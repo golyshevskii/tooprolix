@@ -1,0 +1,189 @@
+[build-system]
+requires = ["maturin>=1.14,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "tooprolix"
+# NOT a literal `version = "..."`: the single source of truth is `[package] version` in Cargo.toml,
+# which is the file release-plz bumps from the Conventional Commits. Writing the number in two
+# places is how they drift, and hand-editing either one is exactly what
+# `package-python-distribution-and-publish-0-1-0` AC5 forbids.
+dynamic = ["version"]
+# Floor for the CORPUS TOOLING ONLY (corpus/measure.py + tests/unit/). 3.12, and this line must
+# agree with `MIN_INTERPRETER` in measure.py, which REFUSES to run below 3.12: pre-3.12
+# `tokenize` hides identifiers inside f-strings (PEP 701) and silently lowers the restatement
+# counts from 137 to 133 on an audited repository. Declaring 3.11 here was a latent contradiction,
+# harmless only while uv happened to select 3.14 -- the moment anything pins 3.11 (a
+# `.python-version`, `UV_PYTHON=3.11`, a CI matrix) `make corpus.measure` aborts and AC4 stops
+# being reproducible. ruff's `target-version` and ty's `python-version` are inferred from this
+# line too, so they were being inferred from a version the script rejects.
+# This is NOT the distribution floor --
+# `package-python-distribution-and-publish-0-1-0` owns that (abi3 target, free-threaded 3.14 support)
+# and will set it when the wheel matrix lands. The maturin backend below has already landed, so its
+# presence is not the signal that the distribution floor has been decided; it has not been.
+# Do not read a packaging decision into this line.
+requires-python = ">=3.12"
+
+[tool.maturin]
+# pyo3 EXTENSION bindings, i.e. an importable `tooprolix` module. Stated explicitly rather than left
+# to maturin's auto-detection because ruff — our reference for everything else — has
+# `bindings = "bin"` here: ruff ships a *binary* wheel. Copying that line would produce a wheel with
+# no importable module and break AC3.
+bindings = "pyo3"
+module-name = "tooprolix"
+# Deliberately no `features = ["pyo3/extension-module"]`: maturin already adds that feature itself
+# for pyo3 bindings. Verified on a throwaway `maturin new --bindings pyo3` project — the built
+# `.so` has no `libpython` in `otool -L`, so extension-module was on. Setting it in
+# `[dependencies]` instead would break `cargo test`, which has to link libpython.
+
+[dependency-groups]
+lint = [
+    "ruff>=0.16.0",
+]
+test = [
+    "pytest>=9.1.1",
+]
+type = [
+    "ty>=0.0.63",
+]
+
+[tool.ruff]
+line-length = 120
+# target-version: inferred from requires-python (see comment above).
+# exclude: ruff's default list is a superset of what we'd write — keep the default.
+# Fixture trees are test DATA and can never be lint-clean by construction:
+#   - `corpus/fixtures/` holds the hand-counted oracle for tests/unit/test_measure.py. Its
+#     exact physical line layout IS the expected value (19 lines, docstrings of 4/1/3 lines).
+#     `ruff format` rewrote it once and turned three hand-counted assertions red — the file
+#     must stay byte-stable or the test measures the formatter instead of the counter.
+#   - `tests/fixtures/` is claimed by later tasks and will hold deliberately broken input
+#     (task 6 AC2 needs a Python syntax error; task 3 needs prose-garbage files).
+# LINT_PATHS/TY_PATHS already keep `make lint.check`/`make type` off these; this key is for
+# whoever types a bare `ruff check .` and would otherwise face a red wall of correct files.
+extend-exclude = ["corpus/fixtures", "tests/fixtures"]
+
+[tool.ruff.format]
+line-ending = "native"           # Line endings will be converted to \n on Unix and \r\n on Windows.
+skip-magic-trailing-comma = true
+
+[tool.ruff.lint]
+extend-select = [
+    "E",   # pycodestyle rules
+    "ISC", # Checks for implicit literal string concatenation (auto-fixable)
+    "PT",  # flake8-pytest-style rules
+    "TC",  # Rules around TYPE_CHECKING blocks
+    "UP",  # Pyupgrade
+    "W",   # pycodestyle rules
+    # By rule enables
+    "B004",   # Checks for use of hasattr(x, "__call__") and replaces it with callable(x)
+    "B006",   # Checks for uses of mutable objects as function argument defaults.
+    "B007",   # Checks for unused variables in the loop
+    "D101",   # Missing docstring in public class
+    "D2",     # All D2* docstring rules, except ignored
+    "D213",   # Conflicts with D212. Both can not be enabled. Multi-line docstring summary should start at the second line
+    "D3",     # All D3* docstring rules, except ignored
+    "D400",   # First line should end with a period in docstring
+    "D401",   # First line of docstring should be in imperative mood. Example: Create dataset, not creates dataset
+    "D402",   # First line should not be the function's signature
+    "D403",   # First word of the docstring should be capitalized
+    "D412",   # No blank lines allowed between a section header and its content
+    "D419",   # Missing blank line after last section
+    "I001",   # Organize imports
+    "I002",   # Missing required import (auto-fixable)
+    "PGH004", # Use specific rule codes when using noqa
+    "PGH005", # Invalid unittest.mock.Mock methods/attributes/properties
+    "RUF015", # Checks for unnecessary iterable allocation for first element
+    "RUF019", # Checks for unnecessary key check
+    "RUF100", # Unused noqa (auto-fixable)
+    "TID25",  # flake8-tidy-imports rules
+    "SIM300", # Checks for conditions that position a constant on the left-hand side of the comparison
+              # operator, rather than the right-hand side.
+]
+# Dropped from the reference config, with reasons: ASYNC/LOG/G (no async and no logging-format
+# surface in a synchronous measurement script) and RUF006 (asyncio-specific). PT* is KEPT —
+# tests/unit/ is pytest.
+ignore = [
+    "D100", # Docstring at the top of every file.
+    "D102", # Missing docstring in public method
+    "D103", # Missing docstring in public function
+    "D104", # Docstring at the top of every `__init__.py` file.
+    "D105", # See https://lists.apache.org/thread/8jbg1dd2lr2cfydtqbjxsd6pb6q2wkc3
+    "D107", # Docstring in every constructor is unnecessary if the class has a docstring.
+    "D203", # 1 blank line required before class docstring
+    "D205", # 1 blank line required between summary line and description
+    "D212", # Conflicts with D213.  Both can not be enabled.
+    "E731", # Do not assign a lambda expression, use a def
+    "TC003", # Do not move imports from stdlib to TYPE_CHECKING block
+    "PT006", # Wrong type of names in @pytest.mark.parametrize
+    "PT007", # Wrong type of values in @pytest.mark.parametrize
+    "PT011", # pytest.raises() is too broad, set the match parameter
+    "PT013", # silly rule prohibiting e.g. `from pytest import param`
+    "PT019", # fixture without value is injected as parameter, use @pytest.mark.usefixtures instead
+    # Rules below explicitly set off which could overlap with Ruff's formatter
+    # as it recommended by https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
+    # Except ISC rules
+    "W191",
+    "E111",
+    "E114",
+    "E117",
+    "D206",
+    "D300",
+    "Q000",
+    "Q001",
+    "Q002",
+    "Q003",
+    "COM812",
+    "COM819",
+    "E501", # Formatted code may exceed the line length, leading to line-too-long (E501) errors.
+]
+
+unfixable = [
+    # PT022 replaces an empty `yield` with an empty `return`; it cannot reason about the
+    # annotations that protect the fixture, so the "fix" is not always sound.
+    "PT022",
+]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+split-on-trailing-comma = false # If a comma is placed after the last member in a multi-line import,
+                                # then the imports will never be folded into one line.
+
+# [tool.ty.environment] python-version: inferred from requires-python.
+
+[tool.ty.environment]
+# Same reason as pytest's `pythonpath`: `measure.py` is a loose script in corpus/, not an
+# installed package, so tests/unit/ imports it as a top-level module. ty needs the same search
+# path or it cannot resolve the import. (ty rejects unknown config keys, so a typo here fails
+# the gate loudly rather than being ignored.)
+extra-paths = ["corpus"]
+
+[tool.ty.src]
+# ty's equivalent of ruff's extend-exclude (verified: with this key `ty check .` passes on a
+# tree whose only diagnostic is inside the excluded dir; without it, 1 diagnostic). Same
+# reason as [tool.ruff] extend-exclude above — fixtures are data, not code.
+exclude = ["corpus/fixtures", "tests/fixtures"]
+
+[tool.ty.terminal]
+error-on-warning = true # Exit with code 1 even if all diagnostics are warnings (strict CI)
+
+[tool.ty.rules]
+possibly-unresolved-reference = "error" # Treat unresolved references as errors, not warnings
+unused-ignore-comment = "warn"          # Warn on dead `ty: ignore` comments
+
+[tool.pytest.ini_options]
+minversion = "9.0"
+testpaths = ["tests/unit"]
+# `measure.py` is a standalone script in corpus/ and is NOT part of the distributed package: the
+# maturin backend above builds the Rust extension, not this throwaway research code, so `measure.py`
+# is not importable via the project install no matter how the project is installed. `pythonpath` puts
+# corpus/ on sys.path for the test session, which needs neither an `__init__.py` in a directory of
+# throwaway code nor an editable install of the crate — and an editable install here would mean
+# compiling Rust on every `make test`, which is exactly what `--only-group` avoids.
+# Still current: this is the live mechanism, not a leftover from before the backend existed.
+pythonpath = ["corpus"]
+addopts = [
+    "-ra",              # Show short summary for all non-passing tests
+    "--strict-config",  # Any warnings while parsing the pytest configuration raise errors
+    "--strict-markers", # Markers not registered in configuration raise errors
+    "--import-mode=importlib"
+]

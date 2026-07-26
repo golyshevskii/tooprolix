@@ -1,0 +1,31 @@
+# release-plz owns the version number and the changelog. Nobody edits either by hand.
+#
+# It derives the next version from the Conventional Commits since the last tag, opens a "Release PR"
+# that bumps `[package] version` in Cargo.toml and rewrites CHANGELOG.md, and — once that PR is
+# merged — creates the git tag and the GitHub release.
+#
+# NOTE: ruff is this project's reference for almost everything, but NOT for this. ruff has no
+# release-plz.toml; it hand-rolls releases in .github/workflows/release.yml. release-plz is our own
+# decision, so do not "align with ruff" by deleting this file.
+
+[workspace]
+# PUBLISHING IS OFF, and this line is the switch: release-plz does version + changelog + tag +
+# GitHub release, and never runs `cargo publish`. It is deliberately here and NOT in Cargo.toml.
+#
+# Measured with release-plz 0.3.160: `publish = false` in Cargo.toml's `[package]` makes release-plz
+# skip the package entirely — `release-plz update` exits 0 with an empty diff. So the Cargo.toml form
+# would not "also disable publishing", it would disable the whole release pipeline. See the comment
+# at that spot in Cargo.toml before you move this line.
+#
+# `package-python-distribution-and-publish-0-1-0` is the task that turns publishing on, and it owns
+# PyPI/crates.io, wheels and trusted publishing.
+publish = false
+
+# The Release PR is the gate. With the default `release_always = true`, release-plz would tag and
+# release on EVERY push to main; we only want a release when the Release PR itself is merged.
+release_always = false
+
+# Tag and GitHub release stay on — they are the deliverable of ToDo 4 and are what
+# `package-python-distribution-and-publish-0-1-0` hangs the wheel build off.
+git_tag_enable = true
+git_release_enable = true

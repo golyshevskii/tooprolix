@@ -1,0 +1,228 @@
+name: CI
+
+# Least-privilege GITHUB_TOKEN: every job here only reads the checked-out code.
+# https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#permissions
+permissions:
+  contents: read
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Key on the ref so a re-push cancels the stale run instead of racing it.
+# https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # corpus/measure.py hard-exits below CPython 3.12 (pre-PEP-701 tokenize hides
+  # identifiers inside f-strings), so the gates must run on 3.12+. Pinned
+  # explicitly rather than relying on the runner default or requires-python.
+  PYTHON_VERSION: "3.12"
+  # Fail if uv.lock is stale relative to pyproject.toml instead of silently
+  # re-resolving it. Verified locally with `UV_LOCKED=1 make <target>` for all
+  # three targets (see task report) before enabling here.
+  UV_LOCKED: "1"
+  # Cargo hygiene for CI, shared by the three cargo-* jobs below. Incremental
+  # compilation is pure overhead on a cold runner; the retries stop a flaky
+  # crates.io from reading as a code failure.
+  CARGO_INCREMENTAL: "0"
+  CARGO_NET_RETRY: "10"
+  CARGO_TERM_COLOR: always
+  RUSTUP_MAX_RETRIES: "10"
+
+jobs:
+  # Six jobs: three Python (lint/type/test) and three Rust (cargo-fmt,
+  # cargo-clippy, cargo-test).
+  #
+  # The Rust jobs are deliberately NOT named `test`/`lint` — those names are
+  # already taken by the Python jobs above and are registered as required
+  # status checks in branch protection. Renaming any existing job silently
+  # breaks that rule: the old name stays required and never reports again.
+  #
+  # No `paths:`, `paths-ignore:` or `if:` on ANY job in this file. A SKIPPED
+  # check does not satisfy a required status check — it stays pending, so a
+  # path-filtered gate wedges a PR at "Expected — waiting for status to be
+  # reported" while CI is entirely green. ruff does gate its cargo jobs on a
+  # `determine_changes` job; that practice is NOT portable here, because ruff's
+  # required checks are configured differently.
+  #
+  # AC4's corpus-determinism proof (`make corpus.measure`) deliberately does
+  # NOT run here: it clones the whole pinned corpus, which is hundreds of
+  # megabytes and minutes of network on every run. That check stays a local,
+  # manual step; do not "fix" CI by adding it.
+
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+
+      - name: make lint.check
+        run: make lint.check
+
+  type:
+    name: type
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+
+      - name: make type
+        run: make type
+
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+
+      - name: make test
+        run: make test
+
+  # ---------------------------------------------------------------------------
+  # Rust gates. The toolchain is NOT chosen here: rust-toolchain.toml pins
+  # 1.97.0 plus the clippy/rustfmt components, and rustup honours it on first
+  # `cargo` invocation. The pinned ruff_* crates require rustc >= 1.95, so a
+  # runner default of `stable` is not guaranteed to be enough.
+  # ---------------------------------------------------------------------------
+
+  cargo-fmt:
+    name: cargo-fmt
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # No rust-cache here on purpose: rustfmt parses the source and builds no
+      # dependencies, so there is nothing worth caching.
+      - name: Show the pinned toolchain
+        run: rustup show
+
+      - name: make rust.fmt.check
+        run: make rust.fmt.check
+
+  cargo-clippy:
+    name: cargo-clippy
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Make `uv python find` (used by `make rust.lint`) resolve ONLY a uv-managed CPython, never a
+      # system one the runner image happens to provide. Deliberate over incidental.
+      UV_MANAGED_PYTHON: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+
+      # `make rust.lint` resolves the interpreter with `uv python find`; this step is what guarantees
+      # there is one to find. The action's `python-version` input only sets UV_PYTHON (its README says
+      # so) and installs nothing, so without this the lookup would fall back to whatever the runner
+      # image happens to ship. UV_MANAGED_PYTHON then pins it to the uv-managed build.
+      - name: Install a managed Python for the pyo3 build script
+        run: uv python install "${PYTHON_VERSION}"
+
+      - name: Show the pinned toolchain
+        run: rustup show
+
+      # v2.9.1 — SHA verified against the source repo, not copied on trust:
+      # `git/ref/tags/v2.9.1` -> tag 23869a5b -> commit c1937114.
+      - name: Cache Rust artifacts
+        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+        with:
+          # Only `main` writes the cache, so parallel PRs read a stable entry
+          # instead of each saving a near-duplicate one.
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: make rust.lint
+        run: make rust.lint
+
+  cargo-test:
+    name: cargo-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      UV_MANAGED_PYTHON: "1"
+      # An insta snapshot that is NEW or CHANGED must FAIL this job, never be written. This is the
+      # setting rust-skills `test-snapshot-testing` names for CI. Verified by deleting a committed
+      # `.snap` and re-running: with it, `make rust.test` fails with "snapshot assertion for
+      # 'extracts_the_python_fixture' failed"; without it insta stores a `.snap.new` beside the
+      # source, which is one `git add .` away from an unreviewed snapshot committed as intent.
+      INSTA_UPDATE: "no"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+
+      # Same reason as in cargo-clippy, and it matters more here: `cargo test` builds a test binary
+      # that both LINKS and then LOADS libpython (maturin adds pyo3's `extension-module` feature only
+      # for the wheel), so the interpreter must exist, must carry a shared library, and must still be
+      # findable by the dynamic loader when the test binary runs. The uv-managed build satisfies all
+      # three; `build.rs` is what supplies the third by putting its lib dir on the binary's RUNPATH.
+      #
+      # This combination is what makes the job independent of the runner image, and that is measured,
+      # not assumed: in `rust:1.97` with NO system libpython at all (`ldconfig -p | grep -c
+      # libpython3.12.so.1.0` -> 0) `make rust.test` exits 0. Delete `build.rs` and the same container
+      # fails at exit 127 with "error while loading shared libraries: libpython3.12.so.1.0", which is
+      # how a green `ubuntu-latest` used to be hiding a dependency on the image's python3-dev.
+      - name: Install a managed Python for the pyo3 build script
+        run: uv python install "${PYTHON_VERSION}"
+
+      - name: Show the pinned toolchain
+        run: rustup show
+
+      - name: Cache Rust artifacts
+        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: make rust.test
+        run: make rust.test

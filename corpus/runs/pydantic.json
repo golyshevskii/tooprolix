@@ -1,0 +1,5305 @@
+{
+  "schema_version": "1",
+  "findings": [
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
+      "line": 47,
+      "end_line": 87,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic-core/python/pydantic_core/core_schema.py:47: TPX002 docstring is 484 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 484,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
+      "line": 330,
+      "end_line": 340,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic-core/python/pydantic_core/core_schema.py:330: TPX003 same explanation in 2 places: pydantic/pydantic-core/python/pydantic_core/core_schema.py:397 (weakest pydantic/pydantic-core/python/pydantic_core/core_schema.py:330 ~ pydantic/pydantic-core/python/pydantic_core/core_schema.py:397, similarity 0.805)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
+          "line": 330,
+          "end_line": 340,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
+          "line": 397,
+          "end_line": 408,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
+          "line": 330,
+          "end_line": 340,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
+          "line": 397,
+          "end_line": 408,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8048780487804879
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
+      "line": 726,
+      "end_line": 748,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic-core/python/pydantic_core/core_schema.py:726: TPX003 same explanation in 2 places: pydantic/pydantic-core/python/pydantic_core/core_schema.py:795 (weakest pydantic/pydantic-core/python/pydantic_core/core_schema.py:726 ~ pydantic/pydantic-core/python/pydantic_core/core_schema.py:795, similarity 0.759)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
+          "line": 726,
+          "end_line": 748,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
+          "line": 795,
+          "end_line": 820,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
+          "line": 726,
+          "end_line": 748,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
+          "line": 795,
+          "end_line": 820,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.7586206896551724
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
+      "line": 969,
+      "end_line": 998,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic-core/python/pydantic_core/core_schema.py:969: TPX002 docstring is 231 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 231,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
+      "line": 1232,
+      "end_line": 1259,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic-core/python/pydantic_core/core_schema.py:1232: TPX002 docstring is 225 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 225,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
+      "line": 2770,
+      "end_line": 2824,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic-core/python/pydantic_core/core_schema.py:2770: TPX002 docstring is 376 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 376,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
+      "line": 3293,
+      "end_line": 3341,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic-core/python/pydantic_core/core_schema.py:3293: TPX002 docstring is 273 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 273,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
+      "line": 3531,
+      "end_line": 3553,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic-core/python/pydantic_core/core_schema.py:3531: TPX002 docstring is 210 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 210,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
+      "line": 3587,
+      "end_line": 3606,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic-core/python/pydantic_core/core_schema.py:3587: TPX003 same explanation in 2 places: pydantic/pydantic-core/python/pydantic_core/core_schema.py:3711 (weakest pydantic/pydantic-core/python/pydantic_core/core_schema.py:3587 ~ pydantic/pydantic-core/python/pydantic_core/core_schema.py:3711, similarity 0.818)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
+          "line": 3587,
+          "end_line": 3606,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
+          "line": 3711,
+          "end_line": 3730,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
+          "line": 3587,
+          "end_line": 3606,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
+          "line": 3711,
+          "end_line": 3730,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8181818181818182
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
+      "line": 3638,
+      "end_line": 3667,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic-core/python/pydantic_core/core_schema.py:3638: TPX002 docstring is 218 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 218,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
+      "line": 4000,
+      "end_line": 4024,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic-core/python/pydantic_core/core_schema.py:4000: TPX003 same explanation in 2 places: pydantic/pydantic-core/python/pydantic_core/core_schema.py:4069 (weakest pydantic/pydantic-core/python/pydantic_core/core_schema.py:4000 ~ pydantic/pydantic-core/python/pydantic_core/core_schema.py:4069, similarity 0.795)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
+          "line": 4000,
+          "end_line": 4024,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
+          "line": 4069,
+          "end_line": 4093,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
+          "line": 4000,
+          "end_line": 4024,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
+          "line": 4069,
+          "end_line": 4093,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.7951807228915663
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic-core/tests/serializers/test_dataclasses.py",
+      "line": 261,
+      "end_line": 266,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic-core/tests/serializers/test_dataclasses.py:261: TPX003 same explanation in 3 places: pydantic/pydantic-core/tests/serializers/test_model.py:1265, pydantic/pydantic-core/tests/serializers/test_typed_dict.py:362 (weakest pydantic/pydantic-core/tests/serializers/test_dataclasses.py:261 ~ pydantic/pydantic-core/tests/serializers/test_model.py:1265, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic-core/tests/serializers/test_dataclasses.py",
+          "line": 261,
+          "end_line": 266,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic-core/tests/serializers/test_model.py",
+          "line": 1265,
+          "end_line": 1270,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic-core/tests/serializers/test_typed_dict.py",
+          "line": 362,
+          "end_line": 367,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic-core/tests/serializers/test_dataclasses.py",
+          "line": 261,
+          "end_line": 266,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic-core/tests/serializers/test_model.py",
+          "line": 1265,
+          "end_line": 1270,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic-core/tests/serializers/test_simple.py",
+      "line": 67,
+      "end_line": 69,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic-core/tests/serializers/test_simple.py:67: TPX003 same explanation in 2 places: pydantic/pydantic-core/tests/serializers/test_simple.py:92 (weakest pydantic/pydantic-core/tests/serializers/test_simple.py:67 ~ pydantic/pydantic-core/tests/serializers/test_simple.py:92, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic-core/tests/serializers/test_simple.py",
+          "line": 67,
+          "end_line": 69,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic-core/tests/serializers/test_simple.py",
+          "line": 92,
+          "end_line": 94,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic-core/tests/serializers/test_simple.py",
+          "line": 67,
+          "end_line": 69,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic-core/tests/serializers/test_simple.py",
+          "line": 92,
+          "end_line": 94,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic-core/tests/test_prebuilt.py",
+      "line": 88,
+      "end_line": 89,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic-core/tests/test_prebuilt.py:88: TPX003 same explanation in 2 places: pydantic/pydantic-core/tests/test_prebuilt.py:265 (weakest pydantic/pydantic-core/tests/test_prebuilt.py:88 ~ pydantic/pydantic-core/tests/test_prebuilt.py:265, similarity 0.833)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic-core/tests/test_prebuilt.py",
+          "line": 88,
+          "end_line": 89,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic-core/tests/test_prebuilt.py",
+          "line": 265,
+          "end_line": 266,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic-core/tests/test_prebuilt.py",
+          "line": 88,
+          "end_line": 89,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic-core/tests/test_prebuilt.py",
+          "line": 265,
+          "end_line": 266,
+          "prose_kind": "comment"
+        },
+        "similarity": 0.8333333333333334
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic-core/tests/test_prebuilt.py",
+      "line": 148,
+      "end_line": 149,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic-core/tests/test_prebuilt.py:148: TPX003 same explanation in 4 places: pydantic/pydantic-core/tests/test_prebuilt.py:208, pydantic/pydantic-core/tests/test_prebuilt.py:319, pydantic/pydantic-core/tests/test_prebuilt.py:381 (weakest pydantic/pydantic-core/tests/test_prebuilt.py:148 ~ pydantic/pydantic-core/tests/test_prebuilt.py:319, similarity 0.833)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic-core/tests/test_prebuilt.py",
+          "line": 148,
+          "end_line": 149,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic-core/tests/test_prebuilt.py",
+          "line": 208,
+          "end_line": 209,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic-core/tests/test_prebuilt.py",
+          "line": 319,
+          "end_line": 320,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic-core/tests/test_prebuilt.py",
+          "line": 381,
+          "end_line": 382,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic-core/tests/test_prebuilt.py",
+          "line": 148,
+          "end_line": 149,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic-core/tests/test_prebuilt.py",
+          "line": 319,
+          "end_line": 320,
+          "prose_kind": "comment"
+        },
+        "similarity": 0.8333333333333334
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic-core/tests/validators/arguments_v3/test_alias.py",
+      "line": 124,
+      "end_line": 128,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic-core/tests/validators/arguments_v3/test_alias.py:124: TPX003 same explanation in 6 places: pydantic/pydantic-core/tests/validators/test_arguments.py:1187, pydantic/pydantic-core/tests/validators/test_dataclasses.py:1792, pydantic/pydantic-core/tests/validators/test_model_fields.py:1861, pydantic/pydantic-core/tests/validators/test_typed_dict.py:1251, pydantic/tests/test_aliases.py:835 (weakest pydantic/pydantic-core/tests/validators/arguments_v3/test_alias.py:124 ~ pydantic/pydantic-core/tests/validators/test_arguments.py:1187, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic-core/tests/validators/arguments_v3/test_alias.py",
+          "line": 124,
+          "end_line": 128,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic-core/tests/validators/test_arguments.py",
+          "line": 1187,
+          "end_line": 1191,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic-core/tests/validators/test_dataclasses.py",
+          "line": 1792,
+          "end_line": 1796,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic-core/tests/validators/test_model_fields.py",
+          "line": 1861,
+          "end_line": 1865,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic-core/tests/validators/test_typed_dict.py",
+          "line": 1251,
+          "end_line": 1255,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/tests/test_aliases.py",
+          "line": 835,
+          "end_line": 839,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic-core/tests/validators/arguments_v3/test_alias.py",
+          "line": 124,
+          "end_line": 128,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic-core/tests/validators/test_arguments.py",
+          "line": 1187,
+          "end_line": 1191,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic-core/tests/validators/test_bytes.py",
+      "line": 34,
+      "end_line": 35,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic-core/tests/validators/test_bytes.py:34: TPX003 same explanation in 2 places: pydantic/pydantic-core/tests/validators/test_string.py:125 (weakest pydantic/pydantic-core/tests/validators/test_bytes.py:34 ~ pydantic/pydantic-core/tests/validators/test_string.py:125, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic-core/tests/validators/test_bytes.py",
+          "line": 34,
+          "end_line": 35,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic-core/tests/validators/test_string.py",
+          "line": 125,
+          "end_line": 126,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic-core/tests/validators/test_bytes.py",
+          "line": 34,
+          "end_line": 35,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic-core/tests/validators/test_string.py",
+          "line": 125,
+          "end_line": 126,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic-core/tests/validators/test_dataclasses.py",
+      "line": 1579,
+      "end_line": 1581,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic-core/tests/validators/test_dataclasses.py:1579: TPX003 same explanation in 5 places: pydantic/pydantic-core/tests/validators/test_model_init.py:447, pydantic/pydantic-core/tests/validators/test_nullable.py:54, pydantic/pydantic-core/tests/validators/test_typed_dict.py:1225, pydantic/pydantic-core/tests/validators/test_with_default.py:652 (weakest pydantic/pydantic-core/tests/validators/test_dataclasses.py:1579 ~ pydantic/pydantic-core/tests/validators/test_model_init.py:447, similarity 0.846)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic-core/tests/validators/test_dataclasses.py",
+          "line": 1579,
+          "end_line": 1581,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic-core/tests/validators/test_model_init.py",
+          "line": 447,
+          "end_line": 449,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic-core/tests/validators/test_nullable.py",
+          "line": 54,
+          "end_line": 56,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic-core/tests/validators/test_typed_dict.py",
+          "line": 1225,
+          "end_line": 1227,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic-core/tests/validators/test_with_default.py",
+          "line": 652,
+          "end_line": 654,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic-core/tests/validators/test_dataclasses.py",
+          "line": 1579,
+          "end_line": 1581,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic-core/tests/validators/test_model_init.py",
+          "line": 447,
+          "end_line": 449,
+          "prose_kind": "comment"
+        },
+        "similarity": 0.8461538461538461
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic-core/tests/validators/test_function.py",
+      "line": 655,
+      "end_line": 657,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic-core/tests/validators/test_function.py:655: TPX003 same explanation in 3 places: pydantic/pydantic-core/tests/validators/test_function.py:842, pydantic/pydantic-core/tests/validators/test_function.py:873 (weakest pydantic/pydantic-core/tests/validators/test_function.py:655 ~ pydantic/pydantic-core/tests/validators/test_function.py:842, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic-core/tests/validators/test_function.py",
+          "line": 655,
+          "end_line": 657,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic-core/tests/validators/test_function.py",
+          "line": 842,
+          "end_line": 844,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic-core/tests/validators/test_function.py",
+          "line": 873,
+          "end_line": 875,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic-core/tests/validators/test_function.py",
+          "line": 655,
+          "end_line": 657,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic-core/tests/validators/test_function.py",
+          "line": 842,
+          "end_line": 844,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic-core/tests/validators/test_model_fields.py",
+      "line": 1681,
+      "end_line": 1683,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic-core/tests/validators/test_model_fields.py:1681: TPX003 same explanation in 2 places: pydantic/pydantic-core/tests/validators/test_typed_dict.py:1106 (weakest pydantic/pydantic-core/tests/validators/test_model_fields.py:1681 ~ pydantic/pydantic-core/tests/validators/test_typed_dict.py:1106, similarity 0.914)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic-core/tests/validators/test_model_fields.py",
+          "line": 1681,
+          "end_line": 1683,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic-core/tests/validators/test_typed_dict.py",
+          "line": 1106,
+          "end_line": 1108,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic-core/tests/validators/test_model_fields.py",
+          "line": 1681,
+          "end_line": 1683,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic-core/tests/validators/test_typed_dict.py",
+          "line": 1106,
+          "end_line": 1108,
+          "prose_kind": "comment"
+        },
+        "similarity": 0.9142857142857143
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/_internal/_core_metadata.py",
+      "line": 14,
+      "end_line": 36,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/_internal/_core_metadata.py:14: TPX002 docstring is 263 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 263,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/_internal/_dataclasses.py",
+      "line": 147,
+      "end_line": 149,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/_internal/_dataclasses.py:147: TPX003 same explanation in 2 places: pydantic/pydantic/_internal/_model_construction.py:708 (weakest pydantic/pydantic/_internal/_dataclasses.py:147 ~ pydantic/pydantic/_internal/_model_construction.py:708, similarity 0.812)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/_internal/_dataclasses.py",
+          "line": 147,
+          "end_line": 149,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/_internal/_model_construction.py",
+          "line": 708,
+          "end_line": 710,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/_internal/_dataclasses.py",
+          "line": 147,
+          "end_line": 149,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic/_internal/_model_construction.py",
+          "line": 708,
+          "end_line": 710,
+          "prose_kind": "comment"
+        },
+        "similarity": 0.8125
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/_internal/_dataclasses.py",
+      "line": 231,
+      "end_line": 280,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/_internal/_dataclasses.py:231: TPX002 docstring is 316 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 316,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/_internal/_decorators.py",
+      "line": 559,
+      "end_line": 560,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/_internal/_decorators.py:559: TPX003 same explanation in 4 places: pydantic/pydantic/_internal/_decorators.py:597, pydantic/pydantic/_internal/_decorators.py:635, pydantic/pydantic/_internal/_fields.py:727 (weakest pydantic/pydantic/_internal/_decorators.py:559 ~ pydantic/pydantic/_internal/_fields.py:727, similarity 0.769)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/_internal/_decorators.py",
+          "line": 559,
+          "end_line": 560,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/_internal/_decorators.py",
+          "line": 597,
+          "end_line": 598,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/_internal/_decorators.py",
+          "line": 635,
+          "end_line": 636,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/_internal/_fields.py",
+          "line": 727,
+          "end_line": 728,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/_internal/_decorators.py",
+          "line": 559,
+          "end_line": 560,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic/_internal/_fields.py",
+          "line": 727,
+          "end_line": 728,
+          "prose_kind": "comment"
+        },
+        "similarity": 0.7692307692307693
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/_internal/_fields.py",
+      "line": 150,
+      "end_line": 152,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/_internal/_fields.py:150: TPX003 same explanation in 2 places: pydantic/pydantic/fields.py:1650 (weakest pydantic/pydantic/_internal/_fields.py:150 ~ pydantic/pydantic/fields.py:1650, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/_internal/_fields.py",
+          "line": 150,
+          "end_line": 152,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/fields.py",
+          "line": 1650,
+          "end_line": 1652,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/_internal/_fields.py",
+          "line": 150,
+          "end_line": 152,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic/fields.py",
+          "line": 1650,
+          "end_line": 1652,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/_internal/_fields.py",
+      "line": 169,
+      "end_line": 171,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/_internal/_fields.py:169: TPX003 same explanation in 2 places: pydantic/pydantic/fields.py:1662 (weakest pydantic/pydantic/_internal/_fields.py:169 ~ pydantic/pydantic/fields.py:1662, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/_internal/_fields.py",
+          "line": 169,
+          "end_line": 171,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/fields.py",
+          "line": 1662,
+          "end_line": 1664,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/_internal/_fields.py",
+          "line": 169,
+          "end_line": 171,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic/fields.py",
+          "line": 1662,
+          "end_line": 1664,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/_internal/_generate_schema.py",
+      "line": 261,
+      "end_line": 263,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/_internal/_generate_schema.py:261: TPX003 same explanation in 2 places: pydantic/pydantic/_internal/_generate_schema.py:1286 (weakest pydantic/pydantic/_internal/_generate_schema.py:261 ~ pydantic/pydantic/_internal/_generate_schema.py:1286, similarity 0.805)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/_internal/_generate_schema.py",
+          "line": 261,
+          "end_line": 263,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/_internal/_generate_schema.py",
+          "line": 1286,
+          "end_line": 1289,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/_internal/_generate_schema.py",
+          "line": 261,
+          "end_line": 263,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic/_internal/_generate_schema.py",
+          "line": 1286,
+          "end_line": 1289,
+          "prose_kind": "comment"
+        },
+        "similarity": 0.8048780487804879
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/_internal/_generate_schema.py",
+      "line": 1588,
+      "end_line": 1590,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/_internal/_generate_schema.py:1588: TPX003 same explanation in 2 places: pydantic/pydantic/_internal/_generate_schema.py:1638 (weakest pydantic/pydantic/_internal/_generate_schema.py:1588 ~ pydantic/pydantic/_internal/_generate_schema.py:1638, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/_internal/_generate_schema.py",
+          "line": 1588,
+          "end_line": 1590,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/_internal/_generate_schema.py",
+          "line": 1638,
+          "end_line": 1640,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/_internal/_generate_schema.py",
+          "line": 1588,
+          "end_line": 1590,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic/_internal/_generate_schema.py",
+          "line": 1638,
+          "end_line": 1640,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/_internal/_generate_schema.py",
+      "line": 2136,
+      "end_line": 2138,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/_internal/_generate_schema.py:2136: TPX003 same explanation in 5 places: pydantic/pydantic/_internal/_generate_schema.py:2445, pydantic/pydantic/_internal/_generate_schema.py:2491, pydantic/pydantic/functional_serializers.py:69, pydantic/pydantic/functional_serializers.py:172 (weakest pydantic/pydantic/_internal/_generate_schema.py:2136 ~ pydantic/pydantic/_internal/_generate_schema.py:2445, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/_internal/_generate_schema.py",
+          "line": 2136,
+          "end_line": 2138,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/_internal/_generate_schema.py",
+          "line": 2445,
+          "end_line": 2447,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/_internal/_generate_schema.py",
+          "line": 2491,
+          "end_line": 2493,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/functional_serializers.py",
+          "line": 69,
+          "end_line": 71,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/functional_serializers.py",
+          "line": 172,
+          "end_line": 174,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/_internal/_generate_schema.py",
+          "line": 2136,
+          "end_line": 2138,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic/_internal/_generate_schema.py",
+          "line": 2445,
+          "end_line": 2447,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/_internal/_generics.py",
+      "line": 56,
+      "end_line": 57,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/_internal/_generics.py:56: TPX003 same explanation in 2 places: pydantic/pydantic/v1/generics.py:43 (weakest pydantic/pydantic/_internal/_generics.py:56 ~ pydantic/pydantic/v1/generics.py:43, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/_internal/_generics.py",
+          "line": 56,
+          "end_line": 57,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/v1/generics.py",
+          "line": 43,
+          "end_line": 44,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/_internal/_generics.py",
+          "line": 56,
+          "end_line": 57,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/generics.py",
+          "line": 43,
+          "end_line": 44,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/_internal/_generics.py",
+      "line": 294,
+      "end_line": 295,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/_internal/_generics.py:294: TPX003 same explanation in 2 places: pydantic/pydantic/v1/generics.py:280 (weakest pydantic/pydantic/_internal/_generics.py:294 ~ pydantic/pydantic/v1/generics.py:280, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/_internal/_generics.py",
+          "line": 294,
+          "end_line": 295,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/v1/generics.py",
+          "line": 280,
+          "end_line": 281,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/_internal/_generics.py",
+          "line": 294,
+          "end_line": 295,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/generics.py",
+          "line": 280,
+          "end_line": 281,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/_internal/_generics.py",
+      "line": 304,
+      "end_line": 306,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/_internal/_generics.py:304: TPX003 same explanation in 2 places: pydantic/pydantic/v1/generics.py:289 (weakest pydantic/pydantic/_internal/_generics.py:304 ~ pydantic/pydantic/v1/generics.py:289, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/_internal/_generics.py",
+          "line": 304,
+          "end_line": 306,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/v1/generics.py",
+          "line": 289,
+          "end_line": 291,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/_internal/_generics.py",
+          "line": 304,
+          "end_line": 306,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/generics.py",
+          "line": 289,
+          "end_line": 291,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/_internal/_generics.py",
+      "line": 330,
+      "end_line": 331,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/_internal/_generics.py:330: TPX003 same explanation in 2 places: pydantic/pydantic/v1/generics.py:300 (weakest pydantic/pydantic/_internal/_generics.py:330 ~ pydantic/pydantic/v1/generics.py:300, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/_internal/_generics.py",
+          "line": 330,
+          "end_line": 331,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/v1/generics.py",
+          "line": 300,
+          "end_line": 301,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/_internal/_generics.py",
+          "line": 330,
+          "end_line": 331,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/generics.py",
+          "line": 300,
+          "end_line": 301,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/_internal/_generics.py",
+      "line": 342,
+      "end_line": 343,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/_internal/_generics.py:342: TPX003 same explanation in 2 places: pydantic/pydantic/v1/generics.py:309 (weakest pydantic/pydantic/_internal/_generics.py:342 ~ pydantic/pydantic/v1/generics.py:309, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/_internal/_generics.py",
+          "line": 342,
+          "end_line": 343,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/v1/generics.py",
+          "line": 309,
+          "end_line": 310,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/_internal/_generics.py",
+          "line": 342,
+          "end_line": 343,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/generics.py",
+          "line": 309,
+          "end_line": 310,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/_internal/_generics.py",
+      "line": 350,
+      "end_line": 351,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/_internal/_generics.py:350: TPX003 same explanation in 2 places: pydantic/pydantic/v1/generics.py:323 (weakest pydantic/pydantic/_internal/_generics.py:350 ~ pydantic/pydantic/v1/generics.py:323, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/_internal/_generics.py",
+          "line": 350,
+          "end_line": 351,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/v1/generics.py",
+          "line": 323,
+          "end_line": 324,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/_internal/_generics.py",
+          "line": 350,
+          "end_line": 351,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/generics.py",
+          "line": 323,
+          "end_line": 324,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/_internal/_generics.py",
+      "line": 452,
+      "end_line": 467,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/_internal/_generics.py:452: TPX002 docstring is 208 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 208,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/_internal/_model_construction.py",
+      "line": 236,
+      "end_line": 237,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/_internal/_model_construction.py:236: TPX003 same explanation in 2 places: pydantic/pydantic/v1/main.py:311 (weakest pydantic/pydantic/_internal/_model_construction.py:236 ~ pydantic/pydantic/v1/main.py:311, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/_internal/_model_construction.py",
+          "line": 236,
+          "end_line": 237,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/v1/main.py",
+          "line": 311,
+          "end_line": 312,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/_internal/_model_construction.py",
+          "line": 236,
+          "end_line": 237,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/main.py",
+          "line": 311,
+          "end_line": 312,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/_internal/_model_construction.py",
+      "line": 563,
+      "end_line": 566,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/_internal/_model_construction.py:563: TPX003 same explanation in 2 places: pydantic/pydantic/main.py:1270 (weakest pydantic/pydantic/_internal/_model_construction.py:563 ~ pydantic/pydantic/main.py:1270, similarity 0.914)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/_internal/_model_construction.py",
+          "line": 563,
+          "end_line": 566,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/main.py",
+          "line": 1270,
+          "end_line": 1274,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/_internal/_model_construction.py",
+          "line": 563,
+          "end_line": 566,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic/main.py",
+          "line": 1270,
+          "end_line": 1274,
+          "prose_kind": "comment"
+        },
+        "similarity": 0.9137931034482759
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/_internal/_namespace_utils.py",
+      "line": 144,
+      "end_line": 221,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/_internal/_namespace_utils.py:144: TPX002 docstring is 496 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 496,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/_internal/_repr.py",
+      "line": 21,
+      "end_line": 23,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/_internal/_repr.py:21: TPX003 same explanation in 2 places: pydantic/pydantic/v1/utils.py:352 (weakest pydantic/pydantic/_internal/_repr.py:21 ~ pydantic/pydantic/v1/utils.py:352, similarity 0.821)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/_internal/_repr.py",
+          "line": 21,
+          "end_line": 23,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/v1/utils.py",
+          "line": 352,
+          "end_line": 355,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/_internal/_repr.py",
+          "line": 21,
+          "end_line": 23,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/utils.py",
+          "line": 352,
+          "end_line": 355,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8214285714285714
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/_internal/_repr.py",
+      "line": 38,
+      "end_line": 43,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/_internal/_repr.py:38: TPX003 same explanation in 2 places: pydantic/pydantic/v1/utils.py:372 (weakest pydantic/pydantic/_internal/_repr.py:38 ~ pydantic/pydantic/v1/utils.py:372, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/_internal/_repr.py",
+          "line": 38,
+          "end_line": 43,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/v1/utils.py",
+          "line": 372,
+          "end_line": 378,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/_internal/_repr.py",
+          "line": 38,
+          "end_line": 43,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/utils.py",
+          "line": 372,
+          "end_line": 378,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/_internal/_signature.py",
+      "line": 62,
+      "end_line": 64,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/_internal/_signature.py:62: TPX003 same explanation in 2 places: pydantic/pydantic/_internal/_signature.py:97 (weakest pydantic/pydantic/_internal/_signature.py:62 ~ pydantic/pydantic/_internal/_signature.py:97, similarity 0.808)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/_internal/_signature.py",
+          "line": 62,
+          "end_line": 64,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/_internal/_signature.py",
+          "line": 97,
+          "end_line": 98,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/_internal/_signature.py",
+          "line": 62,
+          "end_line": 64,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic/_internal/_signature.py",
+          "line": 97,
+          "end_line": 98,
+          "prose_kind": "comment"
+        },
+        "similarity": 0.8076923076923077
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/_internal/_signature.py",
+      "line": 145,
+      "end_line": 146,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/_internal/_signature.py:145: TPX003 same explanation in 2 places: pydantic/pydantic/v1/utils.py:280 (weakest pydantic/pydantic/_internal/_signature.py:145 ~ pydantic/pydantic/v1/utils.py:280, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/_internal/_signature.py",
+          "line": 145,
+          "end_line": 146,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/v1/utils.py",
+          "line": 280,
+          "end_line": 281,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/_internal/_signature.py",
+          "line": 145,
+          "end_line": 146,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/utils.py",
+          "line": 280,
+          "end_line": 281,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/_internal/_typing_extra.py",
+      "line": 72,
+      "end_line": 73,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/_internal/_typing_extra.py:72: TPX003 same explanation in 2 places: pydantic/pydantic/_internal/_typing_extra.py:89 (weakest pydantic/pydantic/_internal/_typing_extra.py:72 ~ pydantic/pydantic/_internal/_typing_extra.py:89, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/_internal/_typing_extra.py",
+          "line": 72,
+          "end_line": 73,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/_internal/_typing_extra.py",
+          "line": 89,
+          "end_line": 90,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/_internal/_typing_extra.py",
+          "line": 72,
+          "end_line": 73,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic/_internal/_typing_extra.py",
+          "line": 89,
+          "end_line": 90,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/_internal/_typing_extra.py",
+      "line": 206,
+      "end_line": 243,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/_internal/_typing_extra.py:206: TPX002 docstring is 308 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 308,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/_internal/_typing_extra.py",
+      "line": 320,
+      "end_line": 322,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/_internal/_typing_extra.py:320: TPX003 same explanation in 2 places: pydantic/pydantic/_internal/_typing_extra.py:374 (weakest pydantic/pydantic/_internal/_typing_extra.py:320 ~ pydantic/pydantic/_internal/_typing_extra.py:374, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/_internal/_typing_extra.py",
+          "line": 320,
+          "end_line": 322,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/_internal/_typing_extra.py",
+          "line": 374,
+          "end_line": 376,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/_internal/_typing_extra.py",
+          "line": 320,
+          "end_line": 322,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic/_internal/_typing_extra.py",
+          "line": 374,
+          "end_line": 376,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/_internal/_utils.py",
+      "line": 51,
+      "end_line": 53,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/_internal/_utils.py:51: TPX003 same explanation in 2 places: pydantic/pydantic/v1/utils.py:101 (weakest pydantic/pydantic/_internal/_utils.py:51 ~ pydantic/pydantic/v1/utils.py:101, similarity 0.898)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/_internal/_utils.py",
+          "line": 51,
+          "end_line": 53,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/v1/utils.py",
+          "line": 101,
+          "end_line": 103,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/_internal/_utils.py",
+          "line": 51,
+          "end_line": 53,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/utils.py",
+          "line": 101,
+          "end_line": 103,
+          "prose_kind": "comment"
+        },
+        "similarity": 0.8979591836734694
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/_internal/_utils.py",
+      "line": 121,
+      "end_line": 124,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/_internal/_utils.py:121: TPX003 same explanation in 2 places: pydantic/pydantic/v1/utils.py:203 (weakest pydantic/pydantic/_internal/_utils.py:121 ~ pydantic/pydantic/v1/utils.py:203, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/_internal/_utils.py",
+          "line": 121,
+          "end_line": 124,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/v1/utils.py",
+          "line": 203,
+          "end_line": 207,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/_internal/_utils.py",
+          "line": 121,
+          "end_line": 124,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/utils.py",
+          "line": 203,
+          "end_line": 207,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/_internal/_utils.py",
+      "line": 154,
+      "end_line": 157,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/_internal/_utils.py:154: TPX003 same explanation in 2 places: pydantic/pydantic/v1/utils.py:333 (weakest pydantic/pydantic/_internal/_utils.py:154 ~ pydantic/pydantic/v1/utils.py:333, similarity 0.786)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/_internal/_utils.py",
+          "line": 154,
+          "end_line": 157,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/v1/utils.py",
+          "line": 333,
+          "end_line": 337,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/_internal/_utils.py",
+          "line": 154,
+          "end_line": 157,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/utils.py",
+          "line": 333,
+          "end_line": 337,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.7857142857142857
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/_internal/_utils.py",
+      "line": 185,
+      "end_line": 188,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/_internal/_utils.py:185: TPX003 same explanation in 2 places: pydantic/pydantic/v1/utils.py:499 (weakest pydantic/pydantic/_internal/_utils.py:185 ~ pydantic/pydantic/v1/utils.py:499, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/_internal/_utils.py",
+          "line": 185,
+          "end_line": 188,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/v1/utils.py",
+          "line": 499,
+          "end_line": 503,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/_internal/_utils.py",
+          "line": 185,
+          "end_line": 188,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/utils.py",
+          "line": 499,
+          "end_line": 503,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/_internal/_utils.py",
+      "line": 192,
+      "end_line": 195,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/_internal/_utils.py:192: TPX003 same explanation in 2 places: pydantic/pydantic/v1/utils.py:507 (weakest pydantic/pydantic/_internal/_utils.py:192 ~ pydantic/pydantic/v1/utils.py:507, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/_internal/_utils.py",
+          "line": 192,
+          "end_line": 195,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/v1/utils.py",
+          "line": 507,
+          "end_line": 511,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/_internal/_utils.py",
+          "line": 192,
+          "end_line": 195,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/utils.py",
+          "line": 507,
+          "end_line": 511,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/_internal/_utils.py",
+      "line": 199,
+      "end_line": 201,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/_internal/_utils.py:199: TPX003 same explanation in 2 places: pydantic/pydantic/v1/utils.py:515 (weakest pydantic/pydantic/_internal/_utils.py:199 ~ pydantic/pydantic/v1/utils.py:515, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/_internal/_utils.py",
+          "line": 199,
+          "end_line": 201,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/v1/utils.py",
+          "line": 515,
+          "end_line": 518,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/_internal/_utils.py",
+          "line": 199,
+          "end_line": 201,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/utils.py",
+          "line": 515,
+          "end_line": 518,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/_internal/_utils.py",
+      "line": 206,
+      "end_line": 213,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/_internal/_utils.py:206: TPX003 same explanation in 2 places: pydantic/pydantic/v1/utils.py:524 (weakest pydantic/pydantic/_internal/_utils.py:206 ~ pydantic/pydantic/v1/utils.py:524, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/_internal/_utils.py",
+          "line": 206,
+          "end_line": 213,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/v1/utils.py",
+          "line": 524,
+          "end_line": 532,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/_internal/_utils.py",
+          "line": 206,
+          "end_line": 213,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/utils.py",
+          "line": 524,
+          "end_line": 532,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/_internal/_utils.py",
+      "line": 244,
+      "end_line": 256,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/_internal/_utils.py:244: TPX003 same explanation in 2 places: pydantic/pydantic/v1/utils.py:564 (weakest pydantic/pydantic/_internal/_utils.py:244 ~ pydantic/pydantic/v1/utils.py:564, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/_internal/_utils.py",
+          "line": 244,
+          "end_line": 256,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/v1/utils.py",
+          "line": 564,
+          "end_line": 577,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/_internal/_utils.py",
+          "line": 244,
+          "end_line": 256,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/utils.py",
+          "line": 564,
+          "end_line": 577,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/_internal/_utils.py",
+      "line": 335,
+      "end_line": 338,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/_internal/_utils.py:335: TPX003 same explanation in 2 places: pydantic/pydantic/v1/utils.py:677 (weakest pydantic/pydantic/_internal/_utils.py:335 ~ pydantic/pydantic/v1/utils.py:677, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/_internal/_utils.py",
+          "line": 335,
+          "end_line": 338,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/v1/utils.py",
+          "line": 677,
+          "end_line": 681,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/_internal/_utils.py",
+          "line": 335,
+          "end_line": 338,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/utils.py",
+          "line": 677,
+          "end_line": 681,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/_internal/_utils.py",
+      "line": 359,
+      "end_line": 366,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/_internal/_utils.py:359: TPX003 same explanation in 2 places: pydantic/pydantic/v1/utils.py:725 (weakest pydantic/pydantic/_internal/_utils.py:359 ~ pydantic/pydantic/v1/utils.py:725, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/_internal/_utils.py",
+          "line": 359,
+          "end_line": 366,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/v1/utils.py",
+          "line": 725,
+          "end_line": 733,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/_internal/_utils.py",
+          "line": 359,
+          "end_line": 366,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/utils.py",
+          "line": 725,
+          "end_line": 733,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/_internal/_validators.py",
+      "line": 199,
+      "end_line": 203,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/_internal/_validators.py:199: TPX003 same explanation in 2 places: pydantic/pydantic/v1/validators.py:387 (weakest pydantic/pydantic/_internal/_validators.py:199 ~ pydantic/pydantic/v1/validators.py:387, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/_internal/_validators.py",
+          "line": 199,
+          "end_line": 203,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/v1/validators.py",
+          "line": 387,
+          "end_line": 392,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/_internal/_validators.py",
+          "line": 199,
+          "end_line": 203,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/validators.py",
+          "line": 387,
+          "end_line": 392,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/_internal/_validators.py",
+      "line": 214,
+      "end_line": 218,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/_internal/_validators.py:214: TPX003 same explanation in 2 places: pydantic/pydantic/v1/validators.py:403 (weakest pydantic/pydantic/_internal/_validators.py:214 ~ pydantic/pydantic/v1/validators.py:403, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/_internal/_validators.py",
+          "line": 214,
+          "end_line": 218,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/v1/validators.py",
+          "line": 403,
+          "end_line": 408,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/_internal/_validators.py",
+          "line": 214,
+          "end_line": 218,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/validators.py",
+          "line": 403,
+          "end_line": 408,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/color.py",
+      "line": 140,
+      "end_line": 147,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/color.py:140: TPX003 same explanation in 2 places: pydantic/pydantic/v1/color.py:106 (weakest pydantic/pydantic/color.py:140 ~ pydantic/pydantic/v1/color.py:106, similarity 0.816)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/color.py",
+          "line": 140,
+          "end_line": 147,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/v1/color.py",
+          "line": 106,
+          "end_line": 109,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/color.py",
+          "line": 140,
+          "end_line": 147,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/color.py",
+          "line": 106,
+          "end_line": 109,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8157894736842105
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/dataclasses.py",
+      "line": 80,
+      "end_line": 114,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/dataclasses.py:80: TPX002 docstring is 286 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 286,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/dataclasses.py",
+      "line": 314,
+      "end_line": 331,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/dataclasses.py:314: TPX003 same explanation in 2 places: pydantic/pydantic/main.py:683 (weakest pydantic/pydantic/dataclasses.py:314 ~ pydantic/pydantic/main.py:683, similarity 0.768)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/dataclasses.py",
+          "line": 314,
+          "end_line": 331,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/main.py",
+          "line": 683,
+          "end_line": 697,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/dataclasses.py",
+          "line": 314,
+          "end_line": 331,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/main.py",
+          "line": 683,
+          "end_line": 697,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.768
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/deprecated/class_validators.py",
+      "line": 72,
+      "end_line": 73,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/deprecated/class_validators.py:72: TPX003 same explanation in 6 places: pydantic/pydantic/deprecated/config.py:12, pydantic/pydantic/deprecated/decorator.py:16, pydantic/pydantic/deprecated/json.py:23, pydantic/pydantic/deprecated/parse.py:16, pydantic/pydantic/deprecated/tools.py:15 (weakest pydantic/pydantic/deprecated/class_validators.py:72 ~ pydantic/pydantic/deprecated/config.py:12, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/deprecated/class_validators.py",
+          "line": 72,
+          "end_line": 73,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/deprecated/config.py",
+          "line": 12,
+          "end_line": 13,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/deprecated/decorator.py",
+          "line": 16,
+          "end_line": 17,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/deprecated/json.py",
+          "line": 23,
+          "end_line": 24,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/deprecated/parse.py",
+          "line": 16,
+          "end_line": 17,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/deprecated/tools.py",
+          "line": 15,
+          "end_line": 16,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/deprecated/class_validators.py",
+          "line": 72,
+          "end_line": 73,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic/deprecated/config.py",
+          "line": 12,
+          "end_line": 13,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/deprecated/copy_internals.py",
+      "line": 39,
+      "end_line": 40,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/deprecated/copy_internals.py:39: TPX003 same explanation in 2 places: pydantic/pydantic/v1/main.py:855 (weakest pydantic/pydantic/deprecated/copy_internals.py:39 ~ pydantic/pydantic/v1/main.py:855, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/deprecated/copy_internals.py",
+          "line": 39,
+          "end_line": 40,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/v1/main.py",
+          "line": 855,
+          "end_line": 856,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/deprecated/copy_internals.py",
+          "line": 39,
+          "end_line": 40,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/main.py",
+          "line": 855,
+          "end_line": 856,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/deprecated/json.py",
+      "line": 35,
+      "end_line": 47,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/deprecated/json.py:35: TPX003 same explanation in 2 places: pydantic/pydantic/v1/json.py:24 (weakest pydantic/pydantic/deprecated/json.py:35 ~ pydantic/pydantic/v1/json.py:24, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/deprecated/json.py",
+          "line": 35,
+          "end_line": 47,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/v1/json.py",
+          "line": 24,
+          "end_line": 37,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/deprecated/json.py",
+          "line": 35,
+          "end_line": 47,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/json.py",
+          "line": 24,
+          "end_line": 37,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/fields.py",
+      "line": 108,
+      "end_line": 150,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/fields.py:108: TPX002 docstring is 420 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 420,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX001",
+      "path": "pydantic/pydantic/fields.py",
+      "line": 545,
+      "end_line": 558,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/fields.py:545: TPX001 comment is 198 words long, over the 150-word limit — shorten it, or mark it with `# tooprolix: noqa TPX001` on the line above it",
+      "words": 198,
+      "max_volume": 150
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/fields.py",
+      "line": 715,
+      "end_line": 718,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/fields.py:715: TPX003 same explanation in 2 places: pydantic/pydantic/fields.py:1459 (weakest pydantic/pydantic/fields.py:715 ~ pydantic/pydantic/fields.py:1459, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/fields.py",
+          "line": 715,
+          "end_line": 718,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/fields.py",
+          "line": 1459,
+          "end_line": 1462,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/fields.py",
+          "line": 715,
+          "end_line": 718,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/fields.py",
+          "line": 1459,
+          "end_line": 1462,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/fields.py",
+      "line": 731,
+      "end_line": 743,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/fields.py:731: TPX003 same explanation in 2 places: pydantic/pydantic/fields.py:1482 (weakest pydantic/pydantic/fields.py:731 ~ pydantic/pydantic/fields.py:1482, similarity 0.926)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/fields.py",
+          "line": 731,
+          "end_line": 743,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/fields.py",
+          "line": 1482,
+          "end_line": 1494,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/fields.py",
+          "line": 731,
+          "end_line": 743,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/fields.py",
+          "line": 1482,
+          "end_line": 1494,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.9259259259259259
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/fields.py",
+      "line": 1023,
+      "end_line": 1025,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/fields.py:1023: TPX003 same explanation in 2 places: pydantic/pydantic/fields.py:1106 (weakest pydantic/pydantic/fields.py:1023 ~ pydantic/pydantic/fields.py:1106, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/fields.py",
+          "line": 1023,
+          "end_line": 1025,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/fields.py",
+          "line": 1106,
+          "end_line": 1108,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/fields.py",
+          "line": 1023,
+          "end_line": 1025,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic/fields.py",
+          "line": 1106,
+          "end_line": 1108,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/fields.py",
+      "line": 1215,
+      "end_line": 1281,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/fields.py:1215: TPX002 docstring is 711 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 711,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/fields.py",
+      "line": 1729,
+      "end_line": 1873,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/fields.py:1729: TPX002 docstring is 706 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 706,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/functional_serializers.py",
+      "line": 91,
+      "end_line": 151,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/functional_serializers.py:91: TPX002 docstring is 280 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 280,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/functional_serializers.py",
+      "line": 245,
+      "end_line": 289,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/functional_serializers.py:245: TPX002 docstring is 236 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 236,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/functional_serializers.py",
+      "line": 376,
+      "end_line": 426,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/functional_serializers.py:376: TPX002 docstring is 217 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 217,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/functional_validators.py",
+      "line": 159,
+      "end_line": 203,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/functional_validators.py:159: TPX002 docstring is 217 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 217,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/functional_validators.py",
+      "line": 418,
+      "end_line": 477,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/functional_validators.py:418: TPX002 docstring is 270 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 270,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/functional_validators.py",
+      "line": 546,
+      "end_line": 548,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/functional_validators.py:546: TPX003 same explanation in 6 places: pydantic/pydantic/functional_validators.py:561, pydantic/pydantic/functional_validators.py:578, pydantic/pydantic/functional_validators.py:594, pydantic/pydantic/functional_validators.py:607, pydantic/pydantic/functional_validators.py:622 (weakest pydantic/pydantic/functional_validators.py:546 ~ pydantic/pydantic/functional_validators.py:561, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/functional_validators.py",
+          "line": 546,
+          "end_line": 548,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/functional_validators.py",
+          "line": 561,
+          "end_line": 563,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/functional_validators.py",
+          "line": 578,
+          "end_line": 580,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/functional_validators.py",
+          "line": 594,
+          "end_line": 596,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/functional_validators.py",
+          "line": 607,
+          "end_line": 609,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/functional_validators.py",
+          "line": 622,
+          "end_line": 624,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/functional_validators.py",
+          "line": 546,
+          "end_line": 548,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic/functional_validators.py",
+          "line": 561,
+          "end_line": 563,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/functional_validators.py",
+      "line": 572,
+      "end_line": 574,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/functional_validators.py:572: TPX003 same explanation in 2 places: pydantic/pydantic/functional_validators.py:587 (weakest pydantic/pydantic/functional_validators.py:572 ~ pydantic/pydantic/functional_validators.py:587, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/functional_validators.py",
+          "line": 572,
+          "end_line": 574,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/functional_validators.py",
+          "line": 587,
+          "end_line": 589,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/functional_validators.py",
+          "line": 572,
+          "end_line": 574,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/functional_validators.py",
+          "line": 587,
+          "end_line": 589,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/json_schema.py",
+      "line": 224,
+      "end_line": 263,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/json_schema.py:224: TPX002 docstring is 354 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 354,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/json_schema.py",
+      "line": 1487,
+      "end_line": 1494,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/json_schema.py:1487: TPX003 same explanation in 2 places: pydantic/pydantic/json_schema.py:1590 (weakest pydantic/pydantic/json_schema.py:1487 ~ pydantic/pydantic/json_schema.py:1590, similarity 0.792)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/json_schema.py",
+          "line": 1487,
+          "end_line": 1494,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/json_schema.py",
+          "line": 1590,
+          "end_line": 1597,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/json_schema.py",
+          "line": 1487,
+          "end_line": 1494,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/json_schema.py",
+          "line": 1590,
+          "end_line": 1597,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.7916666666666666
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/json_schema.py",
+      "line": 1601,
+      "end_line": 1608,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/json_schema.py:1601: TPX003 same explanation in 6 places: pydantic/pydantic/json_schema.py:1612, pydantic/pydantic/json_schema.py:1623, pydantic/pydantic/json_schema.py:1634, pydantic/pydantic/json_schema.py:1756, pydantic/pydantic/json_schema.py:1846 (weakest pydantic/pydantic/json_schema.py:1601 ~ pydantic/pydantic/json_schema.py:1612, similarity 0.750)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/json_schema.py",
+          "line": 1601,
+          "end_line": 1608,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/json_schema.py",
+          "line": 1612,
+          "end_line": 1619,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/json_schema.py",
+          "line": 1623,
+          "end_line": 1630,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/json_schema.py",
+          "line": 1634,
+          "end_line": 1641,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/json_schema.py",
+          "line": 1756,
+          "end_line": 1763,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/json_schema.py",
+          "line": 1846,
+          "end_line": 1853,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/json_schema.py",
+          "line": 1601,
+          "end_line": 1608,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/json_schema.py",
+          "line": 1612,
+          "end_line": 1619,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.75
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/json_schema.py",
+      "line": 1866,
+      "end_line": 1873,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/json_schema.py:1866: TPX003 same explanation in 2 places: pydantic/pydantic/json_schema.py:2001 (weakest pydantic/pydantic/json_schema.py:1866 ~ pydantic/pydantic/json_schema.py:2001, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/json_schema.py",
+          "line": 1866,
+          "end_line": 1873,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/json_schema.py",
+          "line": 2001,
+          "end_line": 2008,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/json_schema.py",
+          "line": 1866,
+          "end_line": 1873,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/json_schema.py",
+          "line": 2001,
+          "end_line": 2008,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/json_schema.py",
+      "line": 1904,
+      "end_line": 1911,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/json_schema.py:1904: TPX003 same explanation in 2 places: pydantic/pydantic/json_schema.py:1942 (weakest pydantic/pydantic/json_schema.py:1904 ~ pydantic/pydantic/json_schema.py:1942, similarity 0.769)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/json_schema.py",
+          "line": 1904,
+          "end_line": 1911,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/json_schema.py",
+          "line": 1942,
+          "end_line": 1949,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/json_schema.py",
+          "line": 1904,
+          "end_line": 1911,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/json_schema.py",
+          "line": 1942,
+          "end_line": 1949,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.7692307692307693
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/json_schema.py",
+      "line": 1922,
+      "end_line": 1924,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/json_schema.py:1922: TPX003 same explanation in 3 places: pydantic/pydantic/json_schema.py:1962, pydantic/pydantic/json_schema.py:2029 (weakest pydantic/pydantic/json_schema.py:1922 ~ pydantic/pydantic/json_schema.py:1962, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/json_schema.py",
+          "line": 1922,
+          "end_line": 1924,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/json_schema.py",
+          "line": 1962,
+          "end_line": 1964,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/json_schema.py",
+          "line": 2029,
+          "end_line": 2031,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/json_schema.py",
+          "line": 1922,
+          "end_line": 1924,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic/json_schema.py",
+          "line": 1962,
+          "end_line": 1964,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/json_schema.py",
+      "line": 2062,
+      "end_line": 2069,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/json_schema.py:2062: TPX003 same explanation in 3 places: pydantic/pydantic/json_schema.py:2117, pydantic/pydantic/json_schema.py:2150 (weakest pydantic/pydantic/json_schema.py:2062 ~ pydantic/pydantic/json_schema.py:2150, similarity 0.750)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/json_schema.py",
+          "line": 2062,
+          "end_line": 2069,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/json_schema.py",
+          "line": 2117,
+          "end_line": 2124,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/json_schema.py",
+          "line": 2150,
+          "end_line": 2157,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/json_schema.py",
+          "line": 2062,
+          "end_line": 2069,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/json_schema.py",
+          "line": 2150,
+          "end_line": 2157,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.75
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/json_schema.py",
+      "line": 2605,
+      "end_line": 2630,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/json_schema.py:2605: TPX002 docstring is 240 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 240,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/json_schema.py",
+      "line": 2675,
+      "end_line": 2730,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/json_schema.py:2675: TPX002 docstring is 252 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 252,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/main.py",
+      "line": 134,
+      "end_line": 166,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/main.py:134: TPX002 docstring is 285 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 285,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/main.py",
+      "line": 487,
+      "end_line": 516,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/main.py:487: TPX002 docstring is 262 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 262,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/main.py",
+      "line": 487,
+      "end_line": 516,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/main.py:487: TPX003 same explanation in 2 places: pydantic/pydantic/root_model.py:146 (weakest pydantic/pydantic/main.py:487 ~ pydantic/pydantic/root_model.py:146, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/main.py",
+          "line": 487,
+          "end_line": 516,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/root_model.py",
+          "line": 146,
+          "end_line": 175,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/main.py",
+          "line": 487,
+          "end_line": 516,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/root_model.py",
+          "line": 146,
+          "end_line": 175,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/main.py",
+      "line": 554,
+      "end_line": 583,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/main.py:554: TPX002 docstring is 263 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 263,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/main.py",
+      "line": 1058,
+      "end_line": 1059,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/main.py:1058: TPX003 same explanation in 2 places: pydantic/pydantic/root_model.py:115 (weakest pydantic/pydantic/main.py:1058 ~ pydantic/pydantic/root_model.py:115, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/main.py",
+          "line": 1058,
+          "end_line": 1059,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/root_model.py",
+          "line": 115,
+          "end_line": 116,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/main.py",
+          "line": 1058,
+          "end_line": 1059,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic/root_model.py",
+          "line": 115,
+          "end_line": 116,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/main.py",
+      "line": 1228,
+      "end_line": 1230,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/main.py:1228: TPX003 same explanation in 7 places: pydantic/tests/benchmarks/basemodel_eq_performance.py:33, pydantic/tests/benchmarks/basemodel_eq_performance.py:52, pydantic/tests/benchmarks/basemodel_eq_performance.py:73, pydantic/tests/benchmarks/basemodel_eq_performance.py:95, pydantic/tests/benchmarks/basemodel_eq_performance.py:158, pydantic/tests/benchmarks/basemodel_eq_performance.py:190 (weakest pydantic/pydantic/main.py:1228 ~ pydantic/tests/benchmarks/basemodel_eq_performance.py:33, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/main.py",
+          "line": 1228,
+          "end_line": 1230,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/benchmarks/basemodel_eq_performance.py",
+          "line": 33,
+          "end_line": 35,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/benchmarks/basemodel_eq_performance.py",
+          "line": 52,
+          "end_line": 54,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/benchmarks/basemodel_eq_performance.py",
+          "line": 73,
+          "end_line": 75,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/benchmarks/basemodel_eq_performance.py",
+          "line": 95,
+          "end_line": 97,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/benchmarks/basemodel_eq_performance.py",
+          "line": 158,
+          "end_line": 160,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/benchmarks/basemodel_eq_performance.py",
+          "line": 190,
+          "end_line": 192,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/main.py",
+          "line": 1228,
+          "end_line": 1230,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/tests/benchmarks/basemodel_eq_performance.py",
+          "line": 33,
+          "end_line": 35,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/main.py",
+      "line": 1811,
+      "end_line": 1845,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/main.py:1811: TPX002 docstring is 250 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 250,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/mypy.py",
+      "line": 165,
+      "end_line": 168,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/mypy.py:165: TPX003 same explanation in 2 places: pydantic/pydantic/v1/mypy.py:148 (weakest pydantic/pydantic/mypy.py:165 ~ pydantic/pydantic/v1/mypy.py:148, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/mypy.py",
+          "line": 165,
+          "end_line": 168,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/v1/mypy.py",
+          "line": 148,
+          "end_line": 151,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/mypy.py",
+          "line": 165,
+          "end_line": 168,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/mypy.py",
+          "line": 148,
+          "end_line": 151,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/mypy.py",
+      "line": 176,
+      "end_line": 180,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/mypy.py:176: TPX003 same explanation in 2 places: pydantic/pydantic/v1/mypy.py:159 (weakest pydantic/pydantic/mypy.py:176 ~ pydantic/pydantic/v1/mypy.py:159, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/mypy.py",
+          "line": 176,
+          "end_line": 180,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/v1/mypy.py",
+          "line": 159,
+          "end_line": 163,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/mypy.py",
+          "line": 176,
+          "end_line": 180,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/mypy.py",
+          "line": 159,
+          "end_line": 163,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/mypy.py",
+      "line": 519,
+      "end_line": 527,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/mypy.py:519: TPX003 same explanation in 2 places: pydantic/pydantic/v1/mypy.py:302 (weakest pydantic/pydantic/mypy.py:519 ~ pydantic/pydantic/v1/mypy.py:302, similarity 0.857)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/mypy.py",
+          "line": 519,
+          "end_line": 527,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/v1/mypy.py",
+          "line": 302,
+          "end_line": 310,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/mypy.py",
+          "line": 519,
+          "end_line": 527,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/mypy.py",
+          "line": 302,
+          "end_line": 310,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8571428571428571
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/mypy.py",
+      "line": 792,
+      "end_line": 793,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/mypy.py:792: TPX003 same explanation in 2 places: pydantic/pydantic/v1/mypy.py:400 (weakest pydantic/pydantic/mypy.py:792 ~ pydantic/pydantic/v1/mypy.py:400, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/mypy.py",
+          "line": 792,
+          "end_line": 793,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/v1/mypy.py",
+          "line": 400,
+          "end_line": 401,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/mypy.py",
+          "line": 792,
+          "end_line": 793,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/mypy.py",
+          "line": 400,
+          "end_line": 401,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/mypy.py",
+      "line": 815,
+      "end_line": 816,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/mypy.py:815: TPX003 same explanation in 2 places: pydantic/pydantic/v1/mypy.py:411 (weakest pydantic/pydantic/mypy.py:815 ~ pydantic/pydantic/v1/mypy.py:411, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/mypy.py",
+          "line": 815,
+          "end_line": 816,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/v1/mypy.py",
+          "line": 411,
+          "end_line": 412,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/mypy.py",
+          "line": 815,
+          "end_line": 816,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/mypy.py",
+          "line": 411,
+          "end_line": 412,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/mypy.py",
+      "line": 922,
+      "end_line": 925,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/mypy.py:922: TPX003 same explanation in 2 places: pydantic/pydantic/v1/mypy.py:460 (weakest pydantic/pydantic/mypy.py:922 ~ pydantic/pydantic/v1/mypy.py:460, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/mypy.py",
+          "line": 922,
+          "end_line": 925,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/v1/mypy.py",
+          "line": 460,
+          "end_line": 464,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/mypy.py",
+          "line": 922,
+          "end_line": 925,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/mypy.py",
+          "line": 460,
+          "end_line": 464,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/mypy.py",
+      "line": 989,
+      "end_line": 993,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/mypy.py:989: TPX003 same explanation in 2 places: pydantic/pydantic/v1/mypy.py:482 (weakest pydantic/pydantic/mypy.py:989 ~ pydantic/pydantic/v1/mypy.py:482, similarity 0.848)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/mypy.py",
+          "line": 989,
+          "end_line": 993,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/v1/mypy.py",
+          "line": 482,
+          "end_line": 487,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/mypy.py",
+          "line": 989,
+          "end_line": 993,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/mypy.py",
+          "line": 482,
+          "end_line": 487,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8484848484848485
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/mypy.py",
+      "line": 1023,
+      "end_line": 1026,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/mypy.py:1023: TPX003 same explanation in 2 places: pydantic/pydantic/v1/mypy.py:540 (weakest pydantic/pydantic/mypy.py:1023 ~ pydantic/pydantic/v1/mypy.py:540, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/mypy.py",
+          "line": 1023,
+          "end_line": 1026,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/v1/mypy.py",
+          "line": 540,
+          "end_line": 544,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/mypy.py",
+          "line": 1023,
+          "end_line": 1026,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/mypy.py",
+          "line": 540,
+          "end_line": 544,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/mypy.py",
+      "line": 1122,
+      "end_line": 1126,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/mypy.py:1122: TPX003 same explanation in 2 places: pydantic/pydantic/v1/mypy.py:645 (weakest pydantic/pydantic/mypy.py:1122 ~ pydantic/pydantic/v1/mypy.py:645, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/mypy.py",
+          "line": 1122,
+          "end_line": 1126,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/v1/mypy.py",
+          "line": 645,
+          "end_line": 650,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/mypy.py",
+          "line": 1122,
+          "end_line": 1126,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/mypy.py",
+          "line": 645,
+          "end_line": 650,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/mypy.py",
+      "line": 1186,
+      "end_line": 1189,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/mypy.py:1186: TPX003 same explanation in 2 places: pydantic/pydantic/v1/mypy.py:675 (weakest pydantic/pydantic/mypy.py:1186 ~ pydantic/pydantic/v1/mypy.py:675, similarity 0.815)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/mypy.py",
+          "line": 1186,
+          "end_line": 1189,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/v1/mypy.py",
+          "line": 675,
+          "end_line": 679,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/mypy.py",
+          "line": 1186,
+          "end_line": 1189,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/mypy.py",
+          "line": 675,
+          "end_line": 679,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8148148148148148
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/mypy.py",
+      "line": 1208,
+      "end_line": 1212,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/mypy.py:1208: TPX003 same explanation in 2 places: pydantic/pydantic/v1/mypy.py:689 (weakest pydantic/pydantic/mypy.py:1208 ~ pydantic/pydantic/v1/mypy.py:689, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/mypy.py",
+          "line": 1208,
+          "end_line": 1212,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/v1/mypy.py",
+          "line": 689,
+          "end_line": 694,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/mypy.py",
+          "line": 1208,
+          "end_line": 1212,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/mypy.py",
+          "line": 689,
+          "end_line": 694,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/mypy.py",
+      "line": 1222,
+      "end_line": 1224,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/mypy.py:1222: TPX003 same explanation in 2 places: pydantic/pydantic/v1/mypy.py:704 (weakest pydantic/pydantic/mypy.py:1222 ~ pydantic/pydantic/v1/mypy.py:704, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/mypy.py",
+          "line": 1222,
+          "end_line": 1224,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/v1/mypy.py",
+          "line": 704,
+          "end_line": 707,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/mypy.py",
+          "line": 1222,
+          "end_line": 1224,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/mypy.py",
+          "line": 704,
+          "end_line": 707,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/mypy.py",
+      "line": 1358,
+      "end_line": 1359,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/mypy.py:1358: TPX003 same explanation in 2 places: pydantic/pydantic/v1/mypy.py:842 (weakest pydantic/pydantic/mypy.py:1358 ~ pydantic/pydantic/v1/mypy.py:842, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/mypy.py",
+          "line": 1358,
+          "end_line": 1359,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/v1/mypy.py",
+          "line": 842,
+          "end_line": 843,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/mypy.py",
+          "line": 1358,
+          "end_line": 1359,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/mypy.py",
+          "line": 842,
+          "end_line": 843,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/mypy.py",
+      "line": 1406,
+      "end_line": 1407,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/mypy.py:1406: TPX003 same explanation in 2 places: pydantic/pydantic/v1/mypy.py:878 (weakest pydantic/pydantic/mypy.py:1406 ~ pydantic/pydantic/v1/mypy.py:878, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/mypy.py",
+          "line": 1406,
+          "end_line": 1407,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/v1/mypy.py",
+          "line": 878,
+          "end_line": 879,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/mypy.py",
+          "line": 1406,
+          "end_line": 1407,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/mypy.py",
+          "line": 878,
+          "end_line": 879,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/networks.py",
+      "line": 224,
+      "end_line": 227,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/networks.py:224: TPX003 same explanation in 2 places: pydantic/pydantic/networks.py:412 (weakest pydantic/pydantic/networks.py:224 ~ pydantic/pydantic/networks.py:412, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/networks.py",
+          "line": 224,
+          "end_line": 227,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/networks.py",
+          "line": 412,
+          "end_line": 415,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/networks.py",
+          "line": 224,
+          "end_line": 227,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/networks.py",
+          "line": 412,
+          "end_line": 415,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/networks.py",
+      "line": 338,
+      "end_line": 339,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/networks.py:338: TPX003 same explanation in 2 places: pydantic/pydantic/networks.py:554 (weakest pydantic/pydantic/networks.py:338 ~ pydantic/pydantic/networks.py:554, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/networks.py",
+          "line": 338,
+          "end_line": 339,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/networks.py",
+          "line": 554,
+          "end_line": 555,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/networks.py",
+          "line": 338,
+          "end_line": 339,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic/networks.py",
+          "line": 554,
+          "end_line": 555,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/networks.py",
+      "line": 603,
+      "end_line": 678,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/networks.py:603: TPX002 docstring is 384 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 384,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/networks.py",
+      "line": 684,
+      "end_line": 688,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/networks.py:684: TPX003 same explanation in 2 places: pydantic/pydantic/networks.py:694 (weakest pydantic/pydantic/networks.py:684 ~ pydantic/pydantic/networks.py:694, similarity 0.824)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/networks.py",
+          "line": 684,
+          "end_line": 688,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/networks.py",
+          "line": 694,
+          "end_line": 699,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/networks.py",
+          "line": 684,
+          "end_line": 688,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/networks.py",
+          "line": 694,
+          "end_line": 699,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8235294117647058
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/networks.py",
+      "line": 1263,
+      "end_line": 1264,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/networks.py:1263: TPX003 same explanation in 2 places: pydantic/pydantic/v1/networks.py:691 (weakest pydantic/pydantic/networks.py:1263 ~ pydantic/pydantic/v1/networks.py:691, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/networks.py",
+          "line": 1263,
+          "end_line": 1264,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/v1/networks.py",
+          "line": 691,
+          "end_line": 692,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/networks.py",
+          "line": 1263,
+          "end_line": 1264,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/networks.py",
+          "line": 691,
+          "end_line": 692,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/plugin/__init__.py",
+      "line": 126,
+      "end_line": 138,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/plugin/__init__.py:126: TPX003 same explanation in 2 places: pydantic/pydantic/plugin/__init__.py:155 (weakest pydantic/pydantic/plugin/__init__.py:126 ~ pydantic/pydantic/plugin/__init__.py:155, similarity 0.821)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/plugin/__init__.py",
+          "line": 126,
+          "end_line": 138,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/plugin/__init__.py",
+          "line": 155,
+          "end_line": 166,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/plugin/__init__.py",
+          "line": 126,
+          "end_line": 138,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/plugin/__init__.py",
+          "line": 155,
+          "end_line": 166,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8205128205128205
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/root_model.py",
+      "line": 146,
+      "end_line": 175,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/root_model.py:146: TPX002 docstring is 262 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 262,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/type_adapter.py",
+      "line": 71,
+      "end_line": 164,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/type_adapter.py:71: TPX002 docstring is 640 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 640,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/type_adapter.py",
+      "line": 652,
+      "end_line": 682,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/type_adapter.py:652: TPX002 docstring is 232 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 232,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/type_adapter.py",
+      "line": 751,
+      "end_line": 780,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/type_adapter.py:751: TPX002 docstring is 250 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 250,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/types.py",
+      "line": 164,
+      "end_line": 233,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/types.py:164: TPX002 docstring is 240 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 240,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/types.py",
+      "line": 425,
+      "end_line": 494,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/types.py:425: TPX002 docstring is 253 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 253,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/types.py",
+      "line": 768,
+      "end_line": 826,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/types.py:768: TPX002 docstring is 222 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 222,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/types.py",
+      "line": 925,
+      "end_line": 1002,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/types.py:925: TPX002 docstring is 361 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 361,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/types.py",
+      "line": 1063,
+      "end_line": 1134,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/types.py:1063: TPX002 docstring is 305 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 305,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/types.py",
+      "line": 1448,
+      "end_line": 1518,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/types.py:1448: TPX002 docstring is 311 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 311,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/types.py",
+      "line": 1583,
+      "end_line": 1686,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/types.py:1583: TPX002 docstring is 364 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 364,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/types.py",
+      "line": 1813,
+      "end_line": 1867,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/types.py:1813: TPX002 docstring is 205 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 205,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/types.py",
+      "line": 1999,
+      "end_line": 2001,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/types.py:1999: TPX003 same explanation in 2 places: pydantic/pydantic/v1/types.py:1038 (weakest pydantic/pydantic/types.py:1999 ~ pydantic/pydantic/v1/types.py:1038, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/types.py",
+          "line": 1999,
+          "end_line": 2001,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/v1/types.py",
+          "line": 1038,
+          "end_line": 1041,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/types.py",
+          "line": 1999,
+          "end_line": 2001,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/types.py",
+          "line": 1038,
+          "end_line": 1041,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/types.py",
+      "line": 2037,
+      "end_line": 2071,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/types.py:2037: TPX002 docstring is 203 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 203,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/types.py",
+      "line": 2394,
+      "end_line": 2398,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/types.py:2394: TPX003 same explanation in 3 places: pydantic/pydantic/types.py:2434, pydantic/pydantic/types.py:2474 (weakest pydantic/pydantic/types.py:2394 ~ pydantic/pydantic/types.py:2434, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/types.py",
+          "line": 2394,
+          "end_line": 2398,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/types.py",
+          "line": 2434,
+          "end_line": 2438,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/types.py",
+          "line": 2474,
+          "end_line": 2478,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/types.py",
+          "line": 2394,
+          "end_line": 2398,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/types.py",
+          "line": 2434,
+          "end_line": 2438,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/types.py",
+      "line": 2407,
+      "end_line": 2414,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/types.py:2407: TPX003 same explanation in 2 places: pydantic/pydantic/types.py:2447 (weakest pydantic/pydantic/types.py:2407 ~ pydantic/pydantic/types.py:2447, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/types.py",
+          "line": 2407,
+          "end_line": 2414,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/types.py",
+          "line": 2447,
+          "end_line": 2454,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/types.py",
+          "line": 2407,
+          "end_line": 2414,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/types.py",
+          "line": 2447,
+          "end_line": 2454,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/types.py",
+      "line": 2422,
+      "end_line": 2429,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/types.py:2422: TPX003 same explanation in 2 places: pydantic/pydantic/types.py:2462 (weakest pydantic/pydantic/types.py:2422 ~ pydantic/pydantic/types.py:2462, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/types.py",
+          "line": 2422,
+          "end_line": 2429,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/types.py",
+          "line": 2462,
+          "end_line": 2469,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/types.py",
+          "line": 2422,
+          "end_line": 2429,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/types.py",
+          "line": 2462,
+          "end_line": 2469,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/types.py",
+      "line": 2556,
+      "end_line": 2563,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/types.py:2556: TPX003 same explanation in 2 places: pydantic/pydantic/types.py:2655 (weakest pydantic/pydantic/types.py:2556 ~ pydantic/pydantic/types.py:2655, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/types.py",
+          "line": 2556,
+          "end_line": 2563,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/types.py",
+          "line": 2655,
+          "end_line": 2662,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/types.py",
+          "line": 2556,
+          "end_line": 2563,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/types.py",
+          "line": 2655,
+          "end_line": 2662,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/types.py",
+      "line": 2567,
+      "end_line": 2574,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/types.py:2567: TPX003 same explanation in 2 places: pydantic/pydantic/types.py:2666 (weakest pydantic/pydantic/types.py:2567 ~ pydantic/pydantic/types.py:2666, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/types.py",
+          "line": 2567,
+          "end_line": 2574,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/types.py",
+          "line": 2666,
+          "end_line": 2673,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/types.py",
+          "line": 2567,
+          "end_line": 2574,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/types.py",
+          "line": 2666,
+          "end_line": 2673,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/types.py",
+      "line": 2900,
+      "end_line": 2969,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/types.py:2900: TPX002 docstring is 331 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 331,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/types.py",
+      "line": 2982,
+      "end_line": 3048,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/types.py:2982: TPX002 docstring is 309 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 309,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/v1/fields.py",
+      "line": 250,
+      "end_line": 300,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/v1/fields.py:250: TPX002 docstring is 610 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 610,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/v1/mypy.py",
+      "line": 908,
+      "end_line": 910,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/v1/mypy.py:908: TPX003 same explanation in 2 places: pydantic/pydantic/v1/mypy.py:918 (weakest pydantic/pydantic/v1/mypy.py:908 ~ pydantic/pydantic/v1/mypy.py:918, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/v1/mypy.py",
+          "line": 908,
+          "end_line": 910,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/v1/mypy.py",
+          "line": 918,
+          "end_line": 920,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/v1/mypy.py",
+          "line": 908,
+          "end_line": 910,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/mypy.py",
+          "line": 918,
+          "end_line": 920,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "pydantic/pydantic/v1/schema.py",
+      "line": 118,
+      "end_line": 136,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/v1/schema.py:118: TPX002 docstring is 214 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 214,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/v1/typing.py",
+      "line": 75,
+      "end_line": 76,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/v1/typing.py:75: TPX003 same explanation in 2 places: pydantic/pydantic/v1/typing.py:82 (weakest pydantic/pydantic/v1/typing.py:75 ~ pydantic/pydantic/v1/typing.py:82, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/v1/typing.py",
+          "line": 75,
+          "end_line": 76,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic/v1/typing.py",
+          "line": 82,
+          "end_line": 83,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/v1/typing.py",
+          "line": 75,
+          "end_line": 76,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/typing.py",
+          "line": 82,
+          "end_line": 83,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/pydantic/v1/validators.py",
+      "line": 324,
+      "end_line": 325,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic/v1/validators.py:324: TPX003 same explanation in 2 places: pydantic/pydantic-core/tests/benchmarks/test_micro_benchmarks.py:755 (weakest pydantic/pydantic/v1/validators.py:324 ~ pydantic/pydantic-core/tests/benchmarks/test_micro_benchmarks.py:755, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/v1/validators.py",
+          "line": 324,
+          "end_line": 325,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic-core/tests/benchmarks/test_micro_benchmarks.py",
+          "line": 755,
+          "end_line": 756,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/v1/validators.py",
+          "line": 324,
+          "end_line": 325,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic-core/tests/benchmarks/test_micro_benchmarks.py",
+          "line": 755,
+          "end_line": 756,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/tests/benchmarks/basemodel_eq_performance.py",
+      "line": 109,
+      "end_line": 111,
+      "prose_kind": "comment",
+      "message": "pydantic/tests/benchmarks/basemodel_eq_performance.py:109: TPX003 same explanation in 3 places: pydantic/tests/benchmarks/basemodel_eq_performance.py:172, pydantic/tests/benchmarks/basemodel_eq_performance.py:204 (weakest pydantic/tests/benchmarks/basemodel_eq_performance.py:109 ~ pydantic/tests/benchmarks/basemodel_eq_performance.py:172, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/tests/benchmarks/basemodel_eq_performance.py",
+          "line": 109,
+          "end_line": 111,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/benchmarks/basemodel_eq_performance.py",
+          "line": 172,
+          "end_line": 174,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/benchmarks/basemodel_eq_performance.py",
+          "line": 204,
+          "end_line": 206,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/tests/benchmarks/basemodel_eq_performance.py",
+          "line": 109,
+          "end_line": 111,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/tests/benchmarks/basemodel_eq_performance.py",
+          "line": 172,
+          "end_line": 174,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/tests/benchmarks/basemodel_eq_performance.py",
+      "line": 323,
+      "end_line": 327,
+      "prose_kind": "comment",
+      "message": "pydantic/tests/benchmarks/basemodel_eq_performance.py:323: TPX003 same explanation in 4 places: pydantic/tests/benchmarks/basemodel_eq_performance.py:369, pydantic/tests/benchmarks/basemodel_eq_performance.py:416, pydantic/tests/benchmarks/basemodel_eq_performance.py:465 (weakest pydantic/tests/benchmarks/basemodel_eq_performance.py:323 ~ pydantic/tests/benchmarks/basemodel_eq_performance.py:369, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/tests/benchmarks/basemodel_eq_performance.py",
+          "line": 323,
+          "end_line": 327,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/benchmarks/basemodel_eq_performance.py",
+          "line": 369,
+          "end_line": 373,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/benchmarks/basemodel_eq_performance.py",
+          "line": 416,
+          "end_line": 420,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/benchmarks/basemodel_eq_performance.py",
+          "line": 465,
+          "end_line": 469,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/tests/benchmarks/basemodel_eq_performance.py",
+          "line": 323,
+          "end_line": 327,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/tests/benchmarks/basemodel_eq_performance.py",
+          "line": 369,
+          "end_line": 373,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/tests/mypy/modules/plugin_fail.py",
+      "line": 259,
+      "end_line": 260,
+      "prose_kind": "comment",
+      "message": "pydantic/tests/mypy/modules/plugin_fail.py:259: TPX003 same explanation in 10 places: pydantic/tests/mypy/modules/plugin_fail_baseConfig.py:279, pydantic/tests/mypy/outputs/mypy-plugin-strict_ini/plugin_fail.py:311, pydantic/tests/mypy/outputs/mypy-plugin-strict_ini/plugin_fail_baseConfig.py:330, pydantic/tests/mypy/outputs/mypy-plugin_ini/plugin_fail.py:295, pydantic/tests/mypy/outputs/mypy-plugin_ini/plugin_fail_baseConfig.py:314, pydantic/tests/mypy/outputs/pyproject-plugin-strict_toml/plugin_fail.py:311, pydantic/tests/mypy/outputs/pyproject-plugin-strict_toml/plugin_fail_baseConfig.py:330, pydantic/tests/mypy/outputs/pyproject-plugin_toml/plugin_fail.py:295, pydantic/tests/mypy/outputs/pyproject-plugin_toml/plugin_fail_baseConfig.py:314 (weakest pydantic/tests/mypy/modules/plugin_fail.py:259 ~ pydantic/tests/mypy/modules/plugin_fail_baseConfig.py:279, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/tests/mypy/modules/plugin_fail.py",
+          "line": 259,
+          "end_line": 260,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/mypy/modules/plugin_fail_baseConfig.py",
+          "line": 279,
+          "end_line": 280,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/mypy/outputs/mypy-plugin-strict_ini/plugin_fail.py",
+          "line": 311,
+          "end_line": 312,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/mypy/outputs/mypy-plugin-strict_ini/plugin_fail_baseConfig.py",
+          "line": 330,
+          "end_line": 331,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/mypy/outputs/mypy-plugin_ini/plugin_fail.py",
+          "line": 295,
+          "end_line": 296,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/mypy/outputs/mypy-plugin_ini/plugin_fail_baseConfig.py",
+          "line": 314,
+          "end_line": 315,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/mypy/outputs/pyproject-plugin-strict_toml/plugin_fail.py",
+          "line": 311,
+          "end_line": 312,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/mypy/outputs/pyproject-plugin-strict_toml/plugin_fail_baseConfig.py",
+          "line": 330,
+          "end_line": 331,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/mypy/outputs/pyproject-plugin_toml/plugin_fail.py",
+          "line": 295,
+          "end_line": 296,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/mypy/outputs/pyproject-plugin_toml/plugin_fail_baseConfig.py",
+          "line": 314,
+          "end_line": 315,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/tests/mypy/modules/plugin_fail.py",
+          "line": 259,
+          "end_line": 260,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/tests/mypy/modules/plugin_fail_baseConfig.py",
+          "line": 279,
+          "end_line": 280,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/tests/mypy/modules/root_models.py",
+      "line": 32,
+      "end_line": 33,
+      "prose_kind": "comment",
+      "message": "pydantic/tests/mypy/modules/root_models.py:32: TPX003 same explanation in 4 places: pydantic/tests/mypy/outputs/mypy-default_ini/root_models.py:33, pydantic/tests/mypy/outputs/mypy-plugin_ini/root_models.py:33, pydantic/tests/mypy/outputs/pyproject-default_toml/root_models.py:33 (weakest pydantic/tests/mypy/modules/root_models.py:32 ~ pydantic/tests/mypy/outputs/mypy-default_ini/root_models.py:33, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/tests/mypy/modules/root_models.py",
+          "line": 32,
+          "end_line": 33,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/mypy/outputs/mypy-default_ini/root_models.py",
+          "line": 33,
+          "end_line": 34,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/mypy/outputs/mypy-plugin_ini/root_models.py",
+          "line": 33,
+          "end_line": 34,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/mypy/outputs/pyproject-default_toml/root_models.py",
+          "line": 33,
+          "end_line": 34,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/tests/mypy/modules/root_models.py",
+          "line": 32,
+          "end_line": 33,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/tests/mypy/outputs/mypy-default_ini/root_models.py",
+          "line": 33,
+          "end_line": 34,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/tests/mypy/outputs/mypy-default_ini/plugin_success.py",
+      "line": 124,
+      "end_line": 125,
+      "prose_kind": "comment",
+      "message": "pydantic/tests/mypy/outputs/mypy-default_ini/plugin_success.py:124: TPX003 same explanation in 2 places: pydantic/tests/mypy/outputs/mypy-default_ini/plugin_success_baseConfig.py:127 (weakest pydantic/tests/mypy/outputs/mypy-default_ini/plugin_success.py:124 ~ pydantic/tests/mypy/outputs/mypy-default_ini/plugin_success_baseConfig.py:127, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/tests/mypy/outputs/mypy-default_ini/plugin_success.py",
+          "line": 124,
+          "end_line": 125,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/mypy/outputs/mypy-default_ini/plugin_success_baseConfig.py",
+          "line": 127,
+          "end_line": 128,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/tests/mypy/outputs/mypy-default_ini/plugin_success.py",
+          "line": 124,
+          "end_line": 125,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/tests/mypy/outputs/mypy-default_ini/plugin_success_baseConfig.py",
+          "line": 127,
+          "end_line": 128,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/tests/mypy/outputs/mypy-default_ini/pydantic_settings.py",
+      "line": 12,
+      "end_line": 14,
+      "prose_kind": "comment",
+      "message": "pydantic/tests/mypy/outputs/mypy-default_ini/pydantic_settings.py:12: TPX003 same explanation in 4 places: pydantic/tests/mypy/outputs/mypy-default_ini/pydantic_settings.py:17, pydantic/tests/mypy/outputs/pyproject-default_toml/pydantic_settings.py:12, pydantic/tests/mypy/outputs/pyproject-default_toml/pydantic_settings.py:17 (weakest pydantic/tests/mypy/outputs/mypy-default_ini/pydantic_settings.py:12 ~ pydantic/tests/mypy/outputs/mypy-default_ini/pydantic_settings.py:17, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/tests/mypy/outputs/mypy-default_ini/pydantic_settings.py",
+          "line": 12,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/mypy/outputs/mypy-default_ini/pydantic_settings.py",
+          "line": 17,
+          "end_line": 19,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/mypy/outputs/pyproject-default_toml/pydantic_settings.py",
+          "line": 12,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/mypy/outputs/pyproject-default_toml/pydantic_settings.py",
+          "line": 17,
+          "end_line": 19,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/tests/mypy/outputs/mypy-default_ini/pydantic_settings.py",
+          "line": 12,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/tests/mypy/outputs/mypy-default_ini/pydantic_settings.py",
+          "line": 17,
+          "end_line": 19,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/tests/mypy/outputs/mypy-default_ini/root_models.py",
+      "line": 61,
+      "end_line": 63,
+      "prose_kind": "comment",
+      "message": "pydantic/tests/mypy/outputs/mypy-default_ini/root_models.py:61: TPX003 same explanation in 2 places: pydantic/tests/mypy/outputs/pyproject-default_toml/root_models.py:61 (weakest pydantic/tests/mypy/outputs/mypy-default_ini/root_models.py:61 ~ pydantic/tests/mypy/outputs/pyproject-default_toml/root_models.py:61, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/tests/mypy/outputs/mypy-default_ini/root_models.py",
+          "line": 61,
+          "end_line": 63,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/mypy/outputs/pyproject-default_toml/root_models.py",
+          "line": 61,
+          "end_line": 63,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/tests/mypy/outputs/mypy-default_ini/root_models.py",
+          "line": 61,
+          "end_line": 63,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/tests/mypy/outputs/pyproject-default_toml/root_models.py",
+          "line": 61,
+          "end_line": 63,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/tests/mypy/outputs/mypy-default_ini/root_models.py",
+      "line": 66,
+      "end_line": 68,
+      "prose_kind": "comment",
+      "message": "pydantic/tests/mypy/outputs/mypy-default_ini/root_models.py:66: TPX003 same explanation in 2 places: pydantic/tests/mypy/outputs/pyproject-default_toml/root_models.py:66 (weakest pydantic/tests/mypy/outputs/mypy-default_ini/root_models.py:66 ~ pydantic/tests/mypy/outputs/pyproject-default_toml/root_models.py:66, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/tests/mypy/outputs/mypy-default_ini/root_models.py",
+          "line": 66,
+          "end_line": 68,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/mypy/outputs/pyproject-default_toml/root_models.py",
+          "line": 66,
+          "end_line": 68,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/tests/mypy/outputs/mypy-default_ini/root_models.py",
+          "line": 66,
+          "end_line": 68,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/tests/mypy/outputs/pyproject-default_toml/root_models.py",
+          "line": 66,
+          "end_line": 68,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/tests/mypy/outputs/mypy-plugin-strict_ini/fail_defaults.py",
+      "line": 18,
+      "end_line": 21,
+      "prose_kind": "comment",
+      "message": "pydantic/tests/mypy/outputs/mypy-plugin-strict_ini/fail_defaults.py:18: TPX003 same explanation in 2 places: pydantic/tests/mypy/outputs/pyproject-plugin-strict_toml/fail_defaults.py:18 (weakest pydantic/tests/mypy/outputs/mypy-plugin-strict_ini/fail_defaults.py:18 ~ pydantic/tests/mypy/outputs/pyproject-plugin-strict_toml/fail_defaults.py:18, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/tests/mypy/outputs/mypy-plugin-strict_ini/fail_defaults.py",
+          "line": 18,
+          "end_line": 21,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/mypy/outputs/pyproject-plugin-strict_toml/fail_defaults.py",
+          "line": 18,
+          "end_line": 21,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/tests/mypy/outputs/mypy-plugin-strict_ini/fail_defaults.py",
+          "line": 18,
+          "end_line": 21,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/tests/mypy/outputs/pyproject-plugin-strict_toml/fail_defaults.py",
+          "line": 18,
+          "end_line": 21,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/tests/mypy/outputs/mypy-plugin-strict_ini/plugin_fail.py",
+      "line": 71,
+      "end_line": 72,
+      "prose_kind": "comment",
+      "message": "pydantic/tests/mypy/outputs/mypy-plugin-strict_ini/plugin_fail.py:71: TPX003 same explanation in 8 places: pydantic/tests/mypy/outputs/mypy-plugin-strict_ini/plugin_fail.py:82, pydantic/tests/mypy/outputs/mypy-plugin_ini/plugin_fail.py:71, pydantic/tests/mypy/outputs/mypy-plugin_ini/plugin_fail.py:82, pydantic/tests/mypy/outputs/pyproject-plugin-strict_toml/plugin_fail.py:71, pydantic/tests/mypy/outputs/pyproject-plugin-strict_toml/plugin_fail.py:82, pydantic/tests/mypy/outputs/pyproject-plugin_toml/plugin_fail.py:71, pydantic/tests/mypy/outputs/pyproject-plugin_toml/plugin_fail.py:82 (weakest pydantic/tests/mypy/outputs/mypy-plugin-strict_ini/plugin_fail.py:71 ~ pydantic/tests/mypy/outputs/mypy-plugin-strict_ini/plugin_fail.py:82, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/tests/mypy/outputs/mypy-plugin-strict_ini/plugin_fail.py",
+          "line": 71,
+          "end_line": 72,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/mypy/outputs/mypy-plugin-strict_ini/plugin_fail.py",
+          "line": 82,
+          "end_line": 83,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/mypy/outputs/mypy-plugin_ini/plugin_fail.py",
+          "line": 71,
+          "end_line": 72,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/mypy/outputs/mypy-plugin_ini/plugin_fail.py",
+          "line": 82,
+          "end_line": 83,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/mypy/outputs/pyproject-plugin-strict_toml/plugin_fail.py",
+          "line": 71,
+          "end_line": 72,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/mypy/outputs/pyproject-plugin-strict_toml/plugin_fail.py",
+          "line": 82,
+          "end_line": 83,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/mypy/outputs/pyproject-plugin_toml/plugin_fail.py",
+          "line": 71,
+          "end_line": 72,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/mypy/outputs/pyproject-plugin_toml/plugin_fail.py",
+          "line": 82,
+          "end_line": 83,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/tests/mypy/outputs/mypy-plugin-strict_ini/plugin_fail.py",
+          "line": 71,
+          "end_line": 72,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/tests/mypy/outputs/mypy-plugin-strict_ini/plugin_fail.py",
+          "line": 82,
+          "end_line": 83,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/tests/mypy/outputs/mypy-plugin-strict_ini/plugin_fail.py",
+      "line": 120,
+      "end_line": 124,
+      "prose_kind": "comment",
+      "message": "pydantic/tests/mypy/outputs/mypy-plugin-strict_ini/plugin_fail.py:120: TPX003 same explanation in 8 places: pydantic/tests/mypy/outputs/mypy-plugin-strict_ini/plugin_fail_baseConfig.py:132, pydantic/tests/mypy/outputs/mypy-plugin_ini/plugin_fail.py:120, pydantic/tests/mypy/outputs/mypy-plugin_ini/plugin_fail_baseConfig.py:132, pydantic/tests/mypy/outputs/pyproject-plugin-strict_toml/plugin_fail.py:120, pydantic/tests/mypy/outputs/pyproject-plugin-strict_toml/plugin_fail_baseConfig.py:132, pydantic/tests/mypy/outputs/pyproject-plugin_toml/plugin_fail.py:120, pydantic/tests/mypy/outputs/pyproject-plugin_toml/plugin_fail_baseConfig.py:132 (weakest pydantic/tests/mypy/outputs/mypy-plugin-strict_ini/plugin_fail.py:120 ~ pydantic/tests/mypy/outputs/mypy-plugin-strict_ini/plugin_fail_baseConfig.py:132, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/tests/mypy/outputs/mypy-plugin-strict_ini/plugin_fail.py",
+          "line": 120,
+          "end_line": 124,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/mypy/outputs/mypy-plugin-strict_ini/plugin_fail_baseConfig.py",
+          "line": 132,
+          "end_line": 136,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/mypy/outputs/mypy-plugin_ini/plugin_fail.py",
+          "line": 120,
+          "end_line": 124,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/mypy/outputs/mypy-plugin_ini/plugin_fail_baseConfig.py",
+          "line": 132,
+          "end_line": 136,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/mypy/outputs/pyproject-plugin-strict_toml/plugin_fail.py",
+          "line": 120,
+          "end_line": 124,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/mypy/outputs/pyproject-plugin-strict_toml/plugin_fail_baseConfig.py",
+          "line": 132,
+          "end_line": 136,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/mypy/outputs/pyproject-plugin_toml/plugin_fail.py",
+          "line": 120,
+          "end_line": 124,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/mypy/outputs/pyproject-plugin_toml/plugin_fail_baseConfig.py",
+          "line": 132,
+          "end_line": 136,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/tests/mypy/outputs/mypy-plugin-strict_ini/plugin_fail.py",
+          "line": 120,
+          "end_line": 124,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/tests/mypy/outputs/mypy-plugin-strict_ini/plugin_fail_baseConfig.py",
+          "line": 132,
+          "end_line": 136,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/tests/mypy/outputs/mypy-plugin_ini/pydantic_settings.py",
+      "line": 13,
+      "end_line": 15,
+      "prose_kind": "comment",
+      "message": "pydantic/tests/mypy/outputs/mypy-plugin_ini/pydantic_settings.py:13: TPX003 same explanation in 2 places: pydantic/tests/mypy/outputs/pyproject-plugin_toml/pydantic_settings.py:13 (weakest pydantic/tests/mypy/outputs/mypy-plugin_ini/pydantic_settings.py:13 ~ pydantic/tests/mypy/outputs/pyproject-plugin_toml/pydantic_settings.py:13, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/tests/mypy/outputs/mypy-plugin_ini/pydantic_settings.py",
+          "line": 13,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/mypy/outputs/pyproject-plugin_toml/pydantic_settings.py",
+          "line": 13,
+          "end_line": 15,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/tests/mypy/outputs/mypy-plugin_ini/pydantic_settings.py",
+          "line": 13,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/tests/mypy/outputs/pyproject-plugin_toml/pydantic_settings.py",
+          "line": 13,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/tests/test_config.py",
+      "line": 49,
+      "end_line": 50,
+      "prose_kind": "comment",
+      "message": "pydantic/tests/test_config.py:49: TPX003 same explanation in 2 places: pydantic/tests/test_strict.py:43 (weakest pydantic/tests/test_config.py:49 ~ pydantic/tests/test_strict.py:43, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/tests/test_config.py",
+          "line": 49,
+          "end_line": 50,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/test_strict.py",
+          "line": 43,
+          "end_line": 44,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/tests/test_config.py",
+          "line": 49,
+          "end_line": 50,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/tests/test_strict.py",
+          "line": 43,
+          "end_line": 44,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/tests/test_dataclasses.py",
+      "line": 2065,
+      "end_line": 2069,
+      "prose_kind": "docstring",
+      "message": "pydantic/tests/test_dataclasses.py:2065: TPX003 same explanation in 2 places: pydantic/tests/test_validators.py:2001 (weakest pydantic/tests/test_dataclasses.py:2065 ~ pydantic/tests/test_validators.py:2001, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/tests/test_dataclasses.py",
+          "line": 2065,
+          "end_line": 2069,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/tests/test_validators.py",
+          "line": 2001,
+          "end_line": 2005,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/tests/test_dataclasses.py",
+          "line": 2065,
+          "end_line": 2069,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/tests/test_validators.py",
+          "line": 2001,
+          "end_line": 2005,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/tests/test_dataclasses.py",
+      "line": 2100,
+      "end_line": 2103,
+      "prose_kind": "docstring",
+      "message": "pydantic/tests/test_dataclasses.py:2100: TPX003 same explanation in 3 places: pydantic/tests/test_validators.py:992, pydantic/tests/test_validators.py:1042 (weakest pydantic/tests/test_dataclasses.py:2100 ~ pydantic/tests/test_validators.py:992, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/tests/test_dataclasses.py",
+          "line": 2100,
+          "end_line": 2103,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/tests/test_validators.py",
+          "line": 992,
+          "end_line": 995,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/tests/test_validators.py",
+          "line": 1042,
+          "end_line": 1046,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/tests/test_dataclasses.py",
+          "line": 2100,
+          "end_line": 2103,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/tests/test_validators.py",
+          "line": 992,
+          "end_line": 995,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/tests/test_deprecated.py",
+      "line": 35,
+      "end_line": 36,
+      "prose_kind": "comment",
+      "message": "pydantic/tests/test_deprecated.py:35: TPX003 same explanation in 2 places: pydantic/tests/test_deprecated_validate_arguments.py:14 (weakest pydantic/tests/test_deprecated.py:35 ~ pydantic/tests/test_deprecated_validate_arguments.py:14, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/tests/test_deprecated.py",
+          "line": 35,
+          "end_line": 36,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/test_deprecated_validate_arguments.py",
+          "line": 14,
+          "end_line": 15,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/tests/test_deprecated.py",
+          "line": 35,
+          "end_line": 36,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/tests/test_deprecated_validate_arguments.py",
+          "line": 14,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/tests/test_discriminated_union.py",
+      "line": 970,
+      "end_line": 972,
+      "prose_kind": "comment",
+      "message": "pydantic/tests/test_discriminated_union.py:970: TPX003 same explanation in 2 places: pydantic/tests/test_discriminated_union.py:1054 (weakest pydantic/tests/test_discriminated_union.py:970 ~ pydantic/tests/test_discriminated_union.py:1054, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/tests/test_discriminated_union.py",
+          "line": 970,
+          "end_line": 972,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/test_discriminated_union.py",
+          "line": 1054,
+          "end_line": 1056,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/tests/test_discriminated_union.py",
+          "line": 970,
+          "end_line": 972,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/tests/test_discriminated_union.py",
+          "line": 1054,
+          "end_line": 1056,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/tests/test_discriminated_union.py",
+      "line": 1426,
+      "end_line": 1427,
+      "prose_kind": "comment",
+      "message": "pydantic/tests/test_discriminated_union.py:1426: TPX003 same explanation in 2 places: pydantic/tests/test_discriminated_union.py:1474 (weakest pydantic/tests/test_discriminated_union.py:1426 ~ pydantic/tests/test_discriminated_union.py:1474, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/tests/test_discriminated_union.py",
+          "line": 1426,
+          "end_line": 1427,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/test_discriminated_union.py",
+          "line": 1474,
+          "end_line": 1475,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/tests/test_discriminated_union.py",
+          "line": 1426,
+          "end_line": 1427,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/tests/test_discriminated_union.py",
+          "line": 1474,
+          "end_line": 1475,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/tests/test_discriminated_union.py",
+      "line": 2251,
+      "end_line": 2252,
+      "prose_kind": "comment",
+      "message": "pydantic/tests/test_discriminated_union.py:2251: TPX003 same explanation in 3 places: pydantic/tests/test_discriminated_union.py:2302, pydantic/tests/test_discriminated_union.py:2359 (weakest pydantic/tests/test_discriminated_union.py:2251 ~ pydantic/tests/test_discriminated_union.py:2302, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/tests/test_discriminated_union.py",
+          "line": 2251,
+          "end_line": 2252,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/test_discriminated_union.py",
+          "line": 2302,
+          "end_line": 2303,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/test_discriminated_union.py",
+          "line": 2359,
+          "end_line": 2360,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/tests/test_discriminated_union.py",
+          "line": 2251,
+          "end_line": 2252,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/tests/test_discriminated_union.py",
+          "line": 2302,
+          "end_line": 2303,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/tests/test_forward_ref.py",
+      "line": 913,
+      "end_line": 914,
+      "prose_kind": "comment",
+      "message": "pydantic/tests/test_forward_ref.py:913: TPX003 same explanation in 2 places: pydantic/tests/test_forward_ref.py:931 (weakest pydantic/tests/test_forward_ref.py:913 ~ pydantic/tests/test_forward_ref.py:931, similarity 0.750)",
+      "locations": [
+        {
+          "path": "pydantic/tests/test_forward_ref.py",
+          "line": 913,
+          "end_line": 914,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/test_forward_ref.py",
+          "line": 931,
+          "end_line": 932,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/tests/test_forward_ref.py",
+          "line": 913,
+          "end_line": 914,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/tests/test_forward_ref.py",
+          "line": 931,
+          "end_line": 932,
+          "prose_kind": "comment"
+        },
+        "similarity": 0.75
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/tests/test_main.py",
+      "line": 3329,
+      "end_line": 3330,
+      "prose_kind": "comment",
+      "message": "pydantic/tests/test_main.py:3329: TPX003 same explanation in 2 places: pydantic/tests/test_main.py:3366 (weakest pydantic/tests/test_main.py:3329 ~ pydantic/tests/test_main.py:3366, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/tests/test_main.py",
+          "line": 3329,
+          "end_line": 3330,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/test_main.py",
+          "line": 3366,
+          "end_line": 3367,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/tests/test_main.py",
+          "line": 3329,
+          "end_line": 3330,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/tests/test_main.py",
+          "line": 3366,
+          "end_line": 3367,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/tests/test_model_validator.py",
+      "line": 152,
+      "end_line": 153,
+      "prose_kind": "comment",
+      "message": "pydantic/tests/test_model_validator.py:152: TPX003 same explanation in 2 places: pydantic/tests/test_model_validator.py:175 (weakest pydantic/tests/test_model_validator.py:152 ~ pydantic/tests/test_model_validator.py:175, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/tests/test_model_validator.py",
+          "line": 152,
+          "end_line": 153,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/test_model_validator.py",
+          "line": 175,
+          "end_line": 176,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/tests/test_model_validator.py",
+          "line": 152,
+          "end_line": 153,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/tests/test_model_validator.py",
+          "line": 175,
+          "end_line": 176,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/tests/test_model_validator.py",
+      "line": 163,
+      "end_line": 164,
+      "prose_kind": "comment",
+      "message": "pydantic/tests/test_model_validator.py:163: TPX003 same explanation in 2 places: pydantic/tests/test_model_validator.py:185 (weakest pydantic/tests/test_model_validator.py:163 ~ pydantic/tests/test_model_validator.py:185, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/tests/test_model_validator.py",
+          "line": 163,
+          "end_line": 164,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/test_model_validator.py",
+          "line": 185,
+          "end_line": 186,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/tests/test_model_validator.py",
+          "line": 163,
+          "end_line": 164,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/tests/test_model_validator.py",
+          "line": 185,
+          "end_line": 186,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/tests/test_type_hints.py",
+      "line": 85,
+      "end_line": 91,
+      "prose_kind": "docstring",
+      "message": "pydantic/tests/test_type_hints.py:85: TPX003 same explanation in 2 places: pydantic/tests/test_type_hints.py:124 (weakest pydantic/tests/test_type_hints.py:85 ~ pydantic/tests/test_type_hints.py:124, similarity 0.830)",
+      "locations": [
+        {
+          "path": "pydantic/tests/test_type_hints.py",
+          "line": 85,
+          "end_line": 91,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/tests/test_type_hints.py",
+          "line": 124,
+          "end_line": 129,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/tests/test_type_hints.py",
+          "line": 85,
+          "end_line": 91,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/tests/test_type_hints.py",
+          "line": 124,
+          "end_line": 129,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8297872340425532
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/tests/test_types.py",
+      "line": 5774,
+      "end_line": 5782,
+      "prose_kind": "comment",
+      "message": "pydantic/tests/test_types.py:5774: TPX003 same explanation in 2 places: pydantic/tests/test_types.py:5834 (weakest pydantic/tests/test_types.py:5774 ~ pydantic/tests/test_types.py:5834, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/tests/test_types.py",
+          "line": 5774,
+          "end_line": 5782,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/test_types.py",
+          "line": 5834,
+          "end_line": 5842,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/tests/test_types.py",
+          "line": 5774,
+          "end_line": 5782,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/tests/test_types.py",
+          "line": 5834,
+          "end_line": 5842,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/tests/test_validators.py",
+      "line": 2391,
+      "end_line": 2393,
+      "prose_kind": "comment",
+      "message": "pydantic/tests/test_validators.py:2391: TPX003 same explanation in 2 places: pydantic/tests/test_validators.py:2469 (weakest pydantic/tests/test_validators.py:2391 ~ pydantic/tests/test_validators.py:2469, similarity 1.000)",
+      "locations": [
+        {
+          "path": "pydantic/tests/test_validators.py",
+          "line": 2391,
+          "end_line": 2393,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/tests/test_validators.py",
+          "line": 2469,
+          "end_line": 2471,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/tests/test_validators.py",
+          "line": 2391,
+          "end_line": 2393,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/tests/test_validators.py",
+          "line": 2469,
+          "end_line": 2471,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "pydantic/tests/test_validators.py",
+      "line": 3031,
+      "end_line": 3034,
+      "prose_kind": "docstring",
+      "message": "pydantic/tests/test_validators.py:3031: TPX003 same explanation in 2 places: pydantic/tests/test_validators.py:3058 (weakest pydantic/tests/test_validators.py:3031 ~ pydantic/tests/test_validators.py:3058, similarity 0.826)",
+      "locations": [
+        {
+          "path": "pydantic/tests/test_validators.py",
+          "line": 3031,
+          "end_line": 3034,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/tests/test_validators.py",
+          "line": 3058,
+          "end_line": 3061,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/tests/test_validators.py",
+          "line": 3031,
+          "end_line": 3034,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/tests/test_validators.py",
+          "line": 3058,
+          "end_line": 3061,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8260869565217391
+      }
+    }
+  ]
+}

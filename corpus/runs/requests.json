@@ -1,0 +1,361 @@
+{
+  "schema_version": "1",
+  "findings": [
+    {
+      "code": "TPX003",
+      "path": "requests/src/requests/adapters.py",
+      "line": 137,
+      "end_line": 150,
+      "prose_kind": "docstring",
+      "message": "requests/src/requests/adapters.py:137: TPX003 same explanation in 2 places: requests/src/requests/adapters.py:643 (weakest requests/src/requests/adapters.py:137 ~ requests/src/requests/adapters.py:643, similarity 0.908)",
+      "locations": [
+        {
+          "path": "requests/src/requests/adapters.py",
+          "line": 137,
+          "end_line": 150,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "requests/src/requests/adapters.py",
+          "line": 643,
+          "end_line": 657,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "requests/src/requests/adapters.py",
+          "line": 137,
+          "end_line": 150,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "requests/src/requests/adapters.py",
+          "line": 643,
+          "end_line": 657,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.907563025210084
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "requests/src/requests/adapters.py",
+      "line": 406,
+      "end_line": 452,
+      "prose_kind": "docstring",
+      "message": "requests/src/requests/adapters.py:406: TPX002 docstring is 356 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 356,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "requests/src/requests/api.py",
+      "line": 27,
+      "end_line": 65,
+      "prose_kind": "docstring",
+      "message": "requests/src/requests/api.py:27: TPX002 docstring is 357 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 357,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "requests/src/requests/api.py",
+      "line": 123,
+      "end_line": 132,
+      "prose_kind": "docstring",
+      "message": "requests/src/requests/api.py:123: TPX003 same explanation in 3 places: requests/src/requests/api.py:140, requests/src/requests/api.py:157 (weakest requests/src/requests/api.py:123 ~ requests/src/requests/api.py:140, similarity 0.898)",
+      "locations": [
+        {
+          "path": "requests/src/requests/api.py",
+          "line": 123,
+          "end_line": 132,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "requests/src/requests/api.py",
+          "line": 140,
+          "end_line": 149,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "requests/src/requests/api.py",
+          "line": 157,
+          "end_line": 166,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "requests/src/requests/api.py",
+          "line": 123,
+          "end_line": 132,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "requests/src/requests/api.py",
+          "line": 140,
+          "end_line": 149,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8983050847457628
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "requests/src/requests/models.py",
+      "line": 838,
+      "end_line": 844,
+      "prose_kind": "docstring",
+      "message": "requests/src/requests/models.py:838: TPX003 same explanation in 3 places: requests/src/requests/models.py:848, requests/src/requests/models.py:863 (weakest requests/src/requests/models.py:838 ~ requests/src/requests/models.py:863, similarity 0.889)",
+      "locations": [
+        {
+          "path": "requests/src/requests/models.py",
+          "line": 838,
+          "end_line": 844,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "requests/src/requests/models.py",
+          "line": 848,
+          "end_line": 854,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "requests/src/requests/models.py",
+          "line": 863,
+          "end_line": 869,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "requests/src/requests/models.py",
+          "line": 838,
+          "end_line": 844,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "requests/src/requests/models.py",
+          "line": 863,
+          "end_line": 869,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8888888888888888
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "requests/src/requests/sessions.py",
+      "line": 576,
+      "end_line": 618,
+      "prose_kind": "docstring",
+      "message": "requests/src/requests/sessions.py:576: TPX002 docstring is 338 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 338,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "requests/src/requests/sessions.py",
+      "line": 674,
+      "end_line": 679,
+      "prose_kind": "docstring",
+      "message": "requests/src/requests/sessions.py:674: TPX003 same explanation in 3 places: requests/src/requests/sessions.py:685, requests/src/requests/sessions.py:743 (weakest requests/src/requests/sessions.py:674 ~ requests/src/requests/sessions.py:685, similarity 0.793)",
+      "locations": [
+        {
+          "path": "requests/src/requests/sessions.py",
+          "line": 674,
+          "end_line": 679,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "requests/src/requests/sessions.py",
+          "line": 685,
+          "end_line": 690,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "requests/src/requests/sessions.py",
+          "line": 743,
+          "end_line": 748,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "requests/src/requests/sessions.py",
+          "line": 674,
+          "end_line": 679,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "requests/src/requests/sessions.py",
+          "line": 685,
+          "end_line": 690,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.7931034482758621
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "requests/src/requests/sessions.py",
+      "line": 702,
+      "end_line": 710,
+      "prose_kind": "docstring",
+      "message": "requests/src/requests/sessions.py:702: TPX003 same explanation in 3 places: requests/src/requests/sessions.py:717, requests/src/requests/sessions.py:731 (weakest requests/src/requests/sessions.py:702 ~ requests/src/requests/sessions.py:717, similarity 0.800)",
+      "locations": [
+        {
+          "path": "requests/src/requests/sessions.py",
+          "line": 702,
+          "end_line": 710,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "requests/src/requests/sessions.py",
+          "line": 717,
+          "end_line": 724,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "requests/src/requests/sessions.py",
+          "line": 731,
+          "end_line": 738,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "requests/src/requests/sessions.py",
+          "line": 702,
+          "end_line": 710,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "requests/src/requests/sessions.py",
+          "line": 717,
+          "end_line": 724,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "requests/tests/test_requests.py",
+      "line": 2252,
+      "end_line": 2254,
+      "prose_kind": "docstring",
+      "message": "requests/tests/test_requests.py:2252: TPX003 same explanation in 2 places: requests/tests/test_requests.py:2264 (weakest requests/tests/test_requests.py:2252 ~ requests/tests/test_requests.py:2264, similarity 1.000)",
+      "locations": [
+        {
+          "path": "requests/tests/test_requests.py",
+          "line": 2252,
+          "end_line": 2254,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "requests/tests/test_requests.py",
+          "line": 2264,
+          "end_line": 2266,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "requests/tests/test_requests.py",
+          "line": 2252,
+          "end_line": 2254,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "requests/tests/test_requests.py",
+          "line": 2264,
+          "end_line": 2266,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "requests/tests/test_testserver.py",
+      "line": 153,
+      "end_line": 154,
+      "prose_kind": "comment",
+      "message": "requests/tests/test_testserver.py:153: TPX003 same explanation in 2 places: requests/tests/test_testserver.py:164 (weakest requests/tests/test_testserver.py:153 ~ requests/tests/test_testserver.py:164, similarity 1.000)",
+      "locations": [
+        {
+          "path": "requests/tests/test_testserver.py",
+          "line": 153,
+          "end_line": 154,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "requests/tests/test_testserver.py",
+          "line": 164,
+          "end_line": 165,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "requests/tests/test_testserver.py",
+          "line": 153,
+          "end_line": 154,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "requests/tests/test_testserver.py",
+          "line": 164,
+          "end_line": 165,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "requests/tests/test_utils.py",
+      "line": 760,
+      "end_line": 762,
+      "prose_kind": "docstring",
+      "message": "requests/tests/test_utils.py:760: TPX003 same explanation in 3 places: requests/tests/test_utils.py:887, requests/tests/test_utils.py:925 (weakest requests/tests/test_utils.py:887 ~ requests/tests/test_utils.py:925, similarity 0.750)",
+      "locations": [
+        {
+          "path": "requests/tests/test_utils.py",
+          "line": 760,
+          "end_line": 762,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "requests/tests/test_utils.py",
+          "line": 887,
+          "end_line": 889,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "requests/tests/test_utils.py",
+          "line": 925,
+          "end_line": 927,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "requests/tests/test_utils.py",
+          "line": 887,
+          "end_line": 889,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "requests/tests/test_utils.py",
+          "line": 925,
+          "end_line": 927,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.75
+      }
+    }
+  ]
+}

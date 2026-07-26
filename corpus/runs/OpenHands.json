@@ -1,0 +1,2638 @@
+{
+  "schema_version": "1",
+  "findings": [
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/migrations/env.py",
+      "line": 5,
+      "end_line": 6,
+      "prose_kind": "comment",
+      "message": "OpenHands/enterprise/migrations/env.py:5: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/app_lifespan/alembic/env.py:7 (weakest OpenHands/enterprise/migrations/env.py:5 ~ OpenHands/openhands/app_server/app_lifespan/alembic/env.py:7, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/migrations/env.py",
+          "line": 5,
+          "end_line": 6,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/app_lifespan/alembic/env.py",
+          "line": 7,
+          "end_line": 8,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/migrations/env.py",
+          "line": 5,
+          "end_line": 6,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/app_lifespan/alembic/env.py",
+          "line": 7,
+          "end_line": 8,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/migrations/env.py",
+      "line": 86,
+      "end_line": 87,
+      "prose_kind": "comment",
+      "message": "OpenHands/enterprise/migrations/env.py:86: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/app_lifespan/alembic/env.py:36 (weakest OpenHands/enterprise/migrations/env.py:86 ~ OpenHands/openhands/app_server/app_lifespan/alembic/env.py:36, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/migrations/env.py",
+          "line": 86,
+          "end_line": 87,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/app_lifespan/alembic/env.py",
+          "line": 36,
+          "end_line": 37,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/migrations/env.py",
+          "line": 86,
+          "end_line": 87,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/app_lifespan/alembic/env.py",
+          "line": 36,
+          "end_line": 37,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/migrations/env.py",
+      "line": 90,
+      "end_line": 91,
+      "prose_kind": "comment",
+      "message": "OpenHands/enterprise/migrations/env.py:90: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/app_lifespan/alembic/env.py:40 (weakest OpenHands/enterprise/migrations/env.py:90 ~ OpenHands/openhands/app_server/app_lifespan/alembic/env.py:40, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/migrations/env.py",
+          "line": 90,
+          "end_line": 91,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/app_lifespan/alembic/env.py",
+          "line": 40,
+          "end_line": 41,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/migrations/env.py",
+          "line": 90,
+          "end_line": 91,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/app_lifespan/alembic/env.py",
+          "line": 40,
+          "end_line": 41,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/migrations/env.py",
+      "line": 103,
+      "end_line": 112,
+      "prose_kind": "docstring",
+      "message": "OpenHands/enterprise/migrations/env.py:103: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/app_lifespan/alembic/env.py:60 (weakest OpenHands/enterprise/migrations/env.py:103 ~ OpenHands/openhands/app_server/app_lifespan/alembic/env.py:60, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/migrations/env.py",
+          "line": 103,
+          "end_line": 112,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/app_lifespan/alembic/env.py",
+          "line": 60,
+          "end_line": 70,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/migrations/env.py",
+          "line": 103,
+          "end_line": 112,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/app_lifespan/alembic/env.py",
+          "line": 60,
+          "end_line": 70,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/migrations/env.py",
+      "line": 126,
+      "end_line": 130,
+      "prose_kind": "docstring",
+      "message": "OpenHands/enterprise/migrations/env.py:126: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/app_lifespan/alembic/env.py:96 (weakest OpenHands/enterprise/migrations/env.py:126 ~ OpenHands/openhands/app_server/app_lifespan/alembic/env.py:96, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/migrations/env.py",
+          "line": 126,
+          "end_line": 130,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/app_lifespan/alembic/env.py",
+          "line": 96,
+          "end_line": 101,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/migrations/env.py",
+          "line": 126,
+          "end_line": 130,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/app_lifespan/alembic/env.py",
+          "line": 96,
+          "end_line": 101,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/migrations/versions/002_create_saas_settings_table.py",
+      "line": 22,
+      "end_line": 23,
+      "prose_kind": "comment",
+      "message": "OpenHands/enterprise/migrations/versions/002_create_saas_settings_table.py:22: TPX003 same explanation in 2 places: OpenHands/enterprise/migrations/versions/027_create_gitlab_webhook_table.py:22 (weakest OpenHands/enterprise/migrations/versions/002_create_saas_settings_table.py:22 ~ OpenHands/enterprise/migrations/versions/027_create_gitlab_webhook_table.py:22, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/migrations/versions/002_create_saas_settings_table.py",
+          "line": 22,
+          "end_line": 23,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "OpenHands/enterprise/migrations/versions/027_create_gitlab_webhook_table.py",
+          "line": 22,
+          "end_line": 23,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/migrations/versions/002_create_saas_settings_table.py",
+          "line": 22,
+          "end_line": 23,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "OpenHands/enterprise/migrations/versions/027_create_gitlab_webhook_table.py",
+          "line": 22,
+          "end_line": 23,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/migrations/versions/024_update_enable_default_condenser_default.py",
+      "line": 71,
+      "end_line": 72,
+      "prose_kind": "comment",
+      "message": "OpenHands/enterprise/migrations/versions/024_update_enable_default_condenser_default.py:71: TPX003 same explanation in 2 places: OpenHands/enterprise/migrations/versions/057_enable_solvability_analysis_for_all_users.py:45 (weakest OpenHands/enterprise/migrations/versions/024_update_enable_default_condenser_default.py:71 ~ OpenHands/enterprise/migrations/versions/057_enable_solvability_analysis_for_all_users.py:45, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/migrations/versions/024_update_enable_default_condenser_default.py",
+          "line": 71,
+          "end_line": 72,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "OpenHands/enterprise/migrations/versions/057_enable_solvability_analysis_for_all_users.py",
+          "line": 45,
+          "end_line": 46,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/migrations/versions/024_update_enable_default_condenser_default.py",
+          "line": 71,
+          "end_line": 72,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "OpenHands/enterprise/migrations/versions/057_enable_solvability_analysis_for_all_users.py",
+          "line": 45,
+          "end_line": 46,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/migrations/versions/101_add_pending_messages_table.py",
+      "line": 22,
+      "end_line": 26,
+      "prose_kind": "docstring",
+      "message": "OpenHands/enterprise/migrations/versions/101_add_pending_messages_table.py:22: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/app_lifespan/alembic/versions/007.py:22 (weakest OpenHands/enterprise/migrations/versions/101_add_pending_messages_table.py:22 ~ OpenHands/openhands/app_server/app_lifespan/alembic/versions/007.py:22, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/migrations/versions/101_add_pending_messages_table.py",
+          "line": 22,
+          "end_line": 26,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/app_lifespan/alembic/versions/007.py",
+          "line": 22,
+          "end_line": 26,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/migrations/versions/101_add_pending_messages_table.py",
+          "line": 22,
+          "end_line": 26,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/app_lifespan/alembic/versions/007.py",
+          "line": 22,
+          "end_line": 26,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "OpenHands/enterprise/migrations/versions/132_add_agent_profiles.py",
+      "line": 1,
+      "end_line": 26,
+      "prose_kind": "docstring",
+      "message": "OpenHands/enterprise/migrations/versions/132_add_agent_profiles.py:1: TPX002 docstring is 201 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 201,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/scripts/seed_conversation_data.py",
+      "line": 276,
+      "end_line": 279,
+      "prose_kind": "docstring",
+      "message": "OpenHands/enterprise/scripts/seed_conversation_data.py:276: TPX003 same explanation in 2 places: OpenHands/enterprise/scripts/setup_and_seed.py:362 (weakest OpenHands/enterprise/scripts/seed_conversation_data.py:276 ~ OpenHands/enterprise/scripts/setup_and_seed.py:362, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/scripts/seed_conversation_data.py",
+          "line": 276,
+          "end_line": 279,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/enterprise/scripts/setup_and_seed.py",
+          "line": 362,
+          "end_line": 365,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/scripts/seed_conversation_data.py",
+          "line": 276,
+          "end_line": 279,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/enterprise/scripts/setup_and_seed.py",
+          "line": 362,
+          "end_line": 365,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "OpenHands/enterprise/server/auth/saas_user_auth.py",
+      "line": 182,
+      "end_line": 218,
+      "prose_kind": "docstring",
+      "message": "OpenHands/enterprise/server/auth/saas_user_auth.py:182: TPX002 docstring is 275 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 275,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "OpenHands/enterprise/server/routes/agent_profiles.py",
+      "line": 1,
+      "end_line": 25,
+      "prose_kind": "docstring",
+      "message": "OpenHands/enterprise/server/routes/agent_profiles.py:1: TPX002 docstring is 205 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 205,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/server/routes/auth.py",
+      "line": 637,
+      "end_line": 639,
+      "prose_kind": "comment",
+      "message": "OpenHands/enterprise/server/routes/auth.py:637: TPX003 same explanation in 2 places: OpenHands/enterprise/server/routes/auth.py:958 (weakest OpenHands/enterprise/server/routes/auth.py:637 ~ OpenHands/enterprise/server/routes/auth.py:958, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/server/routes/auth.py",
+          "line": 637,
+          "end_line": 639,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "OpenHands/enterprise/server/routes/auth.py",
+          "line": 958,
+          "end_line": 960,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/server/routes/auth.py",
+          "line": 637,
+          "end_line": 639,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "OpenHands/enterprise/server/routes/auth.py",
+          "line": 958,
+          "end_line": 960,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "OpenHands/enterprise/server/routes/auth.py",
+      "line": 841,
+      "end_line": 870,
+      "prose_kind": "docstring",
+      "message": "OpenHands/enterprise/server/routes/auth.py:841: TPX002 docstring is 219 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 219,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/server/routes/integration/jira.py",
+      "line": 223,
+      "end_line": 224,
+      "prose_kind": "comment",
+      "message": "OpenHands/enterprise/server/routes/integration/jira.py:223: TPX003 same explanation in 2 places: OpenHands/enterprise/server/routes/integration/jira_dc.py:339 (weakest OpenHands/enterprise/server/routes/integration/jira.py:223 ~ OpenHands/enterprise/server/routes/integration/jira_dc.py:339, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/server/routes/integration/jira.py",
+          "line": 223,
+          "end_line": 224,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "OpenHands/enterprise/server/routes/integration/jira_dc.py",
+          "line": 339,
+          "end_line": 340,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/server/routes/integration/jira.py",
+          "line": 223,
+          "end_line": 224,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "OpenHands/enterprise/server/routes/integration/jira_dc.py",
+          "line": 339,
+          "end_line": 340,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/server/routes/org_profiles.py",
+      "line": 103,
+      "end_line": 104,
+      "prose_kind": "comment",
+      "message": "OpenHands/enterprise/server/routes/org_profiles.py:103: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/settings/settings_router.py:488 (weakest OpenHands/enterprise/server/routes/org_profiles.py:103 ~ OpenHands/openhands/app_server/settings/settings_router.py:488, similarity 0.885)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/server/routes/org_profiles.py",
+          "line": 103,
+          "end_line": 104,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/settings/settings_router.py",
+          "line": 488,
+          "end_line": 489,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/server/routes/org_profiles.py",
+          "line": 103,
+          "end_line": 104,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/settings/settings_router.py",
+          "line": 488,
+          "end_line": 489,
+          "prose_kind": "comment"
+        },
+        "similarity": 0.8846153846153846
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/server/routes/org_profiles.py",
+      "line": 255,
+      "end_line": 256,
+      "prose_kind": "comment",
+      "message": "OpenHands/enterprise/server/routes/org_profiles.py:255: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/settings/settings_router.py:583 (weakest OpenHands/enterprise/server/routes/org_profiles.py:255 ~ OpenHands/openhands/app_server/settings/settings_router.py:583, similarity 0.800)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/server/routes/org_profiles.py",
+          "line": 255,
+          "end_line": 256,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/settings/settings_router.py",
+          "line": 583,
+          "end_line": 584,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/server/routes/org_profiles.py",
+          "line": 255,
+          "end_line": 256,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/settings/settings_router.py",
+          "line": 583,
+          "end_line": 584,
+          "prose_kind": "comment"
+        },
+        "similarity": 0.8
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "OpenHands/enterprise/server/routes/user_provisioning.py",
+      "line": 1,
+      "end_line": 71,
+      "prose_kind": "docstring",
+      "message": "OpenHands/enterprise/server/routes/user_provisioning.py:1: TPX002 docstring is 604 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 604,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "OpenHands/enterprise/server/routes/user_provisioning.py",
+      "line": 512,
+      "end_line": 555,
+      "prose_kind": "docstring",
+      "message": "OpenHands/enterprise/server/routes/user_provisioning.py:512: TPX002 docstring is 322 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 322,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/server/services/email_service.py",
+      "line": 52,
+      "end_line": 56,
+      "prose_kind": "docstring",
+      "message": "OpenHands/enterprise/server/services/email_service.py:52: TPX003 same explanation in 2 places: OpenHands/enterprise/server/services/smtp_email_service.py:117 (weakest OpenHands/enterprise/server/services/email_service.py:52 ~ OpenHands/enterprise/server/services/smtp_email_service.py:117, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/server/services/email_service.py",
+          "line": 52,
+          "end_line": 56,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/enterprise/server/services/smtp_email_service.py",
+          "line": 117,
+          "end_line": 121,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/server/services/email_service.py",
+          "line": 52,
+          "end_line": 56,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/enterprise/server/services/smtp_email_service.py",
+          "line": 117,
+          "end_line": 121,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/server/services/email_service.py",
+      "line": 76,
+      "end_line": 85,
+      "prose_kind": "docstring",
+      "message": "OpenHands/enterprise/server/services/email_service.py:76: TPX003 same explanation in 2 places: OpenHands/enterprise/server/services/smtp_email_service.py:141 (weakest OpenHands/enterprise/server/services/email_service.py:76 ~ OpenHands/enterprise/server/services/smtp_email_service.py:141, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/server/services/email_service.py",
+          "line": 76,
+          "end_line": 85,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/enterprise/server/services/smtp_email_service.py",
+          "line": 141,
+          "end_line": 150,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/server/services/email_service.py",
+          "line": 76,
+          "end_line": 85,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/enterprise/server/services/smtp_email_service.py",
+          "line": 141,
+          "end_line": 150,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/server/sharing/aws_shared_event_service.py",
+      "line": 159,
+      "end_line": 160,
+      "prose_kind": "comment",
+      "message": "OpenHands/enterprise/server/sharing/aws_shared_event_service.py:159: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/event/aws_event_service.py:116 (weakest OpenHands/enterprise/server/sharing/aws_shared_event_service.py:159 ~ OpenHands/openhands/app_server/event/aws_event_service.py:116, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/server/sharing/aws_shared_event_service.py",
+          "line": 159,
+          "end_line": 160,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/event/aws_event_service.py",
+          "line": 116,
+          "end_line": 117,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/server/sharing/aws_shared_event_service.py",
+          "line": 159,
+          "end_line": 160,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/event/aws_event_service.py",
+          "line": 116,
+          "end_line": 117,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/server/sharing/filesystem_shared_event_service.py",
+      "line": 1,
+      "end_line": 7,
+      "prose_kind": "docstring",
+      "message": "OpenHands/enterprise/server/sharing/filesystem_shared_event_service.py:1: TPX003 same explanation in 2 places: OpenHands/enterprise/server/sharing/google_cloud_shared_event_service.py:1 (weakest OpenHands/enterprise/server/sharing/filesystem_shared_event_service.py:1 ~ OpenHands/enterprise/server/sharing/google_cloud_shared_event_service.py:1, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/server/sharing/filesystem_shared_event_service.py",
+          "line": 1,
+          "end_line": 7,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/enterprise/server/sharing/google_cloud_shared_event_service.py",
+          "line": 1,
+          "end_line": 7,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/server/sharing/filesystem_shared_event_service.py",
+          "line": 1,
+          "end_line": 7,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/enterprise/server/sharing/google_cloud_shared_event_service.py",
+          "line": 1,
+          "end_line": 7,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/server/sharing/sql_shared_conversation_info_service.py",
+      "line": 151,
+      "end_line": 153,
+      "prose_kind": "docstring",
+      "message": "OpenHands/enterprise/server/sharing/sql_shared_conversation_info_service.py:151: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/app_conversation/sql_app_conversation_info_service.py:819 (weakest OpenHands/enterprise/server/sharing/sql_shared_conversation_info_service.py:151 ~ OpenHands/openhands/app_server/app_conversation/sql_app_conversation_info_service.py:819, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/server/sharing/sql_shared_conversation_info_service.py",
+          "line": 151,
+          "end_line": 153,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/app_conversation/sql_app_conversation_info_service.py",
+          "line": 819,
+          "end_line": 821,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/server/sharing/sql_shared_conversation_info_service.py",
+          "line": 151,
+          "end_line": 153,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/app_conversation/sql_app_conversation_info_service.py",
+          "line": 819,
+          "end_line": 821,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/server/sharing/sql_shared_conversation_info_service.py",
+      "line": 155,
+      "end_line": 157,
+      "prose_kind": "comment",
+      "message": "OpenHands/enterprise/server/sharing/sql_shared_conversation_info_service.py:155: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/app_conversation/sql_app_conversation_info_service.py:823 (weakest OpenHands/enterprise/server/sharing/sql_shared_conversation_info_service.py:155 ~ OpenHands/openhands/app_server/app_conversation/sql_app_conversation_info_service.py:823, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/server/sharing/sql_shared_conversation_info_service.py",
+          "line": 155,
+          "end_line": 157,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/app_conversation/sql_app_conversation_info_service.py",
+          "line": 823,
+          "end_line": 825,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/server/sharing/sql_shared_conversation_info_service.py",
+          "line": 155,
+          "end_line": 157,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/app_conversation/sql_app_conversation_info_service.py",
+          "line": 823,
+          "end_line": 825,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "OpenHands/enterprise/storage/auth_token_store.py",
+      "line": 109,
+      "end_line": 137,
+      "prose_kind": "docstring",
+      "message": "OpenHands/enterprise/storage/auth_token_store.py:109: TPX002 docstring is 211 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 211,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/storage/gitlab_webhook_store.py",
+      "line": 79,
+      "end_line": 87,
+      "prose_kind": "docstring",
+      "message": "OpenHands/enterprise/storage/gitlab_webhook_store.py:79: TPX003 same explanation in 2 places: OpenHands/enterprise/storage/gitlab_webhook_store.py:103 (weakest OpenHands/enterprise/storage/gitlab_webhook_store.py:79 ~ OpenHands/enterprise/storage/gitlab_webhook_store.py:103, similarity 0.808)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/storage/gitlab_webhook_store.py",
+          "line": 79,
+          "end_line": 87,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/enterprise/storage/gitlab_webhook_store.py",
+          "line": 103,
+          "end_line": 111,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/storage/gitlab_webhook_store.py",
+          "line": 79,
+          "end_line": 87,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/enterprise/storage/gitlab_webhook_store.py",
+          "line": 103,
+          "end_line": 111,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8076923076923077
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/storage/openhands_pr_store.py",
+      "line": 124,
+      "end_line": 132,
+      "prose_kind": "docstring",
+      "message": "OpenHands/enterprise/storage/openhands_pr_store.py:124: TPX003 same explanation in 2 places: OpenHands/enterprise/sync/enrich_user_interaction_data.py:17 (weakest OpenHands/enterprise/storage/openhands_pr_store.py:124 ~ OpenHands/enterprise/sync/enrich_user_interaction_data.py:17, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/storage/openhands_pr_store.py",
+          "line": 124,
+          "end_line": 132,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/enterprise/sync/enrich_user_interaction_data.py",
+          "line": 17,
+          "end_line": 25,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/storage/openhands_pr_store.py",
+          "line": 124,
+          "end_line": 132,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/enterprise/sync/enrich_user_interaction_data.py",
+          "line": 17,
+          "end_line": 25,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/storage/org_service.py",
+      "line": 659,
+      "end_line": 669,
+      "prose_kind": "docstring",
+      "message": "OpenHands/enterprise/storage/org_service.py:659: TPX003 same explanation in 2 places: OpenHands/enterprise/storage/org_store.py:283 (weakest OpenHands/enterprise/storage/org_service.py:659 ~ OpenHands/enterprise/storage/org_store.py:283, similarity 0.776)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/storage/org_service.py",
+          "line": 659,
+          "end_line": 669,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/enterprise/storage/org_store.py",
+          "line": 283,
+          "end_line": 292,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/storage/org_service.py",
+          "line": 659,
+          "end_line": 669,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/enterprise/storage/org_store.py",
+          "line": 283,
+          "end_line": 292,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.7755102040816326
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "OpenHands/enterprise/storage/org_store.py",
+      "line": 524,
+      "end_line": 560,
+      "prose_kind": "docstring",
+      "message": "OpenHands/enterprise/storage/org_store.py:524: TPX002 docstring is 284 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 284,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX001",
+      "path": "OpenHands/enterprise/storage/org_store.py",
+      "line": 569,
+      "end_line": 592,
+      "prose_kind": "comment",
+      "message": "OpenHands/enterprise/storage/org_store.py:569: TPX001 comment is 179 words long, over the 150-word limit — shorten it, or mark it with `# tooprolix: noqa TPX001` on the line above it",
+      "words": 179,
+      "max_volume": 150
+    },
+    {
+      "code": "TPX001",
+      "path": "OpenHands/enterprise/storage/org_store.py",
+      "line": 682,
+      "end_line": 707,
+      "prose_kind": "comment",
+      "message": "OpenHands/enterprise/storage/org_store.py:682: TPX001 comment is 213 words long, over the 150-word limit — shorten it, or mark it with `# tooprolix: noqa TPX001` on the line above it",
+      "words": 213,
+      "max_volume": 150
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/storage/saas_secrets_store.py",
+      "line": 133,
+      "end_line": 144,
+      "prose_kind": "docstring",
+      "message": "OpenHands/enterprise/storage/saas_secrets_store.py:133: TPX003 same explanation in 2 places: OpenHands/enterprise/storage/saas_settings_store.py:761 (weakest OpenHands/enterprise/storage/saas_secrets_store.py:133 ~ OpenHands/enterprise/storage/saas_settings_store.py:761, similarity 0.785)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/storage/saas_secrets_store.py",
+          "line": 133,
+          "end_line": 144,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/enterprise/storage/saas_settings_store.py",
+          "line": 761,
+          "end_line": 771,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/storage/saas_secrets_store.py",
+          "line": 133,
+          "end_line": 144,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/enterprise/storage/saas_settings_store.py",
+          "line": 761,
+          "end_line": 771,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.7846153846153846
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/tests/unit/server/routes/test_jira_dc_integration_routes.py",
+      "line": 35,
+      "end_line": 47,
+      "prose_kind": "docstring",
+      "message": "OpenHands/enterprise/tests/unit/server/routes/test_jira_dc_integration_routes.py:35: TPX003 same explanation in 2 places: OpenHands/enterprise/tests/unit/server/routes/test_jira_integration_routes.py:30 (weakest OpenHands/enterprise/tests/unit/server/routes/test_jira_dc_integration_routes.py:35 ~ OpenHands/enterprise/tests/unit/server/routes/test_jira_integration_routes.py:30, similarity 0.900)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/tests/unit/server/routes/test_jira_dc_integration_routes.py",
+          "line": 35,
+          "end_line": 47,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/enterprise/tests/unit/server/routes/test_jira_integration_routes.py",
+          "line": 30,
+          "end_line": 42,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/tests/unit/server/routes/test_jira_dc_integration_routes.py",
+          "line": 35,
+          "end_line": 47,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/enterprise/tests/unit/server/routes/test_jira_integration_routes.py",
+          "line": 30,
+          "end_line": 42,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.9
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/tests/unit/server/routes/test_orgs.py",
+      "line": 1553,
+      "end_line": 1557,
+      "prose_kind": "docstring",
+      "message": "OpenHands/enterprise/tests/unit/server/routes/test_orgs.py:1553: TPX003 same explanation in 2 places: OpenHands/enterprise/tests/unit/server/routes/test_orgs.py:1900 (weakest OpenHands/enterprise/tests/unit/server/routes/test_orgs.py:1553 ~ OpenHands/enterprise/tests/unit/server/routes/test_orgs.py:1900, similarity 0.750)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/tests/unit/server/routes/test_orgs.py",
+          "line": 1553,
+          "end_line": 1557,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/enterprise/tests/unit/server/routes/test_orgs.py",
+          "line": 1900,
+          "end_line": 1904,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/tests/unit/server/routes/test_orgs.py",
+          "line": 1553,
+          "end_line": 1557,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/enterprise/tests/unit/server/routes/test_orgs.py",
+          "line": 1900,
+          "end_line": 1904,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.75
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/tests/unit/server/routes/test_orgs.py",
+      "line": 2260,
+      "end_line": 2264,
+      "prose_kind": "docstring",
+      "message": "OpenHands/enterprise/tests/unit/server/routes/test_orgs.py:2260: TPX003 same explanation in 2 places: OpenHands/enterprise/tests/unit/server/routes/test_orgs.py:2724 (weakest OpenHands/enterprise/tests/unit/server/routes/test_orgs.py:2260 ~ OpenHands/enterprise/tests/unit/server/routes/test_orgs.py:2724, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/tests/unit/server/routes/test_orgs.py",
+          "line": 2260,
+          "end_line": 2264,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/enterprise/tests/unit/server/routes/test_orgs.py",
+          "line": 2724,
+          "end_line": 2728,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/tests/unit/server/routes/test_orgs.py",
+          "line": 2260,
+          "end_line": 2264,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/enterprise/tests/unit/server/routes/test_orgs.py",
+          "line": 2724,
+          "end_line": 2728,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/tests/unit/server/routes/test_user_app_settings.py",
+      "line": 111,
+      "end_line": 115,
+      "prose_kind": "docstring",
+      "message": "OpenHands/enterprise/tests/unit/server/routes/test_user_app_settings.py:111: TPX003 same explanation in 2 places: OpenHands/enterprise/tests/unit/server/routes/test_user_app_settings.py:188 (weakest OpenHands/enterprise/tests/unit/server/routes/test_user_app_settings.py:111 ~ OpenHands/enterprise/tests/unit/server/routes/test_user_app_settings.py:188, similarity 0.760)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/tests/unit/server/routes/test_user_app_settings.py",
+          "line": 111,
+          "end_line": 115,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/enterprise/tests/unit/server/routes/test_user_app_settings.py",
+          "line": 188,
+          "end_line": 192,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/tests/unit/server/routes/test_user_app_settings.py",
+          "line": 111,
+          "end_line": 115,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/enterprise/tests/unit/server/routes/test_user_app_settings.py",
+          "line": 188,
+          "end_line": 192,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.76
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/tests/unit/storage/test_saas_sql_app_conversation_info_service.py",
+      "line": 1146,
+      "end_line": 1148,
+      "prose_kind": "comment",
+      "message": "OpenHands/enterprise/tests/unit/storage/test_saas_sql_app_conversation_info_service.py:1146: TPX003 same explanation in 3 places: OpenHands/enterprise/tests/unit/storage/test_saas_sql_app_conversation_info_service.py:1236, OpenHands/enterprise/tests/unit/storage/test_saas_sql_app_conversation_info_service.py:1356 (weakest OpenHands/enterprise/tests/unit/storage/test_saas_sql_app_conversation_info_service.py:1146 ~ OpenHands/enterprise/tests/unit/storage/test_saas_sql_app_conversation_info_service.py:1236, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/tests/unit/storage/test_saas_sql_app_conversation_info_service.py",
+          "line": 1146,
+          "end_line": 1148,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "OpenHands/enterprise/tests/unit/storage/test_saas_sql_app_conversation_info_service.py",
+          "line": 1236,
+          "end_line": 1238,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "OpenHands/enterprise/tests/unit/storage/test_saas_sql_app_conversation_info_service.py",
+          "line": 1356,
+          "end_line": 1358,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/tests/unit/storage/test_saas_sql_app_conversation_info_service.py",
+          "line": 1146,
+          "end_line": 1148,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "OpenHands/enterprise/tests/unit/storage/test_saas_sql_app_conversation_info_service.py",
+          "line": 1236,
+          "end_line": 1238,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/tests/unit/test_authorization.py",
+      "line": 1259,
+      "end_line": 1263,
+      "prose_kind": "docstring",
+      "message": "OpenHands/enterprise/tests/unit/test_authorization.py:1259: TPX003 same explanation in 2 places: OpenHands/enterprise/tests/unit/test_authorization.py:1293 (weakest OpenHands/enterprise/tests/unit/test_authorization.py:1259 ~ OpenHands/enterprise/tests/unit/test_authorization.py:1293, similarity 0.760)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/tests/unit/test_authorization.py",
+          "line": 1259,
+          "end_line": 1263,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/enterprise/tests/unit/test_authorization.py",
+          "line": 1293,
+          "end_line": 1297,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/tests/unit/test_authorization.py",
+          "line": 1259,
+          "end_line": 1263,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/enterprise/tests/unit/test_authorization.py",
+          "line": 1293,
+          "end_line": 1297,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.76
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/tests/unit/test_lite_llm_manager.py",
+      "line": 1836,
+      "end_line": 1837,
+      "prose_kind": "comment",
+      "message": "OpenHands/enterprise/tests/unit/test_lite_llm_manager.py:1836: TPX003 same explanation in 2 places: OpenHands/enterprise/tests/unit/test_lite_llm_manager.py:1862 (weakest OpenHands/enterprise/tests/unit/test_lite_llm_manager.py:1836 ~ OpenHands/enterprise/tests/unit/test_lite_llm_manager.py:1862, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/tests/unit/test_lite_llm_manager.py",
+          "line": 1836,
+          "end_line": 1837,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "OpenHands/enterprise/tests/unit/test_lite_llm_manager.py",
+          "line": 1862,
+          "end_line": 1863,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/tests/unit/test_lite_llm_manager.py",
+          "line": 1836,
+          "end_line": 1837,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "OpenHands/enterprise/tests/unit/test_lite_llm_manager.py",
+          "line": 1862,
+          "end_line": 1863,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/tests/unit/test_org_service.py",
+      "line": 339,
+      "end_line": 343,
+      "prose_kind": "docstring",
+      "message": "OpenHands/enterprise/tests/unit/test_org_service.py:339: TPX003 same explanation in 2 places: OpenHands/enterprise/tests/unit/test_org_service.py:398 (weakest OpenHands/enterprise/tests/unit/test_org_service.py:339 ~ OpenHands/enterprise/tests/unit/test_org_service.py:398, similarity 0.760)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/tests/unit/test_org_service.py",
+          "line": 339,
+          "end_line": 343,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/enterprise/tests/unit/test_org_service.py",
+          "line": 398,
+          "end_line": 402,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/tests/unit/test_org_service.py",
+          "line": 339,
+          "end_line": 343,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/enterprise/tests/unit/test_org_service.py",
+          "line": 398,
+          "end_line": 402,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.76
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/tests/unit/test_org_service.py",
+      "line": 847,
+      "end_line": 851,
+      "prose_kind": "docstring",
+      "message": "OpenHands/enterprise/tests/unit/test_org_service.py:847: TPX003 same explanation in 2 places: OpenHands/enterprise/tests/unit/test_org_store.py:995 (weakest OpenHands/enterprise/tests/unit/test_org_service.py:847 ~ OpenHands/enterprise/tests/unit/test_org_store.py:995, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/tests/unit/test_org_service.py",
+          "line": 847,
+          "end_line": 851,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/enterprise/tests/unit/test_org_store.py",
+          "line": 995,
+          "end_line": 999,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/tests/unit/test_org_service.py",
+          "line": 847,
+          "end_line": 851,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/enterprise/tests/unit/test_org_store.py",
+          "line": 995,
+          "end_line": 999,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/tests/unit/test_org_service.py",
+      "line": 1238,
+      "end_line": 1242,
+      "prose_kind": "docstring",
+      "message": "OpenHands/enterprise/tests/unit/test_org_service.py:1238: TPX003 same explanation in 2 places: OpenHands/enterprise/tests/unit/test_org_service.py:1304 (weakest OpenHands/enterprise/tests/unit/test_org_service.py:1238 ~ OpenHands/enterprise/tests/unit/test_org_service.py:1304, similarity 0.760)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/tests/unit/test_org_service.py",
+          "line": 1238,
+          "end_line": 1242,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/enterprise/tests/unit/test_org_service.py",
+          "line": 1304,
+          "end_line": 1308,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/tests/unit/test_org_service.py",
+          "line": 1238,
+          "end_line": 1242,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/enterprise/tests/unit/test_org_service.py",
+          "line": 1304,
+          "end_line": 1308,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.76
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/tests/unit/test_sharing/test_aws_shared_event_service.py",
+      "line": 72,
+      "end_line": 73,
+      "prose_kind": "comment",
+      "message": "OpenHands/enterprise/tests/unit/test_sharing/test_aws_shared_event_service.py:72: TPX003 same explanation in 2 places: OpenHands/enterprise/tests/unit/test_sharing/test_sharing_shared_event_service.py:71 (weakest OpenHands/enterprise/tests/unit/test_sharing/test_aws_shared_event_service.py:72 ~ OpenHands/enterprise/tests/unit/test_sharing/test_sharing_shared_event_service.py:71, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/tests/unit/test_sharing/test_aws_shared_event_service.py",
+          "line": 72,
+          "end_line": 73,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "OpenHands/enterprise/tests/unit/test_sharing/test_sharing_shared_event_service.py",
+          "line": 71,
+          "end_line": 72,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/tests/unit/test_sharing/test_aws_shared_event_service.py",
+          "line": 72,
+          "end_line": 73,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "OpenHands/enterprise/tests/unit/test_sharing/test_sharing_shared_event_service.py",
+          "line": 71,
+          "end_line": 72,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/tests/unit/test_sharing/test_aws_shared_event_service.py",
+      "line": 359,
+      "end_line": 361,
+      "prose_kind": "comment",
+      "message": "OpenHands/enterprise/tests/unit/test_sharing/test_aws_shared_event_service.py:359: TPX003 same explanation in 2 places: OpenHands/enterprise/tests/unit/test_sharing/test_sharing_shared_event_service.py:421 (weakest OpenHands/enterprise/tests/unit/test_sharing/test_aws_shared_event_service.py:359 ~ OpenHands/enterprise/tests/unit/test_sharing/test_sharing_shared_event_service.py:421, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/tests/unit/test_sharing/test_aws_shared_event_service.py",
+          "line": 359,
+          "end_line": 361,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "OpenHands/enterprise/tests/unit/test_sharing/test_sharing_shared_event_service.py",
+          "line": 421,
+          "end_line": 423,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/tests/unit/test_sharing/test_aws_shared_event_service.py",
+          "line": 359,
+          "end_line": 361,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "OpenHands/enterprise/tests/unit/test_sharing/test_sharing_shared_event_service.py",
+          "line": 421,
+          "end_line": 423,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/tests/unit/test_sharing/test_aws_shared_event_service.py",
+      "line": 372,
+      "end_line": 373,
+      "prose_kind": "comment",
+      "message": "OpenHands/enterprise/tests/unit/test_sharing/test_aws_shared_event_service.py:372: TPX003 same explanation in 2 places: OpenHands/enterprise/tests/unit/test_sharing/test_sharing_shared_event_service.py:434 (weakest OpenHands/enterprise/tests/unit/test_sharing/test_aws_shared_event_service.py:372 ~ OpenHands/enterprise/tests/unit/test_sharing/test_sharing_shared_event_service.py:434, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/tests/unit/test_sharing/test_aws_shared_event_service.py",
+          "line": 372,
+          "end_line": 373,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "OpenHands/enterprise/tests/unit/test_sharing/test_sharing_shared_event_service.py",
+          "line": 434,
+          "end_line": 435,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/tests/unit/test_sharing/test_aws_shared_event_service.py",
+          "line": 372,
+          "end_line": 373,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "OpenHands/enterprise/tests/unit/test_sharing/test_sharing_shared_event_service.py",
+          "line": 434,
+          "end_line": 435,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/openhands/app_server/app_conversation/app_conversation_info_service.py",
+      "line": 67,
+      "end_line": 73,
+      "prose_kind": "docstring",
+      "message": "OpenHands/openhands/app_server/app_conversation/app_conversation_info_service.py:67: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/app_conversation/sql_app_conversation_info_service.py:832 (weakest OpenHands/openhands/app_server/app_conversation/app_conversation_info_service.py:67 ~ OpenHands/openhands/app_server/app_conversation/sql_app_conversation_info_service.py:832, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/openhands/app_server/app_conversation/app_conversation_info_service.py",
+          "line": 67,
+          "end_line": 73,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/app_conversation/sql_app_conversation_info_service.py",
+          "line": 832,
+          "end_line": 838,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/openhands/app_server/app_conversation/app_conversation_info_service.py",
+          "line": 67,
+          "end_line": 73,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/app_conversation/sql_app_conversation_info_service.py",
+          "line": 832,
+          "end_line": 838,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/openhands/app_server/app_conversation/app_conversation_info_service.py",
+      "line": 79,
+      "end_line": 86,
+      "prose_kind": "docstring",
+      "message": "OpenHands/openhands/app_server/app_conversation/app_conversation_info_service.py:79: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/app_conversation/sql_app_conversation_info_service.py:372 (weakest OpenHands/openhands/app_server/app_conversation/app_conversation_info_service.py:79 ~ OpenHands/openhands/app_server/app_conversation/sql_app_conversation_info_service.py:372, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/openhands/app_server/app_conversation/app_conversation_info_service.py",
+          "line": 79,
+          "end_line": 86,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/app_conversation/sql_app_conversation_info_service.py",
+          "line": 372,
+          "end_line": 379,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/openhands/app_server/app_conversation/app_conversation_info_service.py",
+          "line": 79,
+          "end_line": 86,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/app_conversation/sql_app_conversation_info_service.py",
+          "line": 372,
+          "end_line": 379,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/openhands/app_server/app_conversation/app_conversation_info_service.py",
+      "line": 113,
+      "end_line": 118,
+      "prose_kind": "docstring",
+      "message": "OpenHands/openhands/app_server/app_conversation/app_conversation_info_service.py:113: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/app_conversation/sql_app_conversation_info_service.py:685 (weakest OpenHands/openhands/app_server/app_conversation/app_conversation_info_service.py:113 ~ OpenHands/openhands/app_server/app_conversation/sql_app_conversation_info_service.py:685, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/openhands/app_server/app_conversation/app_conversation_info_service.py",
+          "line": 113,
+          "end_line": 118,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/app_conversation/sql_app_conversation_info_service.py",
+          "line": 685,
+          "end_line": 690,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/openhands/app_server/app_conversation/app_conversation_info_service.py",
+          "line": 113,
+          "end_line": 118,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/app_conversation/sql_app_conversation_info_service.py",
+          "line": 685,
+          "end_line": 690,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/openhands/app_server/app_conversation/app_conversation_info_service.py",
+      "line": 135,
+      "end_line": 140,
+      "prose_kind": "docstring",
+      "message": "OpenHands/openhands/app_server/app_conversation/app_conversation_info_service.py:135: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/app_conversation/sql_app_conversation_info_service.py:731 (weakest OpenHands/openhands/app_server/app_conversation/app_conversation_info_service.py:135 ~ OpenHands/openhands/app_server/app_conversation/sql_app_conversation_info_service.py:731, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/openhands/app_server/app_conversation/app_conversation_info_service.py",
+          "line": 135,
+          "end_line": 140,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/app_conversation/sql_app_conversation_info_service.py",
+          "line": 731,
+          "end_line": 736,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/openhands/app_server/app_conversation/app_conversation_info_service.py",
+          "line": 135,
+          "end_line": 140,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/app_conversation/sql_app_conversation_info_service.py",
+          "line": 731,
+          "end_line": 736,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/openhands/app_server/app_conversation/app_conversation_router.py",
+      "line": 105,
+      "end_line": 106,
+      "prose_kind": "comment",
+      "message": "OpenHands/openhands/app_server/app_conversation/app_conversation_router.py:105: TPX003 same explanation in 6 places: OpenHands/openhands/app_server/config_api/config_router.py:18, OpenHands/openhands/app_server/event/event_router.py:16, OpenHands/openhands/app_server/git/git_router.py:39, OpenHands/openhands/app_server/sandbox/sandbox_router.py:30, OpenHands/openhands/app_server/user/user_router.py:13 (weakest OpenHands/openhands/app_server/app_conversation/app_conversation_router.py:105 ~ OpenHands/openhands/app_server/config_api/config_router.py:18, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/openhands/app_server/app_conversation/app_conversation_router.py",
+          "line": 105,
+          "end_line": 106,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/config_api/config_router.py",
+          "line": 18,
+          "end_line": 19,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/event/event_router.py",
+          "line": 16,
+          "end_line": 17,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/git/git_router.py",
+          "line": 39,
+          "end_line": 40,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/sandbox/sandbox_router.py",
+          "line": 30,
+          "end_line": 31,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/user/user_router.py",
+          "line": 13,
+          "end_line": 14,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/openhands/app_server/app_conversation/app_conversation_router.py",
+          "line": 105,
+          "end_line": 106,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/config_api/config_router.py",
+          "line": 18,
+          "end_line": 19,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "OpenHands/openhands/app_server/app_conversation/app_conversation_router.py",
+      "line": 450,
+      "end_line": 492,
+      "prose_kind": "docstring",
+      "message": "OpenHands/openhands/app_server/app_conversation/app_conversation_router.py:450: TPX002 docstring is 234 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 234,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX001",
+      "path": "OpenHands/openhands/app_server/app_conversation/app_conversation_router.py",
+      "line": 674,
+      "end_line": 690,
+      "prose_kind": "comment",
+      "message": "OpenHands/openhands/app_server/app_conversation/app_conversation_router.py:674: TPX001 comment is 159 words long, over the 150-word limit — shorten it, or mark it with `# tooprolix: noqa TPX001` on the line above it",
+      "words": 159,
+      "max_volume": 150
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/openhands/app_server/app_lifespan/alembic/versions/001.py",
+      "line": 1,
+      "end_line": 7,
+      "prose_kind": "docstring",
+      "message": "OpenHands/openhands/app_server/app_lifespan/alembic/versions/001.py:1: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/app_lifespan/alembic/versions/002.py:1 (weakest OpenHands/openhands/app_server/app_lifespan/alembic/versions/001.py:1 ~ OpenHands/openhands/app_server/app_lifespan/alembic/versions/002.py:1, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/openhands/app_server/app_lifespan/alembic/versions/001.py",
+          "line": 1,
+          "end_line": 7,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/app_lifespan/alembic/versions/002.py",
+          "line": 1,
+          "end_line": 7,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/openhands/app_server/app_lifespan/alembic/versions/001.py",
+          "line": 1,
+          "end_line": 7,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/app_lifespan/alembic/versions/002.py",
+          "line": 1,
+          "end_line": 7,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/openhands/app_server/file_store/google_cloud.py",
+      "line": 71,
+      "end_line": 77,
+      "prose_kind": "comment",
+      "message": "OpenHands/openhands/app_server/file_store/google_cloud.py:71: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/file_store/s3.py:127 (weakest OpenHands/openhands/app_server/file_store/google_cloud.py:71 ~ OpenHands/openhands/app_server/file_store/s3.py:127, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/openhands/app_server/file_store/google_cloud.py",
+          "line": 71,
+          "end_line": 77,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/file_store/s3.py",
+          "line": 127,
+          "end_line": 133,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/openhands/app_server/file_store/google_cloud.py",
+          "line": 71,
+          "end_line": 77,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/file_store/s3.py",
+          "line": 127,
+          "end_line": 133,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/openhands/app_server/integrations/bitbucket/bitbucket_service.py",
+      "line": 27,
+      "end_line": 36,
+      "prose_kind": "docstring",
+      "message": "OpenHands/openhands/app_server/integrations/bitbucket/bitbucket_service.py:27: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/integrations/bitbucket_data_center/bitbucket_dc_service.py:29 (weakest OpenHands/openhands/app_server/integrations/bitbucket/bitbucket_service.py:27 ~ OpenHands/openhands/app_server/integrations/bitbucket_data_center/bitbucket_dc_service.py:29, similarity 0.865)",
+      "locations": [
+        {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket/bitbucket_service.py",
+          "line": 27,
+          "end_line": 36,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/bitbucket_dc_service.py",
+          "line": 29,
+          "end_line": 38,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket/bitbucket_service.py",
+          "line": 27,
+          "end_line": 36,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/bitbucket_dc_service.py",
+          "line": 29,
+          "end_line": 38,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8648648648648649
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/base.py",
+      "line": 40,
+      "end_line": 50,
+      "prose_kind": "docstring",
+      "message": "OpenHands/openhands/app_server/integrations/bitbucket/service/base.py:40: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/base.py:46 (weakest OpenHands/openhands/app_server/integrations/bitbucket/service/base.py:40 ~ OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/base.py:46, similarity 0.793)",
+      "locations": [
+        {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/base.py",
+          "line": 40,
+          "end_line": 50,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/base.py",
+          "line": 46,
+          "end_line": 56,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/base.py",
+          "line": 40,
+          "end_line": 50,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/base.py",
+          "line": 46,
+          "end_line": 56,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.7931034482758621
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/base.py",
+      "line": 99,
+      "end_line": 109,
+      "prose_kind": "docstring",
+      "message": "OpenHands/openhands/app_server/integrations/bitbucket/service/base.py:99: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/base.py:108 (weakest OpenHands/openhands/app_server/integrations/bitbucket/service/base.py:99 ~ OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/base.py:108, similarity 0.829)",
+      "locations": [
+        {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/base.py",
+          "line": 99,
+          "end_line": 109,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/base.py",
+          "line": 108,
+          "end_line": 118,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/base.py",
+          "line": 99,
+          "end_line": 109,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/base.py",
+          "line": 108,
+          "end_line": 118,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8285714285714286
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/base.py",
+      "line": 136,
+      "end_line": 145,
+      "prose_kind": "docstring",
+      "message": "OpenHands/openhands/app_server/integrations/bitbucket/service/base.py:136: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/base.py:156 (weakest OpenHands/openhands/app_server/integrations/bitbucket/service/base.py:136 ~ OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/base.py:156, similarity 0.842)",
+      "locations": [
+        {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/base.py",
+          "line": 136,
+          "end_line": 145,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/base.py",
+          "line": 156,
+          "end_line": 165,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/base.py",
+          "line": 136,
+          "end_line": 145,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/base.py",
+          "line": 156,
+          "end_line": 165,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8421052631578947
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/base.py",
+      "line": 165,
+      "end_line": 170,
+      "prose_kind": "docstring",
+      "message": "OpenHands/openhands/app_server/integrations/bitbucket/service/base.py:165: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/base.py:190 (weakest OpenHands/openhands/app_server/integrations/bitbucket/service/base.py:165 ~ OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/base.py:190, similarity 0.829)",
+      "locations": [
+        {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/base.py",
+          "line": 165,
+          "end_line": 170,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/base.py",
+          "line": 190,
+          "end_line": 195,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/base.py",
+          "line": 165,
+          "end_line": 170,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/base.py",
+          "line": 190,
+          "end_line": 195,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8285714285714286
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/prs.py",
+      "line": 20,
+      "end_line": 32,
+      "prose_kind": "docstring",
+      "message": "OpenHands/openhands/app_server/integrations/bitbucket/service/prs.py:20: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/prs.py:24 (weakest OpenHands/openhands/app_server/integrations/bitbucket/service/prs.py:20 ~ OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/prs.py:24, similarity 0.806)",
+      "locations": [
+        {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/prs.py",
+          "line": 20,
+          "end_line": 32,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/prs.py",
+          "line": 24,
+          "end_line": 36,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/prs.py",
+          "line": 20,
+          "end_line": 32,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/prs.py",
+          "line": 24,
+          "end_line": 36,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8064516129032258
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/prs.py",
+      "line": 54,
+      "end_line": 62,
+      "prose_kind": "docstring",
+      "message": "OpenHands/openhands/app_server/integrations/bitbucket/service/prs.py:54: TPX003 same explanation in 3 places: OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/prs.py:86, OpenHands/openhands/app_server/integrations/github/service/prs.py:69 (weakest OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/prs.py:86 ~ OpenHands/openhands/app_server/integrations/github/service/prs.py:69, similarity 0.758)",
+      "locations": [
+        {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/prs.py",
+          "line": 54,
+          "end_line": 62,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/prs.py",
+          "line": 86,
+          "end_line": 94,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/integrations/github/service/prs.py",
+          "line": 69,
+          "end_line": 77,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/prs.py",
+          "line": 86,
+          "end_line": 94,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/integrations/github/service/prs.py",
+          "line": 69,
+          "end_line": 77,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.7575757575757576
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/prs.py",
+      "line": 69,
+      "end_line": 77,
+      "prose_kind": "docstring",
+      "message": "OpenHands/openhands/app_server/integrations/bitbucket/service/prs.py:69: TPX003 same explanation in 4 places: OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/prs.py:104, OpenHands/openhands/app_server/integrations/github/service/prs.py:84, OpenHands/openhands/app_server/integrations/service_types.py:324 (weakest OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/prs.py:104 ~ OpenHands/openhands/app_server/integrations/service_types.py:324, similarity 0.756)",
+      "locations": [
+        {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/prs.py",
+          "line": 69,
+          "end_line": 77,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/prs.py",
+          "line": 104,
+          "end_line": 112,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/integrations/github/service/prs.py",
+          "line": 84,
+          "end_line": 92,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/integrations/service_types.py",
+          "line": 324,
+          "end_line": 332,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/prs.py",
+          "line": 104,
+          "end_line": 112,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/integrations/service_types.py",
+          "line": 324,
+          "end_line": 332,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.7560975609756098
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/repos.py",
+      "line": 118,
+      "end_line": 128,
+      "prose_kind": "docstring",
+      "message": "OpenHands/openhands/app_server/integrations/bitbucket/service/repos.py:118: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/repos.py:128 (weakest OpenHands/openhands/app_server/integrations/bitbucket/service/repos.py:118 ~ OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/repos.py:128, similarity 0.789)",
+      "locations": [
+        {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/repos.py",
+          "line": 118,
+          "end_line": 128,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/repos.py",
+          "line": 128,
+          "end_line": 138,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/repos.py",
+          "line": 118,
+          "end_line": 128,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/repos.py",
+          "line": 128,
+          "end_line": 138,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.7894736842105263
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/repos.py",
+      "line": 195,
+      "end_line": 201,
+      "prose_kind": "docstring",
+      "message": "OpenHands/openhands/app_server/integrations/bitbucket/service/repos.py:195: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/repos.py:173 (weakest OpenHands/openhands/app_server/integrations/bitbucket/service/repos.py:195 ~ OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/repos.py:173, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/repos.py",
+          "line": 195,
+          "end_line": 201,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/repos.py",
+          "line": 173,
+          "end_line": 179,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/repos.py",
+          "line": 195,
+          "end_line": 201,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/repos.py",
+          "line": 173,
+          "end_line": 179,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/resolver.py",
+      "line": 202,
+      "end_line": 231,
+      "prose_kind": "docstring",
+      "message": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/resolver.py:202: TPX002 docstring is 218 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 218,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/openhands/app_server/integrations/github/github_service.py",
+      "line": 31,
+      "end_line": 42,
+      "prose_kind": "docstring",
+      "message": "OpenHands/openhands/app_server/integrations/github/github_service.py:31: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/integrations/gitlab/gitlab_service.py:30 (weakest OpenHands/openhands/app_server/integrations/github/github_service.py:31 ~ OpenHands/openhands/app_server/integrations/gitlab/gitlab_service.py:30, similarity 0.861)",
+      "locations": [
+        {
+          "path": "OpenHands/openhands/app_server/integrations/github/github_service.py",
+          "line": 31,
+          "end_line": 42,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/integrations/gitlab/gitlab_service.py",
+          "line": 30,
+          "end_line": 41,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/openhands/app_server/integrations/github/github_service.py",
+          "line": 31,
+          "end_line": 42,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/integrations/gitlab/gitlab_service.py",
+          "line": 30,
+          "end_line": 41,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8613861386138614
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/openhands/app_server/integrations/github/service/base.py",
+      "line": 19,
+      "end_line": 21,
+      "prose_kind": "docstring",
+      "message": "OpenHands/openhands/app_server/integrations/github/service/base.py:19: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/integrations/gitlab/service/base.py:17 (weakest OpenHands/openhands/app_server/integrations/github/service/base.py:19 ~ OpenHands/openhands/app_server/integrations/gitlab/service/base.py:17, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/openhands/app_server/integrations/github/service/base.py",
+          "line": 19,
+          "end_line": 21,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/integrations/gitlab/service/base.py",
+          "line": 17,
+          "end_line": 19,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/openhands/app_server/integrations/github/service/base.py",
+          "line": 19,
+          "end_line": 21,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/integrations/gitlab/service/base.py",
+          "line": 17,
+          "end_line": 19,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "OpenHands/openhands/app_server/sandbox/sandbox_spec_service.py",
+      "line": 155,
+      "end_line": 197,
+      "prose_kind": "docstring",
+      "message": "OpenHands/openhands/app_server/sandbox/sandbox_spec_service.py:155: TPX002 docstring is 232 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 232,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/openhands/app_server/secrets/secrets_store.py",
+      "line": 33,
+      "end_line": 36,
+      "prose_kind": "docstring",
+      "message": "OpenHands/openhands/app_server/secrets/secrets_store.py:33: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/settings/settings_store.py:48 (weakest OpenHands/openhands/app_server/secrets/secrets_store.py:33 ~ OpenHands/openhands/app_server/settings/settings_store.py:48, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/openhands/app_server/secrets/secrets_store.py",
+          "line": 33,
+          "end_line": 36,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/settings/settings_store.py",
+          "line": 48,
+          "end_line": 51,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/openhands/app_server/secrets/secrets_store.py",
+          "line": 33,
+          "end_line": 36,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/settings/settings_store.py",
+          "line": 48,
+          "end_line": 51,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "OpenHands/openhands/app_server/services/db_session.py",
+      "line": 1,
+      "end_line": 30,
+      "prose_kind": "docstring",
+      "message": "OpenHands/openhands/app_server/services/db_session.py:1: TPX002 docstring is 210 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "words": 210,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/openhands/app_server/status/system_stats.py",
+      "line": 1,
+      "end_line": 7,
+      "prose_kind": "comment",
+      "message": "OpenHands/openhands/app_server/status/system_stats.py:1: TPX003 same explanation in 3 places: OpenHands/openhands/app_server/user_auth/default_user_auth.py:1, OpenHands/openhands/app_server/user_auth/user_auth.py:1 (weakest OpenHands/openhands/app_server/status/system_stats.py:1 ~ OpenHands/openhands/app_server/user_auth/default_user_auth.py:1, similarity 0.858)",
+      "locations": [
+        {
+          "path": "OpenHands/openhands/app_server/status/system_stats.py",
+          "line": 1,
+          "end_line": 7,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/user_auth/default_user_auth.py",
+          "line": 1,
+          "end_line": 8,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/user_auth/user_auth.py",
+          "line": 1,
+          "end_line": 8,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/openhands/app_server/status/system_stats.py",
+          "line": 1,
+          "end_line": 7,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/user_auth/default_user_auth.py",
+          "line": 1,
+          "end_line": 8,
+          "prose_kind": "comment"
+        },
+        "similarity": 0.8584070796460177
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/openhands/server/middleware.py",
+      "line": 1,
+      "end_line": 4,
+      "prose_kind": "comment",
+      "message": "OpenHands/openhands/server/middleware.py:1: TPX003 same explanation in 4 places: OpenHands/openhands/server/shared.py:1, OpenHands/openhands/server/static.py:1, OpenHands/openhands/version.py:1 (weakest OpenHands/openhands/server/middleware.py:1 ~ OpenHands/openhands/server/shared.py:1, similarity 0.806)",
+      "locations": [
+        {
+          "path": "OpenHands/openhands/server/middleware.py",
+          "line": 1,
+          "end_line": 4,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "OpenHands/openhands/server/shared.py",
+          "line": 1,
+          "end_line": 4,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "OpenHands/openhands/server/static.py",
+          "line": 1,
+          "end_line": 4,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "OpenHands/openhands/version.py",
+          "line": 1,
+          "end_line": 4,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/openhands/server/middleware.py",
+          "line": 1,
+          "end_line": 4,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "OpenHands/openhands/server/shared.py",
+          "line": 1,
+          "end_line": 4,
+          "prose_kind": "comment"
+        },
+        "similarity": 0.8064516129032258
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/tests/unit/app_server/test_app_conversation_router.py",
+      "line": 271,
+      "end_line": 276,
+      "prose_kind": "docstring",
+      "message": "OpenHands/tests/unit/app_server/test_app_conversation_router.py:271: TPX003 same explanation in 2 places: OpenHands/tests/unit/app_server/test_app_conversation_router.py:347 (weakest OpenHands/tests/unit/app_server/test_app_conversation_router.py:271 ~ OpenHands/tests/unit/app_server/test_app_conversation_router.py:347, similarity 0.812)",
+      "locations": [
+        {
+          "path": "OpenHands/tests/unit/app_server/test_app_conversation_router.py",
+          "line": 271,
+          "end_line": 276,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/tests/unit/app_server/test_app_conversation_router.py",
+          "line": 347,
+          "end_line": 352,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/tests/unit/app_server/test_app_conversation_router.py",
+          "line": 271,
+          "end_line": 276,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/tests/unit/app_server/test_app_conversation_router.py",
+          "line": 347,
+          "end_line": 352,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8125
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/tests/unit/app_server/test_app_conversation_router.py",
+      "line": 291,
+      "end_line": 296,
+      "prose_kind": "docstring",
+      "message": "OpenHands/tests/unit/app_server/test_app_conversation_router.py:291: TPX003 same explanation in 2 places: OpenHands/tests/unit/app_server/test_app_conversation_router.py:368 (weakest OpenHands/tests/unit/app_server/test_app_conversation_router.py:291 ~ OpenHands/tests/unit/app_server/test_app_conversation_router.py:368, similarity 0.824)",
+      "locations": [
+        {
+          "path": "OpenHands/tests/unit/app_server/test_app_conversation_router.py",
+          "line": 291,
+          "end_line": 296,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/tests/unit/app_server/test_app_conversation_router.py",
+          "line": 368,
+          "end_line": 373,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/tests/unit/app_server/test_app_conversation_router.py",
+          "line": 291,
+          "end_line": 296,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/tests/unit/app_server/test_app_conversation_router.py",
+          "line": 368,
+          "end_line": 373,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8235294117647058
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/tests/unit/app_server/test_config_router.py",
+      "line": 145,
+      "end_line": 149,
+      "prose_kind": "docstring",
+      "message": "OpenHands/tests/unit/app_server/test_config_router.py:145: TPX003 same explanation in 3 places: OpenHands/tests/unit/app_server/test_event_router.py:28, OpenHands/tests/unit/app_server/test_git_router.py:114 (weakest OpenHands/tests/unit/app_server/test_config_router.py:145 ~ OpenHands/tests/unit/app_server/test_event_router.py:28, similarity 0.833)",
+      "locations": [
+        {
+          "path": "OpenHands/tests/unit/app_server/test_config_router.py",
+          "line": 145,
+          "end_line": 149,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/tests/unit/app_server/test_event_router.py",
+          "line": 28,
+          "end_line": 32,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/tests/unit/app_server/test_git_router.py",
+          "line": 114,
+          "end_line": 118,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/tests/unit/app_server/test_config_router.py",
+          "line": 145,
+          "end_line": 149,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/tests/unit/app_server/test_event_router.py",
+          "line": 28,
+          "end_line": 32,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8333333333333334
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/tests/unit/app_server/test_filesystem_event_service.py",
+      "line": 300,
+      "end_line": 304,
+      "prose_kind": "docstring",
+      "message": "OpenHands/tests/unit/app_server/test_filesystem_event_service.py:300: TPX003 same explanation in 2 places: OpenHands/tests/unit/app_server/test_filesystem_event_service.py:327 (weakest OpenHands/tests/unit/app_server/test_filesystem_event_service.py:300 ~ OpenHands/tests/unit/app_server/test_filesystem_event_service.py:327, similarity 0.800)",
+      "locations": [
+        {
+          "path": "OpenHands/tests/unit/app_server/test_filesystem_event_service.py",
+          "line": 300,
+          "end_line": 304,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/tests/unit/app_server/test_filesystem_event_service.py",
+          "line": 327,
+          "end_line": 331,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/tests/unit/app_server/test_filesystem_event_service.py",
+          "line": 300,
+          "end_line": 304,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/tests/unit/app_server/test_filesystem_event_service.py",
+          "line": 327,
+          "end_line": 331,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/tests/unit/app_server/test_jwt_service.py",
+      "line": 633,
+      "end_line": 634,
+      "prose_kind": "comment",
+      "message": "OpenHands/tests/unit/app_server/test_jwt_service.py:633: TPX003 same explanation in 2 places: OpenHands/tests/unit/app_server/test_jwt_service.py:645 (weakest OpenHands/tests/unit/app_server/test_jwt_service.py:633 ~ OpenHands/tests/unit/app_server/test_jwt_service.py:645, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/tests/unit/app_server/test_jwt_service.py",
+          "line": 633,
+          "end_line": 634,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "OpenHands/tests/unit/app_server/test_jwt_service.py",
+          "line": 645,
+          "end_line": 646,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/tests/unit/app_server/test_jwt_service.py",
+          "line": 633,
+          "end_line": 634,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "OpenHands/tests/unit/app_server/test_jwt_service.py",
+          "line": 645,
+          "end_line": 646,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/tests/unit/app_server/test_live_status_app_conversation_service.py",
+      "line": 3120,
+      "end_line": 3124,
+      "prose_kind": "docstring",
+      "message": "OpenHands/tests/unit/app_server/test_live_status_app_conversation_service.py:3120: TPX003 same explanation in 2 places: OpenHands/tests/unit/app_server/test_live_status_app_conversation_service.py:3180 (weakest OpenHands/tests/unit/app_server/test_live_status_app_conversation_service.py:3120 ~ OpenHands/tests/unit/app_server/test_live_status_app_conversation_service.py:3180, similarity 0.750)",
+      "locations": [
+        {
+          "path": "OpenHands/tests/unit/app_server/test_live_status_app_conversation_service.py",
+          "line": 3120,
+          "end_line": 3124,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/tests/unit/app_server/test_live_status_app_conversation_service.py",
+          "line": 3180,
+          "end_line": 3184,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/tests/unit/app_server/test_live_status_app_conversation_service.py",
+          "line": 3120,
+          "end_line": 3124,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/tests/unit/app_server/test_live_status_app_conversation_service.py",
+          "line": 3180,
+          "end_line": 3184,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.75
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/tests/unit/app_server/test_remote_sandbox_service.py",
+      "line": 2188,
+      "end_line": 2189,
+      "prose_kind": "comment",
+      "message": "OpenHands/tests/unit/app_server/test_remote_sandbox_service.py:2188: TPX003 same explanation in 3 places: OpenHands/tests/unit/app_server/test_remote_sandbox_service.py:2253, OpenHands/tests/unit/app_server/test_remote_sandbox_service.py:2557 (weakest OpenHands/tests/unit/app_server/test_remote_sandbox_service.py:2188 ~ OpenHands/tests/unit/app_server/test_remote_sandbox_service.py:2253, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/tests/unit/app_server/test_remote_sandbox_service.py",
+          "line": 2188,
+          "end_line": 2189,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "OpenHands/tests/unit/app_server/test_remote_sandbox_service.py",
+          "line": 2253,
+          "end_line": 2254,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "OpenHands/tests/unit/app_server/test_remote_sandbox_service.py",
+          "line": 2557,
+          "end_line": 2558,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/tests/unit/app_server/test_remote_sandbox_service.py",
+          "line": 2188,
+          "end_line": 2189,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "OpenHands/tests/unit/app_server/test_remote_sandbox_service.py",
+          "line": 2253,
+          "end_line": 2254,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    }
+  ]
+}

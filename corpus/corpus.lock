@@ -1,0 +1,15 @@
+# tooprolix measurement corpus — pinned 2026-07-25, BEFORE any detector exists.
+# Format: <url> <sha>, one per line. Blank lines and #-comments ignored.
+# Every SHA was resolved with `git ls-remote <url>` on 2026-07-25 and exists on
+# the named remote. Changing a line invalidates every number in REPORT.md.
+#
+# OSS agent frameworks — the population the tool is aimed at: prose largely
+# written and rewritten by coding agents.
+https://github.com/openai/openai-agents-python.git f45d6e2610105934ecb00dc38ee721a67258fa82
+https://github.com/crewAIInc/crewAI.git b3aaaab023a53a08db4d36c9430b3463f1efcc7d
+https://github.com/langchain-ai/langgraph.git 1e1ca88dad9c7e708263257fa9fc27a3fbdfff68
+https://github.com/All-Hands-AI/OpenHands.git 652503005093d18d1b2f48816c91d62e93f45970
+# Mature human-written OSS — the control group. If the tool fires as hard here
+# as on agent code, it is measuring Python, not agents.
+https://github.com/pydantic/pydantic.git a2a6577d4c329dd574a45dbb01a8feaa16b1ad3d
+https://github.com/psf/requests.git 69f84847045bef7a849cc994a26fe7ba8a169e95

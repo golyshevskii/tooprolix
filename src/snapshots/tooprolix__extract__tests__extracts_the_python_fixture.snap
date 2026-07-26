@@ -1,0 +1,54 @@
+---
+source: src/extract.rs
+expression: extracted
+---
+[
+    ProseBlock {
+        kind: Docstring,
+        path: "tests/fixtures/extract/sample.py",
+        line_start: 3,
+        line_end: 8,
+        raw: "\"\"\"\nModule docstring that carries comfortably more than eight words.\n\nIt spans several physical lines on purpose, so the module branch of the\ncontract is visible in the snapshot.\n\"\"\"",
+        normalized: "module docstring that carries comfortably more than eight words it spans several physical lines on purpose so the module branch of the contract is visible in the snapshot",
+    },
+    ProseBlock {
+        kind: Comment,
+        path: "tests/fixtures/extract/sample.py",
+        line_start: 10,
+        line_end: 12,
+        raw: "# This own-line comment block is glued from three adjacent lines and holds\n# comfortably more than eight normalised words, so the size conjunction keeps\n# it in the output as one block rather than three.",
+        normalized: "this own line comment block is glued from three adjacent lines and holds comfortably more than eight normalised words so the size conjunction keeps it in the output as one block rather than three",
+    },
+    ProseBlock {
+        kind: Docstring,
+        path: "tests/fixtures/extract/sample.py",
+        line_start: 23,
+        line_end: 26,
+        raw: "\"\"\"\n    A class docstring with plenty of words, so that the class branch survives\n    the minimum block size conjunction.\n    \"\"\"",
+        normalized: "a class docstring with plenty of words so that the class branch survives the minimum block size conjunction",
+    },
+    ProseBlock {
+        kind: Docstring,
+        path: "tests/fixtures/extract/sample.py",
+        line_start: 32,
+        line_end: 35,
+        raw: "\"\"\"\n        A method docstring written across enough physical lines and words to\n        stay in the output.\n        \"\"\"",
+        normalized: "a method docstring written across enough physical lines and words to stay in the output",
+    },
+    ProseBlock {
+        kind: Docstring,
+        path: "tests/fixtures/extract/sample.py",
+        line_start: 38,
+        line_end: 41,
+        raw: "\"\"\"\n            A nested function docstring, which a walk over top-level\n            statements only would silently lose.\n            \"\"\"",
+        normalized: "a nested function docstring which a walk over top level statements only would silently lose",
+    },
+    ProseBlock {
+        kind: Docstring,
+        path: "tests/fixtures/extract/sample.py",
+        line_start: 47,
+        line_end: 50,
+        raw: "\"\"\"\n        A docstring inside an `if` block, reachable only through a full\n        statement walk rather than a scan of the module body.\n        \"\"\"",
+        normalized: "a docstring inside an if block reachable only through a full statement walk rather than a scan of the module body",
+    },
+]

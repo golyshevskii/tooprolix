@@ -1,0 +1,136 @@
+[package]
+name = "tooprolix"
+version = "0.1.0"
+edition = "2024"
+description = "A prose budget linter for Python."
+license = "MIT"
+repository = "https://github.com/golyshevskii/tooprolix"
+# Tracks `rust-toolchain.toml`, which is the only Rust version anything here is ever compiled with.
+#
+# It said `1.95` — the floor the pinned ruff crates declare — until a review pointed out that no job
+# in `.github/workflows/ci.yml` compiles at 1.95: all three cargo jobs build under the 1.97.0 pin. An
+# MSRV nobody compiles is an unverifiable promise that rots silently, and the first 1.96-or-later
+# feature anyone writes would break a consumer on 1.95 with no signal here. Raising the floor to the
+# version we actually test is honest; claiming a lower one we never test is not.
+#
+# If a lower MSRV is ever wanted, it costs a job, not an edit: `cargo check` on
+# `dtolnay/rust-toolchain@<floor>`. Do not lower this line without adding that job.
+rust-version = "1.97"
+# DO NOT ADD `publish = false` HERE. It looks like the obvious way to say "not published yet", and it
+# silently switches release-plz OFF completely — no version bump, no CHANGELOG.md, no tag, no GitHub
+# release. Measured with release-plz 0.3.160: with the key present, `release-plz update` exits 0 and
+# produces an EMPTY diff, stopping at `DEBUG version groups: {}`; with the key removed and nothing
+# else changed, the same command proceeds to "downloading packages from cargo registry crates.io" and
+# computes a version. A `[[package]] release = true` override in release-plz.toml does NOT rescue it.
+# (The release-plz docs do not mention this interaction — it was found by running it.)
+#
+# Registry publishing is instead disabled where it can be disabled without that side effect:
+# `publish = false` under `[workspace]` in release-plz.toml. `cargo publish` is never invoked by our
+# workflows. `package-python-distribution-and-publish-0-1-0` owns turning publishing on.
+
+[lib]
+name = "tooprolix"
+# `cdylib` for the maturin/pyo3 wheel, `rlib` so `tests/*.rs` integration targets can link the
+# crate (task 6 adds `tests/cli.rs`). With `cdylib` alone — maturin's default — they cannot.
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+pyo3 = "0.29.0"
+thiserror = "2.0.0"
+# `=` is an EXACT pin: `ruff_python_*` are ruff's internal crates published at 0.0.x, where a patch
+# bump is free to break the API (no semver contract).
+# Verified: `cargo update -p ruff_python_parser --precise 0.0.5` is rejected —
+# "failed to select a version for the requirement `ruff_python_parser = \"=0.0.6\"` / candidate
+# versions found which didn't match: 0.0.5". The guard is falsifiable: relaxing this line to
+# `">=0.0.5"` makes the same command SUCCEED and downgrades the lock to 0.0.5.
+# NOTE for whoever bumps this: at 0.0.x the `=` is belt-and-braces, because cargo's caret already
+# means "exactly this patch" for 0.0.z — a plain `"0.0.6"` rejects 0.0.5 identically (measured;
+# cargo reports the requirement as `^0.0.6`). Keep the `=` anyway: it states the intent, and it
+# starts doing real work the moment these crates reach 0.1.x, where `^0.1.6` would accept 0.1.7.
+#
+# `ruff_python_ast` is NOT speculative — the parser `use`s the AST types, it does not `pub use` them
+# (`crates/ruff_python_parser/src/lib.rs:74` at ruff a2635fd8), so `Stmt::Expr` cannot be named
+# without it and lib.rs does not compile. Verified: removing it gives
+# "use of unresolved module or unlinked crate `ruff_python_ast`".
+#
+# 0.0.6 is the newest version in the index AND is published from ruff a2635fd8 (tag 0.16.0), which is
+# what the local ruff reference checkout is checked out at — the reference and the compiled
+# dependency are the same source.
+ruff_python_ast = "=0.0.6"
+ruff_python_parser = "=0.0.6"
+# The three below are added by `implement-prose-block-extraction`. All three were ALREADY in
+# Cargo.lock as transitive dependencies of the parser (verified: `[[package]] ruff_python_parser`
+# lists all three), so naming them directly adds no new compiled code and no resolution churn under
+# `--locked` — only an entry in this crate's own dependency list.
+#
+# Each one is here for a named reason; none is speculative:
+#   * `ruff_source_file` — `LineIndex::from_source_text` + `line_index(offset).get()` is the only way
+#     to turn a `TextSize` byte offset into the 1-based physical line number `ProseBlock` reports.
+#   * `ruff_text_size`   — the `Ranged` trait, i.e. `token.range()` / `.start()` / `.end()`.
+#     `ruff_python_ast` `use`s it without re-exporting it, exactly like the AST/parser pair above.
+#   * `ruff_python_trivia` — ONE function: `has_leading_content(offset, source)`
+#     (`src/whitespace.rs:60`), which is how `extract::comment_blocks` tells a trailing comment from
+#     an own-line one. That distinction is load-bearing for the glue rule, and this is the same
+#     function ruff itself uses for it. It is NOT here because "comments live in trivia" — they do
+#     not; comments are in the parsed token stream (`TokenKind::Comment`), which is where we read
+#     them from, exactly as ruff does in `crates/ruff_python_index/src/indexer.rs:72`.
+ruff_python_trivia = "=0.0.6"
+ruff_source_file = "=0.0.6"
+ruff_text_size = "=0.0.6"
+# The four below are added by `build-cli-with-exit-contract-and-rule-codes`, which is the first task
+# that has a filesystem, a configuration file and a machine-readable output. Each is here for a named
+# reason, and each one is real cost: none of them was in Cargo.lock before, and `--locked` is on
+# every gate.
+#
+#   * `ignore` — the directory walk behind AC5. It is ruff's own choice
+#     (`crates/ruff_workspace/src/resolver.rs:485`) and it is the whole of `.gitignore`,
+#     `.git/info/exclude` and the global gitignore, which is several hundred lines of matching we
+#     would otherwise own. **Its default is not to follow symlinks and that default is load-bearing**:
+#     measured 2026-07-25, following them takes pydantic from 343 findings to 559 because
+#     `tests/pydantic_core` is a symlink back into the tree. Do not call `follow_links(true)`.
+#   * `toml` — `[tool.tooprolix]` lives in `pyproject.toml` and hand-rolling a TOML reader is not an
+#     option. `default-features = false` with `parse` and `serde` — the `display` half only WRITES
+#     TOML and we only ever read it. `serde` is not optional: `toml::Table` and `toml::Value` live
+#     behind that feature themselves (verified in `toml-1.1.3/src/lib.rs:178-193`), and it costs
+#     `serde_spanned` on top of the `serde` this crate already needs for JSON. The table is then
+#     read key by key rather than deserialised into a struct, because an unknown key has to be an
+#     *error* and `#[serde(deny_unknown_fields)]` would still not say *which* key.
+#   * `serde` + `serde_json` — the JSON schema is a fixed Rust type, which is the point: the shape is
+#     `src/finding.rs` and a change to it is a change to a `#[derive(Serialize)]`, not to a format
+#     string somewhere in a renderer.
+#
+# **Argument parsing is NOT a dependency.** The whole grammar is `tooprolix check <path>
+# [--format text|json]` plus `--help`; `clap` would be a large tree, a derive macro and a second
+# source of truth for the help text, for three tokens parsed in `cli::Arguments::parse`.
+ignore = "0.4.31"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+toml = { version = "1.1.3", default-features = false, features = ["parse", "serde"] }
+
+[build-dependencies]
+# Only for `build.rs`, which puts an rpath to libpython on our own test/CLI binaries. Read the header
+# of build.rs before removing it: without it `cargo test` links fine on Linux and then fails to LOAD.
+# Same minor as `pyo3` above — these two are released together and must not drift.
+pyo3-build-config = "0.29.0"
+
+[dev-dependencies]
+# Snapshot tests for the extractor (rust-skills `test-snapshot-testing`); snapshots live in
+# `src/snapshots/`. Resolved to 1.48.0 in the committed Cargo.lock — match `cargo install
+# cargo-insta` to that version, it is a local developer tool and not a repository dependency.
+# No `features = ["json", "yaml"]`: `assert_debug_snapshot!` needs neither, and they would only add
+# churn to Cargo.lock under `--locked`. The CI gate that makes these snapshots meaningful is
+# `INSTA_UPDATE: "no"` on the `cargo-test` job.
+insta = "1.35.1"
+
+[lints.rust]
+unsafe_code = "deny"
+# doc-all-public: with `-D warnings` in the clippy gate this makes an undocumented public item a
+# build failure rather than a code-review nit.
+missing_docs = "warn"
+
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+# err-no-unwrap-prod: `unwrap()` panics with no context. Tests use `expect("...")` instead, which
+# names the invariant. Deliberately NOT denying `expect_used` — a panic in a test with a message is
+# the documented-in-rust-skills exception, and denying it would only buy a wall of `#[allow]`.
+unwrap_used = "deny"

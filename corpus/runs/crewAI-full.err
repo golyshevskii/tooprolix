@@ -1,0 +1,6 @@
+error: crewAI/lib/cli/src/crewai_cli/templates/crew/crew.py: could not parse Python source: Expected an identifier at byte range 180..181
+crewAI/lib/cli/src/crewai_cli/templates/crew/main.py: could not parse Python source: Expected a module name at byte range 86..87
+crewAI/lib/cli/src/crewai_cli/templates/flow/main.py: could not parse Python source: Expected a module name at byte range 130..131
+crewAI/lib/cli/src/crewai_cli/templates/tool/src/{{folder_name}}/__init__.py: could not parse Python source: Expected one or more symbol names after import at byte range 18..19
+crewAI/lib/cli/src/crewai_cli/templates/tool/src/{{folder_name}}/tool.py: could not parse Python source: Expected an identifier at byte range 42..43
+5 file(s) could not be read; no findings are reported for a tree that was not fully measured

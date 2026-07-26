@@ -1,0 +1,12 @@
+[toolchain]
+# Pinned, not `stable`. The pinned `ruff_*@0.0.6` crates declare `rust-version = "1.95"`, so on the
+# machine's `stable` (1.87.0) `cargo build` aborts before compiling a single line of our code:
+#   error: rustc 1.87.0 is not supported by the following packages:
+#     ruff_python_ast@0.0.6 requires rustc 1.95
+# 1.97.0 is exactly what ruff itself pins in its own `rust-toolchain.toml` at
+# a2635fd8f39e1d34ce8074cb486809426148f3e9 (tag 0.16.0) — the commit our `ruff_python_parser 0.0.6`
+# was published from. Solving this with `rustup update stable` instead would leave the toolchain
+# version outside the repository, so a fresh clone and CI could drift apart silently.
+channel = "1.97.0"
+# So `make rust.lint` / `make rust.fmt` work on a fresh clone without a manual `rustup component add`.
+components = ["clippy", "rustfmt"]
