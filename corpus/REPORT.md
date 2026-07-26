@@ -615,9 +615,22 @@ Words and `tokens_norm` landing within one block of each other is what the ratio
 predicted: on normalised text cl100k charges about one token per word, so they are very nearly the
 same unit measured twice. What separates them is portability rather than precision — cl100k charges
 **2.14 tokens per word on Cyrillic against 1.01 on English**, so a token threshold fires roughly
-twice as early on a non-English codebase while a word threshold does not. **No unit is changed by
-this task**: it is frozen in the shipped JSON schema and in user-written `pyproject.toml` limits, so
-moving it is an owner decision and second-epic work.
+twice as early on a non-English codebase while a word threshold does not.
+
+### ✅ Settled by the owner, 2026-07-26: the unit stays **words**
+
+Decided on these numbers rather than deferred, and before `v0.1.0` is tagged, because until there is
+a tag the change is free and after it the change is breaking.
+
+The reasoning is the cost of the contract, not the 0.038 of precision. A token unit means freezing a
+specific BPE into the public meaning of `comment-max-volume` and `docstring-max-volume`; cl100k then
+makes the same configured number mean materially different things depending on the natural language
+of the prose — **2.14 tokens per word on Cyrillic against 1.01 on English**. A word is the same unit
+in every language a user writes comments in, and it is the one a user can check by eye against the
+message the tool prints.
+
+What this measurement does establish, and it is the part worth keeping: **normalised beats raw**, by
+a factor of about three. That is the finding, and the shipped unit is on the right side of it.
 
 ⚠️ 0.231 is not the rule's precision: the disagreement set is by construction the 51 hardest blocks
 of 11 574, sitting exactly at the calibrated boundary. It ranks units; it is not a floor.
