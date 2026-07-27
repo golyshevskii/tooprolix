@@ -245,7 +245,7 @@ impl Finding {
         // three, which is the behaviour the rule exists to prevent.
         let message = format!(
             "{at}: {} {} is {} words long, over the {}-word limit \u{2014} shorten it, or mark \
-             it with `# tooprolix: noqa {}` on the line above it",
+             it with `# !{}` on the line above it",
             code.code(),
             overrun.block.kind.as_str(),
             overrun.words,
@@ -415,7 +415,7 @@ mod tests {
         assert_eq!(
             finding.to_string(),
             "api.py:1: TPX002 docstring is 232 words long, over the 200-word limit \u{2014} \
-             shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it"
+             shorten it, or mark it with `# !TPX002` on the line above it"
         );
         assert_eq!(finding.code, Rule::DocstringVolume);
         assert_eq!(finding.at.prose_kind, ProseKind::Docstring);

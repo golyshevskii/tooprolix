@@ -92,7 +92,7 @@
 //!
 //! # What this module does not own
 //!
-//! Rule codes, exit codes, JSON, `--help`, the `# tooprolix: noqa` marker and the
+//! Rule codes, exit codes, JSON, `--help`, the `# !TPX00N` marker and the
 //! `[tool.tooprolix]` keys that fill [`Limits`] all belong to
 //! `build-cli-with-exit-contract-and-rule-codes`. Nothing here reads a file or walks a directory.
 //! Two decisions are handed to that task and must not be re-decided there:

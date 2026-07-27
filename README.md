@@ -29,7 +29,7 @@ The 0.1.0 interface is intentionally small:
 ```console
 $ tooprolix check .
 src/client.py:14: TPX003 same explanation in 3 places: src/poller.py:38, src/worker.py:91 (weakest src/client.py:14 ~ src/worker.py:91, similarity 0.812)
-src/config.py:1: TPX002 docstring is 243 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it
+src/config.py:1: TPX002 docstring is 243 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it
 ```
 
 A cluster names its weakest link by name, not only by score. Grouping asserts a transitivity the
@@ -70,13 +70,13 @@ a file. The marker goes on the physical line **directly above the block** — on
 docstrings alike:
 
 ```python
-# tooprolix: noqa TPX003
+# !TPX003
 # The retry contract is restated here on purpose, so this module can be read on
 # its own without opening the client it talks to.
 
 
 def settle(batch):
-    # tooprolix: noqa TPX002
+    # !TPX002
     """Fold a batch into the ledger.
 
     The long explanation of why settlement waits for the nightly cut-off lives
@@ -87,8 +87,18 @@ def settle(batch):
 ```
 
 For a docstring that means *inside* the body, between `def`/`class` and the literal — not above the
-`def` line. Without a code the marker silences every rule for that block; a code it does not
-recognise silences nothing and says so on stderr.
+`def` line. Several codes are comma-separated, anything after them is your reason, and `# !TPX*`
+silences every rule for that block — `TPX*` is a literal token and not a glob, so `TPX0*` is simply
+an unrecognised code. **The space after `#` is part of the grammar**: `#!TPX002` is a shebang, not a
+marker. A code it does not recognise silences nothing and says so on stderr, and so does a comment
+above a block that was clearly aiming at a marker and missed.
+
+> **Upgrading from 0.1.0.** The marker used to be `# tooprolix: noqa TPX002`. That spelling is no
+> longer a marker at all — there is no alias period — and each one now reports a warning naming its
+> file and line. The word `noqa` was dropped deliberately: with it, `ruff check --fix` deletes the
+> marker line (RUF100 for the bare form, RUF102 for the colon form), and this repository's own ruff
+> configuration enables RUF100. `# !…` collides with nothing: 0 occurrences across the 3913 files of
+> the pinned corpus.
 
 Both blocks above are deliberately at least two lines and eight normalised words long. Anything
 smaller is never a prose block at all — the thresholds are in `corpus/REPORT.md` — so a marker over a

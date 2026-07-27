@@ -57,7 +57,7 @@
 //!   normalised words, so they pass the size conjunction on their own.
 //! * **Interaction with the opt-out**: only the marker LINE is excluded here, so the block it
 //!   suppresses starts on the line *below* the marker. Extraction still does not **parse** the
-//!   marker and must not — it asks [`crate::rules::is_marker`], which owns the grammar, rather than
+//!   marker (`# !TPX001`) and must not — it asks [`crate::rules::is_marker`], which owns it, rather than
 //!   spelling a second, nearly-identical test of its own. It did spell one (`starts_with`
 //!   `"tooprolix:"`), the two disagreed in both directions, and each disagreement moved a reported
 //!   word count with no diagnostic; see
@@ -505,16 +505,27 @@ fn is_pragma(text: &str, line: usize) -> bool {
         return true;
     }
     let lowered = body.to_ascii_lowercase();
-    // OUR opt-out marker (`# tooprolix: noqa TPX001`, README.md): the marker LINE is excluded, and
-    // nothing more. The question "is this line a marker?" is asked of [`crate::rules::is_marker`],
-    // which is the grammar's single owner — this module still does not *parse* the marker, and must
-    // not.
+    // OUR opt-out marker (`# !TPX001`, README.md): the marker LINE is excluded, and nothing more.
+    // The question "is this line a marker?" is asked of [`crate::rules::is_marker`], which is the
+    // grammar's single owner — this module still does not *parse* the marker, and must not.
     //
     // It used to be spelled here a second time as `starts_with("tooprolix:")`, and the two owners
     // disagreed in **both** directions, each one silently moving the number the volume rule
     // reports. `a_comment_is_excluded_as_a_marker_exactly_when_the_marker_parser_accepts_it` holds
     // the two measurements; the short version is that a legitimate marker had its own words counted
     // as prose, and a line that was not a marker cut a comment run in half.
+    //
+    // The 0.2.0 grammar change deliberately did NOT add `rules::is_near_miss` beside it, though the
+    // temptation was real: the 0.1.0 marker is no longer a marker, so above a comment run it is now
+    // absorbed into the prose it used to excuse. Excluding near-misses here would keep it out — and
+    // would re-arm exactly the defect above, because a near-miss is by definition a line the parser
+    // rejected, and excluding one in the MIDDLE of a comment run splits the run and silently halves
+    // a measured volume. The diagnostic belongs where a line can be reported rather than dropped,
+    // so `crate::cli` warns about both positions instead. One owner, one direction, still.
+    //
+    // `noqa` and `type:` stay: they name OTHER tools' pragmas (ruff, flake8, mypy) and have nothing
+    // to do with our grammar. Renaming them along with the marker would start counting `# noqa:
+    // F401` as human prose.
     lowered.starts_with("noqa") || lowered.starts_with("type:") || crate::rules::is_marker(text)
 }
 
@@ -731,25 +742,27 @@ mod tests {
     /// Two directions, both measured as defects before this test existed, and each one silently
     /// changes the number the volume rule reports:
     ///
-    /// * a marker with a space before the colon — `# tooprolix : noqa TPX001` — is accepted by
-    ///   [`crate::rules::parse_marker`]. A second, stricter spelling here (`starts_with`
-    ///   `"tooprolix:"`) left it *inside* the block, so the block began on the marker's own line,
-    ///   the CLI looked one line higher and found nothing, and the marker's own words were counted:
-    ///   **303 words where the canonical spelling gives 300 and correctly stays silent**;
-    /// * a misspelt keyword — `# tooprolix: noqqa TPX001` — is **not** a marker. A looser spelling
-    ///   here excluded it anyway and so cut the comment run in two: **300 words reported where the
-    ///   same run with an ordinary comment in the middle reports 610**. A line that is not a marker
-    ///   halved the measured volume, with no diagnostic at all.
+    /// * a marker with a space inside it — `# ! TPX001` — is accepted by
+    ///   [`crate::rules::parse_marker`]. A second, stricter spelling here left it *inside* the
+    ///   block, so the block began on the marker's own line, the CLI looked one line higher and
+    ///   found nothing, and the marker's own words were counted: **303 words where the canonical
+    ///   spelling gives 300 and correctly stays silent**;
+    /// * a line that is not a marker — under 0.2.0, anything without the `!`, including the 0.1.0
+    ///   spelling `# tooprolix: noqa` — is prose. A looser spelling here excluded it anyway and so
+    ///   cut the comment run in two: **300 words reported where the same run with an ordinary
+    ///   comment in the middle reports 610**. A line that is not a marker halved the measured
+    ///   volume, with no diagnostic at all.
     ///
     /// The fix is not a better spelling, it is one owner. This test fails if a second one reappears
-    /// in either direction.
+    /// in either direction — including the tempting one, `is_near_miss`, which would put the whole
+    /// second case back (see `is_pragma`).
     #[test]
     fn a_comment_is_excluded_as_a_marker_exactly_when_the_marker_parser_accepts_it() {
         // Arrange — eight words per line, so every line clears MIN_BLOCK_WORDS on its own and the
         // block boundaries are the only thing under test.
         let prose = "# one two three four five six seven eight\n";
-        let accepted = format!("# tooprolix : noqa TPX001\n{prose}{prose}");
-        let rejected = format!("{prose}# tooprolix: noqqa TPX001\n{prose}");
+        let accepted = format!("# ! TPX001\n{prose}{prose}");
+        let rejected = format!("{prose}# tooprolix: noqa\n{prose}");
 
         // Act
         let excluded = extract(Path::new("a.py"), &accepted).expect("valid Python");
@@ -763,7 +776,7 @@ mod tests {
             "a spelling the marker parser accepts was counted as prose"
         );
         assert!(
-            !excluded[0].normalized.contains("noqa"),
+            !excluded[0].normalized.contains("tpx001"),
             "the marker's own words entered the block it excuses: {}",
             excluded[0].normalized
         );
@@ -780,22 +793,21 @@ mod tests {
             "a line the marker parser rejects was excluded anyway"
         );
         assert!(
-            kept[0].normalized.contains("noqqa"),
-            "the misspelt line was dropped from the prose it belongs to: {}",
+            kept[0].normalized.contains("noqa"),
+            "the 0.1.0 spelling was dropped from the prose it now belongs to: {}",
             kept[0].normalized
         );
     }
 
     /// `AC1a` — our own opt-out marker is a machine directive, not prose.
     ///
-    /// `README.md` ships `# tooprolix: noqa TPX001` as the 0.1.0 contract. Left as prose it does
-    /// three things, the third being the worst: it glues onto the block below it, it injects
-    /// `tooprolix noqa tpx001` into `normalized` and so lowers the Jaccard of the *unsuppressed*
-    /// twin in another file below the 0.75 threshold, and it moves `line_start` onto the marker
-    /// line — the line the opt-out parser has to map onto.
+    /// `README.md` ships `# !TPX001` as the contract. Left as prose it does three things, the third
+    /// being the worst: it glues onto the block below it, it injects `tpx001` into `normalized` and
+    /// so lowers the Jaccard of the *unsuppressed* twin in another file below the 0.75 threshold,
+    /// and it moves `line_start` onto the marker line — the line the opt-out parser has to map onto.
     #[test]
     fn the_opt_out_marker_branch_alone_keeps_the_marker_out() {
-        let source = "# tooprolix: noqa TPX001\n\
+        let source = "# !TPX001\n\
                       # the first real comment line carrying plenty of words for the size gate\n\
                       # and a second real line\n";
 
@@ -804,7 +816,7 @@ mod tests {
         assert_eq!(extracted.len(), 1, "got {extracted:?}");
         assert_eq!((extracted[0].line_start, extracted[0].line_end), (2, 3));
         assert!(
-            !extracted[0].normalized.contains("tooprolix"),
+            !extracted[0].normalized.contains("tpx001"),
             "the opt-out marker leaked into the run: {}",
             extracted[0].normalized
         );
@@ -814,7 +826,7 @@ mod tests {
     /// size gate, and putting a marker above it used to push the pair over the line half.
     #[test]
     fn the_opt_out_marker_does_not_manufacture_a_block() {
-        let suppressed = "# tooprolix: noqa TPX001\n\
+        let suppressed = "# !TPX001\n\
                           # one line comment with quite a lot of words in it indeed\n";
 
         let extracted = blocks("a.py", suppressed);

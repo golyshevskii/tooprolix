@@ -214,11 +214,11 @@ fn the_findings_are_ordered_and_the_run_is_reproducible() {
              (weakest tests/fixtures/dup-corpus/client.py:2 ~ \
              tests/fixtures/dup-corpus/poller.py:2, similarity 0.900)",
             "tests/fixtures/dup-corpus/config.py:1: TPX002 docstring is 244 words long, over \
-             the 200-word limit \u{2014} shorten it, or mark it with \
-             `# tooprolix: noqa TPX002` on the line above it",
+             the 200-word limit \u{2014} shorten it, or mark it with `# !TPX002` on the line \
+             above it",
             "tests/fixtures/dup-corpus/legacy.py:2: TPX001 comment is 238 words long, over the \
-             150-word limit \u{2014} shorten it, or mark it with `# tooprolix: noqa TPX001` \
-             on the line above it",
+             150-word limit \u{2014} shorten it, or mark it with `# !TPX001` on the line above \
+             it",
         ]
     );
 }
@@ -448,7 +448,7 @@ fn a_marker_silences_its_own_block_and_only_its_own_rule() {
 
     // The red-team half: a marker naming a code that does not exist warns and silences nothing.
     assert!(
-        stderr_of(&output).contains("`TPX999` in a tooprolix marker is not a rule code"),
+        stderr_of(&output).contains("`TPX999` in an opt-out marker is not a rule code"),
         "an unknown code in a marker was swallowed: {:?}",
         stderr_of(&output)
     );
@@ -456,6 +456,123 @@ fn a_marker_silences_its_own_block_and_only_its_own_rule() {
         stdout_of(&output).contains("comment_mistyped.py:6: TPX001"),
         "an unknown code in a marker silenced a real rule: {}",
         stdout_of(&output)
+    );
+}
+
+/// A comment that was aiming at a marker and missed is reported — and reported is all it is.
+///
+/// The class this closes was measured on the 0.1.0 binary: a typo in the **code** was already loud
+/// (`TPX999` names its file and line), but a typo in the **directive** was completely silent, and
+/// the 0.2.0 grammar makes that worse rather than better — a forgotten `!` leaves `# TPX002`, one
+/// character from a working marker.
+///
+/// Four properties in one test, because each of the first three passes on a tool that always warns
+/// and the fourth passes on a tool that never does:
+///
+/// 1. the 0.1.0 marker warns, in both positions it can occupy;
+/// 2. it silences nothing — the finding it used to remove is back;
+/// 3. it does not change the exit code, in either direction;
+/// 4. a **working** marker produces no warning at all, so the diagnostic is not noise.
+#[test]
+fn a_comment_that_was_aiming_at_a_marker_is_reported_without_changing_the_outcome() {
+    // Arrange — one long comment run and one long docstring, each over its default limit.
+    let long_comment =
+        "# The cache is warmed at start because a cold read costs whole seconds.\n".repeat(20);
+    let long_docstring = format!(
+        "def process(batch):\n{}    \"\"\"Overview.\n{}    \"\"\"\n",
+        "",
+        "    Clocks are read once per batch because two reads straddle a boundary.\n".repeat(30)
+    );
+
+    // The 0.1.0 spelling, in the two positions a dead marker can land in: above a comment run it
+    // is absorbed into the prose it used to excuse and becomes the run's FIRST line, while above a
+    // docstring it stays a comment on the line above.
+    let loud = Scratch::new("near-miss-loud");
+    loud.write(
+        "comment.py",
+        &format!("# tooprolix: noqa TPX001\n{long_comment}"),
+    );
+    loud.write(
+        "docstring.py",
+        &long_docstring.replace(
+            "def process(batch):\n",
+            "def process(batch):\n    # tooprolix: noqa TPX002\n",
+        ),
+    );
+
+    // The same two files with the 0.2.0 marker: silenced, and silent.
+    let quiet = Scratch::new("near-miss-quiet");
+    quiet.write("comment.py", &format!("# !TPX001\n{long_comment}"));
+    quiet.write(
+        "docstring.py",
+        &long_docstring.replace(
+            "def process(batch):\n",
+            "def process(batch):\n    # !TPX002\n",
+        ),
+    );
+
+    // A near-miss over a block that is not a finding at all — the case that proves the warning
+    // cannot move the exit code, because there is no finding for it to hide behind.
+    let clean = Scratch::new("near-miss-clean");
+    clean.write(
+        "short.py",
+        "# TPX001 remember to shorten this one day\n\
+         # one two three four five six seven eight\n\
+         # nine ten eleven twelve thirteen fourteen fifteen sixteen\n",
+    );
+
+    // Act
+    let loud_output = loud.check(&[]);
+    let quiet_output = quiet.check(&[]);
+    let clean_output = clean.check(&[]);
+
+    // Assert — (1) both positions warn, and the warning names the file, the line and the form.
+    assert!(
+        stderr_of(&loud_output).contains("comment.py:1: this is not an opt-out marker"),
+        "a dead marker absorbed into a comment run went unreported: {:?}",
+        stderr_of(&loud_output)
+    );
+    assert!(
+        stderr_of(&loud_output).contains("docstring.py:2: this is not an opt-out marker"),
+        "a dead marker above a docstring went unreported: {:?}",
+        stderr_of(&loud_output)
+    );
+    assert!(
+        stderr_of(&loud_output).contains("`# !TPX001`"),
+        "the warning does not say what to write instead: {:?}",
+        stderr_of(&loud_output)
+    );
+
+    // (2) and (3) — the findings are back and the exit code is the ordinary one for findings.
+    assert_eq!(loud_output.status.code(), Some(1), "{loud_output:?}");
+    assert!(
+        stdout_of(&loud_output).contains("TPX001") && stdout_of(&loud_output).contains("TPX002"),
+        "the 0.1.0 marker still suppressed something: {}",
+        stdout_of(&loud_output)
+    );
+
+    // (3) again, on the half that cannot hide behind a finding: a warning, and still exit 0.
+    assert_eq!(clean_output.status.code(), Some(0), "{clean_output:?}");
+    assert_eq!(
+        stdout_of(&clean_output),
+        "",
+        "the near-miss manufactured a finding: {}",
+        stdout_of(&clean_output)
+    );
+    assert!(
+        stderr_of(&clean_output).contains("short.py:1: this is not an opt-out marker"),
+        "a near-miss over a clean block said nothing: {:?}",
+        stderr_of(&clean_output)
+    );
+
+    // (4) — the control. Working markers suppress and say nothing, or the warning is just noise.
+    assert_eq!(quiet_output.status.code(), Some(0), "{quiet_output:?}");
+    assert_eq!(stdout_of(&quiet_output), "");
+    assert_eq!(
+        stderr_of(&quiet_output),
+        "",
+        "a working marker was reported as a near-miss: {:?}",
+        stderr_of(&quiet_output)
     );
 }
 
