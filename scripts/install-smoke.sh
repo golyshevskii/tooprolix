@@ -58,6 +58,15 @@ fi
 unset UV_PROJECT_ENVIRONMENT UV_NO_SYNC VIRTUAL_ENV
 
 work="$(cd "$(mktemp -d "${TMPDIR:-/tmp}/tooprolix-smoke.XXXXXX")" && pwd -P)"
+# Immediately, and BEFORE the boundary check below — not after it. The check's whole job is to keep
+# scratch state out of a checkout, and with the trap installed later it exited 2 having left the
+# directory it had just created sitting in exactly the place it was rejecting. Measured.
+#
+# The signals are listed as well as EXIT because death by an uncaught signal does not run an
+# EXIT-only trap: Ctrl-C, or a caller that truncates this script's output through `head`, would leak
+# the scratch project. Seen once while proving the line above, and not reproducible afterwards —
+# which is reason to cover it rather than to argue about it, since the cost is four words.
+trap 'rm -rf "$work"' EXIT HUP INT TERM PIPE
 
 # The scratch project must live outside this repository AND outside every checkout enclosing it: a
 # parent `.gitignore` silently swallowed a scratch install once already (epic 1 Decisions #7.3), and
@@ -85,7 +94,6 @@ case "$work/" in
 	exit 2
 	;;
 esac
-trap 'rm -rf "$work"' EXIT
 
 # `<want-rc> <needle-or-empty> <command...>`, printing what actually happened either way. It grades
 # the artifact — the real exit code and the real bytes on stdout/stderr — not a claim about it.
