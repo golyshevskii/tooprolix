@@ -112,12 +112,48 @@ rust.test: ## Run the Rust tests (unit + doctests)
 # The OTHER half of the feature gate, and the only thing in CI that compiles it: with `--features
 # python` on both gates above, nothing would ever build the configuration the standalone binary is
 # actually shipped in, so a stray `use pyo3::…` outside the `#[cfg]` would break `cargo build` and
-# no gate would say so. This is the AC1 command verbatim.
+# no gate would say so.
+#
+# 🔴 IT ASSERTS THE LINKAGE, NOT THE COMPILATION, and the difference is the whole guard. AC1 does
+# not promise "it builds", it promises a binary that needs no interpreter — and `cargo build` alone
+# cannot tell the two apart. Measured 2026-07-27: with `default = ["python"]` added to `[features]`
+# and an interpreter on PATH, the build step exits **0** and blesses a binary whose `otool -L` reads
+#
+#     /opt/homebrew/opt/python@3.14/Frameworks/Python.framework/Versions/3.14/Python
+#
+# In CI that mutation would sail through, because this target is the last step of `cargo-clippy`,
+# four steps after "Install a managed Python for the pyo3 build script" — an interpreter is always
+# on PATH there. On a machine with no usable `python3` the build happens to fail, which is an
+# accident of the environment and not the guard working. So the guard now reads the produced
+# artifact and fails on any dynamic dependency naming Python.
+#
+# `otool -L` on macOS, `ldd` on Linux (both CI runners and this laptop are covered; nothing else
+# runs it). Deliberately NOT a `cargo tree`/feature-graph check: that grades a proxy for the
+# artifact, which is the same mistake as trusting the flag instead of the `compile_error!`.
+#
+# An empty listing is treated as a FAILURE, not a pass. A missing or renamed `otool`/`ldd` would
+# otherwise make the grep match nothing and the guard report success without having looked.
 #
 # No FIND_PYTHON: not needing an interpreter is the whole point, and this target failing without one
 # would mean the gate had stopped testing what it is for.
-rust.build.nopython: ## Build the standalone binary with the pyo3 feature OFF (no interpreter needed)
+rust.build.nopython: ## Build the standalone binary with the pyo3 feature OFF, and prove it links no libpython
 	@$(CARGO) build --locked
+	@binary=target/debug/tooprolix; \
+	case "$$(uname -s)" in \
+		Darwin) linked="$$(otool -L $$binary)" ;; \
+		*)      linked="$$(ldd $$binary)" ;; \
+	esac; \
+	if [ -z "$$linked" ]; then \
+		echo "error: could not read the dynamic dependencies of $$binary; the AC1 guard did not run." >&2; \
+		exit 1; \
+	fi; \
+	if printf '%s\n' "$$linked" | grep -i python; then \
+		echo "error: $$binary links the Python library above, built with the 'python' feature OFF." >&2; \
+		echo "       AC1 promises a standalone binary that runs without an interpreter." >&2; \
+		exit 1; \
+	fi; \
+	printf '%s\n' "$$linked"; \
+	echo "ok: $$binary links no libpython"
 
 # Rebuild the pyo3 extension into .venv and reinstall it. `--reinstall-package` is NOT optional, and
 # it is the ONLY thing here that reliably rebuilds:
