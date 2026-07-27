@@ -147,10 +147,10 @@ one rule for comments and docstrings alike:
 
   For a docstring that means inside the body, between `def`/`class` and the
   literal — NOT above the `def` line. The space after `#` is required, so a
-  shebang is never a marker, and what follows the `!` must START with a code:
-  `# !anything else` is an ordinary comment and silences nothing. A code that
-  is not recognised silences nothing and says so, and so does a comment that
-  was aiming at a marker and missed.
+  shebang is never a marker, and what follows the `!` must START with one of
+  OUR codes: `# !HTTP2 is mandatory` is an ordinary comment and silences
+  nothing. A code that is not recognised silences nothing and says so, and so
+  does a `# !TPX…` that is not one of them.
 
 Opt out of a rule for the whole project, in pyproject.toml:
 

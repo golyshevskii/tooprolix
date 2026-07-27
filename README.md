@@ -93,14 +93,15 @@ an unrecognised code.
 
 Two rules decide whether a line is a marker at all, and both exist so that ordinary comments cannot
 switch a rule off by accident. **The space after `#` is part of the grammar**: `#!TPX002` is a
-shebang, not a marker. And **what follows the `!` must start with a code** — `# !important: never
-cache this` is a comment, not a marker that silences nothing, because a marker's line is dropped
-from the prose being measured and dropping that one used to make the whole block disappear. The
-cost of the second rule is stated rather than hidden: `# !nonsense` is not reported as a typo,
-because it is not a marker.
+shebang, not a marker. And **what follows the `!` must start with one of our own codes** — `TPX*`,
+or `TPX` and digits. `# !important: never cache this` and `# !HTTP2 is mandatory` are comments, not
+markers that silence nothing, because a marker's line is dropped from the prose being measured and
+dropping one of those used to make the whole block disappear. The cost of the second rule is stated
+rather than hidden: `# !nonsense` is not reported as a typo, because it is not a marker.
 
 A code that is not recognised silences nothing and says so on stderr, and so does a comment above a
-block that was clearly aiming at a marker and missed.
+block that was aiming at one of our codes and missed — `# !TP*`, `# !TPX`, `# !TPX0*` and the 0.1.0
+spelling all warn. A comment in somebody else's namespace is left alone entirely.
 
 > **Upgrading from 0.1.0.** The marker used to be `# tooprolix: noqa TPX002`. That spelling is no
 > longer a marker at all — there is no alias period — and each one now reports a warning naming its

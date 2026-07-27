@@ -490,6 +490,14 @@ fn ordinary_prose_is_not_swallowed_by_a_marker_shaped_comment() {
         "exclamation.py",
         &format!("x = 1\n# !important: never cache this response\n{body}"),
     );
+    // The same defect in somebody else's namespace, which is how it survived the first fix: the
+    // gate tested the general `[A-Z]+[0-9]+` shape used to *report* an unknown code, and `HTTP2`,
+    // `UTF8`, `SHA256`, `RFC2119` and `TLS13` all match it.
+    let foreign = Scratch::new("prose-not-eaten-foreign");
+    foreign.write(
+        "http2.py",
+        &format!("x = 1\n# !HTTP2 is mandatory for this endpoint\n{body}"),
+    );
 
     // The BOM trio, on docstrings so the marker sits on its own line above the block. Each one says
     // something different, or the three identical docstrings would be a TPX003 cluster and the
@@ -514,6 +522,7 @@ fn ordinary_prose_is_not_swallowed_by_a_marker_shaped_comment() {
     // Act
     let control_output = control.check(&[]);
     let output = scratch.check(&[]);
+    let foreign_output = foreign.check(&[]);
     let bom_output = bom.check(&[]);
 
     // Assert — the control proves the fixture can fire ...
@@ -528,6 +537,19 @@ fn ordinary_prose_is_not_swallowed_by_a_marker_shaped_comment() {
         "an ordinary English comment beginning with `!` silenced a whole block: {:?} / {:?}",
         stdout_of(&output),
         stderr_of(&output)
+    );
+    // ... and neither did the same comment in a namespace that is not ours.
+    assert!(
+        stdout_of(&foreign_output).contains("TPX001"),
+        "a comment about HTTP/2 silenced a whole block: {:?} / {:?}",
+        stdout_of(&foreign_output),
+        stderr_of(&foreign_output)
+    );
+    assert_eq!(
+        stderr_of(&foreign_output),
+        "",
+        "a comment about HTTP/2 was reported as a mistyped marker: {:?}",
+        stderr_of(&foreign_output)
     );
 
     // The BOM: `capable.py` proves the docstring is a finding, `marked.py` proves the marker works,

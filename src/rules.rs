@@ -95,26 +95,32 @@
 //!   than it says. Here the blanket form is one literal token, `TPX*`, and nothing else reaches it.
 //!   See `collect_codes` (private) for the defect this replaced.
 //!
-//! ## A marker has to NAME something, or English silences a block
+//! ## A marker has to name a code in OUR namespace, or English silences a block
 //!
-//! **After `# !` the directive must begin with a token of code shape** — `TPX*`, or `TPX` followed
-//! by digits. Anything else is an ordinary comment.
+//! **After `# !` the directive must begin with `TPX*` or `TPX` followed by digits.** Anything else
+//! is an ordinary comment, and stays one.
 //!
-//! This is not tidiness. Without the rule, `# !important: never cache this response` — written by
-//! somebody who has never heard of this tool — was a marker naming an unrecognised code, so
-//! [`crate::extract`] dropped the line as a directive, the prose left under it fell below the
-//! two-line block gate, and the finding vanished **in silence**: no block survived to carry the
-//! unknown-code warning. Prose suppressing prose, reachable without ever writing `TPX*`.
+//! This is not tidiness, and it took two attempts. Without any such rule,
+//! `# !important: never cache this response` — written by somebody who has never heard of this tool
+//! — was a marker naming an unrecognised code, so [`crate::extract`] dropped the line as a
+//! directive, the prose left under it fell below the two-line block gate, and the finding vanished
+//! **in silence**: no block survived to carry the unknown-code warning. The first fix then tested
+//! the *general* code shape `[A-Z]+[0-9]+`, which is ruff's shape for anybody's rule code, and the
+//! same defect walked straight back in through `HTTP2`, `UTF8`, `SHA256`, `RFC2119`, `ISO8601` and
+//! `TLS13`. Measured: `# !HTTP2 is mandatory` removed a whole comment run, silently. The question
+//! "should this token be reported as an unknown code?" and the question "may this line silence a
+//! rule?" have different answers, and only the second one may ever be answered by a general shape.
 //!
-//! The price is taken deliberately and is the smaller one: `# !nonsense` is no longer reported as a
-//! mistyped code, because it is no longer a marker at all. No shape test can separate a typo from a
+//! The price is taken deliberately and is the smaller one: `# !nonsense` is not reported as a
+//! mistyped code, because it is not a marker at all. No shape test can separate a typo from a
 //! sentence, and only one of the two directions fails closed.
 //!
-//! **`TPX*` is a literal token and not a glob.** `TPX0*` and `TPX00*` are unrecognised: not markers,
-//! and reported by [`is_near_miss`] because they name our namespace. `TP*` and `*` name nothing of
-//! ours, so they are simply comments. Every one of them silences nothing, which is the property that
-//! matters — a glob engine has no consumer, and every star form that is not the one blanket token
-//! has to fail *closed*, or the defect below returns in a new costume.
+//! **`TPX*` is a literal token and not a glob.** `TPX0*`, `TPX00*`, `TP*` and `TPX` are
+//! unrecognised: not markers, and each one **reported** by [`is_near_miss`], because a token that
+//! begins with our namespace was aiming at a code. `# !*` and `# !HTTP2 …` begin with somebody
+//! else's, so they are simply comments and are left alone. Every one of them silences nothing, which
+//! is the property that matters — a glob engine has no consumer, and every star form that is not the
+//! one blanket token has to fail *closed*, or the defect below returns in a new costume.
 //!
 //! ## An unknown code in a marker warns; an unknown code in the config is fatal
 //!
@@ -331,14 +337,16 @@ fn tokens(directive: &str) -> impl Iterator<Item = &str> {
 /// grammar makes that hole *wider*, not narrower: a forgotten `!` leaves `# TPX002`, one character
 /// away from a working marker and with less redundancy than two misspellable words had.
 ///
-/// **It keys on the code shape, never on a bare `!`.** Two clauses:
+/// **It keys on our namespace, never on a bare `!`.** Three clauses:
 ///
-/// * the body names something of the form `TPX` followed by a digit or a star, in any case — which
-///   covers every 0.1.0 marker that carried a code, every misspelt keyword in front of a real one,
-///   `#!TPX002` and `#!TPX*` with the space forgotten, `# TPX002` with the `!` forgotten, and every
-///   star form that is not the one blanket token;
+/// * the line is `# !…` and its **first token** begins with `tp` in any case — a directive that was
+///   aiming at a code of ours and missed: `# !TP*`, `# !TPX`, `# !TPX_001`, `# !TPX0*`.
+///   the test is `starts_with`, never `contains`, because `HTTP2` contains `tp`;
+/// * or the body names something of the form `TPX` followed by a digit or a star, in any case —
+///   which covers every 0.1.0 marker that carried a code, every misspelt keyword in front of a real
+///   one, `#!TPX002` and `#!TPX*` with the space forgotten, and `# TPX002` with the `!` forgotten;
 /// * or the body is the 0.1.0 **blanket** spelling, which carries no code at all and is therefore
-///   invisible to the clause above.
+///   invisible to both clauses above.
 ///
 /// Keying on `!` instead is what an earlier version did, and it was the same defect as the parser's:
 /// `# !` is a shape ordinary English reaches by accident. `#!/usr/bin/env python` is excluded for
@@ -357,10 +365,12 @@ fn tokens(directive: &str) -> impl Iterator<Item = &str> {
 /// assert!(is_near_miss("# tooprolix: noqa"));         // ... and its code-less blanket form
 /// assert!(is_near_miss("# TPX002"));                  // the `!` forgotten
 /// assert!(is_near_miss("#!TPX002"));                  // the space forgotten
+/// assert!(is_near_miss("# !TP*"));                    // aimed at our namespace, missed
 /// assert!(!is_near_miss("# !TPX002"));                // ... this one works
 /// assert!(!is_near_miss("#!/usr/bin/env python"));
 /// assert!(!is_near_miss("# an ordinary comment"));
 /// assert!(!is_near_miss("# !important: never cache this response"));  // prose, and left alone
+/// assert!(!is_near_miss("# !HTTP2 is mandatory"));    // somebody else's namespace
 /// ```
 #[must_use]
 pub fn is_near_miss(line: &str) -> bool {
@@ -370,23 +380,40 @@ pub fn is_near_miss(line: &str) -> bool {
     let Some(body) = comment_body(line) else {
         return false;
     };
+
+    // A `# !…` line whose FIRST token was aiming at our namespace and is not a code: `# !TP*`,
+    // `# !TPX`, `# !TPX_001`. `EPIC.md` Decisions #9 and #10 both name the starred forms as
+    // warnings, and this is what makes them one — while leaving `# !HTTP2 is mandatory` alone,
+    // which is the whole reason the test is `starts_with` and not `contains`.
+    if body
+        .strip_prefix(char::is_whitespace)
+        .map(str::trim_start)
+        .and_then(|rest| rest.strip_prefix('!'))
+        .and_then(|directive| tokens(directive).next())
+        .is_some_and(aims_at_our_namespace)
+    {
+        return true;
+    }
+
+    // ... and a line that names a code without being a directive at all: the `!` forgotten
+    // (`# TPX002`), the space forgotten (`#!TPX002`, `#!TPX*`), or a 0.1.0 marker with a code in it.
+    //
     // `get`, not a slice: `to_ascii_lowercase` leaves every non-ASCII byte where it was, so the
     // byte after a match is not guaranteed to be a char boundary and must never be sliced at.
     let lowered = body.to_ascii_lowercase();
     let names_a_code = lowered.match_indices("tpx").any(|(at, _)| {
         lowered
             .as_bytes()
-            .get(at + "tpx".len())
+            .get(at + NAMESPACE.len())
             .is_some_and(|byte| byte.is_ascii_digit() || *byte == b'*')
     });
 
-    // The 0.1.0 blanket marker is the one legacy spelling that carries no code at all, so the shape
-    // test above cannot see it — and it is the spelling whose upgrade goes wrong twice over: it
-    // stops suppressing, and its own two words are then counted as prose. Measured: a 149-word
-    // comment run became 151 words and started reporting `TPX001` that the same run without the
-    // dead marker never reported. Both halves are silent without this clause. It matches nothing in
-    // the pinned corpus, which does not contain the word `tooprolix` at all.
-    names_a_code || (lowered.contains("tooprolix") && lowered.contains("noqa"))
+    // The 0.1.0 blanket marker is the one legacy spelling that carries no code at all, so neither
+    // clause above can see it — and it is the spelling whose upgrade goes wrong twice over: it stops
+    // suppressing, and its own two words are then counted as prose. Measured: a 149-word comment run
+    // became 151 words and started reporting `TPX001` that the same run without the dead marker
+    // never reported. Both halves are silent without this clause.
+    names_a_code || is_legacy_marker(body)
 }
 
 /// Whether `line` is an opt-out marker at all, without asking what it silences.
@@ -411,8 +438,9 @@ pub fn is_marker(line: &str) -> bool {
 
 /// The one token that means "every rule on this block".
 ///
-/// A **literal**, compared with `==`. It is not a glob and there is no glob: `TPX0*`, `TP*` and `*`
-/// are unrecognised codes that warn and silence nothing. Widening this into a pattern language would
+/// A **literal**, compared with `==`. It is not a glob and there is no glob: `TPX0*` and `TP*` are
+/// unrecognised, warn through [`is_near_miss`] and silence nothing. Widening this into a pattern
+/// language would
 /// re-open the defect below by a different door — the blanket state would once again be reachable by
 /// a token nobody spelled out — and no consumer has asked for it.
 const BLANKET: &str = "TPX*";
@@ -473,19 +501,67 @@ fn collect_codes(directive: &str) -> Suppression {
     suppression
 }
 
-/// `[A-Z]+[0-9]+` and nothing else — ruff's own shape for a rule code.
+/// `TPX` and then digits — the shape of a code in **our** namespace, and nothing else.
 ///
-/// `bytes()`, not `chars()`, so `letters` is a byte offset **by construction** and the slice below
-/// cannot land inside a character. It was `chars().take_while(char::is_ascii_uppercase)`, which was
-/// also correct — an ASCII upper-case char is one byte, so the char count equalled the byte offset —
-/// but correct by a two-step argument that a change of predicate would quietly break. `parse_marker`
-/// above shipped a panic from exactly that kind of reasoning; this is the same class made structural
-/// rather than argued. Verified before the change with `# !AB日`: no panic.
+/// This used to be the general `[A-Z]+[0-9]+`, ruff's shape for anybody's rule code, and the
+/// difference is not academic. That predicate is the right answer to "should this token be reported
+/// as an unknown code?" and the **wrong** answer to "does this line silence a rule?", because it
+/// accepts `HTTP2`, `UTF8`, `SHA256`, `RFC2119`, `ISO8601` and `TLS13`. Measured on the built
+/// binary: `# !HTTP2 is mandatory` above a comment run removed the whole block, in silence — a
+/// comment about a wire protocol switching off a lint. One namespace, one question, one predicate.
+///
+/// Case-insensitive on the prefix so that `tpx001` is still *a code*, and therefore still reported
+/// as one nobody answers to. [`Rule::from_code`] is the case-sensitive half, deliberately: a code is
+/// upper case, and getting the case wrong is a typo the tool names rather than a second spelling it
+/// accepts.
+///
+/// `str::get`, never a slice: it returns `None` rather than panicking when byte 3 falls inside a
+/// character, which `# !AB日` does. `parse_marker` shipped exit 101 from exactly that reasoning
+/// once; nothing here can repeat it.
 fn is_code_shaped(token: &str) -> bool {
-    let letters = token.bytes().take_while(u8::is_ascii_uppercase).count();
-    letters > 0
-        && token.len() > letters
-        && token.as_bytes()[letters..].iter().all(u8::is_ascii_digit)
+    token
+        .get(..NAMESPACE.len())
+        .is_some_and(|prefix| prefix.eq_ignore_ascii_case(NAMESPACE))
+        && token.len() > NAMESPACE.len()
+        && token.as_bytes()[NAMESPACE.len()..]
+            .iter()
+            .all(u8::is_ascii_digit)
+}
+
+/// Our namespace, and the first thing every code in it spells.
+const NAMESPACE: &str = "TPX";
+
+/// Whether `token` was **aiming** at our namespace, however badly.
+///
+/// The line between a mistyped marker that must be reported and a sentence that must be left alone,
+/// and the only thing that can draw it: `# !TP*` is somebody reaching for `TPX*`, `# !HTTP2 is
+/// mandatory` is somebody talking about HTTP/2. Both are `# !` followed by a token that is not a
+/// code, so nothing else about their shape separates them.
+///
+/// **`starts_with`, never `contains`** — `HTTP2` contains `tp` and must stay silent. Two characters
+/// rather than three, so that `# !TP*` and `# !tp` are caught as well as `TPX`-something.
+fn aims_at_our_namespace(token: &str) -> bool {
+    token
+        .as_bytes()
+        .get(..2)
+        .is_some_and(|prefix| prefix.eq_ignore_ascii_case(b"tp"))
+}
+
+/// Whether `body` — the text after a `#` — is the **0.1.0** marker, `tooprolix : noqa …`.
+///
+/// The 0.1.0 grammar, walked the way 0.1.0 walked it, and not a search for its words. Asking whether
+/// the body merely *contained* `tooprolix` and `noqa` reported `# tooprolix deliberately avoids noqa
+/// semantics` — a sentence about the tool, above a block — as a dead marker.
+fn is_legacy_marker(body: &str) -> bool {
+    let Some(rest) = body.trim_start().strip_prefix("tooprolix") else {
+        return false;
+    };
+    let Some(rest) = rest.trim_start().strip_prefix(':') else {
+        return false;
+    };
+    rest.trim_start()
+        .get(.."noqa".len())
+        .is_some_and(|keyword| keyword.eq_ignore_ascii_case("noqa"))
 }
 
 #[cfg(test)]
@@ -863,7 +939,8 @@ mod tests {
             "# !, ,\t,",
             // Aimed at a code and missed the SHAPE. These stay audible through `is_near_miss`,
             // which is asserted separately — here the only claim is that they silence nothing.
-            "# !tpx001",
+            // `# !tpx001` is NOT among them: the wrong case is still our namespace and still a
+            // code, so it stays a marker and is reported as a code no rule answers to.
             "# !TPX",
             "# !TPX001TPX002",
             "# !TPX0*",
@@ -878,6 +955,107 @@ mod tests {
         // The pair, or the assertions above pass on a parser that rejects everything.
         for line in ["# !TPX001", "# !TPX*", "# !TPX999", "# ! TPX001,TPX002"] {
             assert!(parse_marker(line).is_some(), "stopped parsing: {line:?}");
+        }
+    }
+
+    /// **Only OUR namespace can make a line a marker.** Anything else is prose, and stays prose.
+    ///
+    /// The first version of the "name a code" rule tested `[A-Z]+[0-9]+` — the general shape used to
+    /// *report* an unknown code — and that is not the same question. It accepts `HTTP2`, `UTF8`,
+    /// `SHA256`, `RFC2119`, `ISO8601`, `TLS13`: ordinary technical prose. Reproduced on the binary:
+    /// `# !HTTP2 is mandatory` above a comment run took the whole block out, silently, exactly as
+    /// `# !important: never cache this response` had done one revision earlier. Same defect, same
+    /// seam, smaller class.
+    ///
+    /// Both halves are asserted for every line. Not being a marker is what stops the block being
+    /// eaten; not being a near-miss either is what stops the tool shouting about somebody's comment
+    /// on TLS.
+    #[test]
+    fn only_our_own_namespace_can_make_a_line_a_marker() {
+        for line in [
+            "# !HTTP2 is mandatory",
+            "# !UTF8 everywhere, no exceptions",
+            "# !SHA256 only",
+            "# !RFC2119 language throughout",
+            "# !ISO8601 timestamps",
+            "# !TLS13 required",
+            "# !A1",
+            "# !important: never cache this response",
+            "# !nonsense",
+        ] {
+            assert_eq!(
+                parse_marker(line),
+                None,
+                "prose in somebody else's namespace was read as a marker: {line:?}"
+            );
+            assert!(
+                !super::is_near_miss(line),
+                "prose in somebody else's namespace was reported as a near-miss: {line:?}"
+            );
+        }
+    }
+
+    /// A directive that aims at our namespace and misses is **reported**, never silent.
+    ///
+    /// `EPIC.md` Decisions #9 and #10 both say it in as many words: `TPX0*`, `TP*` and every other
+    /// starred form warn and suppress zero rules. The measured gap was the ones that carry neither a
+    /// digit nor a star after `TPX` — `# !TP*`, `# !TPX`, `# !TPX_001` were silent.
+    ///
+    /// The signal that separates these from the test above is **whether the token was aiming at our
+    /// namespace at all**, and it is `starts_with`, never `contains`: `HTTP2` contains `tp` and must
+    /// stay silent, while `TP*` begins with it and must not.
+    #[test]
+    fn a_directive_aimed_at_our_namespace_that_misses_is_reported() {
+        for line in [
+            "# !TP*",
+            "# !TPX",
+            "# !TPX_001",
+            "# !TPXOO1",
+            "# !TPX0*",
+            "# !TPX00*",
+            "# !tpx*",
+            "# !TPX**",
+            "# !TPX001TPX002",
+            "# !tp",
+        ] {
+            assert!(
+                super::is_near_miss(line),
+                "a directive aimed at our namespace went unreported: {line:?}"
+            );
+            assert_eq!(
+                parse_marker(line),
+                None,
+                "a token that is not a code was read as a marker: {line:?}"
+            );
+        }
+    }
+
+    /// The legacy clause matches the 0.1.0 **grammar**, not two words in the same sentence.
+    ///
+    /// `# tooprolix deliberately avoids noqa semantics` is a sentence about the tool, above a block,
+    /// and it warned — because the clause asked whether the body contained both words anywhere.
+    #[test]
+    fn only_the_actual_0_1_0_spelling_counts_as_a_legacy_marker() {
+        for line in [
+            "# tooprolix: noqa",
+            "#tooprolix:noqa",
+            "# tooprolix : NOQA",
+            "# tooprolix:  noqa  # deliberate",
+        ] {
+            assert!(super::is_near_miss(line), "went unreported: {line:?}");
+        }
+
+        for line in [
+            "# tooprolix deliberately avoids noqa semantics",
+            "# tooprolix no longer uses a noqa keyword",
+            "# unlike noqa, tooprolix marks the block above",
+            "# tooprolix is a linter",
+            "# noqa: F401",
+        ] {
+            assert!(
+                !super::is_near_miss(line),
+                "prose about the tool was reported as a legacy marker: {line:?}"
+            );
         }
     }
 
@@ -937,7 +1115,6 @@ mod tests {
             "#!TPX*",
             // Aimed at a code and missed its SHAPE. None of these is a marker any more, so the
             // near-miss clause is the only thing left that can report them.
-            "# !tpx001",
             "# !TPX001TPX002",
             "# !TPX0*",
             "# !tpx*",
@@ -955,6 +1132,9 @@ mod tests {
             "# !TPX002",
             "# !TPX*",
             "# !TPX999",
+            // The wrong case is our namespace with a typo in it, so it stays a marker and warns
+            // through `unknown_codes`. Warning twice about one line is noise.
+            "# !tpx001",
             "\u{feff}# !TPX002",
             // **Prose that merely begins with `!`.** This is the half the predicate got wrong by
             // keying on the `!`: a comment nobody wrote as a directive must be neither a marker nor
@@ -964,9 +1144,10 @@ mod tests {
             "  # !nonsense",
             "# !",
             "# ! ",
-            // A star that never names our namespace is not aiming at a code either.
-            "# !TP*",
+            // A star that never names our namespace is not aiming at a code either. `# !TP*` is the
+            // opposite case and lives in the reported list above: it begins with our namespace.
             "# !*",
+            "# !HTTP2 is mandatory",
             // The shebang. 25 files in the pinned corpus open with one and 11 of those sit directly
             // above a module docstring — the difference between no diagnostic and 11 of them.
             "#!/usr/bin/env python",
