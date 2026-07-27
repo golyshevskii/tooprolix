@@ -573,6 +573,92 @@ fn ordinary_prose_is_not_swallowed_by_a_marker_shaped_comment() {
     );
 }
 
+/// **A word in the reason cannot silence a rule the marker never named.**
+///
+/// The same seam as `ordinary_prose_is_not_swallowed_by_a_marker_shaped_comment`, one position
+/// further along: the code list and the reason were separated by nothing, because the tokeniser
+/// split on comma and space alike. A sentence written after a code the author really did mean was
+/// parsed as more codes — including the blanket literal, which is the one token that must never be
+/// reachable except by being written on purpose.
+///
+/// The fixture is a four-line, 180-word comment run, chosen so that it survives losing its marker
+/// line. Without that, "no finding" would be ambiguous between "suppressed" and "the block
+/// collapsed under the two-line gate", and the test would pass for the wrong reason.
+#[test]
+fn a_word_in_the_reason_cannot_silence_a_rule_the_marker_never_named() {
+    // Arrange — 180 words over four lines, over the 150-word default and still four lines after the
+    // marker line is taken off it, which is what keeps "no finding" unambiguous.
+    let body = format!("# {}\n", "word ".repeat(45)).repeat(4);
+    let capable = Scratch::new("reason-capable");
+    capable.write("c0.py", &body);
+    // A reason that could never be mistaken for a code — the control for "the marker still works".
+    let plain = Scratch::new("reason-plain");
+    plain.write(
+        "c1.py",
+        &format!("# !TPX002 blanket would be overkill here\n{body}"),
+    );
+    // The blanket literal in the reason position.
+    let blanket = Scratch::new("reason-blanket");
+    blanket.write(
+        "c2.py",
+        &format!("# !TPX002 TPX* would be overkill here\n{body}"),
+    );
+    // A real code in the reason position.
+    let code = Scratch::new("reason-code");
+    code.write(
+        "c4.py",
+        &format!("# !TPX002 TPX001 was fixed above\n{body}"),
+    );
+    // A starred form INSIDE the comma list, which must warn — Decisions #9.
+    let starred = Scratch::new("reason-starred");
+    starred.write("c3.py", &format!("# !TPX002,TPX0*\n{body}"));
+
+    // Act
+    let c0 = capable.check(&[]);
+    let c1 = plain.check(&[]);
+    let c2 = blanket.check(&[]);
+    let c4 = code.check(&[]);
+    let c3 = starred.check(&[]);
+
+    // Assert — the fixture is capable, and it stays capable with a marker for another rule on it.
+    assert!(
+        stdout_of(&c0).contains("TPX001"),
+        "the fixture cannot demonstrate a suppression it never triggers: {}",
+        stdout_of(&c0)
+    );
+    assert!(
+        stdout_of(&c1).contains("TPX001"),
+        "a TPX002 marker silenced TPX001: {}",
+        stdout_of(&c1)
+    );
+
+    // ... and neither reason may take the finding away, silently or otherwise.
+    assert!(
+        stdout_of(&c2).contains("TPX001"),
+        "`TPX*` in the reason position set the blanket: {:?} / {:?}",
+        stdout_of(&c2),
+        stderr_of(&c2)
+    );
+    assert!(
+        stdout_of(&c4).contains("TPX001"),
+        "a code named in the reason position silenced its rule: {:?} / {:?}",
+        stdout_of(&c4),
+        stderr_of(&c4)
+    );
+
+    // The comma list keeps the other half of the contract: an unrecognised token there warns.
+    assert!(
+        stdout_of(&c3).contains("TPX001"),
+        "`TPX0*` suppressed a rule: {}",
+        stdout_of(&c3)
+    );
+    assert!(
+        stderr_of(&c3).contains("`TPX0*`"),
+        "a starred form inside a comma list said nothing: {:?}",
+        stderr_of(&c3)
+    );
+}
+
 /// A comment that was aiming at a marker and missed is reported — and reported is all it is.
 ///
 /// The class this closes was measured on the 0.1.0 binary: a typo in the **code** was already loud

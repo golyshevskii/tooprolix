@@ -88,12 +88,15 @@
 //!   `TPX001TPX002` is the shape of no code at all, so the line is not a marker — and it is still
 //!   audible, because [`is_near_miss`] reports it. What must never happen is the recovery: a marker
 //!   silencing two rules the author did not separately write;
-//! * **trailing prose does not make a marker blanket.** ruff reads `# noqa this is fine` as a
-//!   blanket suppression, because its marker sits *after code* where a trailing comment is the norm.
-//!   Ours owns its whole line, so text after the `!` is far more likely to be a mistyped code than a
-//!   remark — and reading it as blanket is the one mistake that can make a marker silence *more*
-//!   than it says. Here the blanket form is one literal token, `TPX*`, and nothing else reaches it.
-//!   See `collect_codes` (private) for the defect this replaced.
+//! * **trailing prose is a reason, and cannot be anything else.** ruff reads `# noqa this is fine`
+//!   as a blanket suppression, because its marker sits *after code* where a trailing comment is the
+//!   norm. Ours owns its whole line, so **the code list stops at the first space** and everything
+//!   past it is the author's reason — whatever it is shaped like. That sentence stood here while it
+//!   was false in the way that matters: the tokeniser split on whitespace as well as commas, so
+//!   `# !TPX002 TPX* would be overkill here` reached the blanket state out of an English clause,
+//!   silencing every rule on the block without a word. Reading trailing prose as codes is the one
+//!   mistake that can make a marker silence *more* than it says, and a comma is now the only thing
+//!   that can extend a code list. See `collect_codes` (private).
 //!
 //! ## A marker has to name a code in OUR namespace, or English silences a block
 //!
@@ -287,6 +290,15 @@ pub fn parse_marker(line: &str) -> Option<Suppression> {
         .trim_start()
         .strip_prefix('!')?;
 
+    // **The code list is everything up to the first space; the rest is the author's reason.** The
+    // comma is the only separator, which is what `README.md` has always documented and what the
+    // parser did not do: it split on comma and whitespace alike, so a word standing after a code
+    // the author really meant was read as another code. Measured — `# !TPX002 TPX* would be
+    // overkill here` silenced **every** rule on the block and said nothing, and
+    // `# !TPX002 TPX001 was fixed above` silenced `TPX001`. Silent and suppressing, reached by an
+    // English sentence, which is the third time this seam has been re-armed.
+    let list = code_list(directive)?;
+
     // **The directive has to begin with a token of code shape, or this is not a marker.** Measured
     // defect: without this test `# !important: never cache this response` — English, written by
     // somebody who has never heard of this tool — parsed as a marker naming an unrecognised code,
@@ -297,12 +309,12 @@ pub fn parse_marker(line: &str) -> Option<Suppression> {
     // The price is real and is taken deliberately: `# !nonsense` is no longer reported as a mistyped
     // code, because it is no longer a marker. A shape test cannot tell a typo from a sentence, and
     // between eating prose and missing a typo, only one of the two can fail closed.
-    let first = tokens(directive).next()?;
+    let first = tokens(list).next()?;
     if first != BLANKET && !is_code_shaped(first) {
         return None;
     }
 
-    Some(collect_codes(directive))
+    Some(collect_codes(list))
 }
 
 /// The text of `line` after its `#`, or `None` when `line` is not a comment.
@@ -320,11 +332,17 @@ fn comment_body(line: &str) -> Option<&str> {
         .strip_prefix('#')
 }
 
-/// The directive split into tokens, empties dropped. The single owner of "where a code ends".
-fn tokens(directive: &str) -> impl Iterator<Item = &str> {
-    directive
-        .split([',', ' ', '\t'])
-        .filter(|token| !token.is_empty())
+/// The code list at the head of `directive`: everything before the first whitespace.
+///
+/// The single owner of **where the codes stop and the reason starts**, and there has to be exactly
+/// one, because the answer was previously "nowhere" — see `collect_codes` (private).
+fn code_list(directive: &str) -> Option<&str> {
+    directive.split_whitespace().next()
+}
+
+/// The code list split into tokens, empties dropped. **A comma, and nothing else, separates codes.**
+fn tokens(list: &str) -> impl Iterator<Item = &str> {
+    list.split(',').filter(|token| !token.is_empty())
 }
 
 /// Whether `line` was *trying* to be an opt-out marker and failed.
@@ -389,7 +407,8 @@ pub fn is_near_miss(line: &str) -> bool {
         .strip_prefix(char::is_whitespace)
         .map(str::trim_start)
         .and_then(|rest| rest.strip_prefix('!'))
-        .and_then(|directive| tokens(directive).next())
+        .and_then(code_list)
+        .and_then(|list| tokens(list).next())
         .is_some_and(aims_at_our_namespace)
     {
         return true;
@@ -467,34 +486,42 @@ const BLANKET: &str = "TPX*";
 /// Now absence is not a marker at all ([`parse_marker`] rejects `# !`), and the only road to `all`
 /// is the `==` below.
 ///
-/// # Where the code list ends
+/// # Where the code list ends, and why this function never has to decide
 ///
-/// At the first token that is neither [`BLANKET`] nor `[A-Z]+[0-9]+`. What happens to that token
-/// depends on whether anything was read before it, and that is the *only* thing it depends on:
+/// It does not end here. `list` is **already** only the code list — [`parse_marker`] cuts it at the
+/// first whitespace via `code_list` (private) — so every token reaching this loop is something the
+/// author wrote between commas, and every one of them is a code attempt. There is no "is this still
+/// a code, or has the reason started?" question left to get wrong, and getting it wrong is the
+/// entire history of this function.
 ///
-/// * **a code, or the blanket token, was already read** — the rest is the author's reason, and is
-///   ignored in silence. `# !TPX001 because the table below is the contract` is legal, and ruff
-///   stops in the same place for the same reason;
-/// * **nothing was read yet** — the marker was trying to name something and failed, so the token is
-///   recorded as unknown. The marker silences nothing and [`crate::cli`] says which token it was.
-fn collect_codes(directive: &str) -> Suppression {
+/// Two earlier answers, both shipped, both defects:
+///
+/// * *"the list ends at the first token that is not code shaped, and if nothing was read yet that
+///   token is recorded as unknown"* — the second clause made `# !important: never cache this` a
+///   marker naming an unrecognised code, which then removed the block below it;
+/// * *"the list ends at the first token that is not code shaped, full stop"* — that reads
+///   `# !TPX002 TPX* would be overkill here` as **two** tokens, because the tokeniser split on
+///   whitespace as well as commas. Measured: every rule on the block silenced, no warning.
+///
+/// # An unrecognised token warns here, and prose does not
+///
+/// That asymmetry is what the comma buys. `# !TPX002,TPX0*` warns about `TPX0*`, because a token
+/// written inside the list can only have been meant as a code — `EPIC.md` Decisions #9 requires
+/// exactly that of every starred form. `# !TPX002 TPX0* was rejected` says nothing, because after
+/// the space the author is writing English. Same token, different position, and the position is
+/// unambiguous rather than inferred.
+fn collect_codes(list: &str) -> Suppression {
     let mut suppression = Suppression::default();
 
-    for token in tokens(directive) {
+    for token in tokens(list) {
         if token == BLANKET {
             suppression.all = true;
-        } else if is_code_shaped(token) {
-            match Rule::from_code(token) {
-                Some(rule) => suppression.codes.push(rule),
-                None => suppression.unknown.push(token.to_owned()),
-            }
+        } else if let Some(rule) = Rule::from_code(token) {
+            suppression.codes.push(rule);
         } else {
-            // Everything from here on is the author's reason. There is no "…unless nothing has been
-            // read yet" case left: [`parse_marker`] refuses a directive whose FIRST token is not
-            // code shaped, so by the time control reaches this arm something has always been read.
-            // That branch did exist, and it is what made `# !important: never cache this` a marker
-            // naming an unrecognised code — which then ate the block below it.
-            break;
+            // Code shaped or not, a token inside the comma list was meant as a code and answers to
+            // no rule. `crate::cli` names it.
+            suppression.unknown.push(token.to_owned());
         }
     }
 
@@ -798,22 +825,114 @@ mod tests {
         }
     }
 
-    /// An explanation *after* a code that was recognised is prose, not a second code.
+    /// An explanation *after* a code that was recognised is prose — **whatever it looks like**.
     ///
-    /// This is why the two cases are told apart by what came before them rather than by what the
-    /// token looks like: `because` after `TPX001` is a reason, and `because` on its own is a marker
-    /// that failed to name anything.
+    /// The test used to say only this much with a `because…` sentence, which is the one explanation
+    /// that could never be mistaken for a code. Its own name promised more than that, and the
+    /// guarantee behind the name was broken: a reason word shaped like a code was read as one.
     #[test]
     fn an_explanation_after_a_recognised_code_is_not_reported_as_a_typo() {
-        let marker = parse_marker("# !TPX001 because the table is the contract").expect("marker");
+        for line in [
+            "# !TPX001 because the table is the contract",
+            // Every one of these is a reason whose first word is code-shaped, and none of them may
+            // be read as a second code.
+            "# !TPX001 TPX002 is handled by the schema",
+            "# !TPX001 E501 lives in ruff, not here",
+            "# !TPX001 HTTP2 framing is described below",
+            "# !TPX001 TPX0* was considered and rejected",
+        ] {
+            let marker = parse_marker(line).unwrap_or_else(|| panic!("not parsed: {line}"));
 
-        assert!(marker.silences(Rule::CommentVolume));
-        assert!(!marker.silences(Rule::DuplicateProse));
+            assert!(marker.silences(Rule::CommentVolume), "{line:?}");
+            assert!(
+                !marker.silences(Rule::DocstringVolume) && !marker.silences(Rule::DuplicateProse),
+                "a word in the reason silenced a rule the marker never named: {line:?}"
+            );
+            assert!(
+                marker.unknown_codes().is_empty(),
+                "an explanation was reported as a mistyped code: {line:?} -> {:?}",
+                marker.unknown_codes()
+            );
+        }
+    }
+
+    /// **The code list ends at the first space. Everything after it is the author's reason.**
+    ///
+    /// The third re-arming of one seam, and the first to hide in the *reason* position. `tokens`
+    /// split on comma and whitespace alike, so a word standing after a perfectly good code was
+    /// parsed as another code — including the blanket literal. Reproduced on the binary, on a
+    /// comment run capable of surviving the loss of its marker line:
+    ///
+    /// ```text
+    /// # !TPX002 blanket would be overkill here  → TPX001 reported  (correct)
+    /// # !TPX002 TPX* would be overkill here     → nothing, and no warning
+    /// # !TPX002 TPX001 was fixed above          → nothing, and no warning
+    /// ```
+    ///
+    /// Silent **and** suppressing — the combination the whole grammar exists to make unreachable —
+    /// and reached this time by an ordinary English sentence written after a code the author really
+    /// did mean. `README.md` had already shipped the narrower contract ("Several codes are
+    /// comma-separated, anything after them is your reason"); the parser was simply wider than its
+    /// own documentation, and the width was the defect.
+    ///
+    /// The asymmetry below is the point of the comma. Inside a comma list every token is a code
+    /// attempt, so an unrecognised one **warns**; after a space nothing warns, because it is prose.
+    /// The comma is what makes the author's intent unambiguous.
+    #[test]
+    fn the_code_list_ends_at_the_first_space_and_the_rest_is_the_reason() {
+        // A comma list is still a list.
+        let list = parse_marker("# !TPX001,TPX002").expect("marker");
+        assert!(list.silences(Rule::CommentVolume) && list.silences(Rule::DocstringVolume));
+        assert!(list.unknown_codes().is_empty());
+
+        // ... and a space is no longer a separator, so only the first code is named.
+        let spaced = parse_marker("# !TPX001 TPX002").expect("marker");
+        assert!(spaced.silences(Rule::CommentVolume));
         assert!(
-            marker.unknown_codes().is_empty(),
-            "an explanation was reported as a mistyped code: {:?}",
-            marker.unknown_codes()
+            !spaced.silences(Rule::DocstringVolume),
+            "a space separated two codes: the second was silenced without being written in the list"
         );
+
+        // The blanket literal in the reason position must NOT widen the marker. This is the case
+        // that was both silent and suppressing.
+        let reasoned_blanket = parse_marker("# !TPX002 TPX* would be overkill here").expect("m");
+        assert!(reasoned_blanket.silences(Rule::DocstringVolume));
+        for rule in [Rule::CommentVolume, Rule::DuplicateProse] {
+            assert!(
+                !reasoned_blanket.silences(rule),
+                "the blanket token was reached from the reason position: {rule:?}"
+            );
+        }
+        assert!(reasoned_blanket.unknown_codes().is_empty());
+
+        // A real code in the reason position is prose too.
+        let reasoned_code = parse_marker("# !TPX002 TPX001 was fixed above").expect("marker");
+        assert!(reasoned_code.silences(Rule::DocstringVolume));
+        assert!(
+            !reasoned_code.silences(Rule::CommentVolume),
+            "a word in the reason silenced a second rule"
+        );
+
+        // ... but inside the comma list, an unrecognised token is a code attempt and must warn.
+        let starred = parse_marker("# !TPX002,TPX0*").expect("marker");
+        assert!(starred.silences(Rule::DocstringVolume));
+        assert!(
+            !starred.silences(Rule::CommentVolume) && !starred.silences(Rule::DuplicateProse),
+            "a starred form set the blanket"
+        );
+        assert_eq!(
+            starred.unknown_codes(),
+            ["TPX0*"],
+            "a starred form inside a comma list said nothing — EPIC.md Decisions #9 requires every \
+             starred form to warn and suppress nothing"
+        );
+
+        // The blanket itself is untouched, in first position where it belongs.
+        let blanket = parse_marker("# !TPX* the whole block is deliberate").expect("marker");
+        for rule in Rule::ALL {
+            assert!(blanket.silences(rule));
+        }
+        assert!(blanket.unknown_codes().is_empty());
     }
 
     /// A directive whose text is not a code must be **rejected**, in any script, without panicking.
