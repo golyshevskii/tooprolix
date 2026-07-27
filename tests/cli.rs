@@ -459,6 +459,98 @@ fn a_marker_silences_its_own_block_and_only_its_own_rule() {
     );
 }
 
+/// **Prose is never eaten by a comment that merely looks marker-shaped.**
+///
+/// The worst outcome this tool has, measured on the committed 0.2.0 parser: a comment a human wrote
+/// without ever having heard of tooprolix — `# !important: never cache this response` — parsed as a
+/// marker naming an unrecognised code. `extract` then dropped the line as a directive, the remainder
+/// fell under the two-line block gate, the finding disappeared, and **no warning fired at all**,
+/// because no block survived to carry the unknown-code diagnostic. Silent suppression by English.
+///
+/// The BOM half is the same defect from the other side: a marker that stops working because a
+/// legitimate byte sits in front of it, again in silence.
+///
+/// Every case is paired with a control that must produce the finding, so none of the assertions can
+/// pass on a run that measured nothing.
+#[test]
+fn ordinary_prose_is_not_swallowed_by_a_marker_shaped_comment() {
+    // Arrange — ONE comment line of 160 words, which is what makes the defect visible rather than
+    // merely renumbered: a block needs two lines, so dropping the line above this one takes the
+    // whole block below the gate and the finding stops existing.
+    let body = format!("# {}\n", "word ".repeat(160));
+    // Two trees, one file each: same prose in both, so a shared tree would report them as a TPX003
+    // cluster and the two runs would stop being comparable on TPX001 alone.
+    let control = Scratch::new("prose-control");
+    control.write(
+        "control.py",
+        &format!("x = 1\n# a plain first line\n{body}"),
+    );
+    let scratch = Scratch::new("prose-not-eaten");
+    scratch.write(
+        "exclamation.py",
+        &format!("x = 1\n# !important: never cache this response\n{body}"),
+    );
+
+    // The BOM trio, on docstrings so the marker sits on its own line above the block. Each one says
+    // something different, or the three identical docstrings would be a TPX003 cluster and the
+    // assertions below could not tell a suppressed TPX002 from a cluster naming the same file.
+    let docstring = |subject: &str| {
+        format!(
+            "\"\"\"Overview.\n{}\"\"\"\n",
+            format!(
+                "The {subject} is read once per batch because two reads straddle a boundary.\n"
+            )
+            .repeat(30)
+        )
+    };
+    let bom = Scratch::new("prose-not-eaten-bom");
+    bom.write("capable.py", &docstring("clock"));
+    bom.write("marked.py", &format!("# !TPX002\n{}", docstring("ledger")));
+    bom.write(
+        "bom_marked.py",
+        &format!("\u{feff}# !TPX002\n{}", docstring("cursor")),
+    );
+
+    // Act
+    let control_output = control.check(&[]);
+    let output = scratch.check(&[]);
+    let bom_output = bom.check(&[]);
+
+    // Assert — the control proves the fixture can fire ...
+    assert!(
+        stdout_of(&control_output).contains("TPX001"),
+        "the fixture cannot demonstrate a suppression it never triggers: {}",
+        stdout_of(&control_output)
+    );
+    // ... and the `!` comment must not have removed the same finding from the same prose.
+    assert!(
+        stdout_of(&output).contains("TPX001"),
+        "an ordinary English comment beginning with `!` silenced a whole block: {:?} / {:?}",
+        stdout_of(&output),
+        stderr_of(&output)
+    );
+
+    // The BOM: `capable.py` proves the docstring is a finding, `marked.py` proves the marker works,
+    // and `bom_marked.py` must behave exactly like `marked.py` and not like `capable.py`.
+    assert!(
+        stdout_of(&bom_output).contains("capable.py:1: TPX002"),
+        "the BOM fixture cannot demonstrate anything: {}",
+        stdout_of(&bom_output)
+    );
+    // `./` prefixes, not bare names: `marked.py` is a substring of `bom_marked.py`, so the plain
+    // assertion below would answer for the BOM one too and the pair would stop being a pair.
+    assert!(
+        !stdout_of(&bom_output).contains("./marked.py"),
+        "the plain marker stopped working: {}",
+        stdout_of(&bom_output)
+    );
+    assert!(
+        !stdout_of(&bom_output).contains("./bom_marked.py"),
+        "a UTF-8 byte order mark silently defeated a correct marker: {}",
+        stdout_of(&bom_output)
+    );
+}
+
 /// A comment that was aiming at a marker and missed is reported — and reported is all it is.
 ///
 /// The class this closes was measured on the 0.1.0 binary: a typo in the **code** was already loud
@@ -521,10 +613,24 @@ fn a_comment_that_was_aiming_at_a_marker_is_reported_without_changing_the_outcom
          # nine ten eleven twelve thirteen fourteen fifteen sixteen\n",
     );
 
+    // The 0.1.0 BLANKET marker, which carries no code and so cannot be found by a code-shaped
+    // search. Its upgrade goes wrong twice: it stops suppressing, and its own two words are counted
+    // as prose — measured, a 149-word run becomes 151 and reports TPX001 that the same run without
+    // the dead marker never reported. Both halves are asserted, and both were silent before.
+    let legacy = Scratch::new("near-miss-legacy");
+    legacy.write(
+        "blanket.py",
+        &format!("x = 1\n# tooprolix: noqa\n# {}\n", "word ".repeat(149)),
+    );
+    let legacy_control = Scratch::new("near-miss-legacy-control");
+    legacy_control.write("blanket.py", &format!("x = 1\n# {}\n", "word ".repeat(149)));
+
     // Act
     let loud_output = loud.check(&[]);
     let quiet_output = quiet.check(&[]);
     let clean_output = clean.check(&[]);
+    let legacy_output = legacy.check(&[]);
+    let legacy_control_output = legacy_control.check(&[]);
 
     // Assert — (1) both positions warn, and the warning names the file, the line and the form.
     assert!(
@@ -573,6 +679,21 @@ fn a_comment_that_was_aiming_at_a_marker_is_reported_without_changing_the_outcom
         "",
         "a working marker was reported as a near-miss: {:?}",
         stderr_of(&quiet_output)
+    );
+
+    // (5) — the 0.1.0 blanket, which carries no code at all. The control shows the same 149-word
+    // run is silent without it, so the finding below is one the dead marker's own words created;
+    // the warning is the only thing that connects the two for whoever is upgrading.
+    assert_eq!(
+        stdout_of(&legacy_control_output),
+        "",
+        "the control fires on its own, so it cannot show what the dead marker added: {}",
+        stdout_of(&legacy_control_output)
+    );
+    assert!(
+        stderr_of(&legacy_output).contains("blanket.py:2: this is not an opt-out marker"),
+        "the 0.1.0 blanket marker went completely unreported: {:?}",
+        stderr_of(&legacy_output)
     );
 }
 

@@ -89,9 +89,18 @@ def settle(batch):
 For a docstring that means *inside* the body, between `def`/`class` and the literal — not above the
 `def` line. Several codes are comma-separated, anything after them is your reason, and `# !TPX*`
 silences every rule for that block — `TPX*` is a literal token and not a glob, so `TPX0*` is simply
-an unrecognised code. **The space after `#` is part of the grammar**: `#!TPX002` is a shebang, not a
-marker. A code it does not recognise silences nothing and says so on stderr, and so does a comment
-above a block that was clearly aiming at a marker and missed.
+an unrecognised code.
+
+Two rules decide whether a line is a marker at all, and both exist so that ordinary comments cannot
+switch a rule off by accident. **The space after `#` is part of the grammar**: `#!TPX002` is a
+shebang, not a marker. And **what follows the `!` must start with a code** — `# !important: never
+cache this` is a comment, not a marker that silences nothing, because a marker's line is dropped
+from the prose being measured and dropping that one used to make the whole block disappear. The
+cost of the second rule is stated rather than hidden: `# !nonsense` is not reported as a typo,
+because it is not a marker.
+
+A code that is not recognised silences nothing and says so on stderr, and so does a comment above a
+block that was clearly aiming at a marker and missed.
 
 > **Upgrading from 0.1.0.** The marker used to be `# tooprolix: noqa TPX002`. That spelling is no
 > longer a marker at all — there is no alias period — and each one now reports a warning naming its

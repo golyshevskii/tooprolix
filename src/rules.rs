@@ -85,8 +85,9 @@
 //!
 //! * **the directive is `!`, not a keyword**, for the measured reason above;
 //! * **squashed codes are not split.** ruff recovers `F401F841` into two codes with a warning; here
-//!   `TPX001TPX002` matches no code and is reported as unknown. That is the loud direction: the
-//!   marker suppresses nothing and the user is told which token was not understood;
+//!   `TPX001TPX002` is the shape of no code at all, so the line is not a marker — and it is still
+//!   audible, because [`is_near_miss`] reports it. What must never happen is the recovery: a marker
+//!   silencing two rules the author did not separately write;
 //! * **trailing prose does not make a marker blanket.** ruff reads `# noqa this is fine` as a
 //!   blanket suppression, because its marker sits *after code* where a trailing comment is the norm.
 //!   Ours owns its whole line, so text after the `!` is far more likely to be a mistyped code than a
@@ -94,9 +95,26 @@
 //!   than it says. Here the blanket form is one literal token, `TPX*`, and nothing else reaches it.
 //!   See `collect_codes` (private) for the defect this replaced.
 //!
-//! **`TPX*` is a literal token and not a glob.** `TPX0*`, `TP*` and `*` are unrecognised codes: they
-//! warn and silence nothing. A glob engine has no consumer, and every star form that is not the one
-//! blanket token has to fail *closed* — the alternative is the defect below in a new costume.
+//! ## A marker has to NAME something, or English silences a block
+//!
+//! **After `# !` the directive must begin with a token of code shape** — `TPX*`, or `TPX` followed
+//! by digits. Anything else is an ordinary comment.
+//!
+//! This is not tidiness. Without the rule, `# !important: never cache this response` — written by
+//! somebody who has never heard of this tool — was a marker naming an unrecognised code, so
+//! [`crate::extract`] dropped the line as a directive, the prose left under it fell below the
+//! two-line block gate, and the finding vanished **in silence**: no block survived to carry the
+//! unknown-code warning. Prose suppressing prose, reachable without ever writing `TPX*`.
+//!
+//! The price is taken deliberately and is the smaller one: `# !nonsense` is no longer reported as a
+//! mistyped code, because it is no longer a marker at all. No shape test can separate a typo from a
+//! sentence, and only one of the two directions fails closed.
+//!
+//! **`TPX*` is a literal token and not a glob.** `TPX0*` and `TPX00*` are unrecognised: not markers,
+//! and reported by [`is_near_miss`] because they name our namespace. `TP*` and `*` name nothing of
+//! ours, so they are simply comments. Every one of them silences nothing, which is the property that
+//! matters — a glob engine has no consumer, and every star form that is not the one blanket token
+//! has to fail *closed*, or the defect below returns in a new costume.
 //!
 //! ## An unknown code in a marker warns; an unknown code in the config is fatal
 //!
@@ -225,8 +243,9 @@ impl Suppression {
 /// Reads the opt-out marker out of one physical source line, if that line is one.
 ///
 /// Returns `None` when the line is not a marker at all — including `#!TPX002`, where the space the
-/// grammar requires is missing, and `# !` on its own, which names nothing. Neither suppresses
-/// anything, which is the closed direction; [`is_near_miss`] is what makes them audible.
+/// grammar requires is missing, `# !` on its own, and `# !anything that is not a code` — a marker
+/// has to NAME something of code shape. None of them suppresses anything, which is the closed
+/// direction; [`is_near_miss`] is what makes the ones that were aiming at a marker audible.
 ///
 /// # Examples
 ///
@@ -242,6 +261,9 @@ impl Suppression {
 ///
 /// assert_eq!(parse_marker("# an ordinary comment"), None);
 /// assert_eq!(parse_marker("#!/usr/bin/env python"), None);
+///
+/// // A directive that names nothing of code shape is prose, not a marker that silences nothing.
+/// assert_eq!(parse_marker("# !important: never cache this response"), None);
 /// ```
 #[must_use]
 pub fn parse_marker(line: &str) -> Option<Suppression> {
@@ -254,21 +276,49 @@ pub fn parse_marker(line: &str) -> Option<Suppression> {
     // `rest[..4]` once, and a length is not a char boundary — a 3-byte lead character put byte 4
     // inside it and the slice panicked with exit 101, outside the 0/1/2 contract, crossing the pyo3
     // boundary as a `PanicException` that does not inherit `Exception`. Nothing here indexes bytes.
-    let after_hash = line.trim_start().strip_prefix('#')?;
-    let directive = after_hash
+    let directive = comment_body(line)?
         .strip_prefix(char::is_whitespace)?
         .trim_start()
-        .strip_prefix('!')?
-        .trim();
+        .strip_prefix('!')?;
 
-    // `# !` alone. It is deliberately NOT the blanket form — that one is named by a token of its
-    // own — and it is not a marker either, so it cannot silently silence nothing: it falls through
-    // to the near-miss diagnostic instead.
-    if directive.is_empty() {
+    // **The directive has to begin with a token of code shape, or this is not a marker.** Measured
+    // defect: without this test `# !important: never cache this response` — English, written by
+    // somebody who has never heard of this tool — parsed as a marker naming an unrecognised code,
+    // `crate::extract` dropped the line as a directive, the remaining prose fell under the two-line
+    // block gate, and the finding disappeared **with no warning at all**, because no block survived
+    // to carry one. Silent suppression by prose, reachable without ever writing `TPX*`.
+    //
+    // The price is real and is taken deliberately: `# !nonsense` is no longer reported as a mistyped
+    // code, because it is no longer a marker. A shape test cannot tell a typo from a sentence, and
+    // between eating prose and missing a typo, only one of the two can fail closed.
+    let first = tokens(directive).next()?;
+    if first != BLANKET && !is_code_shaped(first) {
         return None;
     }
 
     Some(collect_codes(directive))
+}
+
+/// The text of `line` after its `#`, or `None` when `line` is not a comment.
+///
+/// **The byte order mark is stripped here, and that is not cosmetic.** A BOM is legitimate in
+/// Python — `CPython` runs such a file — and it sits on byte 0 of the first physical line, exactly
+/// where a module-level marker lives. `str::trim_start` does *not* remove U+FEFF (it is `Cf`, not
+/// whitespace), so `\u{feff}# !TPX002` was "not a comment" to this module while [`crate::extract`],
+/// reading the tokenizer's output, had already excluded the same line as a directive. One line, two
+/// owners, opposite answers — and the visible half was a correct marker that silently stopped
+/// working.
+fn comment_body(line: &str) -> Option<&str> {
+    line.trim_start_matches('\u{feff}')
+        .trim_start()
+        .strip_prefix('#')
+}
+
+/// The directive split into tokens, empties dropped. The single owner of "where a code ends".
+fn tokens(directive: &str) -> impl Iterator<Item = &str> {
+    directive
+        .split([',', ' ', '\t'])
+        .filter(|token| !token.is_empty())
 }
 
 /// Whether `line` was *trying* to be an opt-out marker and failed.
@@ -281,53 +331,62 @@ pub fn parse_marker(line: &str) -> Option<Suppression> {
 /// grammar makes that hole *wider*, not narrower: a forgotten `!` leaves `# TPX002`, one character
 /// away from a working marker and with less redundancy than two misspellable words had.
 ///
-/// Two shapes count, and they are drawn where they are for measured reasons:
+/// **It keys on the code shape, never on a bare `!`.** Two clauses:
 ///
-/// * the comment body starts with `!` **and** a space separates it from the `#` — the marker's own
-///   shape. `#!/usr/bin/env python` is deliberately excluded, or 11 files in the pinned corpus
-///   would each report their shebang;
-/// * the body names something of the form `TPX<digits>` in any case — which is every 0.1.0 marker,
-///   every misspelt keyword in front of a real code, and `#!TPX002` with the space forgotten.
+/// * the body names something of the form `TPX` followed by a digit or a star, in any case — which
+///   covers every 0.1.0 marker that carried a code, every misspelt keyword in front of a real one,
+///   `#!TPX002` and `#!TPX*` with the space forgotten, `# TPX002` with the `!` forgotten, and every
+///   star form that is not the one blanket token;
+/// * or the body is the 0.1.0 **blanket** spelling, which carries no code at all and is therefore
+///   invisible to the clause above.
+///
+/// Keying on `!` instead is what an earlier version did, and it was the same defect as the parser's:
+/// `# !` is a shape ordinary English reaches by accident. `#!/usr/bin/env python` is excluded for
+/// free now — it names no code — where before it needed a rule of its own.
 ///
 /// It costs a false positive on a comment like `# TPX002 needs fixing` written directly above a
 /// block. That is the accepted price: the diagnostic changes no exit code and silences nothing, so
 /// the cost of the false positive is one line of stderr, while the cost of the silence it replaces
-/// is a suppression the author believes is in place and is not.
+/// is a suppression the author believes is in place and is not. Measured over the 6 pinned corpus
+/// repositories: **0** lines fire it.
 ///
 /// ```
 /// use tooprolix::rules::is_near_miss;
 ///
 /// assert!(is_near_miss("# tooprolix: noqa TPX002"));  // the 0.1.0 marker
+/// assert!(is_near_miss("# tooprolix: noqa"));         // ... and its code-less blanket form
 /// assert!(is_near_miss("# TPX002"));                  // the `!` forgotten
 /// assert!(is_near_miss("#!TPX002"));                  // the space forgotten
 /// assert!(!is_near_miss("# !TPX002"));                // ... this one works
 /// assert!(!is_near_miss("#!/usr/bin/env python"));
 /// assert!(!is_near_miss("# an ordinary comment"));
+/// assert!(!is_near_miss("# !important: never cache this response"));  // prose, and left alone
 /// ```
 #[must_use]
 pub fn is_near_miss(line: &str) -> bool {
     if is_marker(line) {
         return false;
     }
-    let Some(after_hash) = line.trim_start().strip_prefix('#') else {
+    let Some(body) = comment_body(line) else {
         return false;
     };
-    if after_hash
-        .strip_prefix(char::is_whitespace)
-        .is_some_and(|body| body.trim_start().starts_with('!'))
-    {
-        return true;
-    }
-
     // `get`, not a slice: `to_ascii_lowercase` leaves every non-ASCII byte where it was, so the
     // byte after a match is not guaranteed to be a char boundary and must never be sliced at.
-    let lowered = after_hash.to_ascii_lowercase();
-    lowered.match_indices("tpx").any(|(at, _)| {
+    let lowered = body.to_ascii_lowercase();
+    let names_a_code = lowered.match_indices("tpx").any(|(at, _)| {
         lowered
             .as_bytes()
             .get(at + "tpx".len())
-            .is_some_and(u8::is_ascii_digit)
-    })
+            .is_some_and(|byte| byte.is_ascii_digit() || *byte == b'*')
+    });
+
+    // The 0.1.0 blanket marker is the one legacy spelling that carries no code at all, so the shape
+    // test above cannot see it — and it is the spelling whose upgrade goes wrong twice over: it
+    // stops suppressing, and its own two words are then counted as prose. Measured: a 149-word
+    // comment run became 151 words and started reporting `TPX001` that the same run without the
+    // dead marker never reported. Both halves are silent without this clause. It matches nothing in
+    // the pinned corpus, which does not contain the word `tooprolix` at all.
+    names_a_code || (lowered.contains("tooprolix") && lowered.contains("noqa"))
 }
 
 /// Whether `line` is an opt-out marker at all, without asking what it silences.
@@ -393,10 +452,7 @@ const BLANKET: &str = "TPX*";
 fn collect_codes(directive: &str) -> Suppression {
     let mut suppression = Suppression::default();
 
-    for token in directive
-        .split([',', ' ', '\t'])
-        .filter(|token| !token.is_empty())
-    {
+    for token in tokens(directive) {
         if token == BLANKET {
             suppression.all = true;
         } else if is_code_shaped(token) {
@@ -405,11 +461,11 @@ fn collect_codes(directive: &str) -> Suppression {
                 None => suppression.unknown.push(token.to_owned()),
             }
         } else {
-            // `!all` belongs in this condition: without it `# !TPX* because the table is the
-            // contract` would report `because` as a mistyped code.
-            if !suppression.all && suppression.codes.is_empty() && suppression.unknown.is_empty() {
-                suppression.unknown.push(token.to_owned());
-            }
+            // Everything from here on is the author's reason. There is no "…unless nothing has been
+            // read yet" case left: [`parse_marker`] refuses a directive whose FIRST token is not
+            // code shaped, so by the time control reaches this arm something has always been read.
+            // That branch did exist, and it is what made `# !important: never cache this` a marker
+            // naming an unrecognised code — which then ate the block below it.
             break;
         }
     }
@@ -542,14 +598,16 @@ mod tests {
         }
     }
 
-    /// A squashed code list is reported as unknown rather than split, and it silences nothing.
+    /// A squashed code list is never split into the codes it looks like, and it silences nothing.
+    ///
+    /// ruff recovers `F401F841` into two codes with a warning. Here `TPX001TPX002` matches the shape
+    /// of no code, so it is not a marker at all — and it is still audible, through `is_near_miss`,
+    /// because it names `TPX` followed by a digit. What must never happen is the recovery: a marker
+    /// that silences two rules the author did not separately write.
     #[test]
     fn squashed_codes_are_not_silently_recovered() {
-        let marker = parse_marker("# !TPX001TPX002").expect("marker");
-
-        assert!(!marker.silences(Rule::CommentVolume));
-        assert!(!marker.silences(Rule::DocstringVolume));
-        assert_eq!(marker.unknown_codes(), ["TPX001TPX002"]);
+        assert_eq!(parse_marker("# !TPX001TPX002"), None);
+        assert!(super::is_near_miss("# !TPX001TPX002"));
     }
 
     /// Lines that are near-misses must not be markers, or a comment about the tool would silence
@@ -588,15 +646,23 @@ mod tests {
     /// The starred forms are the 0.2.0 half of the same guarantee. `TPX*` is a **literal** token,
     /// so every other star spelling is an unrecognised code — and the one thing none of them may
     /// ever do is fall through to the blanket state, which would be that defect rebuilt on purpose.
+    ///
+    /// A line here fails closed in one of two ways, and the test accepts either: it is a marker that
+    /// named only codes nobody answers to, or it is not a marker at all. What it may never be is a
+    /// marker that silences a rule. The second way is the newer one — a directive that names nothing
+    /// of code shape stopped being a marker, because reading one as "a marker that silences nothing"
+    /// still handed the line to `extract` as a directive and ate the block below it.
     #[test]
     fn a_marker_that_names_something_unrecognised_never_widens_to_a_blanket() {
         for line in [
             "# !tpx001",
             "# !TPX",
             "# !TPX999",
+            "# !TPX004",
             "# !TPX001TPX002",
             "# !this one is on purpose",
             "# !001",
+            "# !important: never cache this response",
             // Not a glob engine: every star form except the literal blanket token is a typo.
             "# !TPX0*",
             "# !TPX00*",
@@ -607,7 +673,9 @@ mod tests {
             "# !TPX**",
             "# !*TPX001",
         ] {
-            let marker = parse_marker(line).unwrap_or_else(|| panic!("not parsed: {line}"));
+            let Some(marker) = parse_marker(line) else {
+                continue; // Not a marker: it silences nothing by construction.
+            };
 
             for rule in Rule::ALL {
                 assert!(
@@ -617,9 +685,14 @@ mod tests {
             }
             assert!(
                 !marker.unknown_codes().is_empty(),
-                "{line:?} silenced nothing and said nothing about why"
+                "{line:?} was read as a marker, silenced nothing and said nothing about why"
             );
         }
+
+        // The `continue` above must not be how every case passes: the two that ARE markers have to
+        // stay markers, or this test would go green on a parser that rejects the entire grammar.
+        assert!(parse_marker("# !TPX999").is_some());
+        assert!(parse_marker("# !TPX004").is_some());
     }
 
     /// The blanket form is reachable **only** by naming `TPX*`.
@@ -667,13 +740,13 @@ mod tests {
         );
     }
 
-    /// A `# tooprolix:` line whose text is not `noqa` must be **rejected**, in any script.
+    /// A directive whose text is not a code must be **rejected**, in any script, without panicking.
     ///
     /// This closes a class, not an input. `parse_marker` byte-indexed `rest[..4]` after checking
     /// only `rest.len() >= 4`, and length is not a char boundary: a 3-byte lead character puts byte
     /// 4 *inside* it and the slice panics. Reproduced on the built binary —
     /// `# tooprolix: 忽略这个块` gave `end byte index 4 is not a char boundary` and **exit 101**,
-    /// which is outside this task's whole deliverable of 0/1/2, and which crosses the pyo3
+    /// which is outside this crate's whole deliverable of 0/1/2, and which crosses the pyo3
     /// boundary as a `PanicException` that does not inherit `Exception`.
     ///
     /// **Why 129 tests missed it, which is the part worth keeping:** the panic needs a **3-byte**
@@ -683,24 +756,37 @@ mod tests {
     /// below therefore span all three widths deliberately: a fixture set that is "some non-ASCII"
     /// would have missed it too.
     ///
-    /// **These are 0.1.0 spellings and are kept unchanged on purpose.** The 0.2.0 grammar has no
-    /// keyword to split, so they now fail one step earlier — at the missing `!` — and this test is a
-    /// regression net rather than the live guard. The live one is the pair below it, which drives
-    /// the same three character widths through the *current* parser.
+    /// **The cases drive the LIVE grammar, and that is a correction.** They were kept in their 0.1.0
+    /// spelling for one revision, which meant every one of them exited at the missing `!` before
+    /// reaching anything this parser does today — so re-introducing an unchecked index *after* the
+    /// `!` left this test, the one named for the class, green. Each width now appears in both
+    /// positions the current parser can index at: right after the `!`, and inside a token.
     #[test]
     fn a_non_ascii_directive_is_rejected_rather_than_panicking() {
         for line in [
-            // 2-byte lead — never panicked, here so the set cannot silently narrow to one width.
-            "# tooprolix: привет",
-            // 3-byte lead — the panic.
-            "# tooprolix: 忽略这个块",
-            "# tooprolix: 日本",
-            "#tooprolix:日",
-            "# tooprolix: नमस्ते",
+            // Straight after the `!`, where the directive is read. 2-byte lead first — it never
+            // panicked, and it is here so the set cannot silently narrow to the one width that did.
+            "# !привет",
+            "# !ы",
+            // 3-byte lead — the width that panicked.
+            "# !忽略这个块",
+            "# !日本",
+            "# !日",
+            "# !नमस्ते",
             // 4-byte lead.
-            "# tooprolix: 🙂 this block is deliberate",
-            // Shorter than the keyword, in a script where that is fewer than four bytes.
-            "# tooprolix: 日",
+            "# !🙂 this block is deliberate",
+            "# !🙂",
+            // Inside a token that starts ASCII, which is where `is_code_shaped` does its indexing:
+            // the byte after the upper-case run is the one that must not be sliced at.
+            "# !AB日",
+            "# !TPX日",
+            "# !TPX00日",
+            "# !TPXы",
+            "# !TPX🙂",
+            "# !TPX*日",
+            // And the 0.1.0 spellings, which now fail one step earlier still.
+            "# tooprolix: 忽略这个块",
+            "#tooprolix:日",
             "# tooprolix: ы",
         ] {
             assert_eq!(
@@ -711,52 +797,35 @@ mod tests {
         }
     }
 
-    /// The keyword matches case-insensitively, and a non-ASCII **tail** still parses.
+    /// A marker whose **reason** is not ASCII is still a marker.
     ///
-    /// The pair to the test above: it would pass on an implementation that gave up on every
+    /// The pair to the test above: that one would pass on an implementation that gave up on every
     /// non-ASCII line, which would silently stop excluding legitimate markers written by a team
-    /// that comments in another script.
-    ///
-    /// The three cases are the three states, and the middle one is not an accident of encoding:
-    /// bare prose after the `!` silences nothing **in any script**, by the same rule that makes
-    /// `# !this one is on purpose` silence nothing. A marker that means "everything" says `TPX*`.
-    ///
-    /// The unrecognised tokens span 2-, 3- and 4-byte lead characters, because that is the width
-    /// that decided whether the 0.1.0 panic fired.
+    /// that comments in another script. Here the code is ASCII and everything after it is not, in
+    /// all three lead widths — 2-byte, 3-byte and 4-byte — because the width is what decided whether
+    /// the 0.1.0 panic fired.
     #[test]
     fn a_marker_with_a_non_ascii_tail_is_still_a_marker() {
         let blanket = parse_marker("# !TPX* 這個區塊是故意的").expect("marker");
         let coded = parse_marker("# !TPX002 這是合約").expect("marker");
-        let unnamed = parse_marker("# !這個區塊是故意的").expect("marker");
+        let cyrillic = parse_marker("# !TPX002 таблица ниже — контракт").expect("marker");
+        let emoji = parse_marker("# !TPX002 🙂 deliberate").expect("marker");
 
         for rule in Rule::ALL {
             assert!(
                 blanket.silences(rule),
                 "a non-ASCII reason unmade the blanket token: {rule:?}"
             );
+        }
+        for marker in [&coded, &cyrillic, &emoji] {
+            assert!(marker.silences(Rule::DocstringVolume));
             assert!(
-                !unnamed.silences(rule),
-                "bare prose widened a marker: {rule:?}"
+                !marker.silences(Rule::DuplicateProse),
+                "a non-ASCII explanation after a code was read as a second code"
             );
+            assert!(marker.unknown_codes().is_empty());
         }
-        assert!(coded.silences(Rule::DocstringVolume));
-        assert!(
-            !coded.silences(Rule::DuplicateProse),
-            "a non-ASCII explanation after a code was read as a second code"
-        );
-        assert!(coded.unknown_codes().is_empty());
         assert!(blanket.unknown_codes().is_empty());
-        assert_eq!(unnamed.unknown_codes(), ["這個區塊是故意的"]);
-
-        // All three widths through the live parser: 2-byte, 3-byte and 4-byte lead characters, each
-        // an unrecognised code rather than a panic and each silencing nothing.
-        for line in ["# !ы", "# !日", "# !🙂", "# !AB日", "# !नमस्ते"] {
-            let marker = parse_marker(line).unwrap_or_else(|| panic!("not parsed: {line}"));
-            for rule in Rule::ALL {
-                assert!(!marker.silences(rule), "{line:?} silenced {rule:?}");
-            }
-            assert!(!marker.unknown_codes().is_empty(), "{line:?} said nothing");
-        }
     }
 
     /// A trailing marker on a line of code is still a marker for the block below it — the parser
@@ -764,6 +833,75 @@ mod tests {
     #[test]
     fn the_marker_must_own_its_line() {
         assert_eq!(parse_marker("value = 1  # !TPX001"), None);
+    }
+
+    /// **A marker has to NAME something, or ordinary English silences a block.**
+    ///
+    /// `# !important: never cache this response` is a comment a human writes without ever having
+    /// heard of this tool. Reproduced on the committed 0.2.0 parser: it parsed as a marker naming an
+    /// unrecognised code, `extract` dropped the line as a directive, the two-line remainder fell
+    /// under the block gate, the `TPX001` finding vanished — and no unknown-code warning fired,
+    /// because no block survived to carry one. Silent suppression by prose, reachable without ever
+    /// writing `TPX*`.
+    ///
+    /// The rule that closes it: **after `# !` the directive must begin with a token of code shape**,
+    /// `TPX*` or `TPX` followed by digits. The price is named rather than worked around — a mistyped
+    /// code that is not code-shaped (`# !nonsense`) stops being reported at all, because the only
+    /// alternative is to keep eating real prose.
+    #[test]
+    fn a_marker_must_name_a_code_shaped_token_or_it_is_not_a_marker() {
+        for line in [
+            // The measured defect: ordinary English that happens to open with `!`.
+            "# !important: never cache this response",
+            "# !!! do not reorder these two calls",
+            "# !this one is on purpose",
+            "# !001",
+            // Named nothing at all: an empty directive, and one that is only separators.
+            "# !",
+            "# !   ",
+            "# !,,,",
+            "# !, ,\t,",
+            // Aimed at a code and missed the SHAPE. These stay audible through `is_near_miss`,
+            // which is asserted separately — here the only claim is that they silence nothing.
+            "# !tpx001",
+            "# !TPX",
+            "# !TPX001TPX002",
+            "# !TPX0*",
+        ] {
+            assert_eq!(
+                parse_marker(line),
+                None,
+                "a directive that names no code was read as a marker: {line:?}"
+            );
+        }
+
+        // The pair, or the assertions above pass on a parser that rejects everything.
+        for line in ["# !TPX001", "# !TPX*", "# !TPX999", "# ! TPX001,TPX002"] {
+            assert!(parse_marker(line).is_some(), "stopped parsing: {line:?}");
+        }
+    }
+
+    /// A UTF-8 BOM must not decide whether a marker is a marker.
+    ///
+    /// A BOM is legitimate in Python — `CPython` runs such a file — and it lands on byte 0 of the
+    /// first physical line, which is exactly where a module-level marker lives. `str::trim_start`
+    /// does **not** remove U+FEFF (it is `Cf`, not whitespace), so the marker parser saw
+    /// `\u{feff}# !TPX002` and said "not a comment", while `extract` — reading the tokenizer's
+    /// output — had already excluded the same line as a directive. Two owners disagreeing about one
+    /// line again, and the visible half was a marker that silently stopped working.
+    #[test]
+    fn a_byte_order_mark_does_not_unmake_a_marker() {
+        let marker = parse_marker("\u{feff}# !TPX002").expect("a BOM'd marker is a marker");
+        assert!(marker.silences(Rule::DocstringVolume));
+        assert!(!marker.silences(Rule::DuplicateProse));
+
+        assert!(parse_marker("\u{feff}# !TPX*").is_some_and(|m| m.silences(Rule::CommentVolume)));
+        assert!(
+            super::is_near_miss("\u{feff}# tooprolix: noqa TPX002"),
+            "a BOM hid a near-miss as well"
+        );
+        // ... and a BOM does not turn a shebang into one, which is the pair to the rule above.
+        assert_eq!(parse_marker("\u{feff}#!/usr/bin/env python"), None);
     }
 
     /// A comment that was aiming at a marker and missed is reported, and one that was not is not.
@@ -777,18 +915,36 @@ mod tests {
         for line in [
             // Every 0.1.0 spelling, including the ones measured silent on the 0.1.0 binary.
             "# tooprolix: noqa TPX002",
+            // The 0.1.0 BLANKET, which carries no code at all. A predicate keyed only on the code
+            // shape cannot see it, and it is the one 0.1.0 spelling whose upgrade is doubly wrong:
+            // it stops suppressing AND its own two words are counted as prose, which was measured
+            // to push a 149-word run over the 150-word limit. Recognising the literal legacy
+            // spelling is the migration aid Decisions #10 promised; it matches 0 lines of the
+            // pinned corpus, which contains the word `tooprolix` nowhere.
+            "# tooprolix: noqa",
+            "#tooprolix:noqa",
+            "# tooprolix : NOQA",
             "# toprolix: noqa TPX002",
             "# tooprolix noqa TPX002",
             "# tooprolix: noqua TPX002",
             "# noqa TPX002",
-            // The `!` forgotten, and the space forgotten.
+            // The `!` forgotten, and the space forgotten — including the star form, which needs the
+            // fallback to accept a `*` after `TPX` and not only a digit.
             "# TPX002",
+            "# TPX*",
             "#!TPX002",
             "#!tpx002",
-            // The marker's own shape, naming nothing at all.
-            "# !",
-            "# ! ",
-            "    # !",
+            "#!TPX*",
+            // Aimed at a code and missed its SHAPE. None of these is a marker any more, so the
+            // near-miss clause is the only thing left that can report them.
+            "# !tpx001",
+            "# !TPX001TPX002",
+            "# !TPX0*",
+            "# !tpx*",
+            "# !*TPX001",
+            // A byte order mark is a legitimate first byte and must not hide any of it.
+            "\u{feff}# tooprolix: noqa TPX002",
+            "\u{feff}# TPX002",
         ] {
             assert!(super::is_near_miss(line), "went unreported: {line:?}");
         }
@@ -799,10 +955,18 @@ mod tests {
             "# !TPX002",
             "# !TPX*",
             "# !TPX999",
-            "# !tpx002",
-            "# !TPX0*",
-            "# !TPX",
+            "\u{feff}# !TPX002",
+            // **Prose that merely begins with `!`.** This is the half the predicate got wrong by
+            // keying on the `!`: a comment nobody wrote as a directive must be neither a marker nor
+            // a diagnostic, or every English sentence opening with an exclamation reports itself.
+            "# !important: never cache this response",
+            "# !!! do not reorder these two calls",
             "  # !nonsense",
+            "# !",
+            "# ! ",
+            // A star that never names our namespace is not aiming at a code either.
+            "# !TP*",
+            "# !*",
             // The shebang. 25 files in the pinned corpus open with one and 11 of those sit directly
             // above a module docstring — the difference between no diagnostic and 11 of them.
             "#!/usr/bin/env python",

@@ -147,8 +147,10 @@ one rule for comments and docstrings alike:
 
   For a docstring that means inside the body, between `def`/`class` and the
   literal — NOT above the `def` line. The space after `#` is required, so a
-  shebang is never a marker; a code it does not recognise silences nothing and
-  says so, and so does a comment that was aiming at a marker and missed.
+  shebang is never a marker, and what follows the `!` must START with a code:
+  `# !anything else` is an ordinary comment and silences nothing. A code that
+  is not recognised silences nothing and says so, and so does a comment that
+  was aiming at a marker and missed.
 
 Opt out of a rule for the whole project, in pyproject.toml:
 
@@ -599,8 +601,8 @@ fn sources_of(blocks: Vec<ProseBlock>, text: &str) -> Vec<Source> {
                 {
                     eprintln!(
                         "warning: {}:{line_number}: this is not an opt-out marker and silences \
-                         nothing; the form is `# !TPX001` — a space after the `#`, none before \
-                         the code, `# !TPX001,TPX002` for several and `# !TPX*` for all",
+                         nothing; the form is `# !TPX001` — `# !TPX001,TPX002` for several, \
+                         `# !TPX*` for all",
                         block.path.display(),
                     );
                 }
