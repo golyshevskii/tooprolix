@@ -29,3 +29,50 @@ release_always = false
 # `package-python-distribution-and-publish-0-1-0` hangs the wheel build off.
 git_tag_enable = true
 git_release_enable = true
+
+# 🔴 THE VERSION COMES FROM THE GIT TAG, NOT FROM crates.io. Without this line the promise that a
+# `!` commit produces 0.2.0 is simply false, and breaking changes would ship as patches.
+#
+# By default release-plz asks the registry what the last released version was. This crate is never
+# published (`publish = false` above), so the registry has nothing to say and release-plz falls back
+# to the version already in Cargo.toml — which means "the next version is the current version",
+# forever. Measured on a throwaway clone, tag `v0.1.0` on HEAD~ and a `feat!:` commit carrying a
+# `BREAKING CHANGE:` footer, identical in both runs except for this one line:
+#
+#   without git_only:  WARN Package `tooprolix@*.*.*` not found
+#                      INFO tooprolix: next version is 0.1.0
+#                      * `tooprolix`: 0.1.0                       ← no bump, nothing to release
+#
+#   with git_only:     INFO Latest release of package tooprolix: tag `v0.1.0` (version 0.1.0)
+#                      INFO tooprolix: next version is 0.2.0
+#                      * `tooprolix`: 0.1.0 -> 0.2.0              ← Cargo.toml AND Cargo.lock bumped
+#
+# So the `!` alone does NOT give the 0.2.0 boundary. This line is what gives it, and it has to be
+# here BEFORE the tag exists.
+#
+# Two costs, both measured rather than assumed:
+#
+#   1. `git_only` refuses to run on a dirty working tree ("please commit or stash these changes")
+#      and, once a tag exists, it verifies the package tarball — i.e. it runs `cargo package`, which
+#      compiles the crate. Before a tag exists it does neither: with no tag at all it logs
+#      "No release tag found matching pattern `^v(\d+\.\d+\.\d+)$`. Package tooprolix will be
+#      treated as initial release" and answers 0.1.0 in under a second. That is the state `main` is
+#      in today, so merging this changes nothing about the pending Release PR.
+#   2. That `cargo package` build is the reason the epic audit expected this line to need a Python
+#      interpreter in CI — and **it no longer does, because of the pyo3 feature gate in this same
+#      task**. Isolated in one shell whose `python3` refuses to run, same tag, same commit, same
+#      `git_only = true`, the only difference being the feature gate:
+#
+#        crate at fc77b75 (pyo3 unconditional):  Compiling pyo3-ffi v0.29.0
+#                                                error: no Python 3.x interpreter found
+#                                                error: failed to verify package tarball
+#                                                Error: failed to determine next versions
+#        crate with `python` optional:           tooprolix: next version is 0.2.0
+#
+#      The verification build takes default features, and `python` is not one, so pyo3-ffi is never
+#      compiled. **`.github/workflows/release-plz.yml` therefore needs no Python step**, and none
+#      was added — the audit's cost is real but it was paid off here rather than worked around.
+#      ⚠️ It comes straight back if anyone makes pyo3 non-optional or puts `python` in
+#      `[features] default`. Whoever does that owes this workflow a Python install step and
+#      `PYO3_PYTHON`.
+git_only = true
