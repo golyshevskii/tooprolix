@@ -42,13 +42,46 @@ if [ -e "$source_spec" ]; then
 	source_spec="$(cd "$(dirname "$source_spec")" && pwd -P)/$(basename "$source_spec")"
 fi
 
+# uv reads the environment for WHICH environment to use, so an exported variable from the caller can
+# redirect the whole run at a venv that already has tooprolix in it. Measured 2026-07-27: with
+# `UV_PROJECT_ENVIRONMENT` pointing at this repo's own `.venv` and `UV_NO_SYNC=1`, this script
+# installed nothing, ran the preloaded binary three times and printed `install-smoke: OK` — while
+# the wheel it had been handed contained **0** entry_points and no `tooprolix` command at all. It
+# graded a different artifact and said the wrong thing. That is not only adversarial: a developer
+# with `UV_PROJECT_ENVIRONMENT` exported globally gets the same false pass.
+#
+# Two layers, because unsetting names is a blocklist and blocklists rot:
+#   1. the three variables that redirect the environment are cleared here, and
+#   2. after the install, the console script is required to EXIST inside the scratch project's own
+#      venv (below). No environment variable, present or future, survives that check — it grades the
+#      file that the install was supposed to produce.
+unset UV_PROJECT_ENVIRONMENT UV_NO_SYNC VIRTUAL_ENV
+
 work="$(cd "$(mktemp -d "${TMPDIR:-/tmp}/tooprolix-smoke.XXXXXX")" && pwd -P)"
-# The scratch project must live OUTSIDE this repository and outside its parents' checkouts: a
-# parent `.gitignore` carrying `lib/` silently swallowed a scratch install once already (epic 1
-# Decisions #7.3). TMPDIR is caller-controlled, so this is checked rather than assumed.
+
+# The scratch project must live outside this repository AND outside every checkout enclosing it: a
+# parent `.gitignore` silently swallowed a scratch install once already (epic 1 Decisions #7.3), and
+# that trap is live — `/Users/vgolyshevskii/dwh/.gitignore:17` is `lib/`, one level above this repo.
+# Comparing against `$repo` alone therefore did NOT check what this comment claims: measured, a
+# `TMPDIR` one level up passed the guard and landed straight in the trap.
+#
+# The boundary is derived, never hardcoded to anyone's home: walk up from the repo and keep the
+# HIGHEST ancestor that looks like a checkout (`.git`) or carries ignore rules (`.gitignore`).
+# Everything below that is off limits. Both sides are `pwd -P` output, so the comparison is on
+# resolved paths — `./`, `..` and symlinks are already gone.
+boundary="$repo"
+probe="$(dirname "$repo")"
+while [ "$probe" != "/" ]; do
+	if [ -e "$probe/.git" ] || [ -f "$probe/.gitignore" ]; then
+		boundary="$probe"
+	fi
+	probe="$(dirname "$probe")"
+done
+
 case "$work/" in
-"$repo"/*)
-	echo "error: the scratch project landed inside the repository ($work); set TMPDIR elsewhere" >&2
+"$boundary"/*)
+	echo "error: the scratch project landed at $work, inside the checkout at $boundary." >&2
+	echo "       Its .gitignore rules would apply to the install; set TMPDIR outside it." >&2
 	exit 2
 	;;
 esac
@@ -85,6 +118,16 @@ cd "$work"
 uv init --name tooprolix-smoke >/dev/null
 uv add "$source_spec"
 echo
+
+# The install must have produced the console script HERE, in this scratch project. This is the check
+# that makes the run un-redirectable: `uv run tooprolix` below resolves through uv, and uv can be
+# pointed elsewhere, but this asks the filesystem whether the artifact under test actually created
+# the command. Layer 2 of the note at the top.
+if [ ! -x "$work/.venv/bin/tooprolix" ]; then
+	echo "FAIL: installing '$source_spec' produced no console script at $work/.venv/bin/tooprolix" >&2
+	echo "      — either the distribution has no [project.scripts], or uv installed somewhere else." >&2
+	exit 1
+fi
 
 run_check 0 'tooprolix check <path>' uv run tooprolix --help
 run_check 1 'TPX002' uv run tooprolix check "$repo/tests/fixtures/broken/long_docstring.py"
