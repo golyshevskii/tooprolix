@@ -102,7 +102,7 @@ use crate::detect::duplicate::duplicates;
 use crate::detect::volume::volume;
 use crate::extract::{self, ProseBlock, is_python_source};
 use crate::finding::{Finding, Report};
-use crate::rules::{Rule, Suppression, parse_marker};
+use crate::rules::{self, Rule, Suppression, parse_marker};
 
 /// The `--help` text, and the only place the command grammar is written down.
 pub const HELP: &str = "\
@@ -135,16 +135,22 @@ Rules:
 Opt out of one block, with the marker on the physical line DIRECTLY ABOVE it —
 one rule for comments and docstrings alike:
 
-  # tooprolix: noqa TPX001
+  # !TPX001
   # A comment run that earns its length.
 
   def settle(batch):
-      # tooprolix: noqa TPX002
+      # !TPX002
       \"\"\"A docstring that earns its length.\"\"\"
 
+  # !TPX001,TPX003 several codes, then the reason
+  # !TPX*          every rule on this block, and `TPX*` is a literal, not a glob
+
   For a docstring that means inside the body, between `def`/`class` and the
-  literal — NOT above the `def` line. Without a code the marker silences every
-  rule for that block; a code it does not recognise silences nothing and says so.
+  literal — NOT above the `def` line. The space after `#` is required, so a
+  shebang is never a marker, and what follows the `!` must START with one of
+  OUR codes: `# !HTTP2 is mandatory` is an ordinary comment and silences
+  nothing. A code that is not recognised silences nothing and says so, and so
+  does a `# !TPX…` that is not one of them.
 
 Opt out of a rule for the whole project, in pyproject.toml:
 
@@ -554,7 +560,13 @@ fn read(files: &[PathBuf]) -> Result<Vec<Source>, Error> {
     }
 }
 
-/// Pairs every block with the marker on the physical line above it.
+/// Pairs every block with the marker on the physical line above it, and reports the near-misses.
+///
+/// The near-miss diagnostic is written here rather than in [`report_unknown_marker_codes`] for one
+/// reason: a near-miss is a *line*, and this is the only place that still has one. [`Source`]
+/// carries what the marker silences, not the text it was written as, and giving it a third field to
+/// carry a string only the warning reads would put a diagnostic channel inside the type that
+/// callers of [`findings`] have to build.
 fn sources_of(blocks: Vec<ProseBlock>, text: &str) -> Vec<Source> {
     // Most files in a real repository yield no blocks at all, and indexing their lines to look
     // above zero of them is pure cost. The measured shape of the corpus is the argument: 663 files
@@ -574,6 +586,27 @@ fn sources_of(blocks: Vec<ProseBlock>, text: &str) -> Vec<Source> {
                 .and_then(|index| lines.get(index))
                 .and_then(|line| parse_marker(line))
                 .unwrap_or_default();
+
+            // TWO lines are checked for a near-miss, and which one carries it depends on the kind
+            // of block below it. A comment marker that fails to parse stops being a directive, so
+            // `extract` reads it as prose and it becomes the run's own FIRST line; a docstring
+            // marker stays a comment and remains the line ABOVE. Checking only one of the two would
+            // make the diagnostic depend on the block kind — the one thing the marker rule
+            // deliberately does not do.
+            for line_number in [block.line_start.saturating_sub(1), block.line_start] {
+                if line_number > 0
+                    && lines
+                        .get(line_number - 1)
+                        .is_some_and(|line| rules::is_near_miss(line))
+                {
+                    eprintln!(
+                        "warning: {}:{line_number}: this is not an opt-out marker and silences \
+                         nothing; the form is `# !TPX001` — `# !TPX001,TPX002` for several, \
+                         `# !TPX*` for all",
+                        block.path.display(),
+                    );
+                }
+            }
             Source { block, suppressed }
         })
         .collect()
@@ -587,7 +620,7 @@ fn report_unknown_marker_codes(sources: &[Source]) {
     for source in sources {
         for code in source.suppressed.unknown_codes() {
             eprintln!(
-                "warning: {}:{}: `{code}` in a tooprolix marker is not a rule code; it silences \
+                "warning: {}:{}: `{code}` in an opt-out marker is not a rule code; it silences \
                  nothing",
                 source.block.path.display(),
                 source.block.line_start.saturating_sub(1),
@@ -803,20 +836,14 @@ mod tests {
         let (path, text) = long_comment("api.py", "the retry policy");
 
         let unmarked = findings(source(&path, &text, None), &Config::default());
-        let marked = findings(
+        let marked = findings(source(&path, &text, Some("# !TPX001")), &Config::default());
+        let wrong_code = findings(source(&path, &text, Some("# !TPX002")), &Config::default());
+        let mistyped = findings(source(&path, &text, Some("# !TPX999")), &Config::default());
+        let blanket = findings(source(&path, &text, Some("# !TPX*")), &Config::default());
+        // The 0.1.0 spelling is not a marker any more, and a hard replacement means it silences
+        // nothing rather than silencing what it used to.
+        let zero_one_zero = findings(
             source(&path, &text, Some("# tooprolix: noqa TPX001")),
-            &Config::default(),
-        );
-        let wrong_code = findings(
-            source(&path, &text, Some("# tooprolix: noqa TPX002")),
-            &Config::default(),
-        );
-        let mistyped = findings(
-            source(&path, &text, Some("# tooprolix: noqa TPX999")),
-            &Config::default(),
-        );
-        let blanket = findings(
-            source(&path, &text, Some("# tooprolix: noqa")),
             &Config::default(),
         );
 
@@ -833,7 +860,16 @@ mod tests {
             1,
             "an unknown code silenced a real rule: {mistyped:#?}"
         );
-        assert!(blanket.is_empty(), "a bare marker must silence everything");
+        assert!(
+            blanket.is_empty(),
+            "the blanket token must silence everything"
+        );
+        assert_eq!(
+            zero_one_zero.len(),
+            1,
+            "the 0.1.0 marker still silenced a rule — the replacement is hard, with no alias \
+             period: {zero_one_zero:#?}"
+        );
     }
 
     /// Marking enough members that fewer than two remain removes the finding altogether.
@@ -857,8 +893,8 @@ mod tests {
             .collect();
         let two_marked: Vec<Source> = source("a.py", shared, None)
             .into_iter()
-            .chain(source("b.py", shared, Some("# tooprolix: noqa TPX003")))
-            .chain(source("c.py", shared, Some("# tooprolix: noqa TPX003")))
+            .chain(source("b.py", shared, Some("# !TPX003")))
+            .chain(source("c.py", shared, Some("# !TPX003")))
             .collect();
 
         let all = findings(three, &Config::default());
@@ -909,7 +945,7 @@ mod tests {
         let loose_member_marked: Vec<Source> = source("a.py", exact, None)
             .into_iter()
             .chain(source("b.py", exact, None))
-            .chain(source("c.py", loose, Some("# tooprolix: noqa TPX003")))
+            .chain(source("c.py", loose, Some("# !TPX003")))
             .collect();
 
         // Act
@@ -955,11 +991,7 @@ mod tests {
 
         assert!(findings(source(&path, &text, None), &ignored).is_empty());
         assert!(
-            findings(
-                source(&path, &text, Some("# tooprolix: noqa TPX003")),
-                &ignored
-            )
-            .is_empty(),
+            findings(source(&path, &text, Some("# !TPX003")), &ignored).is_empty(),
             "a marker for another rule re-enabled an ignored one"
         );
     }
