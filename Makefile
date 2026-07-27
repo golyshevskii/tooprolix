@@ -99,10 +99,11 @@ rust.fmt.check: ## Check Rust formatting without writing (CI mode)
 #
 # It lives HERE and not in `.github/workflows/ci.yml` — which is what the task asked for — because
 # ci.yml contains zero direct `cargo` invocations: all six jobs shell out to these recipes
-# (`grep -n "run: make" .github/workflows/ci.yml` returns all six). Putting the flag in the one place
-# both callers go through is also what AC3 actually wants ("the Rust test count in CI equals the
-# local `cargo test --features python` count") — true by construction, not by two edits staying in
-# sync.
+# Measured, because this repo's comments are facts: `grep -c "run: make" .github/workflows/ci.yml`
+# prints **7** — one per job, plus the second `make` step (`rust.build.nopython`) in `cargo-clippy` —
+# and `grep -cE '^\s+run:.*cargo'` prints **0**. Putting the flag in the one place both callers go
+# through is also what AC3 actually wants ("the Rust test count in CI equals the local
+# `cargo test --features python` count") — true by construction, not by two edits staying in sync.
 rust.lint: ## Lint the Rust code with clippy, warnings are errors
 	@$(FIND_PYTHON) $(CARGO) clippy --all-targets --locked --features python -- -D warnings
 
@@ -131,14 +132,30 @@ rust.test: ## Run the Rust tests (unit + doctests)
 # runs it). Deliberately NOT a `cargo tree`/feature-graph check: that grades a proxy for the
 # artifact, which is the same mistake as trusting the flag instead of the `compile_error!`.
 #
-# An empty listing is treated as a FAILURE, not a pass. A missing or renamed `otool`/`ldd` would
-# otherwise make the grep match nothing and the guard report success without having looked.
+# 🔴 THE PATH COMES FROM CARGO, and hardcoding it was a second instance of the very defect this
+# target exists to close. `target/debug/tooprolix` is not where cargo necessarily writes: both
+# `CARGO_TARGET_DIR` and `build.target-dir` in `.cargo/config.toml` move it. Measured 2026-07-27
+# with `default = ["python"]` and `CARGO_TARGET_DIR` set elsewhere — cargo compiled a
+# libpython-linked binary into the alternate directory while this recipe read a stale clean binary
+# left over at `target/debug/`, printed `ok: ... links no libpython` and exited 0. The stale file is
+# what made it silent. `--message-format=json` makes cargo name the executable it just linked, so
+# the guard reads the artifact it actually produced and no reconstruction can drift from it.
+#
+# An empty listing is treated as a FAILURE, not a pass, and so is cargo reporting no executable at
+# all. A missing or renamed `otool`/`ldd` would otherwise make the grep match nothing and the guard
+# report success without having looked.
 #
 # No FIND_PYTHON: not needing an interpreter is the whole point, and this target failing without one
 # would mean the gate had stopped testing what it is for.
 rust.build.nopython: ## Build the standalone binary with the pyo3 feature OFF, and prove it links no libpython
-	@$(CARGO) build --locked
-	@binary=target/debug/tooprolix; \
+	@json="$$($(CARGO) build --locked --message-format=json)"; \
+	rc=$$?; \
+	if [ $$rc -ne 0 ]; then exit $$rc; fi; \
+	binary="$$(printf '%s\n' "$$json" | sed -n 's/.*"executable":"\([^"]*\)".*/\1/p' | tail -1)"; \
+	if [ -z "$$binary" ]; then \
+		echo "error: cargo reported no executable; the AC1 guard has nothing to inspect." >&2; \
+		exit 1; \
+	fi; \
 	case "$$(uname -s)" in \
 		Darwin) linked="$$(otool -L $$binary)" ;; \
 		*)      linked="$$(ldd $$binary)" ;; \
