@@ -178,6 +178,14 @@ jobs:
       - name: make rust.lint
         run: make rust.lint
 
+      # `make rust.lint` and `make rust.test` both carry `--features python`, so without this step
+      # NOTHING in CI compiles the crate with the feature OFF — which is the configuration the
+      # standalone binary of AC1 is built in. A `use pyo3::…` that escaped the `#[cfg]` would then
+      # break `cargo build` for every consumer while all six checks stayed green. It rides in this
+      # job rather than a new one because a new job would be a new required status check.
+      - name: make rust.build.nopython
+        run: make rust.build.nopython
+
   cargo-test:
     name: cargo-test
     runs-on: ubuntu-latest

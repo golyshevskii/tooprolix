@@ -19,6 +19,20 @@
 //! task, and the one export below is deliberately about extraction rather than about findings.
 //! [`finding::Finding`] is the type that will carry it: it owns its data and holds no prose, so it
 //! is `'static` and can become a `#[pyclass]` without a redesign.
+//!
+//! # The `python` feature
+//!
+//! Everything pyo3 in this file is behind `#[cfg(feature = "python")]`, which is **off by
+//! default**. The linter itself — [`extract`], [`detect`], [`cli`] — does not depend on pyo3 at
+//! all, and with the feature off `otool -L target/debug/tooprolix` lists only
+//! `/usr/lib/libSystem.B.dylib`, so the standalone binary runs without an interpreter. The wheel
+//! turns the feature on through `[tool.maturin] features` in pyproject.toml, and that is also what
+//! makes [`tooprolix::main`](tooprolix::main) — the `[project.scripts]` entry point — exist.
+//!
+//! The price is that `cargo test` with no feature compiles none of the 5 boundary tests at the
+//! bottom of this file and reports a smaller number in silence. `Makefile`'s `rust.lint` and
+//! `rust.test` carry `--features python` for exactly that reason; see the `[features]` comment in
+//! Cargo.toml.
 
 pub mod cli;
 pub mod config;
@@ -27,11 +41,14 @@ pub mod extract;
 pub mod finding;
 pub mod rules;
 
+#[cfg(feature = "python")]
 use pyo3::exceptions::{PyFileNotFoundError, PyOSError, PyPermissionError, PyValueError};
+#[cfg(feature = "python")]
 use pyo3::{PyErr, prelude::*};
 
 pub use crate::extract::Error;
 
+#[cfg(feature = "python")]
 impl From<Error> for PyErr {
     /// Maps each extraction failure onto the exception a Python caller would write a handler for.
     ///
@@ -70,11 +87,48 @@ impl From<Error> for PyErr {
 }
 
 /// The `tooprolix` Python extension module.
+#[cfg(feature = "python")]
 #[pymodule]
 mod tooprolix {
+    use std::ffi::OsString;
+    use std::io::Write as _;
     use std::path::Path;
 
     use pyo3::prelude::*;
+
+    /// Entry point of the `tooprolix` console script: run the command line, return its exit code.
+    ///
+    /// This is the whole of `[project.scripts] tooprolix = "tooprolix:main"`. The generated console
+    /// script does `sys.exit(main())`, so the answer has to come back as an **`int`** — which is
+    /// why [`crate::cli`] exposes the outcome as a value at all; `std::process::ExitCode` cannot be
+    /// inspected, and calling `std::process::exit` from inside a `CPython` process would skip
+    /// `CPython`'s own shutdown.
+    ///
+    /// Arguments come from `sys.argv`, not from [`std::env::args_os`]. They are not the same list
+    /// here: the console script is executed through its shebang, so the process argv is
+    /// `[".../python3", ".../bin/tooprolix", "check", "."]` while `sys.argv` is
+    /// `[".../bin/tooprolix", "check", "."]`. Reading the process argv would pass the script's own
+    /// path to `check` as the path to lint.
+    ///
+    /// # Errors
+    ///
+    /// Only if `sys.argv` cannot be read or its entries are not strings. Every *linting* failure is
+    /// already reported on stderr and reduced to exit code 2 by [`crate::cli::status`]; it does not
+    /// surface as a Python exception, because a linter that raised a traceback instead of exiting 2
+    /// would be a different contract from the standalone binary's.
+    #[pyfunction]
+    pub(crate) fn main(py: Python<'_>) -> PyResult<i32> {
+        let argv: Vec<OsString> = py.import("sys")?.getattr("argv")?.extract()?;
+        let status = crate::cli::status(argv.into_iter().skip(1));
+
+        // A cdylib gets no Rust runtime shutdown — the flush `std::process::ExitCode` buys
+        // `src/main.rs` does not happen here, and CPython exits the process on its own. Rust's
+        // stdout is a `LineWriter`, so newline-terminated findings are already out; this is for
+        // anything that is not, and it costs one syscall on a path that runs once per process.
+        let _ = std::io::stdout().flush();
+
+        Ok(i32::from(status.code()))
+    }
 
     /// Return the prose blocks of `source` as a list of
     /// `(kind, line_start, line_end, normalized)` tuples.
@@ -111,7 +165,29 @@ mod tooprolix {
     }
 }
 
-#[cfg(test)]
+// 🔴 The falsifiability of the whole feature gate, and it is here because the obvious version of
+// the guard did not have any.
+//
+// The 5 boundary tests below are `#[cfg(feature = "python")]` — with the feature off they are not
+// compiled, and `cargo test` reports a smaller number in complete silence. The intended protection
+// was `--features python` in the Makefile's `rust.test`. Mutating that recipe (2026-07-27) proved
+// the protection is not one: removing the flag left `make rust.test` **exit 0, 128 passed** where
+// it had been 133. A guard whose removal nothing notices is a guard that fails open.
+//
+// So the demand is stated where it cannot be ignored. `cargo test` without the feature now stops
+// at this line instead of quietly testing less; the same mutation is a compile error. It is under
+// `cfg(test)` only, so the no-feature `cargo build` of `make rust.build.nopython` — the standalone,
+// interpreter-free binary of AC1 — is untouched.
+#[cfg(all(test, not(feature = "python")))]
+compile_error!(
+    "the tests must be run with `--features python`: without it the 5 pyo3 boundary tests below \
+     are not compiled and `cargo test` reports 128 passed instead of 133, with no other signal. \
+     Use `make rust.test`, which carries the flag."
+);
+
+// `feature = "python"` and not just `test`: with the feature off there is no pyo3 to test against.
+// See the `compile_error!` above for what stops that from happening quietly.
+#[cfg(all(test, feature = "python"))]
 mod tests {
     use pyo3::Python;
     use pyo3::exceptions::PyValueError;

@@ -18,7 +18,7 @@ TY_PATHS ?= corpus tests/unit
 LOCK ?= corpus/corpus.lock
 
 .PHONY: help lint.fix lint.check type test corpus.measure \
-	rust.fmt rust.fmt.check rust.lint rust.test py.build
+	rust.fmt rust.fmt.check rust.lint rust.test rust.build.nopython py.build
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*##"; printf "Usage: make <target>\n\nTargets:\n"} \
@@ -87,11 +87,37 @@ rust.fmt: ## Format the Rust code with rustfmt
 rust.fmt.check: ## Check Rust formatting without writing (CI mode)
 	@$(CARGO) fmt --check
 
+# `--features python` on BOTH: since `ship-v0-1-0-delivery-and-release` the pyo3 boundary is behind
+# an off-by-default feature, and with the feature off `cargo test` compiles none of the 5 boundary
+# tests in src/lib.rs. Measured 2026-07-27 by removing this flag: `make rust.test` stayed **exit 0**
+# and reported **128 passed** where it had been 133 — green by testing less, with no other signal.
+#
+# That silence is why the flag is not the only thing holding the line: `src/lib.rs` carries a
+# `#[cfg(all(test, not(feature = "python")))] compile_error!`, so removing the flag from either
+# recipe below is now a build failure rather than a smaller number. Both halves are wanted — the
+# flag makes the gate right, the `compile_error!` makes deleting the flag loud.
+#
+# It lives HERE and not in `.github/workflows/ci.yml` — which is what the task asked for — because
+# ci.yml contains zero direct `cargo` invocations: all six jobs shell out to these recipes
+# (`grep -n "run: make" .github/workflows/ci.yml` returns all six). Putting the flag in the one place
+# both callers go through is also what AC3 actually wants ("the Rust test count in CI equals the
+# local `cargo test --features python` count") — true by construction, not by two edits staying in
+# sync.
 rust.lint: ## Lint the Rust code with clippy, warnings are errors
-	@$(FIND_PYTHON) $(CARGO) clippy --all-targets --locked -- -D warnings
+	@$(FIND_PYTHON) $(CARGO) clippy --all-targets --locked --features python -- -D warnings
 
 rust.test: ## Run the Rust tests (unit + doctests)
-	@$(FIND_PYTHON) $(CARGO) test --locked
+	@$(FIND_PYTHON) $(CARGO) test --locked --features python
+
+# The OTHER half of the feature gate, and the only thing in CI that compiles it: with `--features
+# python` on both gates above, nothing would ever build the configuration the standalone binary is
+# actually shipped in, so a stray `use pyo3::…` outside the `#[cfg]` would break `cargo build` and
+# no gate would say so. This is the AC1 command verbatim.
+#
+# No FIND_PYTHON: not needing an interpreter is the whole point, and this target failing without one
+# would mean the gate had stopped testing what it is for.
+rust.build.nopython: ## Build the standalone binary with the pyo3 feature OFF (no interpreter needed)
+	@$(CARGO) build --locked
 
 # Rebuild the pyo3 extension into .venv and reinstall it. `--reinstall-package` is NOT optional, and
 # it is the ONLY thing here that reliably rebuilds:

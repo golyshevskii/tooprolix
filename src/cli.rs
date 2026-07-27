@@ -183,13 +183,28 @@ pub enum ExitStatus {
     Error,
 }
 
+impl ExitStatus {
+    /// The number this outcome is reported as.
+    ///
+    /// There are two consumers and they need two different types, which is why the mapping is a
+    /// function rather than only the `From<ExitStatus> for ExitCode` below: `src/main.rs` wants an
+    /// [`ExitCode`], and the `tooprolix` console script has to hand an `int` back to `CPython`
+    /// (`sys.exit(main())`), where [`ExitCode`] is opaque. One `match`, so the two cannot drift.
+    ///
+    /// `#[non_exhaustive]` on [`ExitStatus`] only forbids exhaustive matching from *other* crates,
+    /// so a fourth outcome is still a compile error here — which is the point of doing it once.
+    pub(crate) const fn code(self) -> u8 {
+        match self {
+            Self::Success => 0,
+            Self::Failure => 1,
+            Self::Error => 2,
+        }
+    }
+}
+
 impl From<ExitStatus> for ExitCode {
     fn from(status: ExitStatus) -> Self {
-        match status {
-            ExitStatus::Success => Self::from(0),
-            ExitStatus::Failure => Self::from(1),
-            ExitStatus::Error => Self::from(2),
-        }
+        Self::from(status.code())
     }
 }
 
@@ -290,13 +305,21 @@ pub struct Source {
 /// run with the outcome returned as a value instead of a process code.
 #[must_use]
 pub fn run<I: IntoIterator<Item = OsString>>(arguments: I) -> ExitCode {
-    match execute(arguments) {
-        Ok(status) => status.into(),
-        Err(error) => {
-            eprintln!("error: {error}");
-            ExitStatus::Error.into()
-        }
-    }
+    status(arguments).into()
+}
+
+/// [`run`] with the answer still an [`ExitStatus`], the failure already written to stderr.
+///
+/// The two entry points — `src/main.rs` and the `tooprolix` console script in `src/lib.rs` — differ
+/// only in the *type* of the exit code they return, never in how a failure is reported. Rendering
+/// it in each of them would have been two lines duplicated and one place for the wording to drift,
+/// so the rendering lives here and both go through it. [`execute`] is the same run with the failure
+/// still a value, for a caller that wants to handle it rather than print it.
+pub(crate) fn status<I: IntoIterator<Item = OsString>>(arguments: I) -> ExitStatus {
+    execute(arguments).unwrap_or_else(|error| {
+        eprintln!("error: {error}");
+        ExitStatus::Error
+    })
 }
 
 /// [`run`] with the outcome still typed, for a caller that is not a process.

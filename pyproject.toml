@@ -24,6 +24,23 @@ dynamic = ["version"]
 # Do not read a packaging decision into this line.
 requires-python = ">=3.12"
 
+# The `tooprolix` command, and the only thing that creates it: before this key the wheel installed
+# an importable module and no executable, so `uv add git+...` gave `Failed to spawn: tooprolix`
+# (measured on a wheel built at fc77b75).
+#
+# The target is a `#[pyfunction]` in the extension module itself, not a Python file: there is no
+# Python source in this distribution, and adding one would mean a second package layout, a second
+# import path and a second place for the argument handling to live. `tooprolix:main` reads
+# `sys.argv[1:]`, calls `cli::status` and returns the exit code as an `int`, which is what the
+# generated console script's `sys.exit(main())` wants. See `src/lib.rs`.
+#
+# The wheel is therefore the CLI running *inside* CPython — the third of the three delivery options
+# weighed in epic 1, chosen because it costs no second artifact. The standalone `cargo build` binary
+# still exists and is now interpreter-free (the `python` feature is off by default), but it is not
+# what this distribution ships and it carries no promise here.
+[project.scripts]
+tooprolix = "tooprolix:main"
+
 [tool.maturin]
 # pyo3 EXTENSION bindings, i.e. an importable `tooprolix` module. Stated explicitly rather than left
 # to maturin's auto-detection because ruff — our reference for everything else — has
@@ -31,6 +48,23 @@ requires-python = ">=3.12"
 # no importable module and break AC3.
 bindings = "pyo3"
 module-name = "tooprolix"
+# Turns the crate's `python` feature on for the wheel. It is OFF by default so the standalone binary
+# links no libpython, so without this line there is no `#[pymodule]` to build a wheel around.
+#
+# Measured by deleting this line (2026-07-27) — and the answer was NOT the predicted one, so the
+# prediction is not what is written here. The expectation was a wheel that builds and exports
+# nothing, failing at `import tooprolix`. What actually happens is that `make py.build` fails one
+# step earlier and louder:
+#
+#   The build backend returned an error
+#     Caused by: unknown binding type
+#
+# maturin resolves `bindings = "pyo3"` against the dependency graph, and with the `python` feature
+# off pyo3 is not in it, so no broken wheel is ever produced. Through that same mutation `make test`
+# stays green at 120 passed — which is the point: this guard is `make py.build` plus the import
+# check, and it is deliberately NOT a pytest, because `make test` is
+# `uv run --only-group test pytest` and never builds the project at all (Makefile:27-31).
+features = ["python"]
 # Deliberately no `features = ["pyo3/extension-module"]`: maturin already adds that feature itself
 # for pyo3 bindings. Verified on a throwaway `maturin new --bindings pyo3` project — the built
 # `.so` has no `libpython` in `otool -L`, so extension-module was on. Setting it in
