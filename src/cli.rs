@@ -101,6 +101,8 @@
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use ignore::WalkBuilder;
 use thiserror::Error as ThisError;
@@ -388,19 +390,27 @@ pub fn execute<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<ExitSta
         );
     }
 
-    let files = python_files(&path, &config)?;
+    let Walked {
+        files,
+        excluded_any,
+    } = python_files(&path, &config)?;
     if files.is_empty() {
         // A walk that visited nothing scores every repository clean. Saying so is the difference
         // between "no findings" and "no measurement".
         eprintln!("warning: no Python files under {}", path.display());
-        // ... and when the project's own configuration is what emptied it, name that too. On its
-        // own the line above blames an *absence* of Python, which for `exclude = ["*"]` is not
-        // what happened and sends the reader looking for missing files. The exit code stays 0
+        // ... and when `exclude` is what emptied it, name that too. On its own the line above
+        // blames an *absence* of Python, which for `exclude = ["*"]` is not what happened and
+        // sends the reader looking for files that were there all along. The exit code stays 0
         // because it is honest — there really are no findings — so this line is the only thing
         // standing between an excluded tree and a tree that was measured and found clean.
-        if !config.exclude.is_empty() {
+        //
+        // Gated on what the WALK observed, never on `!config.exclude.is_empty()`: a glob that
+        // matched nothing did not empty anything, and saying it did is the same wrong-cause defect
+        // in the opposite direction.
+        if excluded_any {
             eprintln!(
-                "warning: `exclude` in {} is in force ({}); an excluded tree is not a measured one",
+                "warning: `exclude` in {} removed paths from this walk ({}); an excluded tree is \
+                 not a measured one",
                 config.source.as_ref().map_or_else(
                     || "the configuration".to_owned(),
                     |p| p.display().to_string()
@@ -547,7 +557,7 @@ fn parse_format(value: &str) -> Result<Format, Error> {
 ///
 /// [`Error::Missing`], [`Error::NotPython`] and [`Error::Walk`] — all three are "the tree could not
 /// be read", never "the tree is clean".
-fn python_files(root: &Path, config: &Config) -> Result<Vec<PathBuf>, Error> {
+fn python_files(root: &Path, config: &Config) -> Result<Walked, Error> {
     if !root.exists() {
         return Err(Error::Missing(root.to_path_buf()));
     }
@@ -578,7 +588,38 @@ fn python_files(root: &Path, config: &Config) -> Result<Vec<PathBuf>, Error> {
     // checkout it came from, and without this the crate ignores gitignore files outside a repo.
     // Nothing here calls `follow_links`; see the module documentation for what that measured.
     let mut builder = WalkBuilder::new(&walked);
-    builder.require_git(false).overrides(excluded);
+    builder.require_git(false);
+
+    // `filter_entry` rather than `overrides`, and the reason is that the caller has to be able to
+    // say whether `exclude` ACTUALLY removed anything. Read in the crate's `walk.rs`:
+    // `should_skip_entry` — which is where `overrides` is consulted — runs *before* the filter
+    // predicate, so with `overrides` set an excluded path is pruned before any code of ours can
+    // observe it, and the only thing left to report on is the configuration's own say-so. That is
+    // how the diagnostic came to blame `exclude` for emptiness it had no part in.
+    //
+    // The three properties that made `overrides` right are all kept, and none of them is
+    // incidental to this choice:
+    //   * directory pruning — the predicate returning false on a directory stops the descent, so a
+    //     matched `vendor/` still costs one entry rather than a subtree, and a glob naming a
+    //     directory still covers everything under it (that was always pruning's doing, never the
+    //     glob matching descendants);
+    //   * the root is still always visited — `skip_entry` returns early at depth 0, ahead of the
+    //     filter, which is what keeps an explicitly named path checked;
+    //   * `.gitignore` still has its say — its layers run first and this filter runs after, so a
+    //     path is walked only if BOTH allow it. Identical to `overrides` here because we only ever
+    //     build exclusions, never re-inclusions.
+    let observed = Arc::new(AtomicBool::new(false));
+    if !excluded.is_empty() {
+        let seen = Arc::clone(&observed);
+        builder.filter_entry(move |entry| {
+            let is_dir = entry.file_type().is_some_and(|kind| kind.is_dir());
+            if excluded.matched(entry.path(), is_dir).is_ignore() {
+                seen.store(true, Ordering::Relaxed);
+                return false;
+            }
+            true
+        });
+    }
 
     let mut files = Vec::new();
     for entry in builder.build() {
@@ -590,7 +631,23 @@ fn python_files(root: &Path, config: &Config) -> Result<Vec<PathBuf>, Error> {
             files.push(reroot(root, &walked, entry.into_path()));
         }
     }
-    Ok(files)
+    Ok(Walked {
+        files,
+        excluded_any: observed.load(Ordering::Relaxed),
+    })
+}
+
+/// What a walk found, and whether `exclude` is the reason it did not find more.
+struct Walked {
+    /// Every Python file the walk yielded, unsorted — see [`python_files`].
+    files: Vec<PathBuf>,
+    /// Set when the exclude matcher really did remove a path, **observed during the walk**.
+    ///
+    /// Not `!config.exclude.is_empty()`. A configured glob that matches nothing is not an
+    /// exclusion, and reporting it as one blames a rule that never fired for an empty tree it had
+    /// no part in emptying. The distinction is only knowable by watching the walk, which is why
+    /// this rides back with the files instead of being re-derived from the configuration.
+    excluded_any: bool,
 }
 
 /// Puts a walked path back under the root **as the user typed it**.
@@ -1134,8 +1191,13 @@ mod tests {
     fn the_walk_finds_python_and_refuses_everything_else() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/dup-corpus");
 
-        let files = python_files(&root, &Config::default()).expect("the fixture tree is readable");
-        let mut names: Vec<String> = files
+        let walked = python_files(&root, &Config::default()).expect("the fixture tree is readable");
+        assert!(
+            !walked.excluded_any,
+            "a walk with no `exclude` configured reported that it excluded something"
+        );
+        let mut names: Vec<String> = walked
+            .files
             .iter()
             .map(|file| {
                 file.file_name()

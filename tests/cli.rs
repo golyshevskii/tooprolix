@@ -1475,9 +1475,13 @@ fn excluding_the_whole_tree_says_so_rather_than_scoring_it_clean() {
         !stderr_of(&after).is_empty(),
         "every file in the tree was excluded and the run said nothing at all"
     );
+    // Not merely "stderr mentions exclude" — that was satisfied by a clause driven off the
+    // configuration's own say-so, which said the same thing for a glob that matched nothing. The
+    // claim under test is the one only the walk can make: that paths were actually removed.
     assert!(
-        stderr_of(&after).contains("exclude"),
-        "the diagnostic blames something other than the `exclude` that actually caused it: {:?}",
+        stderr_of(&after).contains("removed paths from this walk"),
+        "the diagnostic blames something other than the `exclude` that actually caused it, or \
+         reports the rule's mere presence rather than its effect: {:?}",
         stderr_of(&after)
     );
     assert!(
@@ -1567,5 +1571,121 @@ fn an_unknown_key_is_still_fatal_and_the_known_list_now_carries_exclude() {
         stderr_of(&output).contains("exclude,") || stderr_of(&output).contains(", exclude"),
         "the known-key list does not advertise `exclude`, so the two lists have drifted: {:?}",
         stderr_of(&output)
+    );
+}
+
+/// The negation guard has to look at the entry the way the *walker* will, not at position zero.
+///
+/// `starts_with('!')` inspected byte 0 only, so ` !vendor` walked straight past it, became
+/// `! !vendor` one layer down, and excluded a literal space-prefixed path — which is to say
+/// nothing at all, silently. That is the exact no-op the guard exists to prevent, reached by
+/// typing one space. It is also the epic's "enumerate positions, not just inputs" lesson landing
+/// inside a guard written *because* of that lesson: the original probe only ever tested position 0.
+///
+/// The decision this pins is that an entry is **trimmed and then judged**, so surrounding
+/// whitespace can neither smuggle a `!` past the guard nor turn a working glob into a silent
+/// no-op. The second half is the one users actually hit, and it is asserted here too: ` vendor`
+/// must exclude `vendor`, not a directory whose name begins with a space.
+#[test]
+fn surrounding_whitespace_cannot_smuggle_a_negation_past_the_guard() {
+    let scratch = Scratch::new("exclude-whitespace");
+    scratch.write("app.py", "\"\"\"Short.\"\"\"\n");
+    scratch.write("vendor/fat.py", &long_comment("vendored retry policy"));
+
+    // Every spelling of a negated entry is refused, wherever the whitespace sits.
+    for entry in [" !vendor", "!vendor ", "\t!vendor", "  !vendor  "] {
+        scratch.write(
+            "pyproject.toml",
+            &format!("[tool.tooprolix]\nexclude = [\"{entry}\"]\n"),
+        );
+
+        let output = scratch.check(&[]);
+
+        assert_eq!(
+            output.status.code(),
+            Some(2),
+            "`{entry}` slipped past the negation guard and excluded nothing, silently: {output:?}"
+        );
+        assert!(
+            stderr_of(&output).contains('!') && stderr_of(&output).contains("exclude"),
+            "`{entry}`: the message does not name the problem: {:?}",
+            stderr_of(&output)
+        );
+    }
+
+    // ... and a stray space around a REAL glob is still that glob, not a no-op.
+    scratch.write(
+        "pyproject.toml",
+        "[tool.tooprolix]\nexclude = [\"  vendor  \"]\n",
+    );
+    let padded = scratch.check(&[]);
+
+    assert_eq!(
+        padded.status.code(),
+        Some(0),
+        "a glob with surrounding whitespace excluded nothing: {padded:?}"
+    );
+    assert_eq!(
+        stdout_of(&padded),
+        "",
+        "the padded glob did not reach the walk: {}",
+        stdout_of(&padded)
+    );
+}
+
+/// The empty-walk diagnostic must report what the **walk** did, not what the config *says*.
+///
+/// The clause was driven by `!config.exclude.is_empty()` — a field of the configuration — and
+/// announced as a fact about the walk. An empty directory whose config excludes a `vendor` that
+/// does not exist anywhere therefore blamed `exclude` for an emptiness it had no part in, sending
+/// the reader hunting for excluded files that were never there. That is the same wrong-cause
+/// failure the clause was added to fix, one level in: the original "no Python files" message
+/// blamed an absence, and this blamed a rule that never fired.
+///
+/// Both directions are asserted on one fixture, because either alone passes on a build that always
+/// prints the clause or never does.
+#[test]
+fn the_empty_walk_diagnostic_blames_exclude_only_when_exclude_actually_excluded_something() {
+    // Arrange — one tree, one glob, and the only difference is whether anything matches it.
+    let scratch = Scratch::new("exclude-blame");
+    scratch.write(
+        "pyproject.toml",
+        "[tool.tooprolix]\nexclude = [\"vendor\"]\n",
+    );
+
+    // Act — nothing named `vendor` exists, so the walk is empty for a reason `exclude` did not
+    // cause ...
+    let nothing_matched = scratch.check(&[]);
+    // ... and now it does exist, and is the whole of the tree's Python.
+    scratch.write("vendor/fat.py", &long_comment("vendored retry policy"));
+    let everything_matched = scratch.check(&[]);
+
+    // Assert
+    assert_eq!(
+        nothing_matched.status.code(),
+        Some(0),
+        "{nothing_matched:?}"
+    );
+    assert!(
+        stderr_of(&nothing_matched).contains("no Python files"),
+        "an empty walk must still say it measured nothing: {:?}",
+        stderr_of(&nothing_matched)
+    );
+    assert!(
+        !stderr_of(&nothing_matched).contains("exclude"),
+        "`exclude` was blamed for an emptiness it had no part in — nothing in this tree ever \
+         matched `vendor`: {:?}",
+        stderr_of(&nothing_matched)
+    );
+
+    assert_eq!(
+        everything_matched.status.code(),
+        Some(0),
+        "{everything_matched:?}"
+    );
+    assert!(
+        stderr_of(&everything_matched).contains("exclude"),
+        "`exclude` really did empty this walk and the run did not say so: {:?}",
+        stderr_of(&everything_matched)
     );
 }

@@ -300,6 +300,19 @@ fn from_document(document: &toml::Table, path: PathBuf) -> Result<Config, Error>
     }
 
     for (key, value) in table {
+        // The advertised list GATES the dispatch, so the two cannot be separate lists in the
+        // direction that used to be untested: an arm added below without a matching entry here is
+        // rejected as unknown the first time it is used, instead of quietly working while the
+        // `known keys:` line kept telling users it does not exist. The reverse direction — a key
+        // advertised that no arm handles — falls through to the same error and is caught by
+        // `every_advertised_key_is_actually_accepted`.
+        if !KNOWN_KEYS.contains(&key.as_str()) {
+            return Err(Error::UnknownKey {
+                path,
+                key: key.clone(),
+                known: KNOWN_KEYS.join(", "),
+            });
+        }
         match key.as_str() {
             "ignore" => config.ignore = read_ignore(value, &path)?,
             "exclude" => config.exclude = read_exclude(value, &path)?,
@@ -380,9 +393,31 @@ fn read_ignore(value: &toml::Value, path: &Path) -> Result<Vec<Rule>, Error> {
 /// * a leading `!` becomes `!!…`, which the walker accepts and which excludes **nothing** — the
 ///   user's negation cancels ours and the gate is off with no diagnostic.
 ///
-/// Both are the "a guard that can be switched off by a typo in its own configuration" class. The
-/// entry is rejected rather than normalised because there is no reading of `exclude = [""]` that
-/// is more likely to be what someone meant than a mistake.
+/// Both are the "a guard that can be switched off by a typo in its own configuration" class.
+///
+/// # Entries are trimmed before they are judged, and that is a decision
+///
+/// The negation guard originally read position zero of the raw string, so `" !vendor"` — one
+/// leading space — walked past it and became the useless `"! !vendor"`. The same space applied to
+/// a *valid* glob, `" vendor"`, was equally a silent no-op: it excluded a directory whose name
+/// begins with a space, which is to say nothing. Trimming first fixes both, and every check below
+/// reads the trimmed value.
+///
+/// The price is that a path which genuinely begins or ends with a space cannot be named by
+/// `exclude`. That is accepted: such a path is pathological, gitignore itself strips trailing
+/// whitespace from its patterns, and the alternative — honouring it — means every ordinary typo
+/// stays a silent no-op. Refusing padded entries outright was the other candidate and was not
+/// taken, because `" vendor"` has exactly one plausible reading and rejecting it would be pedantry
+/// where the guard's whole purpose is to stop *silence*, not to police formatting.
+///
+/// # An entry that matches nothing is silent, deliberately
+///
+/// `exclude = ["./pkg/vendor"]`, an absolute path, or a `..` path each compile fine and match no
+/// file, and nothing says so. Unlike the near-miss diagnostic on opt-out *markers*
+/// ([`crate::rules`]), no warning is offered here: a configuration shared across repositories
+/// legitimately names paths that are absent from any one of them, so the warning would be a false
+/// alarm most of the time — where the marker case measured zero collisions on the corpus. Revisit
+/// if `exclude` ever becomes per-repository rather than shared.
 fn read_exclude(value: &toml::Value, path: &Path) -> Result<Vec<String>, Error> {
     let entries = value.as_array().ok_or_else(|| Error::BadValue {
         path: path.to_path_buf(),
@@ -392,13 +427,18 @@ fn read_exclude(value: &toml::Value, path: &Path) -> Result<Vec<String>, Error> 
 
     let mut excluded = Vec::with_capacity(entries.len());
     for entry in entries {
-        let glob = entry.as_str().ok_or_else(|| Error::BadValue {
+        let raw = entry.as_str().ok_or_else(|| Error::BadValue {
             path: path.to_path_buf(),
             key: "exclude".to_owned(),
             problem: format!("expected a glob string, found {}", entry.type_str()),
         })?;
 
-        if glob.trim().is_empty() {
+        // NORMALISE FIRST, then judge, then keep the normalised form. Every line below compares
+        // against `glob` and never against `raw`, because a guard that reads position zero of an
+        // un-normalised string is a guard one space defeats — which is exactly what happened here.
+        let glob = raw.trim();
+
+        if glob.is_empty() {
             return Err(Error::BadValue {
                 path: path.to_path_buf(),
                 key: "exclude".to_owned(),
@@ -411,7 +451,7 @@ fn read_exclude(value: &toml::Value, path: &Path) -> Result<Vec<String>, Error> 
                 path: path.to_path_buf(),
                 key: "exclude".to_owned(),
                 problem: format!(
-                    "`{glob}` starts with `!`, which would negate the exclusion into a no-op; \
+                    "`{raw}` starts with `!`, which would negate the exclusion into a no-op; \
                      `exclude` entries are exclusions already, and re-inclusion is not supported"
                 ),
             });
@@ -655,6 +695,14 @@ mod tests {
             config.exclude,
             vec!["vendor", "tests/fixtures", "*.generated.py"]
         );
+        // Stored trimmed, so the walk matches the glob the user meant rather than one behind a
+        // space — which matched nothing and said nothing.
+        assert_eq!(
+            parse("[tool.tooprolix]\nexclude = [\"  vendor  \"]\n")
+                .expect("padding is not an error")
+                .exclude,
+            vec!["vendor"]
+        );
         assert_eq!(config.limits, Limits::default());
         assert!(config.ignore.is_empty());
         assert!(
@@ -686,6 +734,18 @@ mod tests {
                 "[tool.tooprolix]\nexclude = [\"!vendor\"]\n",
                 "!",
                 "a negated glob, which excludes nothing",
+            ),
+            // The guard used to read byte zero of the raw string, so one leading space walked past
+            // it into the same silent no-op it exists to prevent.
+            (
+                "[tool.tooprolix]\nexclude = [\" !vendor\"]\n",
+                "!",
+                "a negated glob behind a leading space",
+            ),
+            (
+                "[tool.tooprolix]\nexclude = [\"\\t!vendor\"]\n",
+                "!",
+                "a negated glob behind a tab",
             ),
             (
                 "[tool.tooprolix]\nexclude = [\"a[\"]\n",
