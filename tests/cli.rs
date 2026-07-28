@@ -2910,6 +2910,80 @@ fn a_link_out_of_the_walked_tree_is_not_reported_as_a_clean_measurement() {
     );
 }
 
+/// "Inside the tree" is a question about **path components**, not about string prefixes.
+///
+/// 🔴 **The directory names are load-bearing. `treeXtra` must keep a name that begins with the
+/// whole of `tree`, and neither may be renamed to anything else.** They look arbitrary and they are
+/// not: `/…/tree` is a string prefix of `/…/treeXtra/fat.py` while being no prefix of it in path
+/// terms, so this fixture is the only shape in the suite that can tell the two comparisons apart.
+/// Rename `treeXtra` to `other` and this test still passes against a guard that has been disabled.
+/// The arrange block below asserts the property rather than trusting the names, so a tidy-up is a
+/// red test with a message instead of a silent loss of coverage.
+///
+/// The guard is `Path::starts_with`, which is component-wise and therefore correct. Nothing pinned
+/// *that*, and the gap was found by mutation: replacing the line with
+/// `target.to_string_lossy().starts_with(root.to_string_lossy().as_ref())` — the most plausible
+/// refactor anyone would reach for — passed the **entire** suite while restoring the original
+/// defect in full, a green `All checks passed!` over a `TPX001` measured nowhere. Every other
+/// fixture puts the outside target under `outside/` or `../tree`, names that are not string
+/// prefixes of the root, so none of them constrains this property.
+#[test]
+#[cfg(unix)]
+fn a_sibling_whose_name_merely_starts_with_the_root_is_still_outside_it() {
+    // Arrange — one scratch, two sibling directories, and the walk root is the shorter name.
+    let scratch = Scratch::new("prefix-siblings");
+    scratch.write("tree/clean.py", "\"\"\"Short.\"\"\"\n");
+    let outside = scratch.write("treeXtra/fat.py", &SHARED_RATIONALE.repeat(10));
+    std::os::unix::fs::symlink(&outside, scratch.root.join("tree/sibling.py"))
+        .expect("a symlink is creatable");
+
+    // ... and the fixture really has the shape it claims, so renaming either directory fails here
+    // and says why, rather than quietly making the test unable to detect the defect.
+    let root = scratch.root.join("tree");
+    assert!(
+        outside
+            .to_string_lossy()
+            .starts_with(root.to_string_lossy().as_ref()),
+        "the sibling's name is no longer a STRING prefix of the walk root, so this fixture can no \
+         longer tell `Path::starts_with` from a string comparison: {} vs {}",
+        root.display(),
+        outside.display()
+    );
+    assert!(
+        !outside.starts_with(&root),
+        "the sibling really is inside the walk root, so there is nothing to discriminate: {} vs {}",
+        root.display(),
+        outside.display()
+    );
+
+    // Act — the root is named relatively, which is also how a user would type it.
+    let output = scratch.check_from("", "tree");
+    let json = Command::new(env!("CARGO_BIN_EXE_tooprolix"))
+        .args(["check", "tree", "--format", "json"])
+        .current_dir(&scratch.root)
+        .output()
+        .expect("the binary cargo just built is executable");
+
+    // Assert
+    assert_eq!(
+        stdout_of(&output),
+        "",
+        "a `.py` in a SIBLING directory was counted as inside the tree, so the run announced a \
+         measurement it never made"
+    );
+    assert_eq!(output.status.code(), Some(1), "{output:?}");
+    let document = document_of(&json);
+    assert_eq!(document["complete"], false, "{document}");
+    assert!(
+        document["skipped"]
+            .as_array()
+            .expect("an array")
+            .iter()
+            .any(|entry| entry["path"] == "tree/sibling.py"),
+        "the link out to the sibling directory is not named as unread: {document}"
+    );
+}
+
 /// Every marker diagnostic comes out in a deterministic order, and the proof is not a re-run.
 ///
 /// `report_skipped` and `Report::new` both sort; these two did not, and rode the walk order
