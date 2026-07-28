@@ -96,7 +96,7 @@
 //!
 //! # Paths in the output are the paths the walk used
 //!
-//! `tooprolix check src` reports `src/api.py:1`; `tooprolix check .` reports `./api.py:1`. The
+//! `tooprolix check src` reports `src/api.py:1-9`; `tooprolix check .` reports `./api.py:1-9`. The
 //! canonical form is used for finding `pyproject.toml` (see [`crate::config`]) and nowhere else,
 //! because a user who typed a relative path wants a relative finding they can paste into an editor.
 //!
@@ -108,7 +108,8 @@
 //! file*. A user who reads exit 0 there as a verdict on the repository has been misled by silence,
 //! so [`HELP`] says it in as many words.
 
-use std::ffi::OsString;
+use std::ffi::{OsStr, OsString};
+use std::io::IsTerminal;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 use std::sync::{Arc, Mutex};
@@ -497,6 +498,16 @@ pub fn execute<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<ExitSta
             for finding in &findings {
                 println!("{finding}");
             }
+            // Gated on the OUTCOME, not on `findings.is_empty()`. `Success` is the only variant
+            // that reports 0 and it is unreachable while anything was skipped, so this one
+            // condition carries both halves of the rule — "no findings" and "the tree was read
+            // whole" — and cannot drift from the exit code, because it *is* the exit code. A
+            // partial run with nothing to report is `Incomplete`: exit 1, and silence here. The
+            // line would otherwise assert a completeness the run does not have, which is the
+            // outcome the whole graceful contract exists to prevent.
+            if matches!(status, ExitStatus::Success) {
+                success_line();
+            }
         }
         Format::Json => {
             // `display()` and not a lossless form, for the reason `crate::finding::Location`
@@ -518,6 +529,57 @@ pub fn execute<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<ExitSta
     // already there.
     report_skipped(&skipped, &config);
     Ok(status)
+}
+
+/// What a run that read the whole tree and found nothing says.
+///
+/// Worded as ruff words it, deliberately: this repository's own `make lint.check` already prints
+/// exactly this sentence, and a Python developer meets it before they meet this tool. A second
+/// spelling of the same fact would be a new thing to learn for no information.
+const SUCCESS_LINE: &str = "All checks passed!";
+
+/// [`SUCCESS_LINE`] on stdout, green when the terminal wants colour.
+///
+/// # Why a successful run stopped being silent
+///
+/// It printed **zero bytes**, and zero bytes is what a crashed run, a walk that visited nothing and
+/// a clean repository all look like. The exit code told them apart and nothing on the screen did,
+/// so the one outcome a user most wants confirmed was the one the tool refused to confirm.
+///
+/// It is on **stdout**, beside the findings, because it is the answer to the question that was
+/// asked — not a diagnostic about the run. That does mean `tooprolix check . | wc -l` answers 1 on
+/// a clean tree where it used to answer 0; `--format json`, which is the interface for machines,
+/// never prints it at all.
+fn success_line() {
+    // Both facts are read here, once, and neither is readable from a test: `is_terminal` depends on
+    // what the process was handed and `var_os` on the ambient environment. The *decision* they feed
+    // is a pure function precisely so that it can be a table in the tests below.
+    let no_color = std::env::var_os("NO_COLOR");
+    if use_colour(std::io::stdout().is_terminal(), no_color.as_deref()) {
+        // SGR 32 (green) and SGR 0 (reset). Written out rather than taken from a crate: this is the
+        // only colour this tool emits anywhere, and `colored`/`owo-colors`/`anstream` would each be
+        // a dependency — and a tree to audit, pin and ship to PyPI — for two escape sequences that
+        // have not changed since ECMA-48 in 1976.
+        println!("\u{1b}[32m{SUCCESS_LINE}\u{1b}[0m");
+    } else {
+        println!("{SUCCESS_LINE}");
+    }
+}
+
+/// Whether the success line is coloured: a terminal is watching, and it has not asked for plain
+/// text.
+///
+/// Both conditions can veto, and the order they are written in is not the order they matter in —
+/// `NO_COLOR` is an explicit instruction and a pipe is an inference, but a pipe is the case that
+/// actually breaks something. An escape sequence in a redirected file, a CI annotation or a
+/// `| grep` is corruption of data a machine reads; a missing colour is only plain.
+///
+/// `NO_COLOR` is read as `no-color.org` defines it — **present and not an empty string**. The empty
+/// value is the distinction that matters in practice: `NO_COLOR=` is how a shell script unsets an
+/// inherited variable without `unset`, and treating it as "asked for no colour" would make the
+/// variable impossible to switch back off.
+fn use_colour(is_terminal: bool, no_color: Option<&OsStr>) -> bool {
+    is_terminal && no_color.is_none_or(OsStr::is_empty)
 }
 
 /// Names every file the run could not read, and — once — what that did to `TPX003`.
@@ -798,33 +860,50 @@ fn python_files(root: &Path, config: &Config) -> Result<Walked, Error> {
             Some(kind) if kind.is_file() => files.push(reroot(root, &walked, entry.into_path())),
             // A directory named `thing.py` is not an unread source.
             Some(kind) if kind.is_dir() => {}
-            // A symlink whose target RESOLVES is silent, because it was measured — under the
-            // target's own name, which the walk reaches separately. Marking it skipped would put a
-            // false `complete: false` on any repository that uses an in-tree symlink.
+            // **Every** `*.py`-named symlink, without exception: the walk does not follow links, so
+            // it did not read this entry, so the tree it belongs to was not read whole. No
+            // resolution, no containment test, no question to get wrong.
             //
-            // The justification here used to be borrowed and is now measured. It read: following
-            // symlinks "takes pydantic from 343 findings to 559", so reporting them "would mark
-            // half the corpus incomplete". That number is real but belongs to `follow_links` on a
-            // symlinked **directory** (`pydantic/tests/pydantic_core`) — and this arm is reached
-            // only after `is_python_source` has already returned true, so it never sees one. What
-            // it governs is symlinks named `*.py`, of which the six pinned checkouts hold
-            // **zero** (crewAI 0, langgraph 0, openai-agents-python 0, OpenHands 0, pydantic 0,
-            // requests 0). So this arm is kept because it is correct, not because it is cheap.
+            // 🔴 Three adversarial rounds produced three CRITICALs on one seam here, and the seam
+            // was an exception that tried to decide when silence was safe:
             //
-            // `exists()` and not `symlink_metadata`: the question is whether the TARGET is there,
-            // and `symlink_metadata` deliberately does not follow the link — it answers "symlink"
-            // for both cases and would silently collapse the two. `exists()` is also false when the
-            // target cannot be statted for any other reason, which lands the entry in `skipped`;
-            // that is the fail-loud direction, since such a file was not measured either.
-            Some(kind) if kind.is_symlink() && entry.path().exists() => {}
-            // ... and one that dangles is the FIFO case in different clothing: a `.py` the walk
-            // saw, nobody opened, and nothing was ever behind. Silence here was the last way a
-            // document could still say `complete: true` about a tree holding an unread `.py`.
+            //   1. silent whenever the target `exists()` — a target OUTSIDE the walked tree
+            //      resolves just as well and is measured nowhere: a green `All checks passed!` over
+            //      an unread `TPX001`;
+            //   2. silent when the target canonicalised under the walk root — a sibling directory
+            //      whose name is a mere string prefix of the root restored the same false green;
+            //   3. silent when the target is under the root — and a target that IS under the root
+            //      and still never walked (a non-`.py` name, a hidden directory, a gitignored path,
+            //      an `exclude`d path) restored it again, four ways.
+            //
+            // The root cause never moved. The guard asked *"where does the target live"*, while the
+            // invariant is *"was the target measured in this run"*, and each round answered the
+            // wrong question more precisely. The fix is not a fourth guard: it is deleting the
+            // exception, so `complete: false` and exit 1 follow from the shape of the code rather
+            // than from a predicate that has to be right.
+            //
+            // A dangling link and a resolving one now take one path and carry one reason. The
+            // `exists()`-versus-`symlink_metadata` reasoning recorded here existed only to separate
+            // them and is gone with the distinction it served.
+            //
+            // The cost is measured and it is zero: symlinks named `*.py` number **zero** across all
+            // six pinned corpus checkouts (crewAI 0, langgraph 0, openai-agents-python 0,
+            // `OpenHands` 0, pydantic 0, requests 0) and zero in this repository. The earlier
+            // "pydantic 343 -> 559" figure that once defended silence here was never about this arm
+            // at all — it belongs to `follow_links` on a symlinked *directory*, which this arm never
+            // sees, since `is_python_source` has already returned true.
+            //
+            // ⚠️ Naming a symlink DIRECTLY — `tooprolix check alias.py` — still measures it, and
+            // that is deliberate rather than an inconsistency. This arm answers "is this tree whole",
+            // where an unfollowed link is a hole; an explicit argument is an instruction about one
+            // file and carries no claim about a tree. Ruff resolves explicit arguments past its own
+            // exclusions for the same reason. The root of a walk is visited before this match, so
+            // the two paths never meet.
             Some(kind) if kind.is_symlink() => skipped.push(Skipped {
                 path: reroot(root, &walked, entry.into_path())
                     .display()
                     .to_string(),
-                reason: "symlink target does not resolve".to_owned(),
+                reason: "symlinks are not followed, so this file was not measured".to_owned(),
             }),
             // What is left is a FIFO, a socket or a device that happens to end in `.py`. It passes
             // the extension test and fails `is_file()`, so it used to be dropped into neither
@@ -1095,12 +1174,12 @@ pub fn findings(sources: Vec<Source>, config: &Config) -> Vec<Finding> {
 
 #[cfg(test)]
 mod tests {
-    use super::{Format, Invocation, Source, findings, parse, python_files};
+    use super::{Format, Invocation, Source, findings, parse, python_files, use_colour};
     use crate::config::Config;
     use crate::detect::volume::Limits;
     use crate::extract::extract;
     use crate::rules::{Rule, parse_marker};
-    use std::ffi::OsString;
+    use std::ffi::{OsStr, OsString};
     use std::path::{Path, PathBuf};
 
     fn command(arguments: &[&str]) -> Result<Invocation, super::Error> {
@@ -1116,6 +1195,34 @@ mod tests {
                 suppressed: marker.and_then(parse_marker).unwrap_or_default(),
             })
             .collect()
+    }
+
+    /// Colour is a decision about two facts, and both of them have to be able to veto it.
+    ///
+    /// A table rather than four tests, because what is being pinned is that **neither** input is
+    /// ignored: a predicate that dropped the terminal check would still pass every `NO_COLOR` row,
+    /// and one that dropped `NO_COLOR` would still pass every pipe row. The empty-value row is the
+    /// `no-color.org` contract read literally — *present and not an empty string* — and it is the
+    /// row that separates "the variable is set" from "the variable asks for no colour".
+    ///
+    /// The predicate is pure so that this can be a table at all: the terminal test and the
+    /// environment read happen once, at the single call site, where neither is testable.
+    #[test]
+    fn colour_needs_a_terminal_and_the_absence_of_no_color() {
+        for (terminal, no_color, expected) in [
+            (true, None, true),
+            (true, Some(""), true),
+            (true, Some("1"), false),
+            (true, Some("0"), false),
+            (false, None, false),
+            (false, Some("1"), false),
+        ] {
+            assert_eq!(
+                use_colour(terminal, no_color.map(OsStr::new)),
+                expected,
+                "terminal={terminal}, NO_COLOR={no_color:?}"
+            );
+        }
     }
 
     /// A long comment run, as a `(path, source)` pair, sized to fire `TPX001` at the default 150.
@@ -1341,12 +1448,12 @@ mod tests {
         assert_eq!(before.len(), 1, "{before:#?}");
         let before_line = before[0].to_string();
         assert!(
-            before_line.contains("in 3 places") && before_line.contains("c.py:1"),
+            before_line.contains("in 3 places") && before_line.contains("c.py:1-2"),
             "the loose member never joined the cluster, so nothing is being suppressed: \
              {before_line}"
         );
         assert!(
-            before_line.contains("~ c.py:1, similarity 0.900"),
+            before_line.contains("~ c.py:1-2, similarity 0.900"),
             "the loose member is not the weakest link, so removing it would change nothing: \
              {before_line}"
         );
@@ -1356,8 +1463,8 @@ mod tests {
         let after_line = after[0].to_string();
         assert_eq!(
             after_line,
-            "a.py:1: TPX003 same explanation in 2 places: b.py:1 \
-             (weakest a.py:1 ~ b.py:1, similarity 1.000)"
+            "a.py:1-2: TPX003 same explanation in 2 places: b.py:1-2 \
+             (weakest a.py:1-2 ~ b.py:1-2, similarity 1.000)"
         );
         assert!(
             !after_line.contains("c.py"),

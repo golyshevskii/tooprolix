@@ -61,7 +61,7 @@ use serde::{Serialize, Serializer};
 
 use crate::detect::duplicate::Cluster;
 use crate::detect::volume::Overrun;
-use crate::extract::{ProseBlock, ProseKind};
+use crate::extract::{ProseBlock, ProseKind, write_address};
 use crate::rules::Rule;
 
 /// The version of the JSON document produced by `--format json`.
@@ -124,9 +124,46 @@ impl Location {
 }
 
 impl fmt::Display for Location {
-    /// `path:line` — the form every editor and every CI annotation parser already understands.
+    /// `path:line-end_line`, or `path:line` when the block occupies a single line.
+    ///
+    /// # This is a break for some consumers, taken deliberately
+    ///
+    /// The claim that used to stand here — "a range suffix is ignored by a parser that stops at the
+    /// first number, so nothing that worked on 0.3.0 stops working" — is **false**, and it was
+    /// checked rather than reasoned about. A consumer that reads `path:line` as a prefix and stops
+    /// at the first integer is indeed unaffected. A consumer that splits on `:` and parses the
+    /// second field strictly as an integer accepted `api.py:1:` and **rejects** `api.py:1-26:`, and
+    /// that is the ordinary shape of an editor jump-to-line integration.
+    ///
+    /// So this is a break, not a superset, and it is taken because the consumer count is provably
+    /// zero: nothing is published, `PyPI` answers 404, and the repository is private. The price of
+    /// the same change after publication is a major version. Recorded plainly instead of defended
+    /// with a compatibility story that does not hold — this crate has already shipped one comment
+    /// justifying a decision with a figure that measured false, and one is enough.
+    ///
+    /// # Why the end is worth the two characters
+    ///
+    /// The end line is the *size* of the problem, and it is the half a reader cannot infer. `TPX002`
+    /// says a docstring is 249 words long; `tests/unit/test_measure.py:1-26` says those words are
+    /// spread over 26 lines and where to stop reading. The number was already measured and already
+    /// in the JSON as `end_line`, so the text format was the only consumer paying to open a second
+    /// document for a fact the tool had in hand.
+    ///
+    /// # One owner, and where it actually lives
+    ///
+    /// The format itself is **not** owned here — it is [`crate::extract::write_address`], which this
+    /// impl and both detectors' `Display` impls call. Saying "the only place an address becomes a
+    /// string" was true until that function gained three callers, and it is corrected rather than
+    /// left standing: two owners of one format is the divergence the shared function exists to make
+    /// impossible, and a doc comment claiming sole ownership is how the second owner gets written.
+    ///
+    /// What this impl owns is that a *finding's* address goes through that function at all. One
+    /// `TPX003` message reaches it **`2 + n` times** for a cluster of `n` rendered members — the
+    /// anchor, each address `render_others` prints, and both ends of `weakest` — so a two-member
+    /// cluster reaches it four times and a folded twelve-member one thirteen. The cost is real and
+    /// accepted: a cluster line grows by up to `2 + digits` per address it names.
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(formatter, "{}:{}", self.path, self.line)
+        write_address(formatter, &self.path, self.line, self.end_line)
     }
 }
 
@@ -478,6 +515,96 @@ mod tests {
         extract(Path::new(path), source).expect("the fixture is valid Python")
     }
 
+    /// An address says where the block **ends**, and says it only when there is something to say.
+    ///
+    /// The two halves are one contract and are asserted together so neither can be changed alone:
+    /// a spanning block renders `start-end`, a block that occupies one line renders that line and
+    /// no range, because `path:7-7` is noise that a reader has to parse before discarding.
+    ///
+    /// The single-line half is **constructed rather than extracted**, and that is deliberate:
+    /// [`crate::extract::MIN_BLOCK_LINES`] is 2, so no walk can ever hand this type a `Location`
+    /// with `end_line == line`. The branch is a property of the address type — which is public,
+    /// appears three times over in the schema, and is the one place a range is rendered — not of
+    /// the extractor that happens to feed it today. Testing it through the CLI is impossible;
+    /// leaving it untested means the only guard against `path:7-7` is that nothing currently
+    /// reaches it.
+    #[test]
+    fn an_address_renders_a_range_and_omits_it_for_a_single_line() {
+        // Arrange
+        let spanning = Location {
+            path: "api.py".to_owned(),
+            line: 1,
+            end_line: 26,
+            prose_kind: ProseKind::Docstring,
+        };
+        let single = Location {
+            path: "api.py".to_owned(),
+            line: 7,
+            end_line: 7,
+            prose_kind: ProseKind::Comment,
+        };
+
+        // Assert
+        assert_eq!(spanning.to_string(), "api.py:1-26");
+        assert_eq!(single.to_string(), "api.py:7");
+    }
+
+    /// One block has **one** address, whichever of this crate's three renderers writes it.
+    ///
+    /// `Location::Display` is the address a user reads, but it was never the only impl that formats
+    /// one: [`crate::detect::duplicate::Cluster`] and [`crate::detect::volume::Overrun`] each wrote
+    /// `path:line` by hand. The CLI happened to route through `Location` alone, so text and JSON
+    /// agreed — but "one owner **by construction**" was not true while three impls independently
+    /// decided what an address looks like, and the README's "every address is `path:start-end`" was
+    /// false of two of them.
+    ///
+    /// This is the test that makes the claim structural: it compares the other two renderings
+    /// against `Location`'s own output for the same block, so a fourth renderer, or a divergent
+    /// edit to either of these, is a red test rather than a documentation drift.
+    #[test]
+    fn one_block_has_one_address_in_every_renderer() {
+        // Arrange — one overrun and one cluster over blocks that really span several lines, so an
+        // address that dropped the range is visibly different rather than accidentally equal.
+        let long = format!("\"\"\"Overview.\n{}\"\"\"\n", "word ".repeat(231));
+        let long_blocks = blocks_of("api.py", &long);
+        let overruns = volume(&long_blocks, Limits::default());
+        let overrun = &overruns.overruns[0];
+
+        let paragraph = "# The retry budget here is deliberately small, and that matters because\n\
+                         # the upstream service rate limits us on every fourth call.\n";
+        let mut members = blocks_of("client.py", paragraph);
+        members.extend(blocks_of("worker.py", paragraph));
+        let clusters = duplicates(&members);
+        let cluster = &clusters.clusters[0];
+
+        // Act — the address each of the three renderers writes for the same first block.
+        let overrun_address = Location::of(overrun.block).to_string();
+        let cluster_address = Location::of(cluster.members[0]).to_string();
+
+        // Assert — the fixture can tell a range from a bare line at all ...
+        assert_eq!(overrun_address, "api.py:1-2");
+        assert_eq!(cluster_address, "client.py:1-2");
+        // ... and neither detector spells it its own way.
+        assert!(
+            overrun
+                .to_string()
+                .starts_with(&format!("{overrun_address}:")),
+            "the volume diagnostic writes its own address: {overrun}"
+        );
+        assert!(
+            cluster
+                .to_string()
+                .starts_with(&format!("{cluster_address},")),
+            "the duplicate diagnostic writes its own address: {cluster}"
+        );
+        assert!(
+            cluster
+                .to_string()
+                .contains(&format!("weakest {cluster_address} ~ ")),
+            "the weakest edge writes its own address: {cluster}"
+        );
+    }
+
     /// The volume line must name the code, the size, the limit, the unit and the marker.
     ///
     /// Every one of those five is load-bearing: without the unit the number is meaningless, and
@@ -493,7 +620,7 @@ mod tests {
 
         assert_eq!(
             finding.to_string(),
-            "api.py:1: TPX002 docstring is 232 words long, over the 200-word limit \u{2014} \
+            "api.py:1-2: TPX002 docstring is 232 words long, over the 200-word limit \u{2014} \
              shorten it, or mark it with `# !TPX002` on the line above it"
         );
         assert_eq!(finding.code, Rule::DocstringVolume);
@@ -517,8 +644,8 @@ mod tests {
 
         assert_eq!(
             finding.to_string(),
-            "client.py:1: TPX003 same explanation in 2 places: worker.py:1 \
-             (weakest client.py:1 ~ worker.py:1, similarity 0.900)"
+            "client.py:1-2: TPX003 same explanation in 2 places: worker.py:1-2 \
+             (weakest client.py:1-2 ~ worker.py:1-2, similarity 0.900)"
         );
         assert_eq!(finding.code, Rule::DuplicateProse);
     }
@@ -549,11 +676,11 @@ mod tests {
 
         assert_eq!(
             rendered,
-            "a.py:1: TPX003 same explanation in 3 places: b.py:1, c.py:1 \
-             (weakest a.py:1 ~ c.py:1, similarity 0.900)"
+            "a.py:1-2: TPX003 same explanation in 3 places: b.py:1-2, c.py:1-2 \
+             (weakest a.py:1-2 ~ c.py:1-2, similarity 0.900)"
         );
         assert!(
-            rendered.contains("c.py:1,"),
+            rendered.contains("c.py:1-2,"),
             "the loose member is missing from the address list: {rendered}"
         );
     }
@@ -761,7 +888,8 @@ mod tests {
         let smaller = Finding {
             code: Rule::CommentVolume,
             at: at.clone(),
-            message: "a.py:1: TPX001 comment is 151 words long, over the 150-word limit".to_owned(),
+            message: "a.py:1-4: TPX001 comment is 151 words long, over the 150-word limit"
+                .to_owned(),
             detail: super::Detail::Volume {
                 words: 151,
                 max_volume: 150,
@@ -770,7 +898,8 @@ mod tests {
         let larger = Finding {
             code: Rule::CommentVolume,
             at,
-            message: "a.py:1: TPX001 comment is 900 words long, over the 150-word limit".to_owned(),
+            message: "a.py:1-4: TPX001 comment is 900 words long, over the 150-word limit"
+                .to_owned(),
             detail: super::Detail::Volume {
                 words: 900,
                 max_volume: 150,

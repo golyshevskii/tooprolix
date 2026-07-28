@@ -107,7 +107,7 @@
 
 use std::fmt;
 
-use crate::extract::{ProseBlock, ProseKind};
+use crate::extract::{ProseBlock, ProseKind, write_address};
 
 /// Default for [`Limits::docstring_max_volume`], in normalised words: `TPX002`.
 ///
@@ -210,11 +210,15 @@ impl fmt::Display for Overrun<'_> {
     /// bytes. What it does observe is pinned by `the_output_is_a_function_of_the_input_set`, whose
     /// two same-coordinate findings differ in size and therefore in rendering.
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write_address(
+            formatter,
+            &self.block.path.display(),
+            self.block.line_start,
+            self.block.line_end,
+        )?;
         write!(
             formatter,
-            "{}:{}: {} prose volume ({} words > max {}, {} lines)",
-            self.block.path.display(),
-            self.block.line_start,
+            ": {} prose volume ({} words > max {}, {} lines)",
             self.block.kind.as_str(),
             self.words,
             self.max_volume,
@@ -588,12 +592,12 @@ mod tests {
         // Assert — the exact bytes, in the exact documented order.
         assert_eq!(
             forwards,
-            "a.py:1: docstring prose volume (300 words > max 200, 2 lines)\n\
-             b.py:1: comment prose volume (160 words > max 150, 2 lines)\n\
-             c.py:1: docstring prose volume (220 words > max 200, 2 lines)\n\
-             c.py:1: comment prose volume (160 words > max 150, 2 lines)\n\
-             dup.py:1: docstring prose volume (210 words > max 200, 2 lines)\n\
-             dup.py:1: docstring prose volume (230 words > max 200, 2 lines)",
+            "a.py:1-2: docstring prose volume (300 words > max 200, 2 lines)\n\
+             b.py:1-2: comment prose volume (160 words > max 150, 2 lines)\n\
+             c.py:1-2: docstring prose volume (220 words > max 200, 2 lines)\n\
+             c.py:1-2: comment prose volume (160 words > max 150, 2 lines)\n\
+             dup.py:1-2: docstring prose volume (210 words > max 200, 2 lines)\n\
+             dup.py:1-2: docstring prose volume (230 words > max 200, 2 lines)",
             "the output must be ordered by coordinate and then by normalised text, and must carry \
              the unit"
         );

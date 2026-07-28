@@ -32,6 +32,18 @@ one switch for that: `[workspace] publish = false` in `release-plz.toml`.
 > tag, no release, and `release-plz update` still exits 0. `Cargo.toml` has a comment at that spot
 > saying so. Its absence there is intentional, not drift.
 
+### Release-day checklist
+
+The repository currently describes itself as pre-release in several places. When the first published
+release goes out, all of them move together:
+
+- replace the `status-pre--release` badge in `README.md` with PyPI version and supported-Python
+  badges — that badge is currently the **only** thing marking the project unpublished, since the
+  README's examples deliberately show the installed `tooprolix check` command;
+- change rule statuses in `README.md` and `docs/rules-and-configuration.md` from `Implemented` to
+  `Released` — and only after reference-corpus validation records the result;
+- verify every install and output example against the **published wheel**, not a local build.
+
 ## Run the gates before you push
 
 CI runs all six of these on every pull request:

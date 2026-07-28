@@ -81,6 +81,7 @@
 //!
 //! [`MIN_BLOCK_LINES`] `AND` [`MIN_BLOCK_WORDS`], never either alone. See their rustdoc.
 
+use std::fmt;
 use std::path::{Path, PathBuf};
 
 use ruff_python_ast::statement_visitor::{StatementVisitor, walk_stmt};
@@ -175,6 +176,42 @@ impl ProseKind {
             Self::Comment => "comment",
         }
     }
+}
+
+/// Writes one block's address: `path:line`, or `path:line-end_line` when it spans more than one.
+///
+/// # The one owner, and why it lives here
+///
+/// Three `Display` impls in this crate write an address — [`crate::finding::Location`], which is
+/// what a user reads, and [`crate::detect::duplicate::Cluster`] and
+/// [`crate::detect::volume::Overrun`], which are the detectors' own determinism probes. All three
+/// used to format `path:line` by hand, so "one owner by construction" was a property of the CLI
+/// happening to route through one of them rather than of the code. It is now this function.
+///
+/// It is in `extract` and not in `finding` because of the layering: `finding` already depends on
+/// `detect`, so putting the shared renderer there and calling it from the detectors would be a
+/// cycle. `extract` is the module both layers already sit on, and [`ProseBlock`] — which owns the
+/// `path`, `line_start` and `line_end` an address is made of — is defined right below this.
+///
+/// `&dyn fmt::Display` for the path rather than a generic or a `&Path`: the callers hold two
+/// different things (a `String` in the schema, a `Path::display()` in the detectors) and both are
+/// already `Display`. Writing into the caller's formatter allocates nothing.
+///
+/// The range is written only when the end is genuinely past the start. `end_line == line` is a
+/// single-line block, and `end_line < line` cannot be built by [`extract`] — but if one ever were,
+/// `path:9-4` is a nonsense address a consumer would try to parse, where `path:9` is merely
+/// incomplete. The comparison fails closed.
+pub(crate) fn write_address(
+    formatter: &mut fmt::Formatter<'_>,
+    path: &dyn fmt::Display,
+    line: usize,
+    end_line: usize,
+) -> fmt::Result {
+    write!(formatter, "{path}:{line}")?;
+    if end_line > line {
+        write!(formatter, "-{end_line}")?;
+    }
+    Ok(())
 }
 
 /// One block of prose, located in one file.
