@@ -29,6 +29,18 @@ fn stdout_of(output: &Output) -> &str {
     std::str::from_utf8(&output.stdout).expect("the CLI writes UTF-8")
 }
 
+/// Everything a run that read the whole tree and found nothing writes to stdout.
+///
+/// Until 0.3.0 this was `""`, and a dozen assertions here spelled "nothing was found" as an empty
+/// string. Naming it is not tidying: an empty stdout is also what a crash, a walk that visited
+/// nothing and a killed process produce, so those assertions were passing on three outcomes and
+/// meaning one. They now pin the sentence, which only a successful complete run can print.
+///
+/// Colourless because `Command::output` hands the child a pipe — see
+/// `a_clean_full_run_says_so_and_a_pipe_receives_no_escape_codes`, which is where that half of the
+/// rule is asserted rather than assumed.
+const CLEAN_STDOUT: &str = "All checks passed!\n";
+
 fn stderr_of(output: &Output) -> &str {
     std::str::from_utf8(&output.stderr).expect("the CLI writes UTF-8")
 }
@@ -59,8 +71,8 @@ fn the_exit_code_says_which_of_the_three_outcomes_happened() {
     assert_eq!(clean.status.code(), Some(0), "clean: {clean:?}");
     assert_eq!(
         stdout_of(&clean),
-        "",
-        "a clean tree prints nothing to stdout"
+        CLEAN_STDOUT,
+        "a clean tree must SAY it is clean; silence is what a crash looks like"
     );
 
     assert_eq!(findings.status.code(), Some(1), "findings: {findings:?}");
@@ -246,17 +258,133 @@ fn the_findings_are_ordered_and_the_run_is_reproducible() {
     assert_eq!(
         lines,
         vec![
-            "tests/fixtures/dup-corpus/client.py:2: TPX003 same explanation in 3 places: \
-             tests/fixtures/dup-corpus/poller.py:2, tests/fixtures/dup-corpus/worker.py:2 \
-             (weakest tests/fixtures/dup-corpus/client.py:2 ~ \
-             tests/fixtures/dup-corpus/poller.py:2, similarity 0.900)",
-            "tests/fixtures/dup-corpus/config.py:1: TPX002 docstring is 244 words long, over \
+            "tests/fixtures/dup-corpus/client.py:2-4: TPX003 same explanation in 3 places: \
+             tests/fixtures/dup-corpus/poller.py:2-3, tests/fixtures/dup-corpus/worker.py:2-3 \
+             (weakest tests/fixtures/dup-corpus/client.py:2-4 ~ \
+             tests/fixtures/dup-corpus/poller.py:2-3, similarity 0.900)",
+            "tests/fixtures/dup-corpus/config.py:1-25: TPX002 docstring is 244 words long, over \
              the 200-word limit \u{2014} shorten it, or mark it with `# !TPX002` on the line \
              above it",
-            "tests/fixtures/dup-corpus/legacy.py:2: TPX001 comment is 238 words long, over the \
-             150-word limit \u{2014} shorten it, or mark it with `# !TPX001` on the line above \
-             it",
+            "tests/fixtures/dup-corpus/legacy.py:2-20: TPX001 comment is 238 words long, over \
+             the 150-word limit \u{2014} shorten it, or mark it with `# !TPX001` on the line \
+             above it",
         ]
+    );
+}
+
+/// A finding says where the block **ends**, not only where it starts.
+///
+/// Asserted on a real 25-line docstring through the real process, because the number that matters
+/// is the one the extractor measured: a renderer that printed `line` twice would satisfy any
+/// assertion written as `starts_with(path)` and most written as `contains(":1-")`. The end line is
+/// checked against the JSON's own `end_line` for the same finding, so this cannot pass by agreeing
+/// with itself.
+#[test]
+fn a_finding_addresses_the_whole_block_and_not_only_its_first_line() {
+    // Arrange — the document is the independent witness of where the block ends.
+    let json = tooprolix(&[
+        "check",
+        "tests/fixtures/dup-corpus/config.py",
+        "--format",
+        "json",
+    ]);
+    let document: serde_json::Value =
+        serde_json::from_str(stdout_of(&json)).expect("stdout is one JSON document");
+    assert_eq!(document["findings"][0]["line"], 1);
+    assert_eq!(document["findings"][0]["end_line"], 25);
+
+    // Act
+    let text = tooprolix(&["check", "tests/fixtures/dup-corpus/config.py"]);
+
+    // Assert
+    assert!(
+        stdout_of(&text).starts_with("tests/fixtures/dup-corpus/config.py:1-25: TPX002"),
+        "the address stops at the first line of a 25-line block: {:?}",
+        stdout_of(&text)
+    );
+}
+
+/// Every address on a `TPX003` line carries the range, not only the one the finding is filed under.
+///
+/// This is what "one owner" costs and buys: `Location::Display` is reached five times on a cluster
+/// line — the anchor, each rendered other, and both ends of the weakest edge — so a second renderer
+/// for the secondary addresses is exactly the divergence the single owner exists to prevent. The
+/// whole line is pinned rather than a substring, because a fold that dropped the range from the
+/// `weakest` pair alone would pass every `contains` written against the head of the line.
+#[test]
+fn every_address_on_a_cluster_line_carries_the_range() {
+    // Act
+    let output = tooprolix(&["check", "tests/fixtures/dup-corpus"]);
+
+    // Assert
+    let first = stdout_of(&output)
+        .lines()
+        .next()
+        .expect("the fixture reports a cluster");
+    assert_eq!(
+        first,
+        "tests/fixtures/dup-corpus/client.py:2-4: TPX003 same explanation in 3 places: \
+         tests/fixtures/dup-corpus/poller.py:2-3, tests/fixtures/dup-corpus/worker.py:2-3 \
+         (weakest tests/fixtures/dup-corpus/client.py:2-4 ~ \
+         tests/fixtures/dup-corpus/poller.py:2-3, similarity 0.900)"
+    );
+}
+
+/// A run that read the whole tree and found nothing says so, and says it in plain bytes.
+///
+/// The exact bytes are the assertion. `Command::output` gives the child a pipe, which is the
+/// not-a-terminal half of the colour rule, so an escape sequence here would be a real defect
+/// reaching a real consumer — a log file, a CI annotation, a `| grep`. Checked as a byte
+/// comparison **and** as an explicit scan for `ESC`, so a future line that legitimately changes
+/// the wording cannot quietly take the colour rule with it.
+#[test]
+fn a_clean_full_run_says_so_and_a_pipe_receives_no_escape_codes() {
+    // Act
+    let output = tooprolix(&["check", "tests/fixtures/clean"]);
+
+    // Assert
+    assert_eq!(output.status.code(), Some(0), "{output:?}");
+    assert_eq!(
+        output.stdout,
+        b"All checks passed!\n",
+        "stdout was {:?}",
+        stdout_of(&output)
+    );
+    assert!(
+        !output.stdout.contains(&0x1b),
+        "an ANSI escape reached a pipe: {:?}",
+        output.stdout
+    );
+}
+
+/// A run that could not read part of the tree never claims the tree passed — even with nothing
+/// to report.
+///
+/// This is the success line seen from the side that makes it dangerous. The exit code is already
+/// 1 here (task 5's guarantee), so the only thing left that could call this tree clean is a line
+/// of text, and the line would be asserting completeness the run does not have. stdout is
+/// asserted **empty**, not merely free of the success sentence, so a differently-worded claim
+/// fails too.
+#[test]
+fn a_partial_run_with_nothing_to_report_prints_no_success_line() {
+    // Arrange — one file, unparsable, and nothing else in the tree to find.
+    let scratch = Scratch::new("partial-no-success-line");
+    scratch.write("broken.py", "def (:\n");
+
+    // Act
+    let output = scratch.check(&[]);
+
+    // Assert
+    assert_eq!(output.status.code(), Some(1), "{output:?}");
+    assert_eq!(
+        stdout_of(&output),
+        "",
+        "a tree that was not read whole was reported as passing"
+    );
+    assert!(
+        stderr_of(&output).contains("broken.py"),
+        "the skip was not even reported: {:?}",
+        stderr_of(&output)
     );
 }
 
@@ -270,7 +398,7 @@ fn a_single_file_is_checked_and_the_help_says_what_that_misses() {
     // Assert — the retry-budget comment is a duplicate of two blocks in sibling files, and it is
     // NOT reported here, because the detector only ever sees the blocks it was handed.
     assert_eq!(single.status.code(), Some(0), "{single:?}");
-    assert_eq!(stdout_of(&single), "");
+    assert_eq!(stdout_of(&single), CLEAN_STDOUT);
 
     assert_eq!(help.status.code(), Some(0), "{help:?}");
     assert!(
@@ -308,7 +436,7 @@ fn the_reported_path_is_the_one_the_user_typed() {
     let output = tooprolix(&["check", "tests/fixtures/dup-corpus/config.py"]);
 
     assert!(
-        stdout_of(&output).starts_with("tests/fixtures/dup-corpus/config.py:1: TPX002"),
+        stdout_of(&output).starts_with("tests/fixtures/dup-corpus/config.py:1-25: TPX002"),
         "{:?}",
         stdout_of(&output)
     );
@@ -338,10 +466,16 @@ fn a_directory_with_no_python_is_reported_rather_than_scored_clean() {
     let output = tooprolix(&["check", "target/tests/empty-tree"]);
 
     assert_eq!(output.status.code(), Some(0), "{output:?}");
-    assert_eq!(stdout_of(&output), "");
+    // The success line DOES print here, and the warning beside it is what keeps that honest. The
+    // tree was read whole — there was nothing in it to read — so the run is `Success` by every
+    // part of the definition, and suppressing the line would put a second, quieter rule in the
+    // renderer for a case the exit code already calls clean. Measured against the reference:
+    // `ruff check --isolated <dir with no .py>` prints `warning: No Python files found under the
+    // given path(s)` on stderr and `All checks passed!` on stdout, exit 0 — the same pair.
+    assert_eq!(stdout_of(&output), CLEAN_STDOUT);
     assert!(
         stderr_of(&output).contains("no Python files"),
-        "a walk that measured nothing reported success in silence: {:?}",
+        "a walk that measured nothing reported success without saying it measured nothing: {:?}",
         stderr_of(&output)
     );
 }
@@ -493,7 +627,7 @@ fn a_marker_silences_its_own_block_and_only_its_own_rule() {
         stderr_of(&output)
     );
     assert!(
-        stdout_of(&output).contains("comment_mistyped.py:6: TPX001"),
+        stdout_of(&output).contains("comment_mistyped.py:6-19: TPX001"),
         "an unknown code in a marker silenced a real rule: {}",
         stdout_of(&output)
     );
@@ -595,7 +729,7 @@ fn ordinary_prose_is_not_swallowed_by_a_marker_shaped_comment() {
     // The BOM: `capable.py` proves the docstring is a finding, `marked.py` proves the marker works,
     // and `bom_marked.py` must behave exactly like `marked.py` and not like `capable.py`.
     assert!(
-        stdout_of(&bom_output).contains("capable.py:1: TPX002"),
+        stdout_of(&bom_output).contains("capable.py:1-32: TPX002"),
         "the BOM fixture cannot demonstrate anything: {}",
         stdout_of(&bom_output)
     );
@@ -809,7 +943,7 @@ fn a_comment_that_was_aiming_at_a_marker_is_reported_without_changing_the_outcom
     assert_eq!(clean_output.status.code(), Some(0), "{clean_output:?}");
     assert_eq!(
         stdout_of(&clean_output),
-        "",
+        CLEAN_STDOUT,
         "the near-miss manufactured a finding: {}",
         stdout_of(&clean_output)
     );
@@ -821,7 +955,7 @@ fn a_comment_that_was_aiming_at_a_marker_is_reported_without_changing_the_outcom
 
     // (4) — the control. Working markers suppress and say nothing, or the warning is just noise.
     assert_eq!(quiet_output.status.code(), Some(0), "{quiet_output:?}");
-    assert_eq!(stdout_of(&quiet_output), "");
+    assert_eq!(stdout_of(&quiet_output), CLEAN_STDOUT);
     assert_eq!(
         stderr_of(&quiet_output),
         "",
@@ -834,7 +968,7 @@ fn a_comment_that_was_aiming_at_a_marker_is_reported_without_changing_the_outcom
     // the warning is the only thing that connects the two for whoever is upgrading.
     assert_eq!(
         stdout_of(&legacy_control_output),
-        "",
+        CLEAN_STDOUT,
         "the control fires on its own, so it cannot show what the dead marker added: {}",
         stdout_of(&legacy_control_output)
     );
@@ -876,7 +1010,7 @@ fn the_walk_respects_gitignore_and_the_fixture_can_prove_it() {
     assert_eq!(covered.status.code(), Some(0), "{covered:?}");
     assert_eq!(
         stdout_of(&covered),
-        "",
+        CLEAN_STDOUT,
         "a .gitignore'd file was scanned: {}",
         stdout_of(&covered)
     );
@@ -953,7 +1087,7 @@ fn the_walk_skips_hidden_entries() {
     assert_eq!(hidden.status.code(), Some(0), "{hidden:?}");
     assert_eq!(
         stdout_of(&hidden),
-        "",
+        CLEAN_STDOUT,
         "a dot-directory was walked: {}",
         stdout_of(&hidden)
     );
@@ -1001,7 +1135,7 @@ fn a_path_beginning_with_a_dash_is_reachable_only_as_documented() {
     );
     assert_eq!(prefixed.status.code(), Some(1), "{prefixed:?}");
     assert!(
-        stdout_of(&prefixed).contains("./-weird.py:1: TPX001"),
+        stdout_of(&prefixed).contains("./-weird.py:1-20: TPX001"),
         "the documented workaround does not work: {}",
         stdout_of(&prefixed)
     );
@@ -1054,7 +1188,10 @@ fn the_project_configuration_changes_what_is_reported() {
     );
 
     assert_eq!(silenced.status.code(), Some(0), "{silenced:?}");
-    assert_eq!(stdout_of(&silenced), "");
+    // Clean and complete, so the line prints — and the stderr warning beside it is the whole
+    // reason that is not a lie: the run really did find nothing, and the warning is what says it
+    // could not have. Same pairing as the empty-tree case above, and as ruff's.
+    assert_eq!(stdout_of(&silenced), CLEAN_STDOUT);
     assert!(
         stderr_of(&silenced).contains("every rule (TPX001, TPX002, TPX003) is disabled"),
         "a run that could not report anything said nothing about it: {:?}",
@@ -1146,22 +1283,35 @@ fn the_configuration_is_found_relative_to_the_checked_path() {
     );
 }
 
-/// A clean run is silent in text and is still a document in JSON.
+/// A clean run says so in text, and is still exactly one document — and nothing else — in JSON.
 ///
-/// Zero bytes on a successful `--format json` is a parse error at the consumer's end that is
-/// indistinguishable from a crash, so the empty case has to be written. The text half of the same
-/// contract is the opposite and is asserted here beside it, so neither can be changed alone.
+/// The two halves are asserted together so neither can be changed alone. Zero bytes on a
+/// successful `--format json` is a parse error at the consumer's end that is indistinguishable
+/// from a crash, so the empty document has to be written; and the sentence the text format gained
+/// must not follow it there. `serde_json::from_str` over the **whole** of stdout is what enforces
+/// that: a success line appended to a document is trailing input, and parsing fails. The explicit
+/// checks below say the same thing in the error message a maintainer will actually read.
 #[test]
-fn a_clean_run_is_silent_in_text_and_an_empty_document_in_json() {
+fn a_clean_run_says_so_in_text_and_is_only_a_document_in_json() {
     // Act
     let text = tooprolix(&["check", "tests/fixtures/clean"]);
     let json = tooprolix(&["check", "tests/fixtures/clean", "--format", "json"]);
 
     // Assert
     assert_eq!(text.status.code(), Some(0), "{text:?}");
-    assert_eq!(stdout_of(&text), "");
+    assert_eq!(stdout_of(&text), CLEAN_STDOUT);
 
     assert_eq!(json.status.code(), Some(0), "{json:?}");
+    assert!(
+        !stdout_of(&json).contains("All checks passed"),
+        "the success line leaked into the machine-readable format: {:?}",
+        stdout_of(&json)
+    );
+    assert!(
+        !json.stdout.contains(&0x1b),
+        "an ANSI escape reached the JSON document: {:?}",
+        stdout_of(&json)
+    );
     let document: serde_json::Value =
         serde_json::from_str(stdout_of(&json)).expect("a clean run still emits one JSON document");
     assert_eq!(document["schema_version"], "2");
@@ -1232,7 +1382,7 @@ fn an_excluded_unparsable_file_is_not_a_measurement_failure() {
         "an excluded unparsable file still failed the run: {:?}",
         stderr_of(&after)
     );
-    assert_eq!(stdout_of(&after), "");
+    assert_eq!(stdout_of(&after), CLEAN_STDOUT);
     assert_eq!(
         stderr_of(&after),
         "",
@@ -1498,7 +1648,12 @@ fn excluding_the_whole_tree_says_so_rather_than_scoring_it_clean() {
         "the fixture has nothing to lose: {before:?}"
     );
 
-    assert_eq!(stdout_of(&after), "");
+    // The success line prints here too, and the loud stderr below is what stops it being a claim
+    // about a tree nobody looked at. `exclude` is a boundary the project drew (EPIC Decisions
+    // #15), so inside it the measurement really is whole and `complete` is `true` — the run is
+    // `Success` by the same definition as any other. Ruff answers identically on a fully-excluded
+    // tree: the warning on stderr, `All checks passed!` on stdout, exit 0.
+    assert_eq!(stdout_of(&after), CLEAN_STDOUT);
     assert!(
         !stderr_of(&after).is_empty(),
         "every file in the tree was excluded and the run said nothing at all"
@@ -1657,7 +1812,7 @@ fn surrounding_whitespace_cannot_smuggle_a_negation_past_the_guard() {
     );
     assert_eq!(
         stdout_of(&padded),
-        "",
+        CLEAN_STDOUT,
         "the padded glob did not reach the walk: {}",
         stdout_of(&padded)
     );
@@ -1941,7 +2096,7 @@ fn a_broken_file_no_longer_hides_the_findings_of_the_files_that_parsed() {
     // Assert — the finding is printed ...
     assert_eq!(text.status.code(), Some(1), "{text:?}");
     assert!(
-        stdout_of(&text).contains("fat.py:1: TPX001"),
+        stdout_of(&text).contains("fat.py:1-20: TPX001"),
         "the finding of the file that parsed was withheld: {:?}",
         stdout_of(&text)
     );

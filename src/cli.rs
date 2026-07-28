@@ -96,7 +96,7 @@
 //!
 //! # Paths in the output are the paths the walk used
 //!
-//! `tooprolix check src` reports `src/api.py:1`; `tooprolix check .` reports `./api.py:1`. The
+//! `tooprolix check src` reports `src/api.py:1-9`; `tooprolix check .` reports `./api.py:1-9`. The
 //! canonical form is used for finding `pyproject.toml` (see [`crate::config`]) and nowhere else,
 //! because a user who typed a relative path wants a relative finding they can paste into an editor.
 //!
@@ -108,7 +108,8 @@
 //! file*. A user who reads exit 0 there as a verdict on the repository has been misled by silence,
 //! so [`HELP`] says it in as many words.
 
-use std::ffi::OsString;
+use std::ffi::{OsStr, OsString};
+use std::io::IsTerminal;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 use std::sync::{Arc, Mutex};
@@ -497,6 +498,16 @@ pub fn execute<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<ExitSta
             for finding in &findings {
                 println!("{finding}");
             }
+            // Gated on the OUTCOME, not on `findings.is_empty()`. `Success` is the only variant
+            // that reports 0 and it is unreachable while anything was skipped, so this one
+            // condition carries both halves of the rule — "no findings" and "the tree was read
+            // whole" — and cannot drift from the exit code, because it *is* the exit code. A
+            // partial run with nothing to report is `Incomplete`: exit 1, and silence here. The
+            // line would otherwise assert a completeness the run does not have, which is the
+            // outcome the whole graceful contract exists to prevent.
+            if matches!(status, ExitStatus::Success) {
+                success_line();
+            }
         }
         Format::Json => {
             // `display()` and not a lossless form, for the reason `crate::finding::Location`
@@ -518,6 +529,57 @@ pub fn execute<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<ExitSta
     // already there.
     report_skipped(&skipped, &config);
     Ok(status)
+}
+
+/// What a run that read the whole tree and found nothing says.
+///
+/// Worded as ruff words it, deliberately: this repository's own `make lint.check` already prints
+/// exactly this sentence, and a Python developer meets it before they meet this tool. A second
+/// spelling of the same fact would be a new thing to learn for no information.
+const SUCCESS_LINE: &str = "All checks passed!";
+
+/// [`SUCCESS_LINE`] on stdout, green when the terminal wants colour.
+///
+/// # Why a successful run stopped being silent
+///
+/// It printed **zero bytes**, and zero bytes is what a crashed run, a walk that visited nothing and
+/// a clean repository all look like. The exit code told them apart and nothing on the screen did,
+/// so the one outcome a user most wants confirmed was the one the tool refused to confirm.
+///
+/// It is on **stdout**, beside the findings, because it is the answer to the question that was
+/// asked — not a diagnostic about the run. That does mean `tooprolix check . | wc -l` answers 1 on
+/// a clean tree where it used to answer 0; `--format json`, which is the interface for machines,
+/// never prints it at all.
+fn success_line() {
+    // Both facts are read here, once, and neither is readable from a test: `is_terminal` depends on
+    // what the process was handed and `var_os` on the ambient environment. The *decision* they feed
+    // is a pure function precisely so that it can be a table in the tests below.
+    let no_color = std::env::var_os("NO_COLOR");
+    if use_colour(std::io::stdout().is_terminal(), no_color.as_deref()) {
+        // SGR 32 (green) and SGR 0 (reset). Written out rather than taken from a crate: this is the
+        // only colour this tool emits anywhere, and `colored`/`owo-colors`/`anstream` would each be
+        // a dependency — and a tree to audit, pin and ship to PyPI — for two escape sequences that
+        // have not changed since ECMA-48 in 1976.
+        println!("\u{1b}[32m{SUCCESS_LINE}\u{1b}[0m");
+    } else {
+        println!("{SUCCESS_LINE}");
+    }
+}
+
+/// Whether the success line is coloured: a terminal is watching, and it has not asked for plain
+/// text.
+///
+/// Both conditions can veto, and the order they are written in is not the order they matter in —
+/// `NO_COLOR` is an explicit instruction and a pipe is an inference, but a pipe is the case that
+/// actually breaks something. An escape sequence in a redirected file, a CI annotation or a
+/// `| grep` is corruption of data a machine reads; a missing colour is only plain.
+///
+/// `NO_COLOR` is read as `no-color.org` defines it — **present and not an empty string**. The empty
+/// value is the distinction that matters in practice: `NO_COLOR=` is how a shell script unsets an
+/// inherited variable without `unset`, and treating it as "asked for no colour" would make the
+/// variable impossible to switch back off.
+fn use_colour(is_terminal: bool, no_color: Option<&OsStr>) -> bool {
+    is_terminal && no_color.is_none_or(OsStr::is_empty)
 }
 
 /// Names every file the run could not read, and — once — what that did to `TPX003`.
@@ -1095,12 +1157,12 @@ pub fn findings(sources: Vec<Source>, config: &Config) -> Vec<Finding> {
 
 #[cfg(test)]
 mod tests {
-    use super::{Format, Invocation, Source, findings, parse, python_files};
+    use super::{Format, Invocation, Source, findings, parse, python_files, use_colour};
     use crate::config::Config;
     use crate::detect::volume::Limits;
     use crate::extract::extract;
     use crate::rules::{Rule, parse_marker};
-    use std::ffi::OsString;
+    use std::ffi::{OsStr, OsString};
     use std::path::{Path, PathBuf};
 
     fn command(arguments: &[&str]) -> Result<Invocation, super::Error> {
@@ -1116,6 +1178,34 @@ mod tests {
                 suppressed: marker.and_then(parse_marker).unwrap_or_default(),
             })
             .collect()
+    }
+
+    /// Colour is a decision about two facts, and both of them have to be able to veto it.
+    ///
+    /// A table rather than four tests, because what is being pinned is that **neither** input is
+    /// ignored: a predicate that dropped the terminal check would still pass every `NO_COLOR` row,
+    /// and one that dropped `NO_COLOR` would still pass every pipe row. The empty-value row is the
+    /// `no-color.org` contract read literally — *present and not an empty string* — and it is the
+    /// row that separates "the variable is set" from "the variable asks for no colour".
+    ///
+    /// The predicate is pure so that this can be a table at all: the terminal test and the
+    /// environment read happen once, at the single call site, where neither is testable.
+    #[test]
+    fn colour_needs_a_terminal_and_the_absence_of_no_color() {
+        for (terminal, no_color, expected) in [
+            (true, None, true),
+            (true, Some(""), true),
+            (true, Some("1"), false),
+            (true, Some("0"), false),
+            (false, None, false),
+            (false, Some("1"), false),
+        ] {
+            assert_eq!(
+                use_colour(terminal, no_color.map(OsStr::new)),
+                expected,
+                "terminal={terminal}, NO_COLOR={no_color:?}"
+            );
+        }
     }
 
     /// A long comment run, as a `(path, source)` pair, sized to fire `TPX001` at the default 150.
@@ -1341,12 +1431,12 @@ mod tests {
         assert_eq!(before.len(), 1, "{before:#?}");
         let before_line = before[0].to_string();
         assert!(
-            before_line.contains("in 3 places") && before_line.contains("c.py:1"),
+            before_line.contains("in 3 places") && before_line.contains("c.py:1-2"),
             "the loose member never joined the cluster, so nothing is being suppressed: \
              {before_line}"
         );
         assert!(
-            before_line.contains("~ c.py:1, similarity 0.900"),
+            before_line.contains("~ c.py:1-2, similarity 0.900"),
             "the loose member is not the weakest link, so removing it would change nothing: \
              {before_line}"
         );
@@ -1356,8 +1446,8 @@ mod tests {
         let after_line = after[0].to_string();
         assert_eq!(
             after_line,
-            "a.py:1: TPX003 same explanation in 2 places: b.py:1 \
-             (weakest a.py:1 ~ b.py:1, similarity 1.000)"
+            "a.py:1-2: TPX003 same explanation in 2 places: b.py:1-2 \
+             (weakest a.py:1-2 ~ b.py:1-2, similarity 1.000)"
         );
         assert!(
             !after_line.contains("c.py"),

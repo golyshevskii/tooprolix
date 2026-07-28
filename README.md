@@ -26,9 +26,25 @@ in `*.py` files, never rewrites the useful **why**, and leaves the final decisio
 
 ```console
 $ tooprolix check .
-src/client.py:14: TPX003 same explanation in 3 places: src/poller.py:38, src/worker.py:91 (weakest src/client.py:14 ~ src/worker.py:91, similarity 0.812)
-src/config.py:1: TPX002 docstring is 243 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it
+src/client.py:14-31: TPX003 same explanation in 3 places: src/poller.py:38-52, src/worker.py:91-104 (weakest src/client.py:14-31 ~ src/worker.py:91-104, similarity 0.812)
+src/config.py:1-26: TPX002 docstring is 243 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it
 ```
+
+Every address is `path:start-end`, so the size of the block is in the line you already read — a
+243-word docstring is 26 lines, and you know where to stop before opening the file. A block that
+occupies a single line is written `path:line`, with no range.
+
+...and when there is nothing to report and the whole tree was read:
+
+```console
+$ tooprolix check .
+All checks passed!
+```
+
+Green on a terminal, plain everywhere else — in a pipe, a file, or with `NO_COLOR` set. It is
+printed **only** when the tree was read whole and the exit code is 0: a run that could not read part
+of the tree exits 1 and stays quiet, because the sentence would be claiming a completeness the run
+does not have. `--format json` never prints it.
 
 A cluster names its weakest link by name, not only by score. Grouping asserts a transitivity the
 similarity measure does not have, so `weakest a ~ b` is the pair to read first — on a cluster of

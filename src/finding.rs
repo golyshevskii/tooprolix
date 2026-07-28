@@ -124,9 +124,40 @@ impl Location {
 }
 
 impl fmt::Display for Location {
-    /// `path:line` — the form every editor and every CI annotation parser already understands.
+    /// `path:line-end_line`, or `path:line` when the block occupies a single line.
+    ///
+    /// The `path:line` prefix is unchanged and is still the form every editor and every CI
+    /// annotation parser already understands — a range suffix is ignored by a parser that stops at
+    /// the first number, so nothing that worked on 0.3.0 addresses stops working.
+    ///
+    /// # Why the end is worth the two characters
+    ///
+    /// The end line is the *size* of the problem, and it is the half a reader cannot infer. `TPX002`
+    /// says a docstring is 249 words long; `tests/unit/test_measure.py:1-26` says those words are
+    /// spread over 26 lines and where to stop reading. The number was already measured and already
+    /// in the JSON as `end_line`, so the text format was the only consumer paying to open a second
+    /// document for a fact the tool had in hand.
+    ///
+    /// # One owner, and what that owns
+    ///
+    /// This is the **only** place an address becomes a string, and a `TPX003` message reaches it
+    /// five times over — the anchor, each address in `render_others`, and both ends of `weakest`. A
+    /// second renderer for the secondary addresses would be a second owner, and two owners of one
+    /// format is the divergence this arrangement exists to make impossible. The cost is real and is
+    /// accepted: a cluster line is longer than it was, by up to `2 + digits` per address it names.
+    ///
+    /// # `>` and not `!=`
+    ///
+    /// A range is written only when the end is genuinely past the start. `end_line == line` is a
+    /// single-line block, and `end_line < line` cannot be built by [`Location::of`] — but if one
+    /// ever were, `path:9-4` would be a nonsense address a consumer would try to parse, where
+    /// `path:9` is merely incomplete. The comparison fails closed.
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(formatter, "{}:{}", self.path, self.line)
+        write!(formatter, "{}:{}", self.path, self.line)?;
+        if self.end_line > self.line {
+            write!(formatter, "-{}", self.end_line)?;
+        }
+        Ok(())
     }
 }
 
@@ -478,6 +509,40 @@ mod tests {
         extract(Path::new(path), source).expect("the fixture is valid Python")
     }
 
+    /// An address says where the block **ends**, and says it only when there is something to say.
+    ///
+    /// The two halves are one contract and are asserted together so neither can be changed alone:
+    /// a spanning block renders `start-end`, a block that occupies one line renders that line and
+    /// no range, because `path:7-7` is noise that a reader has to parse before discarding.
+    ///
+    /// The single-line half is **constructed rather than extracted**, and that is deliberate:
+    /// [`crate::extract::MIN_BLOCK_LINES`] is 2, so no walk can ever hand this type a `Location`
+    /// with `end_line == line`. The branch is a property of the address type — which is public,
+    /// appears three times over in the schema, and is the one place a range is rendered — not of
+    /// the extractor that happens to feed it today. Testing it through the CLI is impossible;
+    /// leaving it untested means the only guard against `path:7-7` is that nothing currently
+    /// reaches it.
+    #[test]
+    fn an_address_renders_a_range_and_omits_it_for_a_single_line() {
+        // Arrange
+        let spanning = Location {
+            path: "api.py".to_owned(),
+            line: 1,
+            end_line: 26,
+            prose_kind: ProseKind::Docstring,
+        };
+        let single = Location {
+            path: "api.py".to_owned(),
+            line: 7,
+            end_line: 7,
+            prose_kind: ProseKind::Comment,
+        };
+
+        // Assert
+        assert_eq!(spanning.to_string(), "api.py:1-26");
+        assert_eq!(single.to_string(), "api.py:7");
+    }
+
     /// The volume line must name the code, the size, the limit, the unit and the marker.
     ///
     /// Every one of those five is load-bearing: without the unit the number is meaningless, and
@@ -493,7 +558,7 @@ mod tests {
 
         assert_eq!(
             finding.to_string(),
-            "api.py:1: TPX002 docstring is 232 words long, over the 200-word limit \u{2014} \
+            "api.py:1-2: TPX002 docstring is 232 words long, over the 200-word limit \u{2014} \
              shorten it, or mark it with `# !TPX002` on the line above it"
         );
         assert_eq!(finding.code, Rule::DocstringVolume);
@@ -517,8 +582,8 @@ mod tests {
 
         assert_eq!(
             finding.to_string(),
-            "client.py:1: TPX003 same explanation in 2 places: worker.py:1 \
-             (weakest client.py:1 ~ worker.py:1, similarity 0.900)"
+            "client.py:1-2: TPX003 same explanation in 2 places: worker.py:1-2 \
+             (weakest client.py:1-2 ~ worker.py:1-2, similarity 0.900)"
         );
         assert_eq!(finding.code, Rule::DuplicateProse);
     }
@@ -549,11 +614,11 @@ mod tests {
 
         assert_eq!(
             rendered,
-            "a.py:1: TPX003 same explanation in 3 places: b.py:1, c.py:1 \
-             (weakest a.py:1 ~ c.py:1, similarity 0.900)"
+            "a.py:1-2: TPX003 same explanation in 3 places: b.py:1-2, c.py:1-2 \
+             (weakest a.py:1-2 ~ c.py:1-2, similarity 0.900)"
         );
         assert!(
-            rendered.contains("c.py:1,"),
+            rendered.contains("c.py:1-2,"),
             "the loose member is missing from the address list: {rendered}"
         );
     }
@@ -761,7 +826,8 @@ mod tests {
         let smaller = Finding {
             code: Rule::CommentVolume,
             at: at.clone(),
-            message: "a.py:1: TPX001 comment is 151 words long, over the 150-word limit".to_owned(),
+            message: "a.py:1-4: TPX001 comment is 151 words long, over the 150-word limit"
+                .to_owned(),
             detail: super::Detail::Volume {
                 words: 151,
                 max_volume: 150,
@@ -770,7 +836,8 @@ mod tests {
         let larger = Finding {
             code: Rule::CommentVolume,
             at,
-            message: "a.py:1: TPX001 comment is 900 words long, over the 150-word limit".to_owned(),
+            message: "a.py:1-4: TPX001 comment is 900 words long, over the 150-word limit"
+                .to_owned(),
             detail: super::Detail::Volume {
                 words: 900,
                 max_volume: 150,
