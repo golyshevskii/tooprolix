@@ -24,8 +24,6 @@ in `*.py` files, never rewrites the useful **why**, and leaves the final decisio
 
 ## See the signal
 
-The 0.1.0 interface is intentionally small:
-
 ```console
 $ tooprolix check .
 src/client.py:14: TPX003 same explanation in 3 places: src/poller.py:38, src/worker.py:91 (weakest src/client.py:14 ~ src/worker.py:91, similarity 0.812)
@@ -91,35 +89,13 @@ For a docstring that means *inside* the body, between `def`/`class` and the lite
 silences every rule for that block — `TPX*` is a literal token and not a glob, so `TPX0*` is simply
 an unrecognised code.
 
-Two rules decide whether a line is a marker at all, and both exist so that ordinary comments cannot
-switch a rule off by accident. **The space after `#` is part of the grammar**: `#!TPX002` is a
-shebang, not a marker. And **what follows the `!` must start with one of our own codes** — `TPX*`,
-or `TPX` and digits. `# !important: never cache this` and `# !HTTP2 is mandatory` are comments, not
-markers that silence nothing, because a marker's line is dropped from the prose being measured and
-dropping one of those used to make the whole block disappear. The cost of the second rule is stated
-rather than hidden: `# !nonsense` is not reported as a typo, because it is not a marker.
-
-A code that is not recognised silences nothing and says so on stderr, and so does a comment above a
-block that was aiming at one of our codes and missed — `# !TP*`, `# !TPX`, `# !TPX0*` and the 0.1.0
-spelling all warn. A comment in somebody else's namespace is left alone entirely.
-
-> **Upgrading from 0.1.0.** The marker used to be `# tooprolix: noqa TPX002`. That spelling is no
-> longer a marker at all — there is no alias period — and each one now reports a warning naming its
-> file and line. The word `noqa` was dropped deliberately: with it, `ruff check --fix` deletes the
-> marker line (RUF100 for the bare form, RUF102 for the colon form), and this repository's own ruff
-> configuration enables RUF100. `# !…` collides with nothing: 0 occurrences across the 3913 files of
-> the pinned corpus.
-
-Both blocks above are deliberately at least two lines and eight normalised words long. Anything
-smaller is never a prose block at all — the thresholds are in `corpus/REPORT.md` — so a marker over a
-one-line comment guards nothing and reads as though it does.
-
 Turn a rule off repository-wide, or move a limit, in `pyproject.toml`. The nearest one at or above
 the checked path is used, and a rule listed in `ignore` cannot be switched back on by a marker:
 
 ```toml
 [tool.tooprolix]
 ignore = ["TPX003"]
+exclude = ["tests/fixtures", "vendor", "*_pb2.py"]
 comment-max-volume = 150
 docstring-max-volume = 200
 ```
@@ -133,10 +109,6 @@ docstring-max-volume = 200
   of own-line comments. Generated, vendored, build, and environment files are excluded explicitly.
   Every threshold and word limit is read off that corpus rather than chosen by taste, and each is
   recorded next to the constant it sets, together with what it costs in opt-out markers.
-- The current branch passes **80 Python and 133 Rust tests**,
-  covering corpus measurement, extraction, detection, opt-outs, deterministic ordering, performance
-  growth, the Python boundary, and the command line as a spawned process — exit codes, stream split
-  and JSON schema included.
 - Guards are proved by mutation, not by passing: a threshold shifted by one, an ordering key
   replaced, or an unreadable checkout must turn a named test red. Tests that stayed green under such
   a mutation have been removed rather than kept for the count.
@@ -151,7 +123,6 @@ See [`corpus/REPORT.md`](corpus/REPORT.md) for the pins, measurements, and unres
 - **Repository-wide.** It can find one explanation repeated across otherwise unrelated files.
 - **Deterministic.** The same source produces the same ordered findings.
 - **Local.** No model calls, network requests, or probabilistic output.
-- **Review-first.** There is no auto-fix: a tool cannot reconstruct the reason it deletes.
 
 `tooprolix` complements [Ruff](https://github.com/astral-sh/ruff): Ruff owns Python code quality;
 `tooprolix` focuses on the prose beside the code and uses Ruff's parser as its syntax foundation.

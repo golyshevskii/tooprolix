@@ -43,35 +43,43 @@
 //! `TPX003` is cross-file by construction, so a cluster computed over a subset is not a smaller
 //! true answer, it is a different one.
 //!
-//! ## The open question this creates, for the owner rather than for an implementer
+//! ## What that cost was, and the half of it that is now paid
 //!
-//! Measured on the pinned ruff checkout itself:
+//! Measured on the pinned ruff checkout (`a2635fd8`) before this key existed:
 //!
 //! | | |
 //! |---|---|
 //! | `tooprolix check /path/to/ruff` | **exit 2**, **0** findings, **375** stderr lines |
 //! | why | 374 of its files are deliberately-unparsable parser fixtures |
 //!
-//! 0.1.0 ships no `exclude` (second epic), so a first adopter whose repository contains a parser
-//! test-corpus has no way to run this tool over it except one invocation per subdirectory. That is
-//! the cost of the trade-off above, stated rather than discovered. **Whether to soften it — report
-//! and continue, an `exclude` key, or a `--continue-on-error` flag — is the owner's call**, and the
-//! behaviour is not to be changed on an implementer's judgement.
+//! A first adopter whose repository contains a parser test-corpus had no way to run this tool over
+//! it except one invocation per subdirectory. [`crate::config`]'s `exclude` is the answer, and it
+//! is deliberately the *narrow* one: it moves the boundary of what is measured, so a tree the
+//! project never claimed is silently out of scope rather than partially read. It does **not**
+//! soften what happens inside that boundary — an unparsable file that nobody excluded is still
+//! exit 2, and making that graceful is a separate, breaking change.
 //!
 //! # What the walk does and does not visit
 //!
 //! * `.gitignore`, `.git/info/exclude` and the global gitignore are respected, through the `ignore`
 //!   crate — ruff's own choice for the same job. `require_git` is **off**, so an exported tarball
 //!   with a `.gitignore` in it behaves like the checkout it came from.
+//! * **`exclude` from [`crate::config`] is layered on top of that, not in place of it.** It is
+//!   applied as an `ignore::overrides::Override`, which leaves every non-matching path untouched,
+//!   so the gitignore layer underneath still decides those. A project that sets `exclude` does not
+//!   thereby start walking what its `.gitignore` hides — which is what the whitelist reading of
+//!   that type would have done.
 //! * **Symlinks are not followed.** Measured 2026-07-25: following them takes pydantic from 343
 //!   findings to 559, because `tests/pydantic_core` is a symlink back into the tree and every file
 //!   under it is then counted twice. This is the `ignore` crate's default; the requirement is not to
 //!   turn it off.
 //! * **Hidden entries are skipped**, which is the `ignore` crate's default and a deliberate
 //!   divergence from ruff, which sets `hidden(false)`. Ruff can afford to walk `.tox` and `.venv`
-//!   because it ships a default `exclude` list; `exclude` is explicitly out of scope for 0.1.0, so
-//!   this is the only defence this version has against linting a virtualenv. Naming a hidden path
-//!   directly still checks it — the root of a walk is always visited.
+//!   because it ships a *default* `exclude` list; ours is empty unless a project writes one, so
+//!   this remains the only defence a project that configures nothing has against linting a
+//!   virtualenv. Naming a hidden path directly still checks it — the root of a walk is always
+//!   visited, and that is also why an explicitly named path is checked even when `exclude` matches
+//!   it, which is ruff's own default.
 //! * Only files [`crate::extract::is_python_source`] accepts are read. Naming a non-Python file
 //!   *directly* is an error rather than a silent zero, for the reason
 //!   [`crate::extract::Error::UnsupportedSource`] gives: the caller chose that file.
@@ -93,6 +101,8 @@
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use ignore::WalkBuilder;
 use thiserror::Error as ThisError;
@@ -156,11 +166,20 @@ Opt out of a rule for the whole project, in pyproject.toml:
 
   [tool.tooprolix]
   ignore = [\"TPX003\"]
+  exclude = [\"tests/fixtures\", \"vendor\"]
   comment-max-volume = 150
   docstring-max-volume = 200
 
   The nearest pyproject.toml at or above the checked path is used. A rule listed in
   `ignore` cannot be switched back on by a marker.
+
+  `exclude` takes .gitignore-syntax globs, resolved relative to the directory of
+  the pyproject.toml they are written in — so one rule means the same thing from
+  the project root and from a package inside it. Matches are never read, so they
+  are neither checked nor able to fail the run; this is how a repository that
+  legitimately contains invalid Python (a parser corpus, a fixture tree) can be
+  checked at all. It ADDS to .gitignore rather than replacing it, and a path named
+  directly on the command line is still checked.
 
 Checking a single file:
   TPX003 compares only the blocks it is handed, so `tooprolix check one_file.py`
@@ -371,11 +390,40 @@ pub fn execute<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<ExitSta
         );
     }
 
-    let files = python_files(&path)?;
+    let Walked {
+        files,
+        excluded_measurable,
+    } = python_files(&path, &config)?;
     if files.is_empty() {
         // A walk that visited nothing scores every repository clean. Saying so is the difference
         // between "no findings" and "no measurement".
         eprintln!("warning: no Python files under {}", path.display());
+        // ... and when `exclude` is what emptied it, name that too. On its own the line above
+        // blames an *absence* of Python, which for `exclude = ["*"]` is not what happened and
+        // sends the reader looking for files that were there all along. The exit code stays 0
+        // because it is honest — there really are no findings — so this line is the only thing
+        // standing between an excluded tree and a tree that was measured and found clean.
+        //
+        // Gated on what the WALK counted, never on `!config.exclude.is_empty()`: a glob that
+        // matched nothing did not empty anything, and saying it did is the same wrong-cause defect
+        // in the opposite direction.
+        //
+        // The count is also the entire content of the sentence. Naming the globs is what went
+        // wrong last time — the list came from the configuration, so a glob that never fired was
+        // reported as having removed paths — and it cannot be fixed by naming them from the walk
+        // instead: `ignore::overrides::Glob` is an opaque newtype with a private field and no
+        // accessors, so per-glob attribution is not reachable through that crate's public API.
+        // A number the walk counted is, and the file it came from is already on the line.
+        if excluded_measurable > 0 {
+            eprintln!(
+                "warning: `exclude` in {} removed {excluded_measurable} path(s) that could have \
+                 been measured; an excluded tree is not a measured one",
+                config.source.as_ref().map_or_else(
+                    || "the configuration".to_owned(),
+                    |p| p.display().to_string()
+                ),
+            );
+        }
     }
 
     let sources = read(&files)?;
@@ -510,7 +558,7 @@ fn parse_format(value: &str) -> Result<Format, Error> {
 ///
 /// [`Error::Missing`], [`Error::NotPython`] and [`Error::Walk`] — all three are "the tree could not
 /// be read", never "the tree is clean".
-fn python_files(root: &Path) -> Result<Vec<PathBuf>, Error> {
+fn python_files(root: &Path, config: &Config) -> Result<Walked, Error> {
     if !root.exists() {
         return Err(Error::Missing(root.to_path_buf()));
     }
@@ -518,20 +566,124 @@ fn python_files(root: &Path) -> Result<Vec<PathBuf>, Error> {
         return Err(Error::NotPython(root.to_path_buf()));
     }
 
-    let mut files = Vec::new();
+    let excluded = config::exclude_matcher(config)?;
+    // Nothing to exclude, nothing to normalise: the walk is the one this tool has always done, on
+    // the path exactly as typed. Kept as a branch rather than as a canonical walk that happens to
+    // round-trip, so that a project without `exclude` cannot be affected by any of this at all.
+    let walked = if excluded.is_empty() {
+        root.to_path_buf()
+    } else {
+        // A glob is matched against the path relative to the CONFIGURATION FILE, and the walker
+        // can only do that if the paths it reports are rooted in the same tree the base names.
+        // `.`, `..` and a symlinked root each name the same file differently and defeat every
+        // lexical answer — the recorded defect this module and `crate::config` both already
+        // canonicalise against. Reported paths are put back under the typed root by `reroot`, so
+        // this is invisible in the output.
+        std::fs::canonicalize(root).map_err(|error| Error::Walk {
+            path: root.to_path_buf(),
+            message: error.to_string(),
+        })?
+    };
+
     // `require_git(false)`: a `.gitignore` means the same thing in an exported tarball as in the
     // checkout it came from, and without this the crate ignores gitignore files outside a repo.
     // Nothing here calls `follow_links`; see the module documentation for what that measured.
-    for entry in WalkBuilder::new(root).require_git(false).build() {
+    let mut builder = WalkBuilder::new(&walked);
+    builder.require_git(false);
+
+    // `filter_entry` rather than `overrides`, and the reason is that the caller has to be able to
+    // say whether `exclude` ACTUALLY removed anything. Read in the crate's `walk.rs`:
+    // `should_skip_entry` — which is where `overrides` is consulted — runs *before* the filter
+    // predicate, so with `overrides` set an excluded path is pruned before any code of ours can
+    // observe it, and the only thing left to report on is the configuration's own say-so. That is
+    // how the diagnostic came to blame `exclude` for emptiness it had no part in.
+    //
+    // The three properties that made `overrides` right are all kept, and none of them is
+    // incidental to this choice:
+    //   * directory pruning — the predicate returning false on a directory stops the descent, so a
+    //     matched `vendor/` still costs one entry rather than a subtree, and a glob naming a
+    //     directory still covers everything under it (that was always pruning's doing, never the
+    //     glob matching descendants);
+    //   * the root is still always visited — `skip_entry` returns early at depth 0, ahead of the
+    //     filter, which is what keeps an explicitly named path checked;
+    //   * `.gitignore` still has its say — its layers run first and this filter runs after, so a
+    //     path is walked only if BOTH allow it. Identical to `overrides` here because we only ever
+    //     build exclusions, never re-inclusions.
+    let removed = Arc::new(AtomicUsize::new(0));
+    if !excluded.is_empty() {
+        let counter = Arc::clone(&removed);
+        builder.filter_entry(move |entry| {
+            let is_dir = entry.file_type().is_some_and(|kind| kind.is_dir());
+            if !excluded.matched(entry.path(), is_dir).is_ignore() {
+                return true;
+            }
+            // Counted only when the removal cost the run something it could have MEASURED. A
+            // `README.md` the tool would never have read is a removed path but not a lost
+            // measurement, and reporting it as one is the same over-claim one level in.
+            //
+            // A directory is counted without knowing, and that is deliberate: finding out means
+            // descending into it, which is the pruning that makes this affordable at all. So the
+            // claim for a directory is conservative — it *might* have held Python — and the
+            // residual is that excluding a directory of images still says the tree was not fully
+            // measured.
+            if is_dir || is_python_source(entry.path()) {
+                counter.fetch_add(1, Ordering::Relaxed);
+            }
+            false
+        });
+    }
+
+    let mut files = Vec::new();
+    for entry in builder.build() {
         let entry = entry.map_err(|error| Error::Walk {
             path: root.to_path_buf(),
             message: error.to_string(),
         })?;
         if entry.file_type().is_some_and(|kind| kind.is_file()) && is_python_source(entry.path()) {
-            files.push(entry.into_path());
+            files.push(reroot(root, &walked, entry.into_path()));
         }
     }
-    Ok(files)
+    Ok(Walked {
+        files,
+        excluded_measurable: removed.load(Ordering::Relaxed),
+    })
+}
+
+/// What a walk found, and how much `exclude` kept it from finding.
+struct Walked {
+    /// Every Python file the walk yielded, unsorted — see [`python_files`].
+    files: Vec<PathBuf>,
+    /// How many paths the exclude matcher removed that could have been measured, **counted
+    /// during the walk**.
+    ///
+    /// Not `config.exclude.len()`, and not a flag beside a list read back off the configuration.
+    /// This one number is both the reason to print the diagnostic and the whole of its content, so
+    /// the gate and the sentence cannot disagree — which they have, twice, in exactly this place:
+    /// first a gate that read `!config.exclude.is_empty()`, then an honest gate whose sentence
+    /// still listed every configured glob whether it fired or not.
+    ///
+    /// A pruned directory counts as **one** path, not as the subtree behind it; the walk
+    /// deliberately never learns how big that subtree was.
+    excluded_measurable: usize,
+}
+
+/// Puts a walked path back under the root **as the user typed it**.
+///
+/// A no-op unless the walk was canonicalised, which is the only case where the two differ. The
+/// prefix is not a guess: it is the path this walk was started from, so `strip_prefix` is exact
+/// rather than a lexical comparison of two strings that might mean the same directory.
+fn reroot(typed: &Path, walked: &Path, path: PathBuf) -> PathBuf {
+    match path.strip_prefix(walked) {
+        // The root itself, which is what `tooprolix check one_file.py` yields and nothing else.
+        // `typed.join("")` would append a separator and invent a path that is not the one asked
+        // about.
+        Ok(rest) if rest.as_os_str().is_empty() => typed.to_path_buf(),
+        Ok(rest) => typed.join(rest),
+        // Unreachable — `walked` is by construction the prefix of everything this walk yields.
+        // Keeping the walked path rather than dropping the file is the fail-loud half: an absolute
+        // path in a finding is visible and wrong, a silently unmeasured file is neither.
+        Err(_) => path,
+    }
 }
 
 /// Reads and extracts every file, or fails with **all** of the failures.
@@ -1056,8 +1208,13 @@ mod tests {
     fn the_walk_finds_python_and_refuses_everything_else() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/dup-corpus");
 
-        let files = python_files(&root).expect("the fixture tree is readable");
-        let mut names: Vec<String> = files
+        let walked = python_files(&root, &Config::default()).expect("the fixture tree is readable");
+        assert!(
+            walked.excluded_measurable == 0,
+            "a walk with no `exclude` configured reported that it excluded something"
+        );
+        let mut names: Vec<String> = walked
+            .files
             .iter()
             .map(|file| {
                 file.file_name()
@@ -1078,12 +1235,13 @@ mod tests {
                 "worker.py"
             ]
         );
-        assert!(python_files(&root.join("nope")).is_err());
+        assert!(python_files(&root.join("nope"), &Config::default()).is_err());
         assert!(
             python_files(
                 Path::new(env!("CARGO_MANIFEST_DIR"))
                     .join("README.md")
-                    .as_path()
+                    .as_path(),
+                &Config::default()
             )
             .is_err(),
             "a non-Python file named directly is not an empty result"

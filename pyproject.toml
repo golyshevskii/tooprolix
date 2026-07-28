@@ -41,6 +41,22 @@ requires-python = ">=3.12"
 [project.scripts]
 tooprolix = "tooprolix:main"
 
+[tool.tooprolix]
+# The tool run on itself. Until this key existed `tooprolix check .` on this repository was exit 2
+# with zero findings, because `tests/fixtures/broken/syntax_error.py` is deliberately unparsable and
+# deliberately committed — `.gitignore` cannot express "committed, but not part of the measurement",
+# and an opt-out marker cannot save a file that never parses far enough for its comments to be read.
+#
+# The whole fixture tree is excluded and not just the one broken file, because the rest of it is
+# equally not this repository's prose: `dup-corpus/` is duplicated on purpose so TPX003 has
+# something to find, and measuring it would report our own test data as a defect in our own source.
+#
+# ⚠️ This prunes a directory during a WALK. `tooprolix check tests/fixtures/broken` still checks that
+# tree and still exits 2 — the walker never sees `tests/fixtures` as an entry to prune when the walk
+# starts below it, and a path named directly on the command line is checked regardless. That is
+# ruff's default and it is what keeps the fixture tests honest.
+exclude = ["tests/fixtures"]
+
 [tool.maturin]
 # pyo3 EXTENSION bindings, i.e. an importable `tooprolix` module. Stated explicitly rather than left
 # to maturin's auto-detection because ruff — our reference for everything else — has
