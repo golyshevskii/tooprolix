@@ -1,5 +1,8 @@
 {
-  "schema_version": "1",
+  "schema_version": "2",
+  "complete": true,
+  "skipped": [],
+  "excluded": [],
   "findings": [
     {
       "code": "TPX002",
@@ -7,7 +10,7 @@
       "line": 553,
       "end_line": 581,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/a2a/config.py:553: TPX002 docstring is 209 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "crewAI/lib/crewai/src/crewai/a2a/config.py:553: TPX002 docstring is 209 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 209,
       "max_volume": 200
     },
@@ -54,7 +57,7 @@
       "line": 161,
       "end_line": 199,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/a2a/utils/delegation.py:161: TPX002 docstring is 261 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "crewAI/lib/crewai/src/crewai/a2a/utils/delegation.py:161: TPX002 docstring is 261 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 261,
       "max_volume": 200
     },
@@ -64,7 +67,7 @@
       "line": 265,
       "end_line": 298,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/a2a/utils/delegation.py:265: TPX002 docstring is 223 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "crewAI/lib/crewai/src/crewai/a2a/utils/delegation.py:265: TPX002 docstring is 223 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 223,
       "max_volume": 200
     },
@@ -111,7 +114,7 @@
       "line": 1079,
       "end_line": 1110,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/a2a/wrapper.py:1079: TPX002 docstring is 243 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "crewAI/lib/crewai/src/crewai/a2a/wrapper.py:1079: TPX002 docstring is 243 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 243,
       "max_volume": 200
     },
@@ -121,7 +124,7 @@
       "line": 172,
       "end_line": 196,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/agent/core.py:172: TPX002 docstring is 215 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "crewAI/lib/crewai/src/crewai/agent/core.py:172: TPX002 docstring is 215 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 215,
       "max_volume": 200
     },
@@ -279,7 +282,7 @@
       "line": 12,
       "end_line": 77,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/agent/planning_config.py:12: TPX002 docstring is 319 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "crewAI/lib/crewai/src/crewai/agent/planning_config.py:12: TPX002 docstring is 319 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 319,
       "max_volume": 200
     },
@@ -400,7 +403,7 @@
       "line": 201,
       "end_line": 253,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/agents/agent_builder/base_agent.py:201: TPX002 docstring is 407 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "crewAI/lib/crewai/src/crewai/agents/agent_builder/base_agent.py:201: TPX002 docstring is 407 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 407,
       "max_volume": 200
     },
@@ -595,7 +598,7 @@
       "line": 160,
       "end_line": 199,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/crew.py:160: TPX002 docstring is 294 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "crewAI/lib/crewai/src/crewai/crew.py:160: TPX002 docstring is 294 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 294,
       "max_volume": 200
     },
@@ -722,7 +725,7 @@
       "line": 142,
       "end_line": 188,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/flow/async_feedback/types.py:142: TPX002 docstring is 203 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "crewAI/lib/crewai/src/crewai/flow/async_feedback/types.py:142: TPX002 docstring is 203 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 203,
       "max_volume": 200
     },
@@ -849,7 +852,7 @@
       "line": 884,
       "end_line": 909,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/flow/runtime/__init__.py:884: TPX002 docstring is 204 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "crewAI/lib/crewai/src/crewai/flow/runtime/__init__.py:884: TPX002 docstring is 204 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 204,
       "max_volume": 200
     },
@@ -896,7 +899,7 @@
       "line": 3208,
       "end_line": 3255,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/flow/runtime/__init__.py:3208: TPX002 docstring is 247 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "crewAI/lib/crewai/src/crewai/flow/runtime/__init__.py:3208: TPX002 docstring is 247 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 247,
       "max_volume": 200
     },
@@ -906,7 +909,7 @@
       "line": 30,
       "end_line": 54,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/hooks/llm_hooks.py:30: TPX002 docstring is 207 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "crewAI/lib/crewai/src/crewai/hooks/llm_hooks.py:30: TPX002 docstring is 207 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 207,
       "max_volume": 200
     },
@@ -1612,7 +1615,7 @@
       "line": 167,
       "end_line": 194,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/llms/providers/openai/completion.py:167: TPX002 docstring is 224 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "crewAI/lib/crewai/src/crewai/llms/providers/openai/completion.py:167: TPX002 docstring is 224 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 224,
       "max_volume": 200
     },
@@ -1881,7 +1884,7 @@
       "line": 280,
       "end_line": 322,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/rag/core/base_client.py:280: TPX002 docstring is 203 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "crewAI/lib/crewai/src/crewai/rag/core/base_client.py:280: TPX002 docstring is 203 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 203,
       "max_volume": 200
     },
@@ -2674,7 +2677,7 @@
       "line": 213,
       "end_line": 237,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/utilities/planning_types.py:213: TPX002 docstring is 207 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "crewAI/lib/crewai/src/crewai/utilities/planning_types.py:213: TPX002 docstring is 207 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 207,
       "max_volume": 200
     },
@@ -2684,7 +2687,7 @@
       "line": 821,
       "end_line": 862,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/utilities/pydantic_schema_utils.py:821: TPX002 docstring is 226 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "crewAI/lib/crewai/src/crewai/utilities/pydantic_schema_utils.py:821: TPX002 docstring is 226 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 226,
       "max_volume": 200
     },

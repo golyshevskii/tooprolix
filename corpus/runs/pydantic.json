@@ -1,5 +1,8 @@
 {
-  "schema_version": "1",
+  "schema_version": "2",
+  "complete": true,
+  "skipped": [],
+  "excluded": [],
   "findings": [
     {
       "code": "TPX002",
@@ -7,7 +10,7 @@
       "line": 47,
       "end_line": 87,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic-core/python/pydantic_core/core_schema.py:47: TPX002 docstring is 484 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic-core/python/pydantic_core/core_schema.py:47: TPX002 docstring is 484 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 484,
       "max_volume": 200
     },
@@ -91,7 +94,7 @@
       "line": 969,
       "end_line": 998,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic-core/python/pydantic_core/core_schema.py:969: TPX002 docstring is 231 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic-core/python/pydantic_core/core_schema.py:969: TPX002 docstring is 231 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 231,
       "max_volume": 200
     },
@@ -101,7 +104,7 @@
       "line": 1232,
       "end_line": 1259,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic-core/python/pydantic_core/core_schema.py:1232: TPX002 docstring is 225 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic-core/python/pydantic_core/core_schema.py:1232: TPX002 docstring is 225 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 225,
       "max_volume": 200
     },
@@ -111,7 +114,7 @@
       "line": 2770,
       "end_line": 2824,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic-core/python/pydantic_core/core_schema.py:2770: TPX002 docstring is 376 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic-core/python/pydantic_core/core_schema.py:2770: TPX002 docstring is 376 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 376,
       "max_volume": 200
     },
@@ -121,7 +124,7 @@
       "line": 3293,
       "end_line": 3341,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic-core/python/pydantic_core/core_schema.py:3293: TPX002 docstring is 273 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic-core/python/pydantic_core/core_schema.py:3293: TPX002 docstring is 273 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 273,
       "max_volume": 200
     },
@@ -131,7 +134,7 @@
       "line": 3531,
       "end_line": 3553,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic-core/python/pydantic_core/core_schema.py:3531: TPX002 docstring is 210 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic-core/python/pydantic_core/core_schema.py:3531: TPX002 docstring is 210 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 210,
       "max_volume": 200
     },
@@ -178,7 +181,7 @@
       "line": 3638,
       "end_line": 3667,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic-core/python/pydantic_core/core_schema.py:3638: TPX002 docstring is 218 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic-core/python/pydantic_core/core_schema.py:3638: TPX002 docstring is 218 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 218,
       "max_volume": 200
     },
@@ -624,7 +627,7 @@
       "line": 14,
       "end_line": 36,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/_internal/_core_metadata.py:14: TPX002 docstring is 263 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/_internal/_core_metadata.py:14: TPX002 docstring is 263 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 263,
       "max_volume": 200
     },
@@ -671,7 +674,7 @@
       "line": 231,
       "end_line": 280,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/_internal/_dataclasses.py:231: TPX002 docstring is 316 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/_internal/_dataclasses.py:231: TPX002 docstring is 316 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 316,
       "max_volume": 200
     },
@@ -1155,7 +1158,7 @@
       "line": 452,
       "end_line": 467,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/_internal/_generics.py:452: TPX002 docstring is 208 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/_internal/_generics.py:452: TPX002 docstring is 208 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 208,
       "max_volume": 200
     },
@@ -1239,7 +1242,7 @@
       "line": 144,
       "end_line": 221,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/_internal/_namespace_utils.py:144: TPX002 docstring is 496 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/_internal/_namespace_utils.py:144: TPX002 docstring is 496 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 496,
       "max_volume": 200
     },
@@ -1434,7 +1437,7 @@
       "line": 206,
       "end_line": 243,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/_internal/_typing_extra.py:206: TPX002 docstring is 308 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/_internal/_typing_extra.py:206: TPX002 docstring is 308 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 308,
       "max_volume": 200
     },
@@ -1962,7 +1965,7 @@
       "line": 80,
       "end_line": 114,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/dataclasses.py:80: TPX002 docstring is 286 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/dataclasses.py:80: TPX002 docstring is 286 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 286,
       "max_volume": 200
     },
@@ -2144,7 +2147,7 @@
       "line": 108,
       "end_line": 150,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/fields.py:108: TPX002 docstring is 420 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/fields.py:108: TPX002 docstring is 420 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 420,
       "max_volume": 200
     },
@@ -2154,7 +2157,7 @@
       "line": 545,
       "end_line": 558,
       "prose_kind": "comment",
-      "message": "pydantic/pydantic/fields.py:545: TPX001 comment is 198 words long, over the 150-word limit — shorten it, or mark it with `# tooprolix: noqa TPX001` on the line above it",
+      "message": "pydantic/pydantic/fields.py:545: TPX001 comment is 198 words long, over the 150-word limit — shorten it, or mark it with `# !TPX001` on the line above it",
       "words": 198,
       "max_volume": 150
     },
@@ -2275,7 +2278,7 @@
       "line": 1215,
       "end_line": 1281,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/fields.py:1215: TPX002 docstring is 711 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/fields.py:1215: TPX002 docstring is 711 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 711,
       "max_volume": 200
     },
@@ -2285,7 +2288,7 @@
       "line": 1729,
       "end_line": 1873,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/fields.py:1729: TPX002 docstring is 706 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/fields.py:1729: TPX002 docstring is 706 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 706,
       "max_volume": 200
     },
@@ -2295,7 +2298,7 @@
       "line": 91,
       "end_line": 151,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/functional_serializers.py:91: TPX002 docstring is 280 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/functional_serializers.py:91: TPX002 docstring is 280 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 280,
       "max_volume": 200
     },
@@ -2305,7 +2308,7 @@
       "line": 245,
       "end_line": 289,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/functional_serializers.py:245: TPX002 docstring is 236 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/functional_serializers.py:245: TPX002 docstring is 236 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 236,
       "max_volume": 200
     },
@@ -2315,7 +2318,7 @@
       "line": 376,
       "end_line": 426,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/functional_serializers.py:376: TPX002 docstring is 217 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/functional_serializers.py:376: TPX002 docstring is 217 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 217,
       "max_volume": 200
     },
@@ -2325,7 +2328,7 @@
       "line": 159,
       "end_line": 203,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/functional_validators.py:159: TPX002 docstring is 217 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/functional_validators.py:159: TPX002 docstring is 217 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 217,
       "max_volume": 200
     },
@@ -2335,7 +2338,7 @@
       "line": 418,
       "end_line": 477,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/functional_validators.py:418: TPX002 docstring is 270 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/functional_validators.py:418: TPX002 docstring is 270 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 270,
       "max_volume": 200
     },
@@ -2443,7 +2446,7 @@
       "line": 224,
       "end_line": 263,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/json_schema.py:224: TPX002 docstring is 354 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/json_schema.py:224: TPX002 docstring is 354 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 354,
       "max_volume": 200
     },
@@ -2711,7 +2714,7 @@
       "line": 2605,
       "end_line": 2630,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/json_schema.py:2605: TPX002 docstring is 240 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/json_schema.py:2605: TPX002 docstring is 240 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 240,
       "max_volume": 200
     },
@@ -2721,7 +2724,7 @@
       "line": 2675,
       "end_line": 2730,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/json_schema.py:2675: TPX002 docstring is 252 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/json_schema.py:2675: TPX002 docstring is 252 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 252,
       "max_volume": 200
     },
@@ -2731,7 +2734,7 @@
       "line": 134,
       "end_line": 166,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/main.py:134: TPX002 docstring is 285 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/main.py:134: TPX002 docstring is 285 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 285,
       "max_volume": 200
     },
@@ -2741,7 +2744,7 @@
       "line": 487,
       "end_line": 516,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/main.py:487: TPX002 docstring is 262 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/main.py:487: TPX002 docstring is 262 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 262,
       "max_volume": 200
     },
@@ -2788,7 +2791,7 @@
       "line": 554,
       "end_line": 583,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/main.py:554: TPX002 docstring is 263 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/main.py:554: TPX002 docstring is 263 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 263,
       "max_volume": 200
     },
@@ -2902,7 +2905,7 @@
       "line": 1811,
       "end_line": 1845,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/main.py:1811: TPX002 docstring is 250 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/main.py:1811: TPX002 docstring is 250 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 250,
       "max_volume": 200
     },
@@ -3504,7 +3507,7 @@
       "line": 603,
       "end_line": 678,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/networks.py:603: TPX002 docstring is 384 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/networks.py:603: TPX002 docstring is 384 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 384,
       "max_volume": 200
     },
@@ -3625,7 +3628,7 @@
       "line": 146,
       "end_line": 175,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/root_model.py:146: TPX002 docstring is 262 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/root_model.py:146: TPX002 docstring is 262 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 262,
       "max_volume": 200
     },
@@ -3635,7 +3638,7 @@
       "line": 71,
       "end_line": 164,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/type_adapter.py:71: TPX002 docstring is 640 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/type_adapter.py:71: TPX002 docstring is 640 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 640,
       "max_volume": 200
     },
@@ -3645,7 +3648,7 @@
       "line": 652,
       "end_line": 682,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/type_adapter.py:652: TPX002 docstring is 232 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/type_adapter.py:652: TPX002 docstring is 232 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 232,
       "max_volume": 200
     },
@@ -3655,7 +3658,7 @@
       "line": 751,
       "end_line": 780,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/type_adapter.py:751: TPX002 docstring is 250 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/type_adapter.py:751: TPX002 docstring is 250 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 250,
       "max_volume": 200
     },
@@ -3665,7 +3668,7 @@
       "line": 164,
       "end_line": 233,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/types.py:164: TPX002 docstring is 240 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/types.py:164: TPX002 docstring is 240 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 240,
       "max_volume": 200
     },
@@ -3675,7 +3678,7 @@
       "line": 425,
       "end_line": 494,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/types.py:425: TPX002 docstring is 253 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/types.py:425: TPX002 docstring is 253 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 253,
       "max_volume": 200
     },
@@ -3685,7 +3688,7 @@
       "line": 768,
       "end_line": 826,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/types.py:768: TPX002 docstring is 222 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/types.py:768: TPX002 docstring is 222 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 222,
       "max_volume": 200
     },
@@ -3695,7 +3698,7 @@
       "line": 925,
       "end_line": 1002,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/types.py:925: TPX002 docstring is 361 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/types.py:925: TPX002 docstring is 361 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 361,
       "max_volume": 200
     },
@@ -3705,7 +3708,7 @@
       "line": 1063,
       "end_line": 1134,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/types.py:1063: TPX002 docstring is 305 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/types.py:1063: TPX002 docstring is 305 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 305,
       "max_volume": 200
     },
@@ -3715,7 +3718,7 @@
       "line": 1448,
       "end_line": 1518,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/types.py:1448: TPX002 docstring is 311 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/types.py:1448: TPX002 docstring is 311 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 311,
       "max_volume": 200
     },
@@ -3725,7 +3728,7 @@
       "line": 1583,
       "end_line": 1686,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/types.py:1583: TPX002 docstring is 364 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/types.py:1583: TPX002 docstring is 364 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 364,
       "max_volume": 200
     },
@@ -3735,7 +3738,7 @@
       "line": 1813,
       "end_line": 1867,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/types.py:1813: TPX002 docstring is 205 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/types.py:1813: TPX002 docstring is 205 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 205,
       "max_volume": 200
     },
@@ -3782,7 +3785,7 @@
       "line": 2037,
       "end_line": 2071,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/types.py:2037: TPX002 docstring is 203 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/types.py:2037: TPX002 docstring is 203 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 203,
       "max_volume": 200
     },
@@ -3983,7 +3986,7 @@
       "line": 2900,
       "end_line": 2969,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/types.py:2900: TPX002 docstring is 331 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/types.py:2900: TPX002 docstring is 331 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 331,
       "max_volume": 200
     },
@@ -3993,7 +3996,7 @@
       "line": 2982,
       "end_line": 3048,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/types.py:2982: TPX002 docstring is 309 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/types.py:2982: TPX002 docstring is 309 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 309,
       "max_volume": 200
     },
@@ -4003,7 +4006,7 @@
       "line": 250,
       "end_line": 300,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/v1/fields.py:250: TPX002 docstring is 610 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/v1/fields.py:250: TPX002 docstring is 610 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 610,
       "max_volume": 200
     },
@@ -4050,7 +4053,7 @@
       "line": 118,
       "end_line": 136,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/v1/schema.py:118: TPX002 docstring is 214 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "pydantic/pydantic/v1/schema.py:118: TPX002 docstring is 214 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 214,
       "max_volume": 200
     },

@@ -16,18 +16,20 @@
 //!
 //! # `exclude` is a measurement boundary, and that is why it exists at all
 //!
-//! It is not configurability for its own sake. [`crate::cli`] refuses to report findings for a tree
-//! it could not fully read — a file that does not parse is exit 2, never "clean" — and `exclude` is
-//! the only lever that makes that contract usable on a repository which *legitimately* contains
-//! invalid Python. Two measured cases: this crate's own `tests/fixtures/broken/`, and the pinned
-//! ruff checkout, where 374 deliberately-unparsable parser fixtures turn `check .` into exit 2 with
-//! 0 findings. Neither is reachable any other way — `.gitignore` does not cover committed files,
-//! and an opt-out marker cannot save a file that never parses far enough for its comments to be
-//! read.
+//! It is not configurability for its own sake, and its job outlived the strict exit contract it was
+//! introduced under. A repository that *legitimately* contains invalid Python — this crate's own
+//! `tests/fixtures/broken/`, or the pinned ruff checkout with its 374 deliberately-unparsable parser
+//! fixtures — is the case neither `.gitignore` (which does not cover committed files) nor an opt-out
+//! marker (which cannot save a file that never parses far enough for its comments to be read) can
+//! reach. `exclude` is the only lever that does.
 //!
-//! It is deliberately **not** graceful handling of unreadable files, which is a different contract:
-//! `exclude` says a path was never part of the measurement, graceful says the measurement met
-//! something it could not read.
+//! It is deliberately **not** graceful handling of unreadable files, and the two have stayed
+//! distinct now that both exist: `exclude` says a path was never part of the measurement, graceful
+//! says the measurement met something it could not read. That is why they land in different fields
+//! of [`crate::finding::Report`] and why only the second one sets `complete: false` — see the
+//! exit contract in [`crate::cli`]. Without `exclude`, the ruff checkout is a run that reports 374
+//! skipped files on every invocation; with it, the tree is measured whole inside a boundary the
+//! project drew on purpose, and the text output stays silent.
 //!
 //! # Where the file is looked for, and the answer is one answer
 //!
@@ -53,7 +55,7 @@
 //! | `tool` or `tool.tooprolix` present but **not a table** | **exit 2**, naming the key and what was found | it failed open — the defaults were silently restored and a project's whole `ignore` list vanished with no diagnostic. Same class as an unknown key, one level out |
 //! | a key the tool does not know | **exit 2**, naming the key | a key that does nothing looks exactly like a key that works, which is the whole reason `ty` rejects unknown keys too |
 //! | a code in `ignore` that no rule answers to | **exit 2**, naming the code | a gate switched off by a typo. Fatal here and merely loud in a marker, because this file belongs to the tool and there is one of it |
-//! | an `exclude` entry that is empty, blank, starts with `!`, or is not a glob | **exit 2**, naming the entry | measured against the walker: `""` and `"   "` build a matcher that excludes **nothing**, and `"!vendor"` cancels the exclusion into a no-op. All three look exactly like a rule that works, and the second class silently un-excludes the tree the strict exit code was made bearable by |
+//! | an `exclude` entry that is empty, blank, starts with `!`, or is not a glob | **exit 2**, naming the entry | measured against the walker: `""` and `"   "` build a matcher that excludes **nothing**, and `"!vendor"` cancels the exclusion into a no-op. All three look exactly like a rule that works, and the second class silently un-excludes the tree the project meant to put out of scope |
 //! | a limit that is not an integer, or is negative | **exit 2**, naming the key and what was found | `docstring-max-volume = "200"` silently falling back to the default is the same defect one type further out |
 //! | a limit of `0` | **accepted**: every block of that kind is a finding | `0` is the literal meaning of the key — "no words allowed" — and the core is already fail-closed there. `ignore` is how a rule is switched off; a limit that quietly meant "off" would be the trap |
 //! | `ignore` naming every shipping code | **accepted**, and [`crate::cli`] prints a diagnostic | the exit code is honestly 0 — there really are no findings — but a run that measured nothing must not be silent about it |

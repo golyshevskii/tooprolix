@@ -183,6 +183,14 @@ class TestOneOwnerForTheRunTable:
         so every Python restatement of "which root, how many files" has to answer to it. Two owners
         for one fact is the defect this epic keeps paying for; this is the machine check that keeps
         it to one owner plus mirrors.
+
+        The row shape is pinned by its separator count, and that is load-bearing rather than
+        incidental: the columns are
+        `name|root|checkout|exit|files|skipped|TPX001|TPX002|TPX003`, so **eight** pipes. It was
+        seven until `make-check-graceful-on-unreadable-files` added the `skipped` column, and the
+        stale count made this test fail loudly with an empty parse instead of silently agreeing with
+        nothing — which is exactly what the `assert table` line below is for. Keep both: a parser
+        that quietly matches zero rows would turn this whole check into a no-op.
         """
         import bench
 
@@ -192,7 +200,7 @@ class TestOneOwnerForTheRunTable:
             for row in (
                 line.strip().strip('"').split("|")
                 for line in script.splitlines()
-                if line.strip().startswith('"') and line.count("|") == 7
+                if line.strip().startswith('"') and line.count("|") == 8
             )
         }
         assert table, "the EXPECTED table in run_all.sh could not be parsed"

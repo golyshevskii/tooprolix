@@ -1,5 +1,8 @@
 {
-  "schema_version": "1",
+  "schema_version": "2",
+  "complete": true,
+  "skipped": [],
+  "excluded": [],
   "findings": [
     {
       "code": "TPX003",
@@ -44,7 +47,7 @@
       "line": 406,
       "end_line": 452,
       "prose_kind": "docstring",
-      "message": "requests/src/requests/adapters.py:406: TPX002 docstring is 356 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "requests/src/requests/adapters.py:406: TPX002 docstring is 356 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 356,
       "max_volume": 200
     },
@@ -54,7 +57,7 @@
       "line": 27,
       "end_line": 65,
       "prose_kind": "docstring",
-      "message": "requests/src/requests/api.py:27: TPX002 docstring is 357 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "requests/src/requests/api.py:27: TPX002 docstring is 357 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 357,
       "max_volume": 200
     },
@@ -150,7 +153,7 @@
       "line": 576,
       "end_line": 618,
       "prose_kind": "docstring",
-      "message": "requests/src/requests/sessions.py:576: TPX002 docstring is 338 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "requests/src/requests/sessions.py:576: TPX002 docstring is 338 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 338,
       "max_volume": 200
     },

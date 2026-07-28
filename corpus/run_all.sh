@@ -13,8 +13,17 @@
 # **5** of its 1269 `.py` files, reports **1** finding, and exits **1** with an empty stderr —
 # indistinguishable, from the outside, from a clean measurement. See the trap below.
 #
-# So each repository carries an expected exit code and an expected count per rule code, and a
-# deviation is a red run naming the repository. The numbers are not this script's own opinion:
+# So each repository carries an expected exit code, an expected number of **skipped** files and an
+# expected count per rule code, and a deviation is a red run naming the repository.
+#
+# The skipped column is not decoration. Since `make-check-graceful-on-unreadable-files` a file the
+# tool cannot read no longer stops the run — it is reported and the rest of the tree is still
+# measured — so "this repository quietly stopped being readable" is now a thing that can happen
+# without the exit code moving at all. The column is the only place that becomes visible, and the
+# document's own `complete` flag is cross-checked against it on every row: a report that claims to
+# be whole while carrying skipped files is a contract break, not a count that drifted.
+#
+# The numbers are not this script's own opinion:
 # the `TPX001`/`TPX002` columns are reproduced independently by `tests/volume_corpus.rs`
 # (`cargo test --locked --release --test volume_corpus -- --ignored --nocapture`), which walks the
 # tree through `std::fs` rather than through the `ignore` crate, and the `TPX003` columns are the
@@ -65,33 +74,41 @@ for tool in jq git rg; do
 	fi
 done
 
-# name | walk root, relative to CORPUS_ROOT | exit | TPX001 | TPX002 | TPX003
+# `crewAI-full` and `crewAI` are the same checkout at two roots, on purpose. Five Jinja templates
+# named `.py` under `lib/cli/src/crewai_cli/templates/` do not parse, and until
+# `make-check-graceful-on-unreadable-files` that made the whole repository unmeasurable: the
+# all-or-nothing contract of 2026-07-26 turned the full run into exit 2 with zero findings, and
+# `corpus/runs/crewAI-full.json` was **0 bytes** on disk for exactly that reason.
 #
-# `crewAI-full` and `crewAI` are the same checkout at two roots, on purpose. The whole repository
-# cannot be measured at all: five Jinja templates named `.py` under `lib/cli/src/crewai_cli/
-# templates/` do not parse, and the exit-2 contract is all-or-nothing by the owner's decision of
-# 2026-07-26, so the full run yields zero findings. Keeping it in the table pins that fact instead
-# of leaving the narrowed root looking arbitrary. `crewAI/lib/crewai` is the narrowed root the
-# owner chose (EPIC.md Decisions #7.2); the 515 `.py` files outside it are recorded in REPORT.md
-# §7.2. A union of per-subdirectory runs was rejected: `TPX003` is cross-file, so that is a
-# different answer, not a more complete one.
+# 🔴 **The `crewAI-full` row is a first measurement, not a corrected one.** Its old `2|1269|0|0|0`
+# recorded what the refusal printed, not what the repository contains — the 1264 readable files had
+# never been measured by anything. The numbers here were produced by running this script on
+# 2026-07-28, after the graceful contract landed, and read out of the regenerated artifact.
 #
-# `crewAI` appears twice above because it is one checkout measured at two roots, so the table has
-# seven rows over the six checkouts `corpus/corpus.lock` pins.
-# name | walk root | checkout | exit | .py walked | TPX001 | TPX002 | TPX003
+# Keeping the row pins that the five templates are still the only thing lost. `crewAI/lib/crewai` is
+# the narrowed root the owner chose (EPIC.md Decisions #7.2); the 515 `.py` files outside it are
+# recorded in REPORT.md §7.2. A union of per-subdirectory runs was rejected: `TPX003` is cross-file,
+# so that is a different answer, not a more complete one — which is also why `crewAI-full` and
+# `crewAI` do not add up and are not supposed to.
+#
+# `crewAI` appears twice because it is one checkout measured at two roots, so the table has seven
+# rows over the six checkouts `corpus/corpus.lock` pins.
+# name | walk root | checkout | exit | .py walked | skipped | TPX001 | TPX002 | TPX003
 readonly EXPECTED=(
-	"OpenHands|OpenHands|OpenHands|1|914|3|12|65"
-	"crewAI-full|crewAI|crewAI|2|1269|0|0|0"
-	"crewAI|crewAI/lib/crewai|crewAI|1|754|0|16|90"
-	"langgraph|langgraph|langgraph|1|445|2|74|264"
-	"openai-agents-python|openai-agents-python|openai-agents-python|1|834|2|14|70"
-	"pydantic|pydantic|pydantic|1|404|1|46|120"
-	"requests|requests|requests|1|37|0|3|8"
+	"OpenHands|OpenHands|OpenHands|1|914|0|3|12|65"
+	"crewAI-full|crewAI|crewAI|1|1269|5|0|21|118"
+	"crewAI|crewAI/lib/crewai|crewAI|1|754|0|0|16|90"
+	"langgraph|langgraph|langgraph|1|445|0|2|74|264"
+	"openai-agents-python|openai-agents-python|openai-agents-python|1|834|0|2|14|70"
+	"pydantic|pydantic|pydantic|1|404|0|1|46|120"
+	"requests|requests|requests|1|37|0|0|3|8"
 )
 
 # The five files `crewAI` ships as `.py` and the parser rejects — Jinja templates. Asserted by name
-# rather than by count: "exit 2 with an empty stdout" is also what an unreadable tree or an
-# unrelated fatal error looks like, and the owner approved *these* five, not exit 2 in general.
+# rather than by count, and now against the JSON `skipped[]` rather than against stderr: a count
+# alone is also what five *different* unreadable files would produce, and the owner approved
+# **these** five. They are the reason `crewAI-full` is the one row in this corpus with
+# `complete: false`.
 readonly CREWAI_UNPARSEABLE=(
 	"crewAI/lib/cli/src/crewai_cli/templates/crew/crew.py"
 	"crewAI/lib/cli/src/crewai_cli/templates/crew/main.py"
@@ -142,10 +159,10 @@ echo "corpus.lock: $(awk '!/^#/ && NF' "$REPO_ROOT/corpus/corpus.lock" | wc -l |
 echo
 
 failures=0
-printf '%-28s %6s %8s %8s %8s %8s\n' repo exit files TPX001 TPX002 TPX003
+printf '%-28s %6s %8s %8s %8s %8s %8s\n' repo exit files skipped TPX001 TPX002 TPX003
 
 for row in "${EXPECTED[@]}"; do
-	IFS='|' read -r name subpath checkout want_exit want_files want1 want2 want3 <<<"$row"
+	IFS='|' read -r name subpath checkout want_exit want_files want_skipped want1 want2 want3 <<<"$row"
 
 	if [[ ! -d "$CORPUS_ROOT/$subpath" ]]; then
 		echo "FAIL $name: $CORPUS_ROOT/$subpath does not exist — the checkout did not materialise" >&2
@@ -171,59 +188,66 @@ for row in "${EXPECTED[@]}"; do
 		failures=$((failures + 1))
 	fi
 
-	# Count from the JSON document rather than from the exit code or from stdout line counts: the
-	# artifact is what the next task reads, so the artifact is what gets graded.
+	# Exit 2 now means only that the run could not start — a bad path or a broken configuration —
+	# and such a run still writes nothing at all to stdout. No row expects it any more, so reaching
+	# it is itself the failure, reported here because `jq` on an empty file would otherwise print
+	# three question marks and bury the reason on the row below.
 	#
-	# An exit-2 run writes **nothing at all** to stdout — not an empty document, no bytes. That is
-	# the all-or-nothing contract being visible in the artifact, so it is asserted rather than
-	# described: an empty stdout counts as three zeros only when the run failed, and a failed run
-	# that nevertheless printed a document is a contract break. That used to be a comment claiming
-	# the second half while the code let `{"findings":[]}` match a 0/0/0 row and pass.
-	if [[ -s "$RUNS_DIR/$name.json" && "$got_exit" == 2 ]]; then
-		echo "FAIL $name: exit 2 but stdout holds a document; a tree that was not fully measured" \
-			"must report no findings at all" >&2
+	# This replaces two branches that grew around the old all-or-nothing contract, where exit 2 was
+	# the *expected* answer for `crewAI-full` and an empty stdout counted as three zeros.
+	if [[ "$got_exit" == 2 ]]; then
+		echo "FAIL $name: exit 2 — the run could not start at all. stderr:" >&2
+		head -3 "$RUNS_DIR/$name.err" >&2
 		failures=$((failures + 1))
 		continue
 	fi
 
-	if [[ ! -s "$RUNS_DIR/$name.json" && "$got_exit" == 2 ]]; then
-		got1=0 got2=0 got3=0
-		printf '%-28s %6s %8s %8s %8s %8s\n' "$name" "$got_exit" "$got_files" "$got1" "$got2" "$got3"
-		if [[ "$got_exit" != "$want_exit" || "0|0|0" != "$want1|$want2|$want3" ]]; then
-			echo "FAIL $name: expected exit=$want_exit TPX001=$want1 TPX002=$want2 TPX003=$want3," \
-				"got exit=2 and no output document" >&2
-			failures=$((failures + 1))
-		fi
-		if [[ "$name" == "crewAI-full" ]]; then
-			named="$(grep -c 'could not parse Python source' "$RUNS_DIR/$name.err" || true)"
-			if [[ "$named" != "${#CREWAI_UNPARSEABLE[@]}" ]]; then
-				echo "FAIL $name: stderr names $named unparsable files, expected ${#CREWAI_UNPARSEABLE[@]}" >&2
-				failures=$((failures + 1))
-			fi
-			for template in "${CREWAI_UNPARSEABLE[@]}"; do
-				if ! grep -qF "$template: could not parse" "$RUNS_DIR/$name.err"; then
-					echo "FAIL $name: exit 2 was not the approved Jinja-template failure —" \
-						"$template is not named in stderr" >&2
-					failures=$((failures + 1))
-				fi
-			done
-		fi
-		continue
-	fi
-
-	read -r got1 got2 got3 <<<"$(jq -r '
+	# Count from the JSON document rather than from the exit code or from stdout line counts: the
+	# artifact is what the next task reads, so the artifact is what gets graded. `complete` is read
+	# out of the same document rather than inferred from `skipped`, precisely so the two can be
+	# compared against each other below.
+	read -r got1 got2 got3 got_skipped got_complete <<<"$(jq -r '
 		[.findings[].code] as $codes |
 		[ ($codes | map(select(. == "TPX001")) | length),
 		  ($codes | map(select(. == "TPX002")) | length),
-		  ($codes | map(select(. == "TPX003")) | length) ] | @tsv
-	' "$RUNS_DIR/$name.json" 2>/dev/null || echo "?	?	?")"
+		  ($codes | map(select(. == "TPX003")) | length),
+		  (.skipped | length),
+		  (.complete | tostring) ] | @tsv
+	' "$RUNS_DIR/$name.json" 2>/dev/null || echo "?	?	?	?	?")"
 
-	printf '%-28s %6s %8s %8s %8s %8s\n' "$name" "$got_exit" "$got_files" "$got1" "$got2" "$got3"
+	printf '%-28s %6s %8s %8s %8s %8s %8s\n' \
+		"$name" "$got_exit" "$got_files" "$got_skipped" "$got1" "$got2" "$got3"
 
-	if [[ "$got_exit" != "$want_exit" || "$got1" != "$want1" || "$got2" != "$want2" || "$got3" != "$want3" ]]; then
-		echo "FAIL $name: expected exit=$want_exit TPX001=$want1 TPX002=$want2 TPX003=$want3," \
-			"got exit=$got_exit TPX001=$got1 TPX002=$got2 TPX003=$got3" >&2
+	if [[ "$got_exit" != "$want_exit" || "$got_skipped" != "$want_skipped" \
+		|| "$got1" != "$want1" || "$got2" != "$want2" || "$got3" != "$want3" ]]; then
+		echo "FAIL $name: expected exit=$want_exit skipped=$want_skipped TPX001=$want1" \
+			"TPX002=$want2 TPX003=$want3, got exit=$got_exit skipped=$got_skipped" \
+			"TPX001=$got1 TPX002=$got2 TPX003=$got3" >&2
 		failures=$((failures + 1))
+	fi
+
+	# The flag against the list it is supposed to summarise. Graded here rather than trusted because
+	# a document that says it is whole while carrying skipped files is the one failure that would
+	# otherwise be invisible: the counts above still match, and the exit code does not move.
+	want_complete=true
+	[[ "$got_skipped" != 0 ]] && want_complete=false
+	if [[ "$got_complete" != "$want_complete" ]]; then
+		echo "FAIL $name: the document reports complete=$got_complete beside $got_skipped" \
+			"skipped file(s)" >&2
+		failures=$((failures + 1))
+	fi
+
+	# The approved five, by name. Only `crewAI-full` has any, and this is what pins them to being
+	# the SAME five rather than merely five of something.
+	if [[ "$name" == "crewAI-full" ]]; then
+		for template in "${CREWAI_UNPARSEABLE[@]}"; do
+			if ! jq -e --arg p "$template" 'any(.skipped[]; .path == $p)' \
+				"$RUNS_DIR/$name.json" >/dev/null; then
+				echo "FAIL $name: $template is not in the document's skipped list, so the five" \
+					"unreadable files are not the approved Jinja templates" >&2
+				failures=$((failures + 1))
+			fi
+		done
 	fi
 done
 

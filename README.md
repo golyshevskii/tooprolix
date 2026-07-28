@@ -35,13 +35,50 @@ similarity measure does not have, so `weakest a ~ b` is the pair to read first �
 twenty addresses that is the difference between a finding and a hint.
 
 Findings go to stdout and diagnostics to stderr, sorted by address and byte-identical between runs.
-`--format json` writes one versioned document — `{"schema_version", "findings"}` — including on a
-clean run, so a consumer never has to tell an empty result from a crash.
 
-The exit code is the contract: **0** nothing to report, **1** findings were printed, **2** the tree
-could not be read — a bad path, a file that does not parse, or a broken `[tool.tooprolix]`. A failed
-run prints *no* findings at all: a partial list from a tree that was never fully measured reads as a
-verdict on it.
+The exit code is the contract:
+
+| state | code |
+| --- | --- |
+| the tree was read whole, nothing to report | **0** |
+| the tree was read whole, findings were printed | **1** |
+| part of the tree could not be read — with or without findings | **1** |
+| the run could not start: a bad path, a broken `[tool.tooprolix]` | **2** |
+
+A file that does not parse, or that cannot be opened, does not fail the run: it is named on stderr
+with the reason, the rest of the tree is still checked, and the findings that were reachable are
+printed. **A tree that was not read whole never exits 0** — that guarantee is what makes the rest
+safe, so "no findings" and "not fully measured" are never the same answer.
+
+### The JSON document
+
+`--format json` writes one versioned document, including on a clean run, so a consumer never has to
+tell an empty result from a crash. Since exit 1 no longer distinguishes "the prose is bad" from "the
+measurement is incomplete", this is the only channel that carries completeness — all five keys are
+present on **every** document, `schema_version` is now `"2"`, and a v1 consumer fails loudly on it
+rather than silently reading a partial result as a whole one:
+
+```json
+{
+  "schema_version": "2",
+  "complete": false,
+  "skipped": [{"path": "vendor/fixture.py", "reason": "could not parse Python source: …"}],
+  "excluded": ["tests/fixtures"],
+  "findings": []
+}
+```
+
+`skipped` is a **refusal** — the tool tried to read the file and could not — and it is the only thing
+that sets `complete` to `false`. `excluded` is a **boundary**: `exclude` says a tree was never in
+scope, so inside that scope the measurement really is whole and the text output stays silent about
+it. A pruned directory appears as one path, not as the subtree behind it.
+
+> [!IMPORTANT]
+> On a `complete: false` document, `TPX003` clusters are a **different graph** — not the same
+> duplicates minus a file. `TPX003` is cross-file by construction, so a missing block may have been
+> the only bridge between two components: clusters that were one become two, and a cluster that falls
+> below two members disappears entirely. Do not diff the findings of a partial run against a whole
+> one and read the difference as churn in the repository. It is churn in the input set.
 
 > [!NOTE]
 > `tooprolix` is under active development. The prose extractor, all three shipping detectors
