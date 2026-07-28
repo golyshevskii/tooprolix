@@ -1,5 +1,8 @@
 {
-  "schema_version": "1",
+  "schema_version": "2",
+  "complete": true,
+  "skipped": [],
+  "excluded": [],
   "findings": [
     {
       "code": "TPX003",
@@ -414,7 +417,7 @@
       "line": 1,
       "end_line": 63,
       "prose_kind": "docstring",
-      "message": "openai-agents-python/examples/memory/dapr_session_example.py:1: TPX002 docstring is 557 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "openai-agents-python/examples/memory/dapr_session_example.py:1: TPX002 docstring is 557 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 557,
       "max_volume": 200
     },
@@ -695,7 +698,7 @@
       "line": 91,
       "end_line": 123,
       "prose_kind": "comment",
-      "message": "openai-agents-python/examples/sandbox/memory.py:91: TPX001 comment is 257 words long, over the 150-word limit — shorten it, or mark it with `# tooprolix: noqa TPX001` on the line above it",
+      "message": "openai-agents-python/examples/sandbox/memory.py:91: TPX001 comment is 257 words long, over the 150-word limit — shorten it, or mark it with `# !TPX001` on the line above it",
       "words": 257,
       "max_volume": 150
     },
@@ -742,7 +745,7 @@
       "line": 573,
       "end_line": 601,
       "prose_kind": "docstring",
-      "message": "openai-agents-python/src/agents/agent.py:573: TPX002 docstring is 307 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "openai-agents-python/src/agents/agent.py:573: TPX002 docstring is 307 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 307,
       "max_volume": 200
     },
@@ -1311,7 +1314,7 @@
       "line": 250,
       "end_line": 270,
       "prose_kind": "docstring",
-      "message": "openai-agents-python/src/agents/mcp/server.py:250: TPX002 docstring is 208 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "openai-agents-python/src/agents/mcp/server.py:250: TPX002 docstring is 208 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 208,
       "max_volume": 200
     },
@@ -1321,7 +1324,7 @@
       "line": 569,
       "end_line": 602,
       "prose_kind": "docstring",
-      "message": "openai-agents-python/src/agents/mcp/server.py:569: TPX002 docstring is 333 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "openai-agents-python/src/agents/mcp/server.py:569: TPX002 docstring is 333 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 333,
       "max_volume": 200
     },
@@ -1380,7 +1383,7 @@
       "line": 1183,
       "end_line": 1221,
       "prose_kind": "docstring",
-      "message": "openai-agents-python/src/agents/mcp/server.py:1183: TPX002 docstring is 410 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "openai-agents-python/src/agents/mcp/server.py:1183: TPX002 docstring is 410 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 410,
       "max_volume": 200
     },
@@ -1390,7 +1393,7 @@
       "line": 1308,
       "end_line": 1348,
       "prose_kind": "docstring",
-      "message": "openai-agents-python/src/agents/mcp/server.py:1308: TPX002 docstring is 393 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "openai-agents-python/src/agents/mcp/server.py:1308: TPX002 docstring is 393 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 393,
       "max_volume": 200
     },
@@ -1400,7 +1403,7 @@
       "line": 1448,
       "end_line": 1489,
       "prose_kind": "docstring",
-      "message": "openai-agents-python/src/agents/mcp/server.py:1448: TPX002 docstring is 406 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "openai-agents-python/src/agents/mcp/server.py:1448: TPX002 docstring is 406 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 406,
       "max_volume": 200
     },
@@ -1447,7 +1450,7 @@
       "line": 490,
       "end_line": 525,
       "prose_kind": "docstring",
-      "message": "openai-agents-python/src/agents/models/chatcmpl_converter.py:490: TPX002 docstring is 283 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "openai-agents-python/src/agents/models/chatcmpl_converter.py:490: TPX002 docstring is 283 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 283,
       "max_volume": 200
     },
@@ -1531,7 +1534,7 @@
       "line": 94,
       "end_line": 133,
       "prose_kind": "docstring",
-      "message": "openai-agents-python/src/agents/models/multi_provider.py:94: TPX002 docstring is 370 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "openai-agents-python/src/agents/models/multi_provider.py:94: TPX002 docstring is 370 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 370,
       "max_volume": 200
     },
@@ -1615,7 +1618,7 @@
       "line": 62,
       "end_line": 89,
       "prose_kind": "docstring",
-      "message": "openai-agents-python/src/agents/models/openai_provider.py:62: TPX002 docstring is 249 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "openai-agents-python/src/agents/models/openai_provider.py:62: TPX002 docstring is 249 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 249,
       "max_volume": 200
     },
@@ -1705,7 +1708,7 @@
       "line": 219,
       "end_line": 270,
       "prose_kind": "docstring",
-      "message": "openai-agents-python/src/agents/run.py:219: TPX002 docstring is 403 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "openai-agents-python/src/agents/run.py:219: TPX002 docstring is 403 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 403,
       "max_volume": 200
     },
@@ -1715,7 +1718,7 @@
       "line": 303,
       "end_line": 352,
       "prose_kind": "docstring",
-      "message": "openai-agents-python/src/agents/run.py:303: TPX002 docstring is 375 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "openai-agents-python/src/agents/run.py:303: TPX002 docstring is 375 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 375,
       "max_volume": 200
     },
@@ -1725,7 +1728,7 @@
       "line": 385,
       "end_line": 431,
       "prose_kind": "docstring",
-      "message": "openai-agents-python/src/agents/run.py:385: TPX002 docstring is 340 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "openai-agents-python/src/agents/run.py:385: TPX002 docstring is 340 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 340,
       "max_volume": 200
     },
@@ -1809,7 +1812,7 @@
       "line": 137,
       "end_line": 148,
       "prose_kind": "comment",
-      "message": "openai-agents-python/src/agents/sandbox/sandboxes/docker.py:137: TPX001 comment is 151 words long, over the 150-word limit — shorten it, or mark it with `# tooprolix: noqa TPX001` on the line above it",
+      "message": "openai-agents-python/src/agents/sandbox/sandboxes/docker.py:137: TPX001 comment is 151 words long, over the 150-word limit — shorten it, or mark it with `# !TPX001` on the line above it",
       "words": 151,
       "max_volume": 150
     },
@@ -1819,7 +1822,7 @@
       "line": 2277,
       "end_line": 2330,
       "prose_kind": "docstring",
-      "message": "openai-agents-python/src/agents/tool.py:2277: TPX002 docstring is 577 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "openai-agents-python/src/agents/tool.py:2277: TPX002 docstring is 577 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 577,
       "max_volume": 200
     },

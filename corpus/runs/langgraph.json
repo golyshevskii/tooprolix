@@ -1,5 +1,8 @@
 {
-  "schema_version": "1",
+  "schema_version": "2",
+  "complete": true,
+  "skipped": [],
+  "excluded": [],
   "findings": [
     {
       "code": "TPX003",
@@ -656,7 +659,7 @@
       "line": 175,
       "end_line": 198,
       "prose_kind": "comment",
-      "message": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/base.py:175: TPX001 comment is 187 words long, over the 150-word limit — shorten it, or mark it with `# tooprolix: noqa TPX001` on the line above it",
+      "message": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/base.py:175: TPX001 comment is 187 words long, over the 150-word limit — shorten it, or mark it with `# !TPX001` on the line above it",
       "words": 187,
       "max_volume": 150
     },
@@ -820,7 +823,7 @@
       "line": 43,
       "end_line": 118,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/checkpoint-postgres/langgraph/store/postgres/aio.py:43: TPX002 docstring is 339 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/checkpoint-postgres/langgraph/store/postgres/aio.py:43: TPX002 docstring is 339 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 339,
       "max_volume": 200
     },
@@ -1076,7 +1079,7 @@
       "line": 664,
       "end_line": 739,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/checkpoint-postgres/langgraph/store/postgres/base.py:664: TPX002 docstring is 327 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/checkpoint-postgres/langgraph/store/postgres/base.py:664: TPX002 docstring is 327 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 327,
       "max_volume": 200
     },
@@ -1345,7 +1348,7 @@
       "line": 39,
       "end_line": 113,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/aio.py:39: TPX002 docstring is 353 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/aio.py:39: TPX002 docstring is 353 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 353,
       "max_volume": 200
     },
@@ -1540,7 +1543,7 @@
       "line": 708,
       "end_line": 769,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/checkpoint-sqlite/langgraph/store/sqlite/base.py:708: TPX002 docstring is 225 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/checkpoint-sqlite/langgraph/store/sqlite/base.py:708: TPX002 docstring is 225 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 225,
       "max_volume": 200
     },
@@ -1888,7 +1891,7 @@
       "line": 380,
       "end_line": 414,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:380: TPX002 docstring is 213 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:380: TPX002 docstring is 213 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 213,
       "max_volume": 200
     },
@@ -2143,7 +2146,7 @@
       "line": 865,
       "end_line": 918,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/checkpoint/langgraph/store/base/__init__.py:865: TPX002 docstring is 301 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/checkpoint/langgraph/store/base/__init__.py:865: TPX002 docstring is 301 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 301,
       "max_volume": 200
     },
@@ -2227,7 +2230,7 @@
       "line": 1118,
       "end_line": 1179,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/checkpoint/langgraph/store/base/__init__.py:1118: TPX002 docstring is 316 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/checkpoint/langgraph/store/base/__init__.py:1118: TPX002 docstring is 316 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 316,
       "max_volume": 200
     },
@@ -2237,7 +2240,7 @@
       "line": 110,
       "end_line": 149,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/checkpoint/langgraph/store/base/embed.py:110: TPX002 docstring is 213 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/checkpoint/langgraph/store/base/embed.py:110: TPX002 docstring is 213 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 213,
       "max_volume": 200
     },
@@ -2284,7 +2287,7 @@
       "line": 1,
       "end_line": 100,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/checkpoint/langgraph/store/memory/__init__.py:1: TPX002 docstring is 298 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/checkpoint/langgraph/store/memory/__init__.py:1: TPX002 docstring is 298 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 298,
       "max_volume": 200
     },
@@ -2959,7 +2962,7 @@
       "line": 652,
       "end_line": 698,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/cli/langgraph_cli/config.py:652: TPX002 docstring is 371 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/cli/langgraph_cli/config.py:652: TPX002 docstring is 371 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 371,
       "max_volume": 200
     },
@@ -2969,7 +2972,7 @@
       "line": 830,
       "end_line": 865,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/cli/langgraph_cli/config.py:830: TPX002 docstring is 223 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/cli/langgraph_cli/config.py:830: TPX002 docstring is 223 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 223,
       "max_volume": 200
     },
@@ -3275,7 +3278,7 @@
       "line": 26,
       "end_line": 64,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/langgraph/channels/delta.py:26: TPX002 docstring is 258 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/langgraph/langgraph/channels/delta.py:26: TPX002 docstring is 258 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 258,
       "max_volume": 200
     },
@@ -3285,7 +3288,7 @@
       "line": 33,
       "end_line": 122,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/langgraph/config.py:33: TPX002 docstring is 278 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/langgraph/langgraph/config.py:33: TPX002 docstring is 278 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 278,
       "max_volume": 200
     },
@@ -3295,7 +3298,7 @@
       "line": 127,
       "end_line": 194,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/langgraph/config.py:127: TPX002 docstring is 237 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/langgraph/langgraph/config.py:127: TPX002 docstring is 237 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 237,
       "max_volume": 200
     },
@@ -3305,7 +3308,7 @@
       "line": 144,
       "end_line": 215,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/langgraph/func/__init__.py:144: TPX002 docstring is 381 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/langgraph/langgraph/func/__init__.py:144: TPX002 docstring is 381 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 381,
       "max_volume": 200
     },
@@ -3315,7 +3318,7 @@
       "line": 263,
       "end_line": 435,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/langgraph/func/__init__.py:263: TPX002 docstring is 847 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/langgraph/langgraph/func/__init__.py:263: TPX002 docstring is 847 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 847,
       "max_volume": 200
     },
@@ -3362,7 +3365,7 @@
       "line": 67,
       "end_line": 186,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/langgraph/graph/message.py:67: TPX002 docstring is 400 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/langgraph/langgraph/graph/message.py:67: TPX002 docstring is 400 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 400,
       "max_volume": 200
     },
@@ -3372,7 +3375,7 @@
       "line": 317,
       "end_line": 361,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/langgraph/graph/message.py:317: TPX002 docstring is 238 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/langgraph/langgraph/graph/message.py:317: TPX002 docstring is 238 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 238,
       "max_volume": 200
     },
@@ -3382,7 +3385,7 @@
       "line": 131,
       "end_line": 199,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/langgraph/graph/state.py:131: TPX002 docstring is 323 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/langgraph/langgraph/graph/state.py:131: TPX002 docstring is 323 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 323,
       "max_volume": 200
     },
@@ -3392,7 +3395,7 @@
       "line": 279,
       "end_line": 324,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/langgraph/graph/state.py:279: TPX002 docstring is 245 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/langgraph/langgraph/graph/state.py:279: TPX002 docstring is 245 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 245,
       "max_volume": 200
     },
@@ -3402,7 +3405,7 @@
       "line": 389,
       "end_line": 440,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/langgraph/graph/state.py:389: TPX002 docstring is 259 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/langgraph/langgraph/graph/state.py:389: TPX002 docstring is 259 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 259,
       "max_volume": 200
     },
@@ -3461,7 +3464,7 @@
       "line": 458,
       "end_line": 513,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/langgraph/graph/state.py:458: TPX002 docstring is 258 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/langgraph/langgraph/graph/state.py:458: TPX002 docstring is 258 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 258,
       "max_volume": 200
     },
@@ -3471,7 +3474,7 @@
       "line": 532,
       "end_line": 582,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/langgraph/graph/state.py:532: TPX002 docstring is 251 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/langgraph/langgraph/graph/state.py:532: TPX002 docstring is 251 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 251,
       "max_volume": 200
     },
@@ -3481,7 +3484,7 @@
       "line": 601,
       "end_line": 659,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/langgraph/graph/state.py:601: TPX002 docstring is 289 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/langgraph/langgraph/graph/state.py:601: TPX002 docstring is 289 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 289,
       "max_volume": 200
     },
@@ -3491,7 +3494,7 @@
       "line": 677,
       "end_line": 750,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/langgraph/graph/state.py:677: TPX002 docstring is 400 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/langgraph/langgraph/graph/state.py:677: TPX002 docstring is 400 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 400,
       "max_volume": 200
     },
@@ -3501,7 +3504,7 @@
       "line": 1176,
       "end_line": 1217,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/langgraph/graph/state.py:1176: TPX002 docstring is 247 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/langgraph/langgraph/graph/state.py:1176: TPX002 docstring is 247 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 247,
       "max_volume": 200
     },
@@ -4029,7 +4032,7 @@
       "line": 454,
       "end_line": 703,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/langgraph/pregel/main.py:454: TPX002 docstring is 892 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/langgraph/langgraph/pregel/main.py:454: TPX002 docstring is 892 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 892,
       "max_volume": 200
     },
@@ -4298,7 +4301,7 @@
       "line": 2673,
       "end_line": 2724,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/langgraph/pregel/main.py:2673: TPX002 docstring is 452 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/langgraph/langgraph/pregel/main.py:2673: TPX002 docstring is 452 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 452,
       "max_volume": 200
     },
@@ -4456,7 +4459,7 @@
       "line": 3081,
       "end_line": 3132,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/langgraph/pregel/main.py:3081: TPX002 docstring is 453 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/langgraph/langgraph/pregel/main.py:3081: TPX002 docstring is 453 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 453,
       "max_volume": 200
     },
@@ -4466,7 +4469,7 @@
       "line": 3650,
       "end_line": 3705,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/langgraph/pregel/main.py:3650: TPX002 docstring is 317 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/langgraph/langgraph/pregel/main.py:3650: TPX002 docstring is 317 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 317,
       "max_volume": 200
     },
@@ -4476,7 +4479,7 @@
       "line": 3852,
       "end_line": 3882,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/langgraph/pregel/main.py:3852: TPX002 docstring is 234 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/langgraph/langgraph/pregel/main.py:3852: TPX002 docstring is 234 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 234,
       "max_volume": 200
     },
@@ -4523,7 +4526,7 @@
       "line": 4029,
       "end_line": 4059,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/langgraph/pregel/main.py:4029: TPX002 docstring is 235 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/langgraph/langgraph/pregel/main.py:4029: TPX002 docstring is 235 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 235,
       "max_volume": 200
     },
@@ -4718,7 +4721,7 @@
       "line": 126,
       "end_line": 196,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/langgraph/runtime.py:126: TPX002 docstring is 291 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/langgraph/langgraph/runtime.py:126: TPX002 docstring is 291 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 291,
       "max_volume": 200
     },
@@ -4728,7 +4731,7 @@
       "line": 57,
       "end_line": 96,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/langgraph/stream/_mux.py:57: TPX002 docstring is 256 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/langgraph/langgraph/stream/_mux.py:57: TPX002 docstring is 256 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 256,
       "max_volume": 200
     },
@@ -4738,7 +4741,7 @@
       "line": 45,
       "end_line": 110,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/langgraph/stream/_types.py:45: TPX002 docstring is 478 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/langgraph/langgraph/stream/_types.py:45: TPX002 docstring is 478 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 478,
       "max_volume": 200
     },
@@ -4785,7 +4788,7 @@
       "line": 15,
       "end_line": 47,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/langgraph/stream/stream_channel.py:15: TPX002 docstring is 226 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/langgraph/langgraph/stream/stream_channel.py:15: TPX002 docstring is 226 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 226,
       "max_volume": 200
     },
@@ -4832,7 +4835,7 @@
       "line": 156,
       "end_line": 195,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/langgraph/stream/transformers.py:156: TPX002 docstring is 292 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/langgraph/langgraph/stream/transformers.py:156: TPX002 docstring is 292 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 292,
       "max_volume": 200
     },
@@ -4879,7 +4882,7 @@
       "line": 665,
       "end_line": 709,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/langgraph/types.py:665: TPX002 docstring is 248 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/langgraph/langgraph/types.py:665: TPX002 docstring is 248 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 248,
       "max_volume": 200
     },
@@ -4889,7 +4892,7 @@
       "line": 812,
       "end_line": 900,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/langgraph/types.py:812: TPX002 docstring is 412 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/langgraph/langgraph/types.py:812: TPX002 docstring is 412 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 412,
       "max_volume": 200
     },
@@ -4973,7 +4976,7 @@
       "line": 1,
       "end_line": 44,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/tests/test_delta_channel_migration.py:1: TPX002 docstring is 331 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/langgraph/tests/test_delta_channel_migration.py:1: TPX002 docstring is 331 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 331,
       "max_volume": 200
     },
@@ -5846,7 +5849,7 @@
       "line": 441,
       "end_line": 461,
       "prose_kind": "comment",
-      "message": "langgraph/libs/langgraph/tests/test_stream_lifecycle_transformer.py:441: TPX001 comment is 173 words long, over the 150-word limit — shorten it, or mark it with `# tooprolix: noqa TPX001` on the line above it",
+      "message": "langgraph/libs/langgraph/tests/test_stream_lifecycle_transformer.py:441: TPX001 comment is 173 words long, over the 150-word limit — shorten it, or mark it with `# !TPX001` on the line above it",
       "words": 173,
       "max_volume": 150
     },
@@ -7804,7 +7807,7 @@
       "line": 309,
       "end_line": 516,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/prebuilt/langgraph/prebuilt/chat_agent_executor.py:309: TPX002 docstring is 1370 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/prebuilt/langgraph/prebuilt/chat_agent_executor.py:309: TPX002 docstring is 1370 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 1370,
       "max_volume": 200
     },
@@ -7814,7 +7817,7 @@
       "line": 568,
       "end_line": 613,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/prebuilt/langgraph/prebuilt/tool_node.py:568: TPX002 docstring is 212 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/prebuilt/langgraph/prebuilt/tool_node.py:568: TPX002 docstring is 212 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 212,
       "max_volume": 200
     },
@@ -7824,7 +7827,7 @@
       "line": 623,
       "end_line": 739,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/prebuilt/langgraph/prebuilt/tool_node.py:623: TPX002 docstring is 521 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/prebuilt/langgraph/prebuilt/tool_node.py:623: TPX002 docstring is 521 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 521,
       "max_volume": 200
     },
@@ -7908,7 +7911,7 @@
       "line": 1321,
       "end_line": 1353,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/prebuilt/langgraph/prebuilt/tool_node.py:1321: TPX002 docstring is 225 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/prebuilt/langgraph/prebuilt/tool_node.py:1321: TPX002 docstring is 225 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 225,
       "max_volume": 200
     },
@@ -7918,7 +7921,7 @@
       "line": 1586,
       "end_line": 1647,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/prebuilt/langgraph/prebuilt/tool_node.py:1586: TPX002 docstring is 282 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/prebuilt/langgraph/prebuilt/tool_node.py:1586: TPX002 docstring is 282 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 282,
       "max_volume": 200
     },
@@ -7928,7 +7931,7 @@
       "line": 1664,
       "end_line": 1720,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/prebuilt/langgraph/prebuilt/tool_node.py:1664: TPX002 docstring is 242 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/prebuilt/langgraph/prebuilt/tool_node.py:1664: TPX002 docstring is 242 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 242,
       "max_volume": 200
     },
@@ -7938,7 +7941,7 @@
       "line": 1754,
       "end_line": 1822,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/prebuilt/langgraph/prebuilt/tool_node.py:1754: TPX002 docstring is 290 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/prebuilt/langgraph/prebuilt/tool_node.py:1754: TPX002 docstring is 290 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 290,
       "max_volume": 200
     },
@@ -7948,7 +7951,7 @@
       "line": 1830,
       "end_line": 1901,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/prebuilt/langgraph/prebuilt/tool_node.py:1830: TPX002 docstring is 300 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/prebuilt/langgraph/prebuilt/tool_node.py:1830: TPX002 docstring is 300 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 300,
       "max_volume": 200
     },
@@ -7958,7 +7961,7 @@
       "line": 48,
       "end_line": 114,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/prebuilt/langgraph/prebuilt/tool_validator.py:48: TPX002 docstring is 298 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/prebuilt/langgraph/prebuilt/tool_validator.py:48: TPX002 docstring is 298 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 298,
       "max_volume": 200
     },
@@ -8282,7 +8285,7 @@
       "line": 328,
       "end_line": 363,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:328: TPX002 docstring is 206 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:328: TPX002 docstring is 206 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 206,
       "max_volume": 200
     },
@@ -8403,7 +8406,7 @@
       "line": 543,
       "end_line": 582,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:543: TPX002 docstring is 224 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:543: TPX002 docstring is 224 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 224,
       "max_volume": 200
     },
@@ -8561,7 +8564,7 @@
       "line": 36,
       "end_line": 107,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/client.py:36: TPX002 docstring is 288 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/client.py:36: TPX002 docstring is 288 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 288,
       "max_volume": 200
     },
@@ -8571,7 +8574,7 @@
       "line": 87,
       "end_line": 142,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py:87: TPX002 docstring is 408 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py:87: TPX002 docstring is 408 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 408,
       "max_volume": 200
     },
@@ -8630,7 +8633,7 @@
       "line": 204,
       "end_line": 260,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py:204: TPX002 docstring is 435 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py:204: TPX002 docstring is 435 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 435,
       "max_volume": 200
     },
@@ -8677,7 +8680,7 @@
       "line": 349,
       "end_line": 391,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py:349: TPX002 docstring is 285 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py:349: TPX002 docstring is 285 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 285,
       "max_volume": 200
     },
@@ -8761,7 +8764,7 @@
       "line": 436,
       "end_line": 490,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py:436: TPX002 docstring is 201 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py:436: TPX002 docstring is 201 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 201,
       "max_volume": 200
     },
@@ -8882,7 +8885,7 @@
       "line": 227,
       "end_line": 305,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:227: TPX002 docstring is 618 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:227: TPX002 docstring is 618 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 618,
       "max_volume": 200
     },
@@ -8929,7 +8932,7 @@
       "line": 448,
       "end_line": 560,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:448: TPX002 docstring is 555 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:448: TPX002 docstring is 555 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 555,
       "max_volume": 200
     },
@@ -8976,7 +8979,7 @@
       "line": 706,
       "end_line": 794,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:706: TPX002 docstring is 493 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:706: TPX002 docstring is 493 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 493,
       "max_volume": 200
     },
@@ -10558,7 +10561,7 @@
       "line": 495,
       "end_line": 594,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:495: TPX002 docstring is 298 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:495: TPX002 docstring is 298 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 298,
       "max_volume": 200
     },
@@ -10679,7 +10682,7 @@
       "line": 332,
       "end_line": 367,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:332: TPX002 docstring is 205 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:332: TPX002 docstring is 205 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 205,
       "max_volume": 200
     },
@@ -10689,7 +10692,7 @@
       "line": 545,
       "end_line": 583,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:545: TPX002 docstring is 215 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:545: TPX002 docstring is 215 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 215,
       "max_volume": 200
     },
@@ -10699,7 +10702,7 @@
       "line": 81,
       "end_line": 133,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_sync/cron.py:81: TPX002 docstring is 403 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_sync/cron.py:81: TPX002 docstring is 403 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 403,
       "max_volume": 200
     },
@@ -10709,7 +10712,7 @@
       "line": 194,
       "end_line": 250,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_sync/cron.py:194: TPX002 docstring is 434 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_sync/cron.py:194: TPX002 docstring is 434 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 434,
       "max_volume": 200
     },
@@ -10719,7 +10722,7 @@
       "line": 338,
       "end_line": 380,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_sync/cron.py:338: TPX002 docstring is 285 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_sync/cron.py:338: TPX002 docstring is 285 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 285,
       "max_volume": 200
     },
@@ -10729,7 +10732,7 @@
       "line": 227,
       "end_line": 301,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:227: TPX002 docstring is 607 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:227: TPX002 docstring is 607 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 607,
       "max_volume": 200
     },
@@ -10739,7 +10742,7 @@
       "line": 443,
       "end_line": 555,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:443: TPX002 docstring is 557 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:443: TPX002 docstring is 557 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 557,
       "max_volume": 200
     },
@@ -10749,7 +10752,7 @@
       "line": 701,
       "end_line": 791,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:701: TPX002 docstring is 491 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:701: TPX002 docstring is 491 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 491,
       "max_volume": 200
     },
@@ -10759,7 +10762,7 @@
       "line": 486,
       "end_line": 584,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:486: TPX002 docstring is 278 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:486: TPX002 docstring is 278 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 278,
       "max_volume": 200
     },
@@ -10769,7 +10772,7 @@
       "line": 14,
       "end_line": 107,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/auth/__init__.py:14: TPX002 docstring is 468 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/auth/__init__.py:14: TPX002 docstring is 468 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 468,
       "max_volume": 200
     },
@@ -10779,7 +10782,7 @@
       "line": 226,
       "end_line": 295,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/auth/__init__.py:226: TPX002 docstring is 276 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/auth/__init__.py:226: TPX002 docstring is 276 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 276,
       "max_volume": 200
     },
@@ -10789,7 +10792,7 @@
       "line": 682,
       "end_line": 739,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/auth/__init__.py:682: TPX002 docstring is 277 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/auth/__init__.py:682: TPX002 docstring is 277 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 277,
       "max_volume": 200
     },
@@ -10799,7 +10802,7 @@
       "line": 101,
       "end_line": 131,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/cache.py:101: TPX002 docstring is 210 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/cache.py:101: TPX002 docstring is 210 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 210,
       "max_volume": 200
     },
@@ -10809,7 +10812,7 @@
       "line": 202,
       "end_line": 356,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/encryption/__init__.py:202: TPX002 docstring is 683 words long, over the 200-word limit — shorten it, or mark it with `# tooprolix: noqa TPX002` on the line above it",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/encryption/__init__.py:202: TPX002 docstring is 683 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 683,
       "max_volume": 200
     },

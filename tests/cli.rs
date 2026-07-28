@@ -2473,6 +2473,11 @@ fn an_unreadable_directory_inside_the_tree_is_skipped_rather_than_fatal() {
     std::fs::create_dir(&locked).expect("a scratch directory is creatable");
     std::fs::write(locked.join("hidden.py"), SHARED_RATIONALE).expect("writable");
     std::fs::set_permissions(&locked, std::fs::Permissions::from_mode(0o000)).expect("chmod");
+    // The mode bits are the whole fixture, and root ignores them. Without this the test does not
+    // fail as root — it silently stops testing anything, walks a perfectly readable directory and
+    // passes every assertion for the wrong reason. Sampled here rather than after the run, because
+    // by then the permissions are already restored.
+    let root_ignores_the_mode_bits = std::fs::read_dir(&locked).is_ok();
 
     // Act
     let inside = scratch.check(&["--format", "json"]);
@@ -2489,7 +2494,14 @@ fn an_unreadable_directory_inside_the_tree_is_skipped_rather_than_fatal() {
     std::fs::set_permissions(&scratch.root, std::fs::Permissions::from_mode(0o755)).expect("chmod");
     std::fs::set_permissions(&locked, std::fs::Permissions::from_mode(0o755)).expect("chmod");
 
-    // Assert — mid-walk: the run continues, reports what it read, and never exits 0 ...
+    // Assert — the fixture only means anything if `chmod 000` actually stopped someone.
+    assert!(
+        !root_ignores_the_mode_bits,
+        "a `chmod 000` directory is still readable to this user (running as root?), so neither \
+         half of this test proves anything"
+    );
+
+    // Mid-walk: the run continues, reports what it read, and never exits 0 ...
     assert_eq!(
         inside.status.code(),
         Some(1),
