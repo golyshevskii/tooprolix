@@ -112,10 +112,12 @@ mod tooprolix {
     ///
     /// # Errors
     ///
-    /// Only if `sys.argv` cannot be read or its entries are not strings. Every *linting* failure is
-    /// already reported on stderr and reduced to exit code 2 by [`crate::cli::status`]; it does not
-    /// surface as a Python exception, because a linter that raised a traceback instead of exiting 2
-    /// would be a different contract from the standalone binary's.
+    /// Only if `sys.argv` cannot be read or its entries are not strings. Everything else is already
+    /// reported on stderr and reduced to a number by [`crate::cli::status`] — a file that cannot be
+    /// read is exit 1 with the rest of the tree still checked, and only a run that could not start
+    /// is exit 2. None of it surfaces as a Python exception, because a linter that raised a
+    /// traceback instead of returning a code would be a different contract from the standalone
+    /// binary's.
     #[pyfunction]
     pub(crate) fn main(py: Python<'_>) -> PyResult<i32> {
         let argv: Vec<OsString> = py.import("sys")?.getattr("argv")?.extract()?;

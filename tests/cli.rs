@@ -33,9 +33,13 @@ fn stderr_of(output: &Output) -> &str {
     std::str::from_utf8(&output.stderr).expect("the CLI writes UTF-8")
 }
 
-/// The exit contract, all three codes, on three fixtures that are each capable of the other two
-/// answers — which is what stops this from being three tests that all pass on a CLI that always
-/// exits 0.
+/// The exit contract, all three codes, on fixtures that are each capable of the other two answers —
+/// which is what stops this from being three tests that all pass on a CLI that always exits 0.
+///
+/// The `broken` tree is the row that changed: it used to be the exit-2 case and is now the partial
+/// one, so exit 2 is proved on the only thing left that produces it — a run that cannot start at
+/// all. Keeping `broken` here, in the same test, is what makes the narrowing visible rather than
+/// merely asserted somewhere else.
 #[test]
 fn the_exit_code_says_which_of_the_three_outcomes_happened() {
     // Arrange — the fixtures exist, and a missing one must fail here rather than silently make
@@ -49,6 +53,7 @@ fn the_exit_code_says_which_of_the_three_outcomes_happened() {
     let clean = tooprolix(&["check", "tests/fixtures/clean"]);
     let findings = tooprolix(&["check", "tests/fixtures/dup-corpus"]);
     let broken = tooprolix(&["check", "tests/fixtures/broken"]);
+    let cannot_start = tooprolix(&["check", "tests/fixtures/does-not-exist"]);
 
     // Assert
     assert_eq!(clean.status.code(), Some(0), "clean: {clean:?}");
@@ -64,11 +69,11 @@ fn the_exit_code_says_which_of_the_three_outcomes_happened() {
         "exit 1 with an empty stdout is a finding nobody can act on"
     );
 
-    assert_eq!(broken.status.code(), Some(2), "broken: {broken:?}");
-    assert_eq!(
-        stdout_of(&broken),
-        "",
-        "a run that could not read the tree must not print findings: {:?}",
+    // A tree holding one unparsable file is measured as far as it goes and is never 0 ...
+    assert_eq!(broken.status.code(), Some(1), "broken: {broken:?}");
+    assert!(
+        stdout_of(&broken).contains("TPX002"),
+        "the finding of the file that parsed is still being withheld: {:?}",
         stdout_of(&broken)
     );
     assert!(
@@ -76,21 +81,34 @@ fn the_exit_code_says_which_of_the_three_outcomes_happened() {
         "the reason must name the file: {:?}",
         stderr_of(&broken)
     );
+
+    // ... and 2 is left meaning only that the run never got started.
+    assert_eq!(
+        cannot_start.status.code(),
+        Some(2),
+        "cannot start: {cannot_start:?}"
+    );
+    assert_eq!(stdout_of(&cannot_start), "");
 }
 
-/// The broken tree holds a file that *would* be a finding, and the tool must withhold it.
+/// The broken tree holds a file that *would* be a finding, and the tool must now report it.
 ///
-/// Without this the AC2 fixture could pass on a CLI that reports findings and merely adds an exit
-/// code, which is the "a parser error looks like clean" defect one layer out: the user would read
-/// a partial list as the state of the repository.
+/// **This test used to assert the exact opposite**, under the name
+/// `a_parse_failure_withholds_the_findings_of_the_files_that_did_parse`, and it was right to: 0.1.0
+/// withheld everything on the reasoning that a partial list reads as the state of the repository.
+/// The reversal is deliberate, was reserved from the start, and is kept as an inversion rather than
+/// a deletion so the contract that changed is visible in the suite instead of merely absent from it.
+///
+/// The withheld finding is proved real by asking for it on its own first — otherwise this passes on
+/// a build where the fixture never had anything to report.
 #[test]
-fn a_parse_failure_withholds_the_findings_of_the_files_that_did_parse() {
-    // Arrange — prove the withheld finding is real by asking for it on its own.
+fn a_parse_failure_no_longer_withholds_the_findings_of_the_files_that_did_parse() {
+    // Arrange
     let reachable = tooprolix(&["check", "tests/fixtures/broken/long_docstring.py"]);
     assert_eq!(reachable.status.code(), Some(1), "{reachable:?}");
     assert!(
         stdout_of(&reachable).contains("TPX002"),
-        "the fixture cannot demonstrate withholding if it has nothing to withhold: {:?}",
+        "the fixture has nothing to withhold or to report: {:?}",
         stdout_of(&reachable)
     );
 
@@ -98,11 +116,16 @@ fn a_parse_failure_withholds_the_findings_of_the_files_that_did_parse() {
     let whole_tree = tooprolix(&["check", "tests/fixtures/broken"]);
 
     // Assert
-    assert_eq!(whole_tree.status.code(), Some(2), "{whole_tree:?}");
+    assert_eq!(whole_tree.status.code(), Some(1), "{whole_tree:?}");
     assert!(
-        !stdout_of(&whole_tree).contains("TPX002"),
-        "a finding survived a failed run: {:?}",
+        stdout_of(&whole_tree).contains("TPX002"),
+        "the finding of the file that parsed did not survive its broken sibling: {:?}",
         stdout_of(&whole_tree)
+    );
+    assert!(
+        stderr_of(&whole_tree).contains("syntax_error.py"),
+        "the run reported findings without saying part of the tree went unread: {:?}",
+        stderr_of(&whole_tree)
     );
 }
 
@@ -338,7 +361,7 @@ fn the_json_document_is_valid_versioned_and_carries_both_shapes() {
     let document: serde_json::Value =
         serde_json::from_str(stdout_of(&output)).expect("stdout is one JSON document");
 
-    assert_eq!(document["schema_version"], "1");
+    assert_eq!(document["schema_version"], "2");
     let findings = document["findings"]
         .as_array()
         .expect("findings is an array");
@@ -404,7 +427,7 @@ fn the_json_document_parses_in_python() {
             "run",
             "python3",
             "-c",
-            "import json,sys; d=json.load(sys.stdin); print(d['schema_version'], len(d['findings']))",
+            "import json,sys; d=json.load(sys.stdin); print(d['schema_version'], len(d['findings']), d['complete'])",
         ])
         .current_dir(repository_root())
         .stdin(std::process::Stdio::piped())
@@ -422,7 +445,10 @@ fn the_json_document_parses_in_python() {
         .expect("uv run python3 is available in this environment");
 
     assert!(python.status.success(), "{python:?}");
-    assert_eq!(stdout_of(&python).trim(), "1 3");
+    // `complete` is read by the same key lookup as the other two, so a document that lost the field
+    // raises `KeyError` in the consumer rather than reading as fully measured — which is exactly
+    // what the schema bump exists to make happen on the far end.
+    assert_eq!(stdout_of(&python).trim(), "2 3 True");
 }
 
 /// AC4 — the paired opt-out, end to end.
@@ -1138,7 +1164,7 @@ fn a_clean_run_is_silent_in_text_and_an_empty_document_in_json() {
     assert_eq!(json.status.code(), Some(0), "{json:?}");
     let document: serde_json::Value =
         serde_json::from_str(stdout_of(&json)).expect("a clean run still emits one JSON document");
-    assert_eq!(document["schema_version"], "1");
+    assert_eq!(document["schema_version"], "2");
     assert_eq!(
         document["findings"].as_array().map(std::vec::Vec::len),
         Some(0)
@@ -1186,15 +1212,17 @@ fn an_excluded_unparsable_file_is_not_a_measurement_failure() {
     );
     let after = scratch.check(&[]);
 
-    // Assert
+    // Assert — the "before" run is exit 1 and not 2 since the graceful change, but the half this
+    // test needs is unchanged: the unparsable file is visible in the run's answer, so excluding it
+    // is demonstrably a change and not a no-op.
     assert_eq!(
         before.status.code(),
-        Some(2),
+        Some(1),
         "the fixture cannot demonstrate an exclusion it never triggers: {before:?}"
     );
     assert!(
         stderr_of(&before).contains("parser_fixture.py"),
-        "the unparsable file is not the reason the run failed: {:?}",
+        "the unparsable file went unreported, so there is nothing for `exclude` to remove: {:?}",
         stderr_of(&before)
     );
 
@@ -1856,4 +1884,569 @@ fn an_exclude_entry_that_can_never_match_is_refused() {
             stderr_of(&output)
         );
     }
+}
+
+// ---------------------------------------------------------------------------------------------
+// Graceful degradation — a file that cannot be read is a diagnostic, not a refusal.
+//
+// This is the ruff path, taken deliberately and against this crate's own 0.1.0 decision: a file
+// that does not parse used to take the whole run down (exit 2, zero findings, the findings of every
+// file that DID parse withheld). The reversal was reserved from the start — "strictness is later
+// relaxed without breaking the contract, never the other way round" — and it is what makes the tool
+// usable on a repository that legitimately holds invalid Python without configuring anything.
+//
+// The single condition under which it is acceptable, and the thing every test below exists to hold:
+// **a partial run NEVER exits 0.** A tree that was not fully read must not be able to look green.
+// The exit code alone cannot say WHY it is 1 — "prose is bad" and "measurement is incomplete" are
+// now the same number — so completeness moves into the machine-readable channel, which is why the
+// JSON schema went to version 2 in the same change.
+//
+// `skipped` and `excluded` are two channels and never one: `skipped` is a REFUSAL (the tool tried to
+// read the file and could not), `excluded` is a BOUNDARY (the project said not to look). Only the
+// first makes a run incomplete.
+// ---------------------------------------------------------------------------------------------
+
+/// The unparsable file this section uses everywhere, and it must be unparsable for a *syntax*
+/// reason rather than because it is missing — otherwise the walk never yields it at all.
+const UNPARSABLE: &str = "def settle(:\n    pass\n";
+
+/// Parses the JSON document on stdout, failing loudly with the bytes if it is not one.
+fn document_of(output: &Output) -> serde_json::Value {
+    serde_json::from_str(stdout_of(output)).unwrap_or_else(|error| {
+        panic!(
+            "stdout is not one JSON document ({error}): {:?} / stderr {:?}",
+            stdout_of(output),
+            stderr_of(output)
+        )
+    })
+}
+
+/// AC1 — the finding of a file that parsed survives a sibling that did not.
+///
+/// This is the exact inversion of what 0.1.0 guaranteed, and both halves are asserted in both
+/// formats because either one alone is satisfiable by the wrong build: printing the finding without
+/// naming the broken file is silently partial, and naming the broken file without printing the
+/// finding is the old behaviour with a friendlier message.
+#[test]
+fn a_broken_file_no_longer_hides_the_findings_of_the_files_that_parsed() {
+    // Arrange
+    let scratch = Scratch::new("graceful-ac1");
+    scratch.write("broken.py", UNPARSABLE);
+    scratch.write("fat.py", &long_comment("retry policy"));
+
+    // Act
+    let text = scratch.check(&[]);
+    let json = scratch.check(&["--format", "json"]);
+
+    // Assert — the finding is printed ...
+    assert_eq!(text.status.code(), Some(1), "{text:?}");
+    assert!(
+        stdout_of(&text).contains("fat.py:1: TPX001"),
+        "the finding of the file that parsed was withheld: {:?}",
+        stdout_of(&text)
+    );
+    // ... and the file that did not parse is named, with the reason.
+    assert!(
+        stderr_of(&text).contains("1 file(s) skipped:") && stderr_of(&text).contains("broken.py"),
+        "the skipped file is not named: {:?}",
+        stderr_of(&text)
+    );
+    assert!(
+        stderr_of(&text).contains("could not parse Python source"),
+        "the skipped file is named without a reason: {:?}",
+        stderr_of(&text)
+    );
+
+    // The JSON half is the same run through the other format, not a different claim.
+    assert_eq!(json.status.code(), Some(1), "{json:?}");
+    let document = document_of(&json);
+    assert_eq!(document["schema_version"], "2");
+    assert_eq!(document["complete"], false);
+    assert_eq!(document["findings"][0]["code"], "TPX001");
+    assert_eq!(
+        document["skipped"].as_array().map(Vec::len),
+        Some(1),
+        "{document}"
+    );
+    assert!(
+        document["skipped"][0]["path"]
+            .as_str()
+            .is_some_and(|path| path.ends_with("broken.py")),
+        "{document}"
+    );
+    assert!(
+        stderr_of(&json).contains("broken.py"),
+        "the JSON run said nothing on stderr about the file it could not read: {:?}",
+        stderr_of(&json)
+    );
+}
+
+/// **The guarantee the whole reversal was accepted on: a partial run never exits 0.**
+///
+/// The fixture is built so that every *other* signal says "clean": the only readable file has no
+/// findings at all, so stdout is empty and a tool that simply skipped the broken file and carried on
+/// would print nothing and exit 0 — indistinguishable from a repository that was measured and found
+/// good. That is the outcome this exists to make impossible.
+///
+/// Asserted on the code and not merely on `!= 0`: 2 would mean the reversal never happened.
+#[test]
+fn a_partial_run_never_exits_zero_even_with_nothing_to_report() {
+    // Arrange
+    let scratch = Scratch::new("graceful-never-zero");
+    scratch.write("broken.py", UNPARSABLE);
+    scratch.write("clean.py", "\"\"\"Short.\"\"\"\n");
+
+    // Act
+    let output = scratch.check(&[]);
+    let json = scratch.check(&["--format", "json"]);
+
+    // Assert
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "a tree that was not fully read reported itself measured and clean: {output:?}"
+    );
+    assert_eq!(
+        stdout_of(&output),
+        "",
+        "there is nothing to report and something was reported: {:?}",
+        stdout_of(&output)
+    );
+    assert!(
+        stderr_of(&output).contains("broken.py"),
+        "exit 1 with no finding and no reason is unreadable: {:?}",
+        stderr_of(&output)
+    );
+
+    assert_eq!(json.status.code(), Some(1), "{json:?}");
+    let document = document_of(&json);
+    assert_eq!(
+        document["complete"], false,
+        "the only channel that can still express incompleteness says the tree was complete: \
+         {document}"
+    );
+    assert_eq!(document["findings"].as_array().map(Vec::len), Some(0));
+}
+
+/// 0 of N files readable is the extreme of the same case, and it must not look successful.
+///
+/// A run where *nothing* was read has the strongest claim to being reported as unmeasured, and it is
+/// also the shape most likely to fall out of a loop that only reports when it has something.
+#[test]
+fn a_tree_where_no_file_could_be_read_does_not_look_successful() {
+    // Arrange
+    let scratch = Scratch::new("graceful-none-readable");
+    scratch.write("a.py", UNPARSABLE);
+    scratch.write("b.py", UNPARSABLE);
+
+    // Act
+    let output = scratch.check(&[]);
+    let json = scratch.check(&["--format", "json"]);
+
+    // Assert
+    assert_eq!(output.status.code(), Some(1), "{output:?}");
+    assert_eq!(stdout_of(&output), "");
+    assert!(
+        stderr_of(&output).contains("2 file(s) skipped:"),
+        "{:?}",
+        stderr_of(&output)
+    );
+    for name in ["a.py", "b.py"] {
+        assert!(
+            stderr_of(&output).contains(name),
+            "{name} was skipped in silence: {:?}",
+            stderr_of(&output)
+        );
+    }
+
+    let document = document_of(&json);
+    assert_eq!(document["complete"], false);
+    assert_eq!(document["skipped"].as_array().map(Vec::len), Some(2));
+}
+
+/// AC3 — `complete` answers in both directions, and all three fields are present either way.
+///
+/// A field that only appears when it is `false` is worse than no field: its absence becomes
+/// indistinguishable from "fully measured" for every consumer that does not know to look.
+#[test]
+fn the_json_document_carries_completeness_in_both_directions() {
+    // Arrange
+    let scratch = Scratch::new("graceful-complete");
+    scratch.write("fat.py", &long_comment("retry policy"));
+
+    // Act — the complete run first, so the partial one is a change and not a constant.
+    let complete = scratch.check(&["--format", "json"]);
+    scratch.write("broken.py", UNPARSABLE);
+    let partial = scratch.check(&["--format", "json"]);
+
+    // Assert
+    let whole = document_of(&complete);
+    assert_eq!(complete.status.code(), Some(1), "{complete:?}");
+    assert_eq!(whole["schema_version"], "2");
+    assert_eq!(whole["complete"], true);
+    assert_eq!(
+        whole["skipped"].as_array().map(Vec::len),
+        Some(0),
+        "`skipped` must be present and empty on a complete run, never absent: {whole}"
+    );
+    assert_eq!(
+        whole["excluded"].as_array().map(Vec::len),
+        Some(0),
+        "`excluded` must be present and empty when nothing is excluded, never absent: {whole}"
+    );
+    assert_eq!(whole["findings"].as_array().map(Vec::len), Some(1));
+
+    let part = document_of(&partial);
+    assert_eq!(part["complete"], false);
+    assert_eq!(part["skipped"].as_array().map(Vec::len), Some(1));
+    assert!(
+        part["skipped"][0]["reason"]
+            .as_str()
+            .is_some_and(|reason| reason.contains("could not parse")),
+        "the machine-readable channel carries a path with no reason: {part}"
+    );
+    assert_eq!(
+        part["findings"].as_array().map(Vec::len),
+        Some(1),
+        "the finding of the readable file vanished from the document: {part}"
+    );
+}
+
+/// AC3 — a partial run is byte-identical across two invocations, in both formats.
+///
+/// The lists are the new risk: `skipped` and `excluded` are filled from a filesystem walk, whose
+/// order is not a guarantee on any filesystem, so an unsorted list would flap between runs on a tree
+/// large enough for the directory order to differ. Compared on NON-EMPTY output, because two empty
+/// strings are byte-identical for the wrong reason.
+#[test]
+fn a_partial_run_is_reproducible_byte_for_byte() {
+    // Arrange — enough files, broken and excluded alike, that an unsorted list can visibly disagree.
+    let scratch = Scratch::new("graceful-determinism");
+    for name in ["zulu", "alpha", "mike", "bravo", "yankee", "charlie"] {
+        scratch.write(&format!("{name}.py"), UNPARSABLE);
+        scratch.write(&format!("vendor/{name}.py"), UNPARSABLE);
+    }
+    scratch.write("fat.py", &long_comment("retry policy"));
+    scratch.write(
+        "pyproject.toml",
+        "[tool.tooprolix]\nexclude = [\"vendor/*.py\"]\n",
+    );
+
+    // Act
+    let text = (scratch.check(&[]), scratch.check(&[]));
+    let json = (
+        scratch.check(&["--format", "json"]),
+        scratch.check(&["--format", "json"]),
+    );
+
+    // Assert — the outputs are non-empty first, or "identical" is worth nothing.
+    assert!(!stdout_of(&text.0).is_empty() && !stderr_of(&text.0).is_empty());
+    assert_eq!(stdout_of(&text.0), stdout_of(&text.1));
+    assert_eq!(stderr_of(&text.0), stderr_of(&text.1));
+
+    let document = document_of(&json.0);
+    assert_eq!(document["skipped"].as_array().map(Vec::len), Some(6));
+    assert_eq!(document["excluded"].as_array().map(Vec::len), Some(6));
+    assert_eq!(stdout_of(&json.0), stdout_of(&json.1));
+    assert_eq!(stderr_of(&json.0), stderr_of(&json.1));
+
+    // ... and identical between runs is not the same as ordered, which is what makes it identical.
+    let skipped: Vec<&str> = document["skipped"]
+        .as_array()
+        .expect("an array")
+        .iter()
+        .map(|entry| entry["path"].as_str().expect("a path"))
+        .collect();
+    let mut sorted = skipped.clone();
+    sorted.sort_unstable();
+    assert_eq!(skipped, sorted, "`skipped` is in walk order: {document}");
+    let excluded: Vec<&str> = document["excluded"]
+        .as_array()
+        .expect("an array")
+        .iter()
+        .map(|entry| entry.as_str().expect("a path"))
+        .collect();
+    let mut sorted = excluded.clone();
+    sorted.sort_unstable();
+    assert_eq!(excluded, sorted, "`excluded` is in walk order: {document}");
+}
+
+/// AC5 — a refusal and a boundary are two channels, asserted on ONE run that has both.
+///
+/// Checking only one field cannot tell "landed in the wrong list" from "landed in both": a build
+/// that put every removed path into `skipped` passes an `excluded`-only test, and one that dropped
+/// the distinction entirely passes a `skipped`-only test. So the run holds an unreadable file and an
+/// excluded file at once and both lists are pinned to exactly one entry each.
+///
+/// `complete` is the load-bearing consequence: the excluded file must NOT make the run incomplete —
+/// `exclude` is a boundary the project drew on purpose, and inside it the tree really was measured
+/// whole. Only the refusal moves it. And the text output stays silent about the exclusion, which is
+/// the recorded decision the alternative was measured against: a warning on every real exclusion
+/// fires on every run of this repository and of the ruff checkout.
+#[test]
+fn a_skipped_file_and_an_excluded_file_are_two_different_channels() {
+    // Arrange
+    let scratch = Scratch::new("graceful-two-channels");
+    scratch.write("broken.py", UNPARSABLE);
+    scratch.write("vendor/generated.py", &long_comment("generated policy"));
+    scratch.write("fat.py", &long_comment("retry policy"));
+    scratch.write(
+        "pyproject.toml",
+        "[tool.tooprolix]\nexclude = [\"vendor\"]\n",
+    );
+
+    // Act
+    let json = scratch.check(&["--format", "json"]);
+    let text = scratch.check(&[]);
+
+    // Assert
+    let document = document_of(&json);
+    assert_eq!(
+        document["skipped"].as_array().map(Vec::len),
+        Some(1),
+        "{document}"
+    );
+    assert!(
+        document["skipped"][0]["path"]
+            .as_str()
+            .is_some_and(|path| path.ends_with("broken.py")),
+        "the refusal channel does not hold the file that was refused: {document}"
+    );
+    assert_eq!(
+        document["excluded"].as_array().map(|paths| paths
+            .iter()
+            .map(|path| path.as_str().expect("a path"))
+            .collect::<Vec<_>>()),
+        // `./vendor` and not `vendor`: the field carries the path as the WALK reached it, the same
+        // spelling `findings[].path` uses for the same run, so the two can be joined by a consumer.
+        Some(vec!["./vendor"]),
+        "the boundary channel does not hold exactly the excluded path: {document}"
+    );
+    assert_eq!(
+        document["complete"], false,
+        "an unreadable file did not make the run incomplete: {document}"
+    );
+    assert!(
+        !stdout_of(&json).contains("generated.py"),
+        "an excluded file was measured: {document}"
+    );
+
+    // The text output names the refusal and says nothing at all about the boundary.
+    assert!(
+        stderr_of(&text).contains("broken.py"),
+        "{:?}",
+        stderr_of(&text)
+    );
+    assert!(
+        !stderr_of(&text).contains("vendor") && !stderr_of(&text).contains("exclude"),
+        "the text output warned about a file the project excluded on purpose: {:?}",
+        stderr_of(&text)
+    );
+}
+
+/// The whole tree excluded is still a COMPLETE run: nothing refused, so nothing incomplete.
+///
+/// This is the direction the `complete` field is easiest to get wrong in — "the walk lost paths" and
+/// "the tool could not read a file" look alike from far enough away, and conflating them would mark
+/// every configured repository permanently incomplete.
+#[test]
+fn an_excluded_tree_is_a_complete_measurement_of_what_was_in_scope() {
+    // Arrange
+    let scratch = Scratch::new("graceful-excluded-complete");
+    scratch.write("vendor/fat.py", &long_comment("vendored retry policy"));
+    scratch.write(
+        "pyproject.toml",
+        "[tool.tooprolix]\nexclude = [\"vendor\"]\n",
+    );
+
+    // Act
+    let output = scratch.check(&["--format", "json"]);
+
+    // Assert
+    assert_eq!(output.status.code(), Some(0), "{output:?}");
+    let document = document_of(&output);
+    assert_eq!(
+        document["complete"], true,
+        "a deliberate boundary was reported as a failed measurement: {document}"
+    );
+    assert_eq!(document["skipped"].as_array().map(Vec::len), Some(0));
+    assert_eq!(
+        document["excluded"].as_array().map(|paths| paths
+            .iter()
+            .map(|path| path.as_str().expect("a path"))
+            .collect::<Vec<_>>()),
+        Some(vec!["./vendor"]),
+        "{document}"
+    );
+}
+
+/// Red team — unreadable by PERMISSIONS is an io failure, not a parse failure, and the same channel.
+///
+/// The parse path and the open path are two different call sites, and a fix written against the one
+/// the ticket named leaves the other still fatal. The file is valid Python, so nothing but the mode
+/// bits can be what stops it being read.
+#[test]
+#[cfg(unix)]
+fn a_file_unreadable_by_permissions_is_skipped_and_not_a_refusal_to_run() {
+    use std::os::unix::fs::PermissionsExt as _;
+
+    // Arrange
+    let scratch = Scratch::new("graceful-permissions");
+    let locked = scratch.write("locked.py", "\"\"\"Perfectly valid Python.\"\"\"\n");
+    scratch.write("fat.py", &long_comment("retry policy"));
+    std::fs::set_permissions(&locked, std::fs::Permissions::from_mode(0o000))
+        .expect("the mode bits are settable");
+
+    // Act
+    let output = scratch.check(&["--format", "json"]);
+    let readable = std::fs::read_to_string(&locked).is_ok();
+    std::fs::set_permissions(&locked, std::fs::Permissions::from_mode(0o644))
+        .expect("the mode bits are restorable");
+
+    // Assert — the fixture only means anything if the file really is unreadable to this user.
+    assert!(
+        !readable,
+        "the test user can read a 0o000 file (running as root?), so nothing was proved"
+    );
+    assert_eq!(output.status.code(), Some(1), "{output:?}");
+    let document = document_of(&output);
+    assert_eq!(document["complete"], false, "{document}");
+    assert_eq!(
+        document["skipped"].as_array().map(Vec::len),
+        Some(1),
+        "an io failure took a different path from a parse failure: {document}"
+    );
+    assert!(
+        document["skipped"][0]["path"]
+            .as_str()
+            .is_some_and(|path| path.ends_with("locked.py")),
+        "{document}"
+    );
+    assert_eq!(
+        document["findings"][0]["code"], "TPX001",
+        "the readable file's finding was withheld: {document}"
+    );
+}
+
+/// Red team — a skipped file that WOULD have been a cluster member changes the graph, and the run
+/// has to say so.
+///
+/// `TPX003` is cross-file by construction, so a subset of the input does not give a smaller true
+/// answer — it gives a different one. The fixture proves the claim rather than asserting it: the
+/// same three files are checked whole (one cluster of three) and then with one member corrupted
+/// (one cluster of *two*, a different finding), so the warning is attached to a graph that visibly
+/// changed rather than to a file that merely failed.
+#[test]
+fn a_skipped_cluster_member_makes_the_run_warn_that_the_graph_is_incomplete() {
+    // Arrange
+    let scratch = Scratch::new("graceful-cluster");
+    scratch.write("a.py", SHARED_RATIONALE);
+    scratch.write("b.py", SHARED_RATIONALE);
+    scratch.write("c.py", SHARED_RATIONALE);
+
+    // Act
+    let whole = scratch.check(&[]);
+    scratch.write("c.py", &format!("{SHARED_RATIONALE}{UNPARSABLE}"));
+    let partial = scratch.check(&[]);
+
+    // Assert — the member really was in the cluster ...
+    assert!(
+        stdout_of(&whole).contains("in 3 places"),
+        "the fixture never had the member it is about to lose: {}",
+        stdout_of(&whole)
+    );
+    assert!(
+        !stderr_of(&whole).contains("incomplete"),
+        "a complete run warned about an incomplete graph: {:?}",
+        stderr_of(&whole)
+    );
+
+    // ... and losing it produces a DIFFERENT finding, announced as such.
+    assert_eq!(partial.status.code(), Some(1), "{partial:?}");
+    assert!(
+        stdout_of(&partial).contains("in 2 places"),
+        "the cluster did not change, so there is nothing for the warning to be about: {}",
+        stdout_of(&partial)
+    );
+    assert!(
+        stderr_of(&partial).contains("TPX003") && stderr_of(&partial).contains("incomplete"),
+        "the cluster graph was computed over a subset and the run did not say so: {:?}",
+        stderr_of(&partial)
+    );
+}
+
+/// ... and it does not claim it when `TPX003` was never computed at all.
+///
+/// A warning about a rule the configuration switched off is the same defect as a diagnostic built
+/// from the configuration's say-so rather than from the run: it describes something that did not
+/// happen. The skipped block itself must still be there — that half is about the files, not the rule.
+#[test]
+fn the_incomplete_graph_warning_is_absent_when_tpx003_never_ran() {
+    // Arrange
+    let scratch = Scratch::new("graceful-cluster-ignored");
+    scratch.write("a.py", SHARED_RATIONALE);
+    scratch.write("broken.py", UNPARSABLE);
+    scratch.write(
+        "pyproject.toml",
+        "[tool.tooprolix]\nignore = [\"TPX003\"]\n",
+    );
+
+    // Act
+    let output = scratch.check(&[]);
+
+    // Assert
+    assert!(
+        stderr_of(&output).contains("1 file(s) skipped:"),
+        "the skipped file stopped being reported because a rule was off: {:?}",
+        stderr_of(&output)
+    );
+    assert!(
+        !stderr_of(&output).contains("TPX003"),
+        "the run warned that a disabled rule was computed over a subset: {:?}",
+        stderr_of(&output)
+    );
+}
+
+/// Exit 2 is now only "the tool could not start", and the narrowing is the breaking half.
+///
+/// Enumerated rather than sampled, because the value of the code is that it still means something:
+/// every remaining member is a failure BEFORE any file is read, and the one case that left the set —
+/// an unparsable file — is asserted as having left it, in the same test. Without that last row this
+/// passes on a build where 2 never happens at all.
+#[test]
+fn exit_two_now_means_only_that_the_run_could_not_start() {
+    // Arrange
+    let scratch = Scratch::new("graceful-exit-two");
+    scratch.write("broken.py", UNPARSABLE);
+    scratch.write("notes.txt", "not Python at all\n");
+
+    // Act — the three ways to fail before reading anything ...
+    let missing_path = scratch.check_from("", "nowhere");
+    let not_python = scratch.check_from("", "notes.txt");
+    scratch.write(
+        "pyproject.toml",
+        "[tool.tooprolix]\nignore = [\"TPX999\"]\n",
+    );
+    let broken_config = scratch.check(&[]);
+    // ... and the case that no longer belongs to them.
+    std::fs::remove_file(scratch.root.join("pyproject.toml")).expect("the file is removable");
+    let unparsable_file = scratch.check(&[]);
+
+    // Assert
+    for (name, output) in [
+        ("a path that does not exist", &missing_path),
+        ("a non-Python file named directly", &not_python),
+        ("an unknown rule code in the configuration", &broken_config),
+    ] {
+        assert_eq!(
+            output.status.code(),
+            Some(2),
+            "{name} stopped being a tool error: {output:?}"
+        );
+    }
+    assert_eq!(
+        unparsable_file.status.code(),
+        Some(1),
+        "an unparsable file still refuses to run, so exit 2 was never narrowed: {unparsable_file:?}"
+    );
 }

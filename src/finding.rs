@@ -68,7 +68,16 @@ use crate::rules::Rule;
 ///
 /// A string rather than a number so that `"1.1"` remains expressible without changing the type of
 /// the field, which is the one change a consumer cannot absorb.
-pub const SCHEMA_VERSION: &str = "1";
+///
+/// # Why `"2"`, when the new fields could have been added to `"1"`
+///
+/// Version 1 was `{schema_version, findings}` and nothing else, and a consumer of it reads a
+/// document as the state of the tree. Since the exit code stopped distinguishing "the prose is bad"
+/// from "the tree was not fully read" — both are 1 — this document is the **only** channel in which
+/// completeness is expressible at all. A consumer that ignores unknown keys would therefore go on
+/// treating a partial result as a whole one, silently, forever. On a new version it fails loudly on
+/// the first run instead. Nothing had been published, so the bump cost nothing.
+pub const SCHEMA_VERSION: &str = "2";
 
 /// How many *other* addresses a duplicate finding prints before it summarises the rest.
 ///
@@ -343,25 +352,95 @@ fn render_others(others: &[Location]) -> String {
     }
 }
 
-/// The whole `--format json` document: a version and the findings.
+/// One file the run tried to read and could not, with the reason it could not.
+///
+/// A **refusal**, and deliberately not the same thing as [`Report::excluded`]: the tool opened this
+/// path, or tried to, and the attempt failed. That is what makes a run incomplete. A path the
+/// project excluded was never opened and takes nothing away from the measurement.
+///
+/// `reason` is the rendered error rather than a code, for the same reason the text output prints it:
+/// the two failures a user actually hits are a syntax error, whose byte range is the whole value of
+/// the message, and an io error, whose `errno` text is likewise the answer. A code would name the
+/// category and drop the part that says what to do.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize)]
+#[non_exhaustive]
+pub struct Skipped {
+    /// The file, exactly as the walk reached it — the same spelling a finding would carry.
+    pub path: String,
+    /// Why it could not be read, rendered.
+    pub reason: String,
+}
+
+/// The whole `--format json` document: a version, what was measured, and the findings.
 ///
 /// A named struct rather than an ad-hoc `serde_json::json!`, because the schema is meant to be a
 /// Rust type that a change has to go through.
+///
+/// # Completeness is a field because it is no longer an exit code
+///
+/// A run that could not read part of the tree exits **1**, the same as a run that read all of it and
+/// found bad prose. That is the ruff path, taken on purpose, and its direct cost is that a machine
+/// can no longer tell the two apart from the process alone. [`Report::complete`] is where that
+/// distinction went, so it is present on **every** document and not only on the partial ones — a
+/// field that appears only when it is `false` makes its absence mean "fully measured" to every
+/// consumer that has never seen it, which is the silence the bump to `"2"` exists to prevent.
+///
+/// # ⚠️ `TPX003` over an incomplete set is a DIFFERENT graph, not the same clusters minus a file
+///
+/// `TPX003` is cross-file by construction: a cluster is a connected component over the whole input.
+/// Drop one file and the answer is not a smaller true answer — the missing block may have been the
+/// only bridge between two components, so clusters that were one become two, and a cluster that
+/// falls below two members disappears altogether. A consumer must not diff the `findings` of a
+/// `complete: false` document against a `complete: true` one and read the difference as churn in the
+/// repository. It is churn in the input set.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 #[non_exhaustive]
 pub struct Report {
     /// [`SCHEMA_VERSION`].
     pub schema_version: &'static str,
+    /// Whether every file in scope was read.
+    ///
+    /// Derived from `skipped` and never set beside it, so the flag and the list cannot disagree:
+    /// the one thing worse than a partial result is a partial result that says it is whole.
+    /// **`excluded` does not enter into it** — see that field.
+    pub complete: bool,
+    /// Every file the run tried to read and could not, sorted by path.
+    pub skipped: Vec<Skipped>,
+    /// Every path `exclude` removed from the walk, sorted, as the walk observed it.
+    ///
+    /// A **boundary**, not a refusal, which is why it leaves `complete` alone: `exclude` says a tree
+    /// was never in scope, and inside the scope the project drew the measurement really is whole.
+    /// The text output says nothing about these at all — a warning on every deliberate exclusion
+    /// fires on every run of a repository that configured one — so this field is the only place they
+    /// are visible, and that is its whole job.
+    ///
+    /// A pruned **directory** appears as one path, not as the subtree behind it: learning what was
+    /// under it means descending into it, which is the pruning that makes `exclude` worth having.
+    pub excluded: Vec<String>,
     /// Every finding, in the order stdout prints them.
     pub findings: Vec<Finding>,
 }
 
 impl Report {
-    /// Wraps `findings` in the versioned envelope.
+    /// Wraps a run in the versioned envelope, sorting the two path lists as it goes.
+    ///
+    /// Sorted here and not at the call site because the walk that produces them is deliberately
+    /// unordered — see `crate::cli::python_files` — so ordering them anywhere else would make the
+    /// document's byte-for-byte reproducibility depend on the filesystem.
     #[must_use]
-    pub fn new(findings: Vec<Finding>) -> Self {
+    pub fn new(findings: Vec<Finding>, skipped: Vec<Skipped>, excluded: Vec<String>) -> Self {
+        let mut skipped = skipped;
+        let mut excluded = excluded;
+        skipped.sort();
+        excluded.sort();
         Self {
             schema_version: SCHEMA_VERSION,
+            // NOT a parameter. `complete` is a fact about the read attempts this run made, and the
+            // list of failures is that fact — passing the two separately is how a report comes to
+            // claim it is whole while carrying the evidence that it is not.
+            complete: skipped.is_empty(),
+            skipped,
+            excluded,
             findings,
         }
     }
@@ -388,7 +467,7 @@ impl Report {
 
 #[cfg(test)]
 mod tests {
-    use super::{Finding, Location, MAX_RENDERED_LOCATIONS, Report};
+    use super::{Finding, Location, MAX_RENDERED_LOCATIONS, Report, Skipped};
     use crate::detect::duplicate::duplicates;
     use crate::detect::volume::{Limits, volume};
     use crate::extract::{ProseKind, extract};
@@ -514,7 +593,7 @@ mod tests {
         );
 
         // ... and the machine-readable form loses nothing.
-        let json = Report::new(vec![finding]).to_json();
+        let json = Report::new(vec![finding], Vec::new(), Vec::new()).to_json();
         assert_eq!(json.matches("\"path\"").count(), 40 + 2 + 1);
     }
 
@@ -532,15 +611,19 @@ mod tests {
         blocks.extend(blocks_of("worker.py", left));
         let clusters = duplicates(&blocks);
 
-        let report = Report::new(vec![
-            Finding::from_overrun(&overruns.overruns[0]),
-            Finding::from_cluster(&clusters.clusters[0]),
-        ]);
+        let report = Report::new(
+            vec![
+                Finding::from_overrun(&overruns.overruns[0]),
+                Finding::from_cluster(&clusters.clusters[0]),
+            ],
+            Vec::new(),
+            Vec::new(),
+        );
         let json = report.to_json();
         let parsed: serde_json::Value =
             serde_json::from_str(&json).expect("the renderer emits valid JSON");
 
-        assert_eq!(parsed["schema_version"], "1");
+        assert_eq!(parsed["schema_version"], "2");
         let volume_finding = &parsed["findings"][0];
         assert_eq!(volume_finding["code"], "TPX002");
         assert_eq!(volume_finding["path"], "api.py");
@@ -566,6 +649,61 @@ mod tests {
             duplicate_finding.get("words").is_none(),
             "a duplicate finding carries a dead volume field"
         );
+    }
+
+    /// The envelope cannot claim to be whole while carrying the evidence that it is not.
+    ///
+    /// `complete` is derived from `skipped` inside the constructor and is not a parameter, so this
+    /// pins the one property that makes the field trustworthy: there is no way to spell a document
+    /// that says `true` next to a non-empty `skipped`. The sort is asserted on input that is
+    /// deliberately out of order, because the walk feeding these lists is unordered on purpose and
+    /// an unsorted field would make the whole document a function of the directory layout.
+    #[test]
+    fn the_envelope_derives_completeness_from_the_failures_it_carries() {
+        // Arrange — reverse-ordered input, and an `excluded` entry that must not touch `complete`.
+        let refusal = |path: &str| Skipped {
+            path: path.to_owned(),
+            reason: "could not parse Python source".to_owned(),
+        };
+
+        // Act
+        let whole = Report::new(Vec::new(), Vec::new(), vec!["z".to_owned(), "a".to_owned()]);
+        let partial = Report::new(
+            Vec::new(),
+            vec![refusal("z.py"), refusal("a.py")],
+            Vec::new(),
+        );
+
+        // Assert — a boundary is not a refusal, so an excluded path leaves the run complete ...
+        assert!(
+            whole.complete,
+            "`exclude` is a deliberate boundary and marked the measurement failed"
+        );
+        assert_eq!(whole.excluded, vec!["a".to_owned(), "z".to_owned()]);
+
+        // ... and a refusal is one, whatever the caller would have liked.
+        assert!(!partial.complete);
+        assert_eq!(
+            partial
+                .skipped
+                .iter()
+                .map(|entry| entry.path.as_str())
+                .collect::<Vec<_>>(),
+            vec!["a.py", "z.py"],
+            "the refusal list is in arrival order, so two runs can disagree byte-for-byte"
+        );
+
+        // Every field is in the document on a clean run, or its absence reads as "fully measured".
+        let parsed: serde_json::Value = serde_json::from_str(&whole.to_json()).expect("valid JSON");
+        for key in [
+            "schema_version",
+            "complete",
+            "skipped",
+            "excluded",
+            "findings",
+        ] {
+            assert!(parsed.get(key).is_some(), "`{key}` is missing: {parsed}");
+        }
     }
 
     /// The sort key separates two findings that share one address, which is the case a

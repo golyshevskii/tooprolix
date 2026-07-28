@@ -11,24 +11,26 @@
 //!
 //! # The exit contract
 //!
-//! | code | meaning |
+//! | state | code |
 //! |---|---|
-//! | 0 | the tree was read and has no findings |
-//! | 1 | the tree was read and has findings |
-//! | 2 | the tree could not be read: a bad path, a file that does not parse, a broken configuration |
+//! | the tree was read whole, no findings | 0 |
+//! | the tree was read whole, findings | 1 |
+//! | part of the tree could not be read, no findings | **1** |
+//! | part of the tree could not be read, findings | **1** |
+//! | the run could not start: a bad path, a broken configuration | 2 |
 //!
-//! The three codes are ruff's (`crates/ruff/src/lib.rs`, `ExitStatus`), and the third is the whole
-//! point of having one: **a file that does not parse must never be reportable as "clean"**.
+//! **A partial run never returns 0**, and that is the single guarantee the rest of this module is
+//! arranged around. It is the condition the graceful path was accepted on: if a tree that was not
+//! fully read could look green, none of the rest would be worth having. Everything else about the
+//! change is a convenience; this is the invariant.
 //!
-//! # ⚠️ A failed run prints no findings at all — and that part is OURS, not ruff's
+//! ## Code 2 used to mean more than it does now, and the narrowing is breaking
 //!
-//! Not the findings of the files that happened to parse: **none**. A partial list is read by a
-//! human as the state of the repository, and a repository that was never fully measured has no
-//! state to report. [`Error::Unreadable`] carries every failure and stdout stays empty.
-//!
-//! **This is a decision, not an inheritance, and the reason recorded here used to say otherwise.**
-//! It cited ruff's `ExitStatus` as though ruff behaved this way. It does not. Executed against the
-//! pinned reference, on a directory holding one unparsable file and one lintable one:
+//! Until 0.2.1, a file that did not parse took the whole run down: exit 2, **zero** findings, and
+//! the findings of every file that *did* parse withheld on the reasoning that a partial list is
+//! read by a human as the state of the repository. That was ours, deliberately, and against ruff —
+//! executed against the pinned reference, on a directory holding one unparsable file and one
+//! lintable one:
 //!
 //! ```text
 //! $ uvx ruff@0.16.0 check --isolated --select F <dir>
@@ -37,27 +39,35 @@
 //! Found 3 errors.
 //! ```
 //!
-//! Ruff reports the syntax error **as a diagnostic** and lints the rest of the tree. It takes the
-//! opposite trade-off deliberately: a linter people run on every save has to stay useful while one
-//! file is mid-edit. We take this one because a prose *budget* is a claim about a whole tree —
-//! `TPX003` is cross-file by construction, so a cluster computed over a subset is not a smaller
-//! true answer, it is a different one.
+//! Ruff reports the syntax error **as a diagnostic** and lints the rest of the tree. The cost of not
+//! doing so was measured on the pinned ruff checkout (`a2635fd8`), 374 of whose files are
+//! deliberately-unparsable parser fixtures: **exit 2, 0 findings, 375 stderr lines**. A first
+//! adopter whose repository contains a parser corpus had no way to run this tool over it except one
+//! invocation per subdirectory, and a permanently red CI until they configured `exclude`.
 //!
-//! ## What that cost was, and the half of it that is now paid
+//! So code 2 now means only **the run could not start** — nothing was read because nothing could be.
+//! A file that cannot be read is a diagnostic on stderr, a `skipped` entry in the JSON, and exit 1.
 //!
-//! Measured on the pinned ruff checkout (`a2635fd8`) before this key existed:
+//! ## What that costs, and where the cost was put
 //!
-//! | | |
-//! |---|---|
-//! | `tooprolix check /path/to/ruff` | **exit 2**, **0** findings, **375** stderr lines |
-//! | why | 374 of its files are deliberately-unparsable parser fixtures |
+//! The exit code no longer distinguishes "the prose is bad" from "the measurement is incomplete":
+//! both are 1. Completeness therefore has to live somewhere a machine can read it, and the only such
+//! place is the document — [`crate::finding::Report::complete`], with the failures beside it in
+//! `skipped`. That is what took the JSON schema to version 2.
 //!
-//! A first adopter whose repository contains a parser test-corpus had no way to run this tool over
-//! it except one invocation per subdirectory. [`crate::config`]'s `exclude` is the answer, and it
-//! is deliberately the *narrow* one: it moves the boundary of what is measured, so a tree the
-//! project never claimed is silently out of scope rather than partially read. It does **not**
-//! soften what happens inside that boundary — an unparsable file that nobody excluded is still
-//! exit 2, and making that graceful is a separate, breaking change.
+//! ⚠️ **`TPX003` over an incomplete set is a different graph, not the same clusters minus a file.**
+//! It is cross-file by construction, so a missing block can be the bridge that held two components
+//! together. A partial run says so on stderr, once, and the document says so by being marked
+//! incomplete.
+//!
+//! ## `exclude` is the other half, and it is not this one
+//!
+//! [`crate::config`]'s `exclude` moves the **boundary** of what is measured: a tree the project
+//! never claimed is out of scope rather than partially read. Inside that boundary the measurement is
+//! whole, so an excluded path leaves `complete` alone and the text output says nothing about it at
+//! all — a warning on every deliberate exclusion would fire on every run of any repository that
+//! configured one. The paths are in the document's `excluded`, which is the whole reason that field
+//! exists. `skipped` is a refusal, `excluded` is a boundary, and nothing is ever in both.
 //!
 //! # What the walk does and does not visit
 //!
@@ -101,8 +111,7 @@
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
-use std::sync::Arc;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::{Arc, Mutex};
 
 use ignore::WalkBuilder;
 use thiserror::Error as ThisError;
@@ -111,7 +120,7 @@ use crate::config::{self, Config};
 use crate::detect::duplicate::duplicates;
 use crate::detect::volume::volume;
 use crate::extract::{self, ProseBlock, is_python_source};
-use crate::finding::{Finding, Report};
+use crate::finding::{Finding, Report, Skipped};
 use crate::rules::{self, Rule, Suppression, parse_marker};
 
 /// The `--help` text, and the only place the command grammar is written down.
@@ -130,8 +139,9 @@ Arguments:
 
 Options:
   --format  `text` (default) writes one line per finding to stdout.
-            `json` writes a versioned document: {\"schema_version\", \"findings\"},
-            including on a clean run. Giving it twice is an error, not last-wins.
+            `json` writes a versioned document: {\"schema_version\", \"complete\",
+            \"skipped\", \"excluded\", \"findings\"}, including on a clean run. All
+            five are always present. Giving it twice is an error, not last-wins.
   --help    Show this text.
 
 Rules:
@@ -187,24 +197,37 @@ Checking a single file:
   Exit 0 on one file is not a verdict on the tree around it.
 
 Exit codes:
-  0   no findings
-  1   findings were reported
-  2   the tree could not be read (bad path, unparsable file, broken configuration);
-      no findings are printed, because a partial list is not a measurement
+  0   the tree was read whole and there are no findings
+  1   findings were reported, OR part of the tree could not be read, or both
+  2   the run could not start (bad path, broken configuration)
+
+  A file that cannot be read no longer fails the run: it is named on stderr with
+  the reason, the rest of the tree is still checked, and the exit code is 1 even
+  when nothing was found — a tree that was not read whole never exits 0. Only
+  `--format json` can tell the two apart: it carries `complete` and `skipped`.
 ";
 
-/// The three outcomes of a run — ruff's `ExitStatus`, and the reason it has three and not two.
+/// The outcomes of a run, and the reason there are four of them rather than three numbers.
 ///
-/// `#[non_exhaustive]` because a fourth outcome is conceivable and matching on this from outside
+/// [`Incomplete`](Self::Incomplete) and [`Failure`](Self::Failure) both report **1**, so the enum
+/// draws a distinction the process cannot. That is deliberate and it is where the central guarantee
+/// is enforced: `Success` is the only variant that can produce 0, and it is unreachable from a run
+/// that failed to read anything, so "a partial run never exits 0" is a property of one `match` arm
+/// instead of a condition scattered through the caller. Collapsing the two would also make both
+/// remaining doc comments false — each of them claims the tree *was read*.
+///
+/// `#[non_exhaustive]` because a fifth outcome is conceivable and matching on this from outside
 /// the crate must keep compiling across one.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum ExitStatus {
-    /// The tree was read and there is nothing to report.
+    /// The tree was read whole and there is nothing to report.
     Success,
-    /// The tree was read and there are findings.
+    /// The tree was read whole and there are findings.
     Failure,
-    /// The tree could not be read.
+    /// Part of the tree could not be read — whether or not anything was found in the rest.
+    Incomplete,
+    /// The run could not start.
     Error,
 }
 
@@ -217,11 +240,16 @@ impl ExitStatus {
     /// (`sys.exit(main())`), where [`ExitCode`] is opaque. One `match`, so the two cannot drift.
     ///
     /// `#[non_exhaustive]` on [`ExitStatus`] only forbids exhaustive matching from *other* crates,
-    /// so a fourth outcome is still a compile error here — which is the point of doing it once.
+    /// so a fifth outcome is still a compile error here — which is the point of doing it once. No
+    /// `_` arm, for exactly that reason.
+    ///
+    /// The `Incomplete => 1` arm is the whole exit contract's load-bearing line: it is the one place
+    /// a tree that was not read whole is given its number, and the only edit that can make such a
+    /// run exit 0.
     pub(crate) const fn code(self) -> u8 {
         match self {
             Self::Success => 0,
-            Self::Failure => 1,
+            Self::Failure | Self::Incomplete => 1,
             Self::Error => 2,
         }
     }
@@ -261,7 +289,12 @@ enum Invocation {
     Help,
 }
 
-/// Everything that makes a run exit 2.
+/// Everything that makes a run exit 2 — every one of them a failure to *start*.
+///
+/// There used to be a sixth, `Unreadable`, carrying every file that would not parse. It is gone
+/// rather than unused: a file that cannot be read is no longer a reason to refuse the run, so
+/// keeping the variant would have left a way to spell an outcome the contract no longer has. What
+/// replaces it is [`crate::finding::Skipped`], which is a *report* and not an error.
 #[derive(Debug, ThisError)]
 #[non_exhaustive]
 pub enum Error {
@@ -290,13 +323,6 @@ pub enum Error {
         /// What the walker complained about.
         message: String,
     },
-
-    /// One or more files could not be read or parsed.
-    ///
-    /// Plural on purpose: reporting only the first failure makes fixing a repository an exercise in
-    /// re-running the tool once per broken file.
-    #[error("{}", render_failures(.0))]
-    Unreadable(Vec<(PathBuf, extract::Error)>),
 }
 
 /// One block, plus whatever the marker above it silences.
@@ -390,10 +416,8 @@ pub fn execute<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<ExitSta
         );
     }
 
-    let Walked {
-        files,
-        excluded_measurable,
-    } = python_files(&path, &config)?;
+    let Walked { files, excluded } = python_files(&path, &config)?;
+    let excluded_measurable = excluded.len();
     if files.is_empty() {
         // A walk that visited nothing scores every repository clean. Saying so is the difference
         // between "no findings" and "no measurement".
@@ -408,12 +432,14 @@ pub fn execute<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<ExitSta
         // matched nothing did not empty anything, and saying it did is the same wrong-cause defect
         // in the opposite direction.
         //
-        // The count is also the entire content of the sentence. Naming the globs is what went
-        // wrong last time — the list came from the configuration, so a glob that never fired was
-        // reported as having removed paths — and it cannot be fixed by naming them from the walk
-        // instead: `ignore::overrides::Glob` is an opaque newtype with a private field and no
-        // accessors, so per-glob attribution is not reachable through that crate's public API.
-        // A number the walk counted is, and the file it came from is already on the line.
+        // The count is also the entire content of the sentence — and it is `excluded.len()`, the
+        // length of the very list the JSON reports, never a second number derived beside it. Two
+        // numbers that "should" agree is the defect this line already shipped once. Naming the
+        // globs is what went wrong the time before: the list came from the configuration, so a glob
+        // that never fired was reported as having removed paths, and it cannot be fixed by naming
+        // them from the walk instead — `ignore::overrides::Glob` is an opaque newtype with a
+        // private field and no accessors, so per-glob attribution is not reachable through that
+        // crate's public API. The paths the walk observed are, and they are in `excluded`.
         if excluded_measurable > 0 {
             eprintln!(
                 "warning: `exclude` in {} removed {excluded_measurable} path(s) that could have \
@@ -426,29 +452,85 @@ pub fn execute<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<ExitSta
         }
     }
 
-    let sources = read(&files)?;
+    let (sources, skipped) = read(&files);
     report_unknown_marker_codes(&sources);
     let findings = findings(sources, &config);
-    let status = if findings.is_empty() {
-        ExitStatus::Success
+    // The guarantee, in one expression: `Success` — the only variant that reports 0 — is
+    // unreachable while anything was skipped, whatever the findings say. `skipped` is filled
+    // exclusively from read attempts that actually failed, so this is a fact about the run and not
+    // about the configuration's opinion of it.
+    let status = if skipped.is_empty() {
+        if findings.is_empty() {
+            ExitStatus::Success
+        } else {
+            ExitStatus::Failure
+        }
     } else {
-        ExitStatus::Failure
+        ExitStatus::Incomplete
     };
 
     // The empty case is written in JSON and not in text, and that asymmetry is the point. A human
     // reading a clean run wants silence; a consumer parsing stdout wants a document, and a
     // successful run that emits zero bytes is a parse error at the far end that looks exactly like
-    // a crash. The one thing neither format ever prints is a *partial* list — that path returned
-    // above, as `Error`.
+    // a crash.
     match format {
         Format::Text => {
             for finding in &findings {
                 println!("{finding}");
             }
         }
-        Format::Json => print!("{}", Report::new(findings).to_json()),
+        Format::Json => {
+            // `display()` and not a lossless form, for the reason `crate::finding::Location`
+            // records for `path`: this is the single place a path becomes a JSON string, and the
+            // whole schema is consistent about it.
+            let excluded = excluded
+                .iter()
+                .map(|path| path.display().to_string())
+                .collect();
+            print!(
+                "{}",
+                Report::new(findings, skipped.clone(), excluded).to_json()
+            );
+        }
     }
+
+    // After the findings, and on stderr in BOTH formats: a document on stdout still needs its
+    // diagnostics somewhere a `| jq` does not eat them, and every other warning in this file is
+    // already there.
+    report_skipped(&skipped, &config);
     Ok(status)
+}
+
+/// Names every file the run could not read, and — once — what that did to `TPX003`.
+///
+/// Driven off the same `skipped` list that decided the exit code and fills the document, so the
+/// three cannot disagree about whether anything was skipped.
+fn report_skipped(skipped: &[Skipped], config: &Config) {
+    if skipped.is_empty() {
+        return;
+    }
+    // Sorted for the same reason `Report::new` sorts: the walk is deliberately unordered, so
+    // without this the diagnostic is a function of the directory layout.
+    let mut lines: Vec<String> = skipped
+        .iter()
+        .map(|entry| format!("  {}: {}", entry.path, entry.reason))
+        .collect();
+    lines.sort();
+    eprintln!(
+        "warning: {} file(s) skipped:\n{}",
+        skipped.len(),
+        lines.join("\n")
+    );
+
+    // Only when the rule actually ran. Announcing that a disabled detector was computed over a
+    // subset describes something that did not happen — the same class as a diagnostic built from
+    // the configuration's say-so rather than from the run, one level up.
+    if !config.ignores(Rule::DuplicateProse) {
+        eprintln!(
+            "warning: TPX003 was computed over an incomplete set of files; a missing file makes a \
+             different cluster graph, not the same clusters minus a file"
+        );
+    }
 }
 
 /// Parses `tooprolix check <path> [--format …]` and nothing else.
@@ -609,25 +691,44 @@ fn python_files(root: &Path, config: &Config) -> Result<Walked, Error> {
     //   * `.gitignore` still has its say — its layers run first and this filter runs after, so a
     //     path is walked only if BOTH allow it. Identical to `overrides` here because we only ever
     //     build exclusions, never re-inclusions.
-    let removed = Arc::new(AtomicUsize::new(0));
+    // A list and no longer a count, because the document has to NAME what was excluded and not
+    // only how much of it there was. The invariant the count was introduced for is kept exactly:
+    // this one value is both the gate for the stderr warning and the whole of its content, and now
+    // also the whole of the JSON field — `excluded.len()` at the call site, never a second number
+    // derived alongside it.
+    //
+    // `Mutex` rather than the `AtomicUsize` it replaces because a `Vec` has no atomic form;
+    // `Arc<Mutex<…>>` and not a `Cell` because `filter_entry` demands `Send + Sync + 'static`.
+    // ponytail: the walker is serial today (`build()`, not `build_parallel()`), so the lock is
+    // never contended and its cost is a compare-and-swap per excluded path.
+    let removed: Arc<Mutex<Vec<PathBuf>>> = Arc::new(Mutex::new(Vec::new()));
     if !excluded.is_empty() {
-        let counter = Arc::clone(&removed);
+        let observed = Arc::clone(&removed);
+        // The reported paths are put back under the typed root, exactly as findings are, so a
+        // relative invocation reports relative paths and the field can be pasted into a config.
+        let (typed, canonical) = (root.to_path_buf(), walked.clone());
         builder.filter_entry(move |entry| {
             let is_dir = entry.file_type().is_some_and(|kind| kind.is_dir());
             if !excluded.matched(entry.path(), is_dir).is_ignore() {
                 return true;
             }
-            // Counted only when the removal cost the run something it could have MEASURED. A
+            // Recorded only when the removal cost the run something it could have MEASURED. A
             // `README.md` the tool would never have read is a removed path but not a lost
             // measurement, and reporting it as one is the same over-claim one level in.
             //
-            // A directory is counted without knowing, and that is deliberate: finding out means
+            // A directory is recorded without knowing, and that is deliberate: finding out means
             // descending into it, which is the pruning that makes this affordable at all. So the
             // claim for a directory is conservative — it *might* have held Python — and the
-            // residual is that excluding a directory of images still says the tree was not fully
-            // measured.
+            // residual is that excluding a directory of images still says paths were removed.
             if is_dir || is_python_source(entry.path()) {
-                counter.fetch_add(1, Ordering::Relaxed);
+                let path = reroot(&typed, &canonical, entry.path().to_path_buf());
+                // A poisoned lock means a panic inside another `filter_entry` call, which cannot
+                // happen here — nothing above can panic — and silently dropping the path would be
+                // an under-report of exactly the kind this list exists to prevent.
+                observed
+                    .lock()
+                    .expect("the walk is serial and nothing in this closure panics")
+                    .push(path);
             }
             false
         });
@@ -643,28 +744,35 @@ fn python_files(root: &Path, config: &Config) -> Result<Walked, Error> {
             files.push(reroot(root, &walked, entry.into_path()));
         }
     }
-    Ok(Walked {
-        files,
-        excluded_measurable: removed.load(Ordering::Relaxed),
-    })
+    // Taken out from behind the lock rather than unwrapped out of the `Arc`: the builder still owns
+    // the closure that holds the second handle, so `Arc::into_inner` is `None` here — measured, and
+    // it panicked on every run of this repository, whose own `exclude` makes the closure exist.
+    let excluded = std::mem::take(
+        &mut *removed
+            .lock()
+            .expect("the walk is serial and nothing in the filter panics"),
+    );
+    Ok(Walked { files, excluded })
 }
 
-/// What a walk found, and how much `exclude` kept it from finding.
+/// What a walk found, and what `exclude` kept it from finding.
 struct Walked {
     /// Every Python file the walk yielded, unsorted — see [`python_files`].
     files: Vec<PathBuf>,
-    /// How many paths the exclude matcher removed that could have been measured, **counted
-    /// during the walk**.
+    /// Every path the exclude matcher removed that could have been measured, **observed during the
+    /// walk**, unsorted.
     ///
-    /// Not `config.exclude.len()`, and not a flag beside a list read back off the configuration.
-    /// This one number is both the reason to print the diagnostic and the whole of its content, so
-    /// the gate and the sentence cannot disagree — which they have, twice, in exactly this place:
-    /// first a gate that read `!config.exclude.is_empty()`, then an honest gate whose sentence
-    /// still listed every configured glob whether it fired or not.
+    /// Not `config.exclude`, and not a flag beside a list read back off the configuration. This one
+    /// list is the reason to print the empty-walk diagnostic, the whole of that sentence's content
+    /// (as its length) *and* the whole of the document's `excluded` field, so the three cannot
+    /// disagree — which the first two have, twice, in exactly this place: first a gate that read
+    /// `!config.exclude.is_empty()`, then an honest gate whose sentence still listed every
+    /// configured glob whether it fired or not.
     ///
-    /// A pruned directory counts as **one** path, not as the subtree behind it; the walk
-    /// deliberately never learns how big that subtree was.
-    excluded_measurable: usize,
+    /// A pruned directory appears as **one** path, not as the subtree behind it; the walk
+    /// deliberately never learns how big that subtree was, because learning it means descending
+    /// into it and losing the pruning that makes `exclude` affordable at all.
+    excluded: Vec<PathBuf>,
 }
 
 /// Puts a walked path back under the root **as the user typed it**.
@@ -686,14 +794,17 @@ fn reroot(typed: &Path, walked: &Path, path: PathBuf) -> PathBuf {
     }
 }
 
-/// Reads and extracts every file, or fails with **all** of the failures.
+/// Reads and extracts every file, returning what parsed **and** what did not.
 ///
-/// Nothing is returned when anything failed, and that is the fail-loud half of the exit contract:
-/// findings from the files that did parse would look like a measurement of a tree that was never
-/// measured.
-fn read(files: &[PathBuf]) -> Result<Vec<Source>, Error> {
+/// Infallible on purpose: there is nothing left here that can stop a run. Every failure is a
+/// [`Skipped`] entry, and the caller turns a non-empty list into an incomplete run — never into a
+/// refusal to report the files that were fine.
+///
+/// Plural, as the error it replaces was: reporting only the first failure makes fixing a repository
+/// an exercise in re-running the tool once per broken file.
+fn read(files: &[PathBuf]) -> (Vec<Source>, Vec<Skipped>) {
     let mut sources = Vec::new();
-    let mut failures = Vec::new();
+    let mut skipped = Vec::new();
 
     for file in files {
         match extract::read_source(file).and_then(|text| {
@@ -701,15 +812,18 @@ fn read(files: &[PathBuf]) -> Result<Vec<Source>, Error> {
             Ok(sources_of(blocks, &text))
         }) {
             Ok(read) => sources.extend(read),
-            Err(error) => failures.push((file.clone(), error)),
+            // Both halves of the `and_then` land here, and that is the point: an io failure
+            // (unreadable by permissions, vanished mid-walk) and a parse failure are the same
+            // outcome for the caller — this file was not measured — and giving them two channels
+            // is how one of them ends up still fatal after the other is fixed.
+            Err(error) => skipped.push(Skipped {
+                path: file.display().to_string(),
+                reason: error.to_string(),
+            }),
         }
     }
 
-    if failures.is_empty() {
-        Ok(sources)
-    } else {
-        Err(Error::Unreadable(failures))
-    }
+    (sources, skipped)
 }
 
 /// Pairs every block with the marker on the physical line above it, and reports the near-misses.
@@ -840,24 +954,6 @@ pub fn findings(sources: Vec<Source>, config: &Config) -> Vec<Finding> {
     // function of the directory layout rather than of the tree's contents.
     findings.sort_by(|left, right| left.sort_key().cmp(&right.sort_key()));
     findings
-}
-
-/// Renders every read failure, one per line, sorted by path.
-///
-/// Sorted here rather than in the walk, so that the walk can stay unordered and keep
-/// [`findings`]'s sort load-bearing.
-fn render_failures(failures: &[(PathBuf, extract::Error)]) -> String {
-    let mut lines: Vec<String> = failures
-        .iter()
-        .map(|(path, error)| format!("{}: {error}", path.display()))
-        .collect();
-    lines.sort();
-    format!(
-        "{}\n{} file(s) could not be read; no findings are reported for a tree that was not fully \
-         measured",
-        lines.join("\n"),
-        failures.len()
-    )
 }
 
 #[cfg(test)]
@@ -1210,8 +1306,9 @@ mod tests {
 
         let walked = python_files(&root, &Config::default()).expect("the fixture tree is readable");
         assert!(
-            walked.excluded_measurable == 0,
-            "a walk with no `exclude` configured reported that it excluded something"
+            walked.excluded.is_empty(),
+            "a walk with no `exclude` configured reported that it excluded something: {:?}",
+            walked.excluded
         );
         let mut names: Vec<String> = walked
             .files
