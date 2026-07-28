@@ -17,196 +17,80 @@
   <img src="https://img.shields.io/badge/Rust-powered-12130f.svg?logo=rust&logoColor=e4dfda" alt="Powered by Rust">
 </p>
 
-Coding agents can over-explain: comments grow into essays, docstrings repeat implementation details,
-and the same rationale spreads across files. `tooprolix` turns that noise into explicit `TPX`
-diagnostics for oversized and duplicated prose. It checks only comments and docstrings
-in `*.py` files, never rewrites the useful **why**, and leaves the final decision to you.
+Coding agents over-explain. Comments grow into essays, docstrings restate the code, and the same
+rationale quietly spreads across five files. `tooprolix` turns that into `TPX` diagnostics you can
+act on — it reads only comments and docstrings, never rewrites your **why**, and leaves the call to
+you.
 
-## See the signal
+## Quick start
 
 ```console
 $ tooprolix check .
-src/client.py:14-31: TPX003 same explanation in 3 places: src/poller.py:38-52, src/worker.py:91-104 (weakest src/client.py:14-31 ~ src/worker.py:91-104, similarity 0.812)
 src/config.py:1-26: TPX002 docstring is 243 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it
+src/client.py:14-31: TPX003 same explanation in 3 places: src/poller.py:38-52, src/worker.py:91-104 (weakest src/client.py:14-31 ~ src/worker.py:91-104, similarity 0.812)
 ```
 
-Every address is `path:start-end`, so the size of the block is in the line you already read — a
-243-word docstring is 26 lines, and you know where to stop before opening the file. Every reported
-block spans at least two lines, so in practice every address carries a range; one-line prose is
-never a finding at all.
+Each finding points to `path:start-end`, so you know how big the block is before you open it.
 
-> [!NOTE]
-> `path:start-end` is a **break** from 0.3.0's `path:line` for anything that parses the address
-> strictly. A tool that reads the leading `path:line` and stops at the first number is unaffected;
-> one that splits on `:` and requires an integer is not. Taken deliberately while nothing is
-> published and there are no consumers.
-
-...and when there is nothing to report and the whole tree was read:
+And when the whole tree came back clean:
 
 ```console
 $ tooprolix check .
 All checks passed!
 ```
 
-Green on a terminal, plain everywhere else — in a pipe, a file, or with `NO_COLOR` set. It is
-printed **only** when the tree was read whole and the exit code is 0: a run that could not read part
-of the tree exits 1 and stays quiet, because the sentence would be claiming a completeness the run
-does not have. `--format json` never prints it.
+Exit codes are the contract: `0` clean, `1` findings, `2` could not start. A tree that was not read
+whole **never** exits 0 — see the [CLI contract](docs/cli-contract.md).
 
-A cluster names its weakest link by name, not only by score. Grouping asserts a transitivity the
-similarity measure does not have, so `weakest a ~ b` is the pair to read first — on a cluster of
-twenty addresses that is the difference between a finding and a hint.
-
-Findings go to stdout and diagnostics to stderr, sorted by address and byte-identical between runs.
-
-The exit code is the contract:
-
-| state | code |
-| --- | --- |
-| the tree was read whole, nothing to report | **0** |
-| the tree was read whole, findings were printed | **1** |
-| part of the tree could not be read — with or without findings | **1** |
-| the run could not start: a bad path, a broken `[tool.tooprolix]` | **2** |
-
-A file that does not parse, or that cannot be opened, does not fail the run: it is named on stderr
-with the reason, the rest of the tree is still checked, and the findings that were reachable are
-printed. **A tree that was not read whole never exits 0** — that guarantee is what makes the rest
-safe, so "no findings" and "not fully measured" are never the same answer.
-
-### The JSON document
-
-`--format json` writes one versioned document, including on a clean run, so a consumer never has to
-tell an empty result from a crash. Since exit 1 no longer distinguishes "the prose is bad" from "the
-measurement is incomplete", this is the only channel that carries completeness — all five keys are
-present on **every** document, `schema_version` is now `"2"`, and a v1 consumer fails loudly on it
-rather than silently reading a partial result as a whole one:
-
-```json
-{
-  "schema_version": "2",
-  "complete": false,
-  "skipped": [{"path": "vendor/fixture.py", "reason": "could not parse Python source: …"}],
-  "excluded": ["tests/fixtures"],
-  "findings": []
-}
-```
-
-`skipped` is a **refusal** — the tool tried to read the file and could not — and it is the only thing
-that sets `complete` to `false`. `excluded` is a **boundary**: `exclude` says a tree was never in
-scope, so inside that scope the measurement really is whole and the text output stays silent about
-it. A pruned directory appears as one path, not as the subtree behind it.
-
-> [!IMPORTANT]
-> On a `complete: false` document, `TPX003` clusters are a **different graph** — not the same
-> duplicates minus a file. `TPX003` is cross-file by construction, so a missing block may have been
-> the only bridge between two components: clusters that were one become two, and a cluster that falls
-> below two members disappears entirely. Do not diff the findings of a partial run against a whole
-> one and read the difference as churn in the repository. It is churn in the input set.
-
-> [!NOTE]
-> `tooprolix` is under active development. The prose extractor, all three shipping detectors
-> (`TPX001`, `TPX002`, `TPX003`) and the command line above are implemented and exercised as a
-> process. There is no PyPI release yet, so the command is not on PATH until
-> `cargo run -- check <path>` becomes `tooprolix check <path>` at packaging time.
-
-## Rules
+## Rules at a glance
 
 | Code | Detects | Status |
 | --- | --- | --- |
-| `TPX001` | A comment run longer than its word limit | Shipping |
-| `TPX002` | A docstring longer than its word limit | Shipping |
-| `TPX003` | One explanation repeated across comments and docstrings, reported once with every place it appears | Shipping |
-| `TPX004` | Comments that restate the following code | Reserved; not in 0.1.0 |
+| `TPX001` | A comment run longer than its word limit | Implemented |
+| `TPX002` | A docstring longer than its word limit | Implemented |
+| `TPX003` | One explanation repeated across comments and docstrings, reported once with every place it appears | Implemented |
+| `TPX004` | Comments that restate the following code | Reserved |
 
-Volume is measured in words rather than lines or characters, and the limit is the last size still
-allowed — a block of exactly the limit is silent, one word over is a finding. `TPX004` is reserved
-rather than disabled: evaluation on the reference corpus could not find a setting that both flagged
-the intended case and stayed quiet on hand-cleaned code, so no rule ships under that number.
-
-Suppress deliberate repetition or a long block that earns its length, without disabling the rule for
-a file. The marker goes on the physical line **directly above the block** — one rule for comments and
-docstrings alike:
+Some prose earns its length. Put a marker on the line directly above the block:
 
 ```python
 # !TPX003
 # The retry contract is restated here on purpose, so this module can be read on
 # its own without opening the client it talks to.
-
-
-def settle(batch):
-    # !TPX002
-    """Fold a batch into the ledger.
-
-    The long explanation of why settlement waits for the nightly cut-off lives
-    here rather than in the wiki, because it is the reason this function exists
-    and it is the first thing anyone changing it needs to know.
-    """
-    return batch
 ```
 
-For a docstring that means *inside* the body, between `def`/`class` and the literal — not above the
-`def` line. Several codes are comma-separated, anything after them is your reason, and `# !TPX*`
-silences every rule for that block — `TPX*` is a literal token and not a glob, so `TPX0*` is simply
-an unrecognised code.
+Several codes, blanket suppression, and repository-wide config live in
+[rules and configuration](docs/rules-and-configuration.md).
 
-Turn a rule off repository-wide, or move a limit, in `pyproject.toml`. The nearest one at or above
-the checked path is used, and a rule listed in `ignore` cannot be switched back on by a marker:
+## Validation
 
-```toml
-[tool.tooprolix]
-ignore = ["TPX003"]
-exclude = ["tests/fixtures", "vendor", "*_pb2.py"]
-comment-max-volume = 150
-docstring-max-volume = 200
-```
+Rules are exercised on six pinned real repositories — agent frameworks and mature libraries — not
+only synthetic fixtures. Every threshold is read off that corpus rather than chosen by taste, and
+critical guards are mutation-proved: a test that stays green when its guarantee is broken is deleted,
+not kept for the count.
 
-## How it is tested
-
-- Rules are exercised on real repositories, not only synthetic fixtures. The pinned corpus spans
-  agent frameworks (`openai-agents-python`, CrewAI, LangGraph, OpenHands) and mature libraries
-  (Pydantic, Requests) — six repositories, all measurable Python.
-- Every `*.py` file is parsed for module, class, function, and async-function docstrings, plus runs
-  of own-line comments. Generated, vendored, build, and environment files are excluded explicitly.
-  Every threshold and word limit is read off that corpus rather than chosen by taste, and each is
-  recorded next to the constant it sets, together with what it costs in opt-out markers.
-- Guards are proved by mutation, not by passing: a threshold shifted by one, an ordering key
-  replaced, or an unreadable checkout must turn a named test red. Tests that stayed green under such
-  a mutation have been removed rather than kept for the count.
-- `TPX003` is release-gated on at least 20 labelled findings and precision of at least 0.80. The
-  volume limits are calibrated from the corpus against the cost of opting out, and their true-positive
-  rate is not yet labelled — that measurement gates publication, not the detector.
-
-See [`corpus/REPORT.md`](corpus/REPORT.md) for the pins, measurements, and unresolved evidence.
+Publication is still gated by labelled-corpus validation. See
+[`corpus/REPORT.md`](corpus/REPORT.md) for the pins, the measurements, and what is still open.
 
 ## Why tooprolix
 
-- **Repository-wide.** It can find one explanation repeated across otherwise unrelated files.
-- **Deterministic.** The same source produces the same ordered findings.
-- **Local.** No model calls, network requests, or probabilistic output.
+- **Repository-wide.** It finds one explanation repeated across otherwise unrelated files.
+- **Deterministic.** The same source produces the same ordered findings, byte for byte.
+- **Local.** No model calls, no network, no probabilistic output.
 
-`tooprolix` complements [Ruff](https://github.com/astral-sh/ruff): Ruff owns Python code quality;
-`tooprolix` focuses on the prose beside the code and uses Ruff's parser as its syntax foundation.
+Ruff checks Python code; `tooprolix` checks the prose beside it, using
+[Ruff](https://github.com/astral-sh/ruff)'s parser as its syntax foundation.
 
-## Development
+## Documentation
 
-The project follows RED → GREEN → REFACTOR and keeps every gate explicit:
+| | |
+| --- | --- |
+| [CLI and exit-code contract](docs/cli-contract.md) | Addresses, output channels, colour, exit codes, JSON schema |
+| [Rules and configuration](docs/rules-and-configuration.md) | Thresholds, suppression markers, `pyproject.toml` |
+| [`corpus/REPORT.md`](corpus/REPORT.md) | The corpus, the measurements, the open questions |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Toolchain, gates, commit and release conventions |
 
-```console
-make lint.check
-make type
-make test
-make rust.fmt.check
-make rust.lint
-make rust.test
-```
+## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the toolchain, release, and commit conventions.
-
-<!--
-Release-day cleanup:
-- remove the pre-release notice;
-- replace the status badge with PyPI version and supported-Python badges;
-- update test counts or replace them with a generated badge;
-- change rule statuses only after reference-corpus validation records the result;
-- verify every install and output example against the published wheel.
--->
+Run `make help` for the task list, and see [CONTRIBUTING.md](CONTRIBUTING.md) for the toolchain and
+the gates CI requires.
