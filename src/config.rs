@@ -410,14 +410,26 @@ fn read_ignore(value: &toml::Value, path: &Path) -> Result<Vec<Rule>, Error> {
 /// taken, because `" vendor"` has exactly one plausible reading and rejecting it would be pedantry
 /// where the guard's whole purpose is to stop *silence*, not to police formatting.
 ///
-/// # An entry that matches nothing is silent, deliberately
+/// # An entry naming a path that is ABSENT is silent; one naming a present path never is
 ///
-/// `exclude = ["./pkg/vendor"]`, an absolute path, or a `..` path each compile fine and match no
-/// file, and nothing says so. Unlike the near-miss diagnostic on opt-out *markers*
-/// ([`crate::rules`]), no warning is offered here: a configuration shared across repositories
-/// legitimately names paths that are absent from any one of them, so the warning would be a false
-/// alarm most of the time — where the marker case measured zero collisions on the corpus. Revisit
-/// if `exclude` ever becomes per-repository rather than shared.
+/// The distinction matters and an earlier version of this comment blurred it. A configuration
+/// shared across repositories legitimately names paths that are missing from any one of them, so
+/// warning about those would be a false alarm most of the time — unlike the near-miss diagnostic
+/// on opt-out *markers* ([`crate::rules`]), which measured zero collisions on the corpus. That
+/// case stays silent.
+///
+/// What is **not** allowed to be silent is an entry naming a path that is right there, in a
+/// spelling the matcher does not recognise. `./broken` was exactly that, and [`normalise_glob`]
+/// now collapses it; anything that provably cannot match is refused outright.
+///
+/// # Two residuals, recorded so they are re-examined rather than rediscovered
+///
+/// * **Unicode normalisation.** A directory created with NFD bytes and an entry written in NFC do
+///   not match, so the exclusion misses and the run exits 2. Left alone: it fails loud rather than
+///   silently, it is macOS-specific, and ruff matches byte-wise too.
+/// * **An explicitly named directory can be emptied by a child-matching glob.**
+///   `exclude = ["vendor/**"]` with `tooprolix check vendor` keeps the root — depth 0 is exempt
+///   from filtering — but removes every child, giving an empty walk. Matches ruff, and it is loud.
 fn read_exclude(value: &toml::Value, path: &Path) -> Result<Vec<String>, Error> {
     let entries = value.as_array().ok_or_else(|| Error::BadValue {
         path: path.to_path_buf(),
@@ -456,10 +468,74 @@ fn read_exclude(value: &toml::Value, path: &Path) -> Result<Vec<String>, Error> 
                 ),
             });
         }
-        excluded.push(glob.to_owned());
+        excluded.push(normalise_glob(glob).map_err(|problem| Error::BadValue {
+            path: path.to_path_buf(),
+            key: "exclude".to_owned(),
+            problem: format!("`{raw}` {problem}"),
+        })?);
     }
 
     Ok(excluded)
+}
+
+/// Collapses the redundant spellings of one relative path, or says why the entry can never match.
+///
+/// `./broken` and `broken` are the same intent, and the underlying matcher does not think so: an
+/// unnormalised `./broken` is a glob for a directory literally named `.`, so it silently matches
+/// nothing and the tree the user believed they had excluded fails the run. Measured, on a tree
+/// where `broken/` exists: `exclude = ["broken"]` exits 0 and `exclude = ["./broken"]` exits 2.
+///
+/// Every separator-level spelling of the same path therefore collapses — `./x`, `.//x`, `././x`,
+/// `x/./y`, `x//y` — because the one that was reported was found by somebody typing it, and the
+/// next one will be found the same way.
+///
+/// # What is preserved, and what is refused
+///
+/// * A **leading `/`** is kept. In gitignore syntax it does not mean "absolute", it *anchors* the
+///   pattern to the base directory, and that is the only way to say "the top-level `vendor`, not
+///   every `vendor` at any depth". Dropping it would delete a working, ruff-compatible capability
+///   in order to fix a spelling problem. The consequence, stated rather than left as folklore: a
+///   hand-pasted absolute path such as `/Users/me/proj/vendor` is read as an anchored *relative*
+///   pattern and matches nothing on a tree that has no `Users/` in it. That is the genuinely
+///   absent-path case, which stays silent for the reason [`read_exclude`] gives.
+/// * A **trailing `/`** is kept. It means "directory only" and dropping it would widen the rule to
+///   files of the same name — a silent change of meaning, which is the thing this function exists
+///   to prevent.
+/// * A **`..` component** is refused. It walks out of the tree the base names, so nothing the walk
+///   can ever yield will match it — measured as a no-op. That is the same class as the empty glob
+///   and the negated one: a rule that reads as working and is not.
+/// * An entry that **normalises away to nothing** (`.`, `./`, `/`) is refused, and this one is
+///   load-bearing rather than tidy: it would otherwise reach [`exclude_matcher`] as the bare `!`,
+///   which was measured to exclude the **entire tree**. Normalising without this guard would
+///   introduce the exact fail-open the empty-string check already closes.
+fn normalise_glob(glob: &str) -> Result<String, &'static str> {
+    let mut segments = Vec::new();
+    for segment in glob.split('/') {
+        match segment {
+            // A separator run or a `.` hop: no path component, so nothing to keep.
+            "" | "." => {}
+            ".." => {
+                return Err(
+                    "escapes the directory of the configuration file with `..`, so no path this walk can reach will ever match it",
+                );
+            }
+            component => segments.push(component),
+        }
+    }
+
+    if segments.is_empty() {
+        return Err("names no path at all; an empty glob would exclude the whole tree");
+    }
+
+    let mut normalised = String::with_capacity(glob.len());
+    if glob.starts_with('/') {
+        normalised.push('/');
+    }
+    normalised.push_str(&segments.join("/"));
+    if glob.ends_with('/') {
+        normalised.push('/');
+    }
+    Ok(normalised)
 }
 
 /// The walk filter for [`Config::exclude`], with the configuration file's directory as its base.
@@ -709,6 +785,43 @@ mod tests {
             !config.ignores_everything(),
             "excluding paths must not read as disabling rules"
         );
+    }
+
+    /// Redundant spellings collapse; the two separators that carry MEANING survive.
+    ///
+    /// The collapsing half is what `./broken` needed. This test exists for the other half, which
+    /// no end-to-end test can see: a leading `/` anchors the pattern to the base directory and a
+    /// trailing `/` restricts it to directories, so normalising either away would silently widen
+    /// or unanchor the rule — the exact class of change this function was added to prevent. The
+    /// expected strings are written out rather than compared to each other, so a normaliser that
+    /// mangled every case identically could not pass.
+    #[test]
+    fn normalisation_collapses_redundant_separators_and_keeps_the_meaningful_ones() {
+        for (written, expected) in [
+            ("broken", "broken"),
+            ("./broken", "broken"),
+            (".//broken", "broken"),
+            ("././broken", "broken"),
+            ("a/./b", "a/b"),
+            ("a//b", "a/b"),
+            ("crates/*/resources", "crates/*/resources"),
+            // Anchored to the configuration file's directory — not "absolute", and not the same
+            // rule as the unanchored `broken`, which matches at any depth.
+            ("/broken", "/broken"),
+            ("/./broken", "/broken"),
+            // Directory-only, which is a narrower rule than the same name without the slash.
+            ("broken/", "broken/"),
+            ("./broken/", "broken/"),
+        ] {
+            let config = parse(&format!("[tool.tooprolix]\nexclude = [\"{written}\"]\n"))
+                .unwrap_or_else(|error| panic!("`{written}` was rejected: {error}"));
+
+            assert_eq!(
+                config.exclude,
+                vec![expected.to_owned()],
+                "`{written}` did not normalise to `{expected}`"
+            );
+        }
     }
 
     /// The entries that the walker accepts and then silently does nothing useful with.

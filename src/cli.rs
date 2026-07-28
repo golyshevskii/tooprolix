@@ -102,7 +102,7 @@ use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use ignore::WalkBuilder;
 use thiserror::Error as ThisError;
@@ -392,7 +392,7 @@ pub fn execute<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<ExitSta
 
     let Walked {
         files,
-        excluded_any,
+        excluded_measurable,
     } = python_files(&path, &config)?;
     if files.is_empty() {
         // A walk that visited nothing scores every repository clean. Saying so is the difference
@@ -404,23 +404,24 @@ pub fn execute<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<ExitSta
         // because it is honest — there really are no findings — so this line is the only thing
         // standing between an excluded tree and a tree that was measured and found clean.
         //
-        // Gated on what the WALK observed, never on `!config.exclude.is_empty()`: a glob that
+        // Gated on what the WALK counted, never on `!config.exclude.is_empty()`: a glob that
         // matched nothing did not empty anything, and saying it did is the same wrong-cause defect
         // in the opposite direction.
-        if excluded_any {
+        //
+        // The count is also the entire content of the sentence. Naming the globs is what went
+        // wrong last time — the list came from the configuration, so a glob that never fired was
+        // reported as having removed paths — and it cannot be fixed by naming them from the walk
+        // instead: `ignore::overrides::Glob` is an opaque newtype with a private field and no
+        // accessors, so per-glob attribution is not reachable through that crate's public API.
+        // A number the walk counted is, and the file it came from is already on the line.
+        if excluded_measurable > 0 {
             eprintln!(
-                "warning: `exclude` in {} removed paths from this walk ({}); an excluded tree is \
-                 not a measured one",
+                "warning: `exclude` in {} removed {excluded_measurable} path(s) that could have \
+                 been measured; an excluded tree is not a measured one",
                 config.source.as_ref().map_or_else(
                     || "the configuration".to_owned(),
                     |p| p.display().to_string()
                 ),
-                config
-                    .exclude
-                    .iter()
-                    .map(|glob| format!("`{glob}`"))
-                    .collect::<Vec<_>>()
-                    .join(", "),
             );
         }
     }
@@ -608,16 +609,27 @@ fn python_files(root: &Path, config: &Config) -> Result<Walked, Error> {
     //   * `.gitignore` still has its say — its layers run first and this filter runs after, so a
     //     path is walked only if BOTH allow it. Identical to `overrides` here because we only ever
     //     build exclusions, never re-inclusions.
-    let observed = Arc::new(AtomicBool::new(false));
+    let removed = Arc::new(AtomicUsize::new(0));
     if !excluded.is_empty() {
-        let seen = Arc::clone(&observed);
+        let counter = Arc::clone(&removed);
         builder.filter_entry(move |entry| {
             let is_dir = entry.file_type().is_some_and(|kind| kind.is_dir());
-            if excluded.matched(entry.path(), is_dir).is_ignore() {
-                seen.store(true, Ordering::Relaxed);
-                return false;
+            if !excluded.matched(entry.path(), is_dir).is_ignore() {
+                return true;
             }
-            true
+            // Counted only when the removal cost the run something it could have MEASURED. A
+            // `README.md` the tool would never have read is a removed path but not a lost
+            // measurement, and reporting it as one is the same over-claim one level in.
+            //
+            // A directory is counted without knowing, and that is deliberate: finding out means
+            // descending into it, which is the pruning that makes this affordable at all. So the
+            // claim for a directory is conservative — it *might* have held Python — and the
+            // residual is that excluding a directory of images still says the tree was not fully
+            // measured.
+            if is_dir || is_python_source(entry.path()) {
+                counter.fetch_add(1, Ordering::Relaxed);
+            }
+            false
         });
     }
 
@@ -633,21 +645,26 @@ fn python_files(root: &Path, config: &Config) -> Result<Walked, Error> {
     }
     Ok(Walked {
         files,
-        excluded_any: observed.load(Ordering::Relaxed),
+        excluded_measurable: removed.load(Ordering::Relaxed),
     })
 }
 
-/// What a walk found, and whether `exclude` is the reason it did not find more.
+/// What a walk found, and how much `exclude` kept it from finding.
 struct Walked {
     /// Every Python file the walk yielded, unsorted — see [`python_files`].
     files: Vec<PathBuf>,
-    /// Set when the exclude matcher really did remove a path, **observed during the walk**.
+    /// How many paths the exclude matcher removed that could have been measured, **counted
+    /// during the walk**.
     ///
-    /// Not `!config.exclude.is_empty()`. A configured glob that matches nothing is not an
-    /// exclusion, and reporting it as one blames a rule that never fired for an empty tree it had
-    /// no part in emptying. The distinction is only knowable by watching the walk, which is why
-    /// this rides back with the files instead of being re-derived from the configuration.
-    excluded_any: bool,
+    /// Not `config.exclude.len()`, and not a flag beside a list read back off the configuration.
+    /// This one number is both the reason to print the diagnostic and the whole of its content, so
+    /// the gate and the sentence cannot disagree — which they have, twice, in exactly this place:
+    /// first a gate that read `!config.exclude.is_empty()`, then an honest gate whose sentence
+    /// still listed every configured glob whether it fired or not.
+    ///
+    /// A pruned directory counts as **one** path, not as the subtree behind it; the walk
+    /// deliberately never learns how big that subtree was.
+    excluded_measurable: usize,
 }
 
 /// Puts a walked path back under the root **as the user typed it**.
@@ -1193,7 +1210,7 @@ mod tests {
 
         let walked = python_files(&root, &Config::default()).expect("the fixture tree is readable");
         assert!(
-            !walked.excluded_any,
+            walked.excluded_measurable == 0,
             "a walk with no `exclude` configured reported that it excluded something"
         );
         let mut names: Vec<String> = walked

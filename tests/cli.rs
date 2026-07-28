@@ -1477,11 +1477,13 @@ fn excluding_the_whole_tree_says_so_rather_than_scoring_it_clean() {
     );
     // Not merely "stderr mentions exclude" — that was satisfied by a clause driven off the
     // configuration's own say-so, which said the same thing for a glob that matched nothing. The
-    // claim under test is the one only the walk can make: that paths were actually removed.
+    // claim under test is the one only the walk can make: how many measurable paths it removed.
+    // The fixture has exactly two files and `*` takes both, so the number is checked and not just
+    // its presence — a hardcoded 1, or a count of globs rather than of removals, is visible here.
     assert!(
-        stderr_of(&after).contains("removed paths from this walk"),
+        stderr_of(&after).contains("removed 2 path(s) that could have been measured"),
         "the diagnostic blames something other than the `exclude` that actually caused it, or \
-         reports the rule's mere presence rather than its effect: {:?}",
+         reports the rule's mere presence rather than its measured effect: {:?}",
         stderr_of(&after)
     );
     assert!(
@@ -1688,4 +1690,170 @@ fn the_empty_walk_diagnostic_blames_exclude_only_when_exclude_actually_excluded_
         "`exclude` really did empty this walk and the run did not say so: {:?}",
         stderr_of(&everything_matched)
     );
+}
+
+/// The empty-walk diagnostic may name only what the walk itself observed — third pass over one
+/// sentence, and the defect has changed shape twice.
+///
+/// Version one gated on `config.exclude` being non-empty. Version two moved the *gate* onto the
+/// walk but left the parenthesised body as `config.exclude.iter()` — every configured glob, firing
+/// or not — so a tree whose only removal was `vendor` still announced `absent-glob` as having
+/// removed paths. The gate became honest and the sentence did not.
+///
+/// Two removals are asserted here and they are deliberately different: a glob that fires and one
+/// that cannot, in the same run, so a message built from the configuration and a message built
+/// from the walk produce visibly different strings. A body driven by the configuration also
+/// reddens `an_absent_glob_is_never_named`, below, which is the half that isolates it.
+#[test]
+fn the_empty_walk_diagnostic_names_nothing_the_walk_did_not_observe() {
+    // Arrange — `vendor/` holds the tree's only Python; `absent-glob` matches nothing at all.
+    let scratch = Scratch::new("exclude-attribution");
+    scratch.write("vendor/fat.py", &long_comment("vendored retry policy"));
+    scratch.write(
+        "pyproject.toml",
+        "[tool.tooprolix]\nexclude = [\"absent-glob\", \"vendor\"]\n",
+    );
+
+    // Act
+    let output = scratch.check(&[]);
+
+    // Assert — the run still says `exclude` emptied it ...
+    assert_eq!(output.status.code(), Some(0), "{output:?}");
+    assert!(
+        stderr_of(&output).contains("exclude"),
+        "`exclude` really did empty this walk and the run did not say so: {:?}",
+        stderr_of(&output)
+    );
+    // ... and does not credit a glob that never matched anything.
+    assert!(
+        !stderr_of(&output).contains("absent-glob"),
+        "a glob that matched nothing is named as having removed paths — the sentence is built \
+         from the configuration rather than from the walk: {:?}",
+        stderr_of(&output)
+    );
+}
+
+/// A removal that could never have been measured is not a reason to say the tree was not measured.
+///
+/// The flag observed "a path was removed"; the sentence claimed "measurement is incomplete". Those
+/// are different facts, and `README.md` is where they come apart: excluding it removes a path the
+/// tool would never have read, so nothing measurable was lost and there is nothing to warn about.
+/// `is_python_source` already answers this for a file. A pruned *directory* is the case where the
+/// answer is genuinely unknowable without descending — that is the pruning the walk must keep — so
+/// a directory stays conservative and still counts.
+#[test]
+fn removing_something_that_was_never_measurable_is_not_an_incomplete_measurement() {
+    // Arrange — no Python anywhere, so the walk is empty either way and only the REASON differs.
+    let scratch = Scratch::new("exclude-unmeasurable");
+    scratch.write("notes.txt", "not python\n");
+    scratch.write(
+        "pyproject.toml",
+        "[tool.tooprolix]\nexclude = [\"notes.txt\"]\n",
+    );
+
+    // Act
+    let unmeasurable = scratch.check(&[]);
+    // ... and the directory case, which stays conservative because it cannot be known.
+    scratch.write("vendor/thing.py", "\"\"\"Short.\"\"\"\n");
+    scratch.write(
+        "pyproject.toml",
+        "[tool.tooprolix]\nexclude = [\"vendor\"]\n",
+    );
+    let pruned_directory = scratch.check(&[]);
+
+    // Assert
+    assert_eq!(unmeasurable.status.code(), Some(0), "{unmeasurable:?}");
+    assert!(
+        stderr_of(&unmeasurable).contains("no Python files"),
+        "an empty walk must still say it measured nothing: {:?}",
+        stderr_of(&unmeasurable)
+    );
+    assert!(
+        !stderr_of(&unmeasurable).contains("exclude"),
+        "excluding a file the tool would never have read was reported as an incomplete \
+         measurement: {:?}",
+        stderr_of(&unmeasurable)
+    );
+
+    assert!(
+        stderr_of(&pruned_directory).contains("exclude"),
+        "a pruned directory might have held Python and must keep the conservative claim: {:?}",
+        stderr_of(&pruned_directory)
+    );
+}
+
+/// `./vendor` and `vendor` are one rule, and so is every other spelling of the same path.
+///
+/// This overturns a residual: "an entry that matches nothing is silent" was accepted because a
+/// shared configuration legitimately names paths absent from any one repository. `./vendor` is not
+/// an absent path — it is a *present* one in a natural spelling, and the task pins ruff semantics,
+/// where it works. Unnormalised it is a glob for a directory literally named `.`, which matches
+/// nothing, so the run fails on a tree the user believed they had excluded.
+///
+/// The whole class is swept rather than the one instance that was reported, because `./x` was
+/// found by someone typing it and the next one will be found the same way.
+#[test]
+fn every_spelling_of_the_same_relative_path_excludes_the_same_tree() {
+    // Arrange — an unparsable file, so a failed exclusion is exit 2 and cannot be mistaken for a
+    // clean run that happened to find nothing.
+    let scratch = Scratch::new("exclude-spellings");
+    scratch.write("broken/parser_fixture.py", "def f(:\n    pass\n");
+    scratch.write("app.py", "\"\"\"A short docstring.\"\"\"\n");
+
+    for spelling in [
+        "broken",
+        "./broken",
+        ".//broken",
+        "././broken",
+        "broken/",
+        "./broken/",
+        "brok*n",
+    ] {
+        scratch.write(
+            "pyproject.toml",
+            &format!("[tool.tooprolix]\nexclude = [\"{spelling}\"]\n"),
+        );
+
+        let output = scratch.check(&[]);
+
+        assert_eq!(
+            output.status.code(),
+            Some(0),
+            "`{spelling}` silently excluded nothing, so the unparsable file still failed the \
+             run: {:?}",
+            stderr_of(&output)
+        );
+    }
+}
+
+/// A pattern that cannot match anything under the configuration file is refused, not ignored.
+///
+/// `..` walks out of the tree the base names, so no path the walk can ever yield will match it —
+/// measured, it is a no-op. Silence there is the same class as the empty glob and the negated one:
+/// a rule that reads as working and is not. Rejecting is the only answer that cannot be mistaken
+/// for a rule that fired.
+#[test]
+fn an_exclude_entry_that_can_never_match_is_refused() {
+    let scratch = Scratch::new("exclude-unmatchable");
+    scratch.write("app.py", &long_comment("retry policy"));
+
+    for entry in ["../vendor", "vendor/../other", "..", "."] {
+        scratch.write(
+            "pyproject.toml",
+            &format!("[tool.tooprolix]\nexclude = [\"{entry}\"]\n"),
+        );
+
+        let output = scratch.check(&[]);
+
+        assert_eq!(
+            output.status.code(),
+            Some(2),
+            "`{entry}` can never match and was accepted anyway: {output:?}"
+        );
+        assert!(
+            stderr_of(&output).contains("exclude") && stderr_of(&output).contains("pyproject.toml"),
+            "`{entry}`: the message names neither the key nor the file: {:?}",
+            stderr_of(&output)
+        );
+    }
 }
