@@ -143,6 +143,20 @@ impl Scratch {
             .output()
             .expect("the binary cargo just built is executable")
     }
+
+    /// `tooprolix check <target>` with the working directory `relative` *inside* the scratch tree.
+    ///
+    /// The working directory is a parameter and not a constant because `exclude` is resolved
+    /// against the **configuration file's** directory: a rule written once at the root of a
+    /// project has to mean the same thing to `tooprolix check .` run from the root and to the same
+    /// command run from a package inside it. Nothing else here can vary the two independently.
+    fn check_from(&self, relative: &str, target: &str) -> Output {
+        Command::new(env!("CARGO_BIN_EXE_tooprolix"))
+            .args(["check", target])
+            .current_dir(self.root.join(relative))
+            .output()
+            .expect("the binary cargo just built is executable")
+    }
 }
 
 impl Drop for Scratch {
@@ -1034,7 +1048,15 @@ fn a_broken_configuration_is_a_tool_error_and_not_a_default() {
 
     for (table, expected) in [
         ("[tool.tooprolix]\nignore = [\"TPX999\"]\n", "TPX999"),
-        ("[tool.tooprolix]\nexclude = [\"vendor\"]\n", "exclude"),
+        // Was `exclude = ["vendor"]`, when `exclude` was the stand-in for "a key we do not have".
+        // It is a shipping key now, so the row would assert the opposite of the truth. A near-miss
+        // spelling keeps the case it was written for — an unknown key is fatal — and
+        // `an_unknown_key_is_still_fatal_and_the_known_list_now_carries_exclude` covers the half
+        // this row can no longer see.
+        (
+            "[tool.tooprolix]\nexclude-vendor = [\"vendor\"]\n",
+            "exclude-vendor",
+        ),
         ("[tool.tooprolix]\ncomment-max-volume = -3\n", "-3"),
         ("[tool.tooprolix]\ncomment-max-volume = \"150\"\n", "string"),
         // Not `"parse"` — that word is in our own format string and was satisfied whatever the
@@ -1120,5 +1142,430 @@ fn a_clean_run_is_silent_in_text_and_an_empty_document_in_json() {
     assert_eq!(
         document["findings"].as_array().map(std::vec::Vec::len),
         Some(0)
+    );
+}
+
+// ---------------------------------------------------------------------------------------------
+// `exclude` — the measurement boundary.
+//
+// `exclude` is not configurability for its own sake. It is the one lever that makes the strict
+// exit contract (`crate::cli`, exit 2: "a file that does not parse must never be reportable as
+// clean") applicable to a repository that legitimately contains invalid Python — a parser's own
+// test corpus, a vendored tree, a fixture directory. `.gitignore` cannot express it, because those
+// files are deliberately committed, and an opt-out marker cannot save a file that does not parse
+// far enough to have comments read out of it.
+//
+// It is deliberately NOT graceful handling of unreadable files. That is a different contract:
+// `exclude` says "this was never part of the measurement", graceful says "the measurement hit
+// something it could not read". This half must never be able to swallow the second.
+// ---------------------------------------------------------------------------------------------
+
+/// A long comment run, over the default 150-word limit, so a single file can carry `TPX001`.
+fn long_comment(subject: &str) -> String {
+    format!("# The {subject} is described here at length and entirely on purpose.\n").repeat(20)
+}
+
+/// The headline: a file the project excluded is neither checked nor a reason to fail.
+///
+/// Both halves are asserted and neither alone is worth anything. Without the "before" run this
+/// passes on a build where the fixture never failed in the first place; without the "after" run it
+/// passes on an `exclude` that swallows the *whole* tree. The unparsable file is the point — it is
+/// the case `.gitignore` and the opt-out marker both structurally cannot reach.
+#[test]
+fn an_excluded_unparsable_file_is_not_a_measurement_failure() {
+    // Arrange
+    let scratch = Scratch::new("exclude-broken");
+    scratch.write("vendor/parser_fixture.py", "def f(:\n    pass\n");
+    scratch.write("app.py", "\"\"\"A short docstring.\"\"\"\n");
+
+    // Act — first WITHOUT the key, to prove the tree really does fail.
+    let before = scratch.check(&[]);
+    scratch.write(
+        "pyproject.toml",
+        "[tool.tooprolix]\nexclude = [\"vendor\"]\n",
+    );
+    let after = scratch.check(&[]);
+
+    // Assert
+    assert_eq!(
+        before.status.code(),
+        Some(2),
+        "the fixture cannot demonstrate an exclusion it never triggers: {before:?}"
+    );
+    assert!(
+        stderr_of(&before).contains("parser_fixture.py"),
+        "the unparsable file is not the reason the run failed: {:?}",
+        stderr_of(&before)
+    );
+
+    assert_eq!(
+        after.status.code(),
+        Some(0),
+        "an excluded unparsable file still failed the run: {:?}",
+        stderr_of(&after)
+    );
+    assert_eq!(stdout_of(&after), "");
+    assert_eq!(
+        stderr_of(&after),
+        "",
+        "an excluded file is not a diagnostic either — it was never part of the measurement: {:?}",
+        stderr_of(&after)
+    );
+}
+
+/// AC3 — the glob is matched against the path **relative to the configuration file**, not against
+/// the basename and not against the working directory.
+///
+/// This is the test the recorded mutation has to redden: matching on `file_name()` instead of the
+/// relative path. The fixture is built so that mutation is *observable*, which a two-file tree
+/// cannot do — with only `vendor/copy.py` and `keep/copy.py`, excluding both leaves one block, and
+/// excluding one leaves one block, and `TPX003` needs two members either way, so both answers are
+/// exit 0 and the test is blind. The third file is what gives the two outcomes different shapes:
+///
+/// | matcher | excluded | surviving blocks | reported |
+/// |---|---|---|---|
+/// | relative path (correct) | `vendor/copy.py` | `keep/copy.py`, `anchor.py` | `TPX003 in 2 places` |
+/// | basename (the mutation) | both `copy.py` | `anchor.py` | nothing, exit 0 |
+#[test]
+fn exclude_is_matched_on_the_path_relative_to_the_configuration_file_not_on_the_basename() {
+    // Arrange
+    let scratch = Scratch::new("exclude-relative");
+    scratch.write("vendor/copy.py", SHARED_RATIONALE);
+    scratch.write("keep/copy.py", SHARED_RATIONALE);
+    scratch.write("anchor.py", SHARED_RATIONALE);
+
+    // Act — without the key first, so the fixture is proved capable of the finding it must keep.
+    let before = scratch.check(&[]);
+    scratch.write(
+        "pyproject.toml",
+        "[tool.tooprolix]\nexclude = [\"vendor/copy.py\"]\n",
+    );
+    let after = scratch.check(&[]);
+
+    // Assert
+    assert_eq!(before.status.code(), Some(1), "{before:?}");
+    assert!(
+        stdout_of(&before).contains("in 3 places"),
+        "the fixture must start as a three-member cluster: {}",
+        stdout_of(&before)
+    );
+
+    assert_eq!(
+        after.status.code(),
+        Some(1),
+        "the surviving pair stopped being a finding, so the glob matched by basename and took \
+         `keep/copy.py` with it: {after:?}"
+    );
+    assert!(
+        stdout_of(&after).contains("in 2 places"),
+        "expected the two survivors to still cluster: {}",
+        stdout_of(&after)
+    );
+    assert!(
+        stdout_of(&after).contains("keep/copy.py"),
+        "a file sharing only its BASENAME with the excluded path was excluded too: {}",
+        stdout_of(&after)
+    );
+    assert!(
+        !stdout_of(&after).contains("vendor"),
+        "the excluded file is still being measured: {}",
+        stdout_of(&after)
+    );
+}
+
+/// AC3 — the relative base is the configuration file's directory even when the walk starts below
+/// it, which is the case a lexical answer gets wrong.
+///
+/// `cd pkg && tooprolix check .` walks a tree whose entries the walker names `./generated/g.py`.
+/// Relative to the *configuration file* that same file is `pkg/generated/g.py`, and that is the
+/// name the glob is written against — one project, one rule, whatever directory CI happens to be
+/// standing in. Nothing normalises `./generated/g.py` into `pkg/generated/g.py` by accident.
+#[test]
+fn exclude_means_the_same_thing_from_a_subdirectory_as_from_the_project_root() {
+    // Arrange
+    let scratch = Scratch::new("exclude-subdir");
+    scratch.write("pkg/generated/g.py", SHARED_RATIONALE);
+    scratch.write("pkg/keep.py", SHARED_RATIONALE);
+    scratch.write("pkg/anchor.py", SHARED_RATIONALE);
+    scratch.write(
+        "pyproject.toml",
+        "[tool.tooprolix]\nexclude = [\"pkg/generated\"]\n",
+    );
+
+    // Act — the same rule, reached from two different working directories.
+    let from_root = scratch.check(&[]);
+    let from_pkg = scratch.check_from("pkg", ".");
+
+    // Assert
+    assert_eq!(from_root.status.code(), Some(1), "{from_root:?}");
+    assert!(
+        stdout_of(&from_root).contains("in 2 places")
+            && !stdout_of(&from_root).contains("generated"),
+        "the rule does not even hold from the project root: {}",
+        stdout_of(&from_root)
+    );
+
+    assert_eq!(from_pkg.status.code(), Some(1), "{from_pkg:?}");
+    assert!(
+        !stdout_of(&from_pkg).contains("generated"),
+        "the same rule stopped applying one directory down, so the glob was resolved against the \
+         working directory rather than against the configuration file: {}",
+        stdout_of(&from_pkg)
+    );
+    assert!(
+        stdout_of(&from_pkg).contains("in 2 places"),
+        "expected the two survivors to still cluster from the subdirectory: {}",
+        stdout_of(&from_pkg)
+    );
+}
+
+/// AC3 — `exclude` is a second layer over `.gitignore`, not a replacement for it.
+///
+/// The one-line version of the defect this forbids: switching the walk over to an "include only
+/// what the overrides allow" matcher, which is what the underlying crate does by default and which
+/// would make a `.gitignore`'d file reappear the moment a project set `exclude`. Both files are
+/// asserted absent and the tree is proved capable of reporting them.
+#[test]
+fn exclude_adds_to_gitignore_rather_than_replacing_it() {
+    // Arrange
+    let scratch = Scratch::new("exclude-gitignore");
+    scratch.write("ignored/copy.py", SHARED_RATIONALE);
+    scratch.write("vendor/copy.py", SHARED_RATIONALE);
+    scratch.write("anchor.py", SHARED_RATIONALE);
+
+    // Act
+    let bare = scratch.check(&[]);
+    scratch.write(".gitignore", "ignored/\n");
+    scratch.write(
+        "pyproject.toml",
+        "[tool.tooprolix]\nexclude = [\"vendor\"]\n",
+    );
+    let both_layers = scratch.check(&[]);
+
+    // Assert
+    assert!(
+        stdout_of(&bare).contains("in 3 places"),
+        "the fixture cannot demonstrate two exclusions it never triggers: {}",
+        stdout_of(&bare)
+    );
+
+    assert_eq!(both_layers.status.code(), Some(0), "{both_layers:?}");
+    assert!(
+        !stdout_of(&both_layers).contains("ignored/"),
+        "setting `exclude` resurrected a .gitignore'd file — the override REPLACED the gitignore \
+         layer instead of adding to it: {}",
+        stdout_of(&both_layers)
+    );
+    assert!(
+        !stdout_of(&both_layers).contains("vendor"),
+        "the excluded file was still measured: {}",
+        stdout_of(&both_layers)
+    );
+}
+
+/// AC3 — a path named **directly** on the command line is checked even when a glob
+/// excludes it, which is ruff's own default.
+///
+/// The reasoning is that `exclude` describes what a *walk* should not wander into, and a user who
+/// types a path has already answered the question the walk was asking. The alternative — silently
+/// exiting 0 on a file the user explicitly asked about — is the "measured nothing, said nothing"
+/// class this project keeps closing.
+#[test]
+fn an_explicitly_named_path_is_checked_even_when_it_is_excluded() {
+    // Arrange
+    let scratch = Scratch::new("exclude-explicit");
+    scratch.write("vendor/loud.py", &long_comment("vendored retry policy"));
+    scratch.write(
+        "pyproject.toml",
+        "[tool.tooprolix]\nexclude = [\"vendor\"]\n",
+    );
+
+    // Act
+    let walked = scratch.check(&[]);
+    let named_file = scratch.check_from("", "vendor/loud.py");
+    let named_directory = scratch.check_from("", "vendor");
+
+    // Assert — the walk skips it ...
+    assert_eq!(walked.status.code(), Some(0), "{walked:?}");
+    assert!(
+        stderr_of(&walked).contains("excluded"),
+        "a walk that measured nothing must say why: {:?}",
+        stderr_of(&walked)
+    );
+
+    // ... and naming it does not.
+    assert_eq!(
+        named_file.status.code(),
+        Some(1),
+        "an explicitly named file was silently skipped: {named_file:?}"
+    );
+    assert!(stdout_of(&named_file).contains("TPX001"));
+    assert_eq!(
+        named_directory.status.code(),
+        Some(1),
+        "an explicitly named directory was silently skipped: {named_directory:?}"
+    );
+    assert!(stdout_of(&named_directory).contains("TPX001"));
+}
+
+/// AC3 — `exclude` does not switch symlink following back on.
+///
+/// Measured on pydantic in epic 1: following links takes 343 findings to 559, because the same
+/// sources are reached twice. That invariant belongs to the walk, and adding a second filtering
+/// layer to the walk is exactly the kind of change that quietly rebuilds it with different options.
+#[test]
+#[cfg(unix)]
+fn exclude_does_not_make_the_walk_follow_symlinks() {
+    // Arrange
+    let scratch = Scratch::new("exclude-symlink");
+    scratch.write("pkg/a.py", &long_comment("retry policy"));
+    scratch.write("vendor/skipped.py", SHARED_RATIONALE);
+    scratch.write(
+        "pyproject.toml",
+        "[tool.tooprolix]\nexclude = [\"vendor\"]\n",
+    );
+    std::os::unix::fs::symlink(scratch.root.join("pkg"), scratch.root.join("alias"))
+        .expect("a symlink is creatable");
+
+    // Act
+    let output = scratch.check(&[]);
+
+    // Assert — one file behind two names is still one file.
+    assert_eq!(
+        stdout_of(&output).lines().count(),
+        1,
+        "the same source was counted twice, so the walk followed a symlink: {}",
+        stdout_of(&output)
+    );
+    assert!(
+        !stdout_of(&output).contains("alias"),
+        "the walk descended through a symlink: {}",
+        stdout_of(&output)
+    );
+}
+
+/// Red team — a glob that matches the WHOLE tree must not be a silent green.
+///
+/// This is the defect class epic 1 shipped once already: a run that measured nothing scores every
+/// repository clean, and exit 0 is indistinguishable from an earned one. The exit code stays 0
+/// because it is honest — there really are no findings — but the run has to say on stderr that it
+/// measured nothing, and it has to name `exclude` as the reason rather than blaming an absence of
+/// Python files that is not what happened.
+#[test]
+fn excluding_the_whole_tree_says_so_rather_than_scoring_it_clean() {
+    // Arrange
+    let scratch = Scratch::new("exclude-everything");
+    scratch.write("a.py", &long_comment("retry policy"));
+    scratch.write("b.py", SHARED_RATIONALE);
+
+    // Act
+    let before = scratch.check(&[]);
+    scratch.write("pyproject.toml", "[tool.tooprolix]\nexclude = [\"*\"]\n");
+    let after = scratch.check(&[]);
+
+    // Assert
+    assert_eq!(
+        before.status.code(),
+        Some(1),
+        "the fixture has nothing to lose: {before:?}"
+    );
+
+    assert_eq!(stdout_of(&after), "");
+    assert!(
+        !stderr_of(&after).is_empty(),
+        "every file in the tree was excluded and the run said nothing at all"
+    );
+    assert!(
+        stderr_of(&after).contains("exclude"),
+        "the diagnostic blames something other than the `exclude` that actually caused it: {:?}",
+        stderr_of(&after)
+    );
+    assert!(
+        stderr_of(&after).contains("pyproject.toml"),
+        "the diagnostic does not name the file the rule came from: {:?}",
+        stderr_of(&after)
+    );
+}
+
+/// An `exclude` entry the tool cannot act on is fatal, and never a silent "excluded nothing".
+///
+/// Measured against the underlying crate, and this is why the list is not decorative:
+///
+/// | entry | what the crate does with it, unguarded |
+/// |---|---|
+/// | `""` | accepted, builds an **empty** matcher — excludes nothing, silently |
+/// | `" "` | the same |
+/// | `"!vendor"` | accepted, and excludes **nothing** — the negation cancels ours |
+/// | `"a["` | a parse error, which is the only one of the four that was already loud |
+///
+/// Two of those fail open and one is meaningless, and all three look exactly like a rule that
+/// works. A gate that can be switched off by a typo in its own configuration is not a gate.
+#[test]
+fn a_malformed_exclude_entry_is_fatal_rather_than_quietly_doing_nothing() {
+    let scratch = Scratch::new("exclude-malformed");
+    scratch.write("a.py", &long_comment("retry policy"));
+
+    for (table, expected) in [
+        ("[tool.tooprolix]\nexclude = [\"\"]\n", "empty"),
+        ("[tool.tooprolix]\nexclude = [\"   \"]\n", "empty"),
+        ("[tool.tooprolix]\nexclude = [\"!vendor\"]\n", "!"),
+        ("[tool.tooprolix]\nexclude = [\"a[\"]\n", "a["),
+        ("[tool.tooprolix]\nexclude = \"vendor\"\n", "string"),
+        ("[tool.tooprolix]\nexclude = [3]\n", "integer"),
+    ] {
+        scratch.write("pyproject.toml", table);
+
+        let output = scratch.check(&[]);
+
+        assert_eq!(
+            output.status.code(),
+            Some(2),
+            "{table:?} was accepted and excluded nothing: {output:?}"
+        );
+        assert_eq!(stdout_of(&output), "", "{table:?} still printed findings");
+        assert!(
+            stderr_of(&output).contains(expected),
+            "{table:?}: the message does not name `{expected}`: {:?}",
+            stderr_of(&output)
+        );
+        assert!(
+            stderr_of(&output).contains("exclude") && stderr_of(&output).contains("pyproject.toml"),
+            "{table:?}: the message names neither the key nor the file: {:?}",
+            stderr_of(&output)
+        );
+    }
+}
+
+/// AC4 — an unknown key is still fatal, and the message still lists what *is* known.
+///
+/// The regression this guards is specific: adding `exclude` grows the known-key list, and a list
+/// written down in a second place is a list that drifts. If the rejection ever consults a
+/// hardcoded set that nobody updated, `exclude` itself becomes the unknown key — so the test
+/// asserts both directions on one run.
+#[test]
+fn an_unknown_key_is_still_fatal_and_the_known_list_now_carries_exclude() {
+    // Arrange
+    let scratch = Scratch::new("exclude-unknown-key");
+    scratch.write("a.py", SHARED_RATIONALE);
+    scratch.write(
+        "pyproject.toml",
+        "[tool.tooprolix]\nexcludes = [\"vendor\"]\n",
+    );
+
+    // Act
+    let output = scratch.check(&[]);
+
+    // Assert
+    assert_eq!(output.status.code(), Some(2), "{output:?}");
+    assert_eq!(stdout_of(&output), "");
+    assert!(
+        stderr_of(&output).contains("unknown key") && stderr_of(&output).contains("excludes"),
+        "a near-miss key was accepted or not named: {:?}",
+        stderr_of(&output)
+    );
+    assert!(
+        stderr_of(&output).contains("exclude,") || stderr_of(&output).contains(", exclude"),
+        "the known-key list does not advertise `exclude`, so the two lists have drifted: {:?}",
+        stderr_of(&output)
     );
 }
