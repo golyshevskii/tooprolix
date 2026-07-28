@@ -100,36 +100,6 @@ comment-max-volume = 150
 docstring-max-volume = 200
 ```
 
-`exclude` keeps paths out of the walk entirely. It exists because `tooprolix` refuses to report
-findings for a tree it could not fully read — one file that does not parse is exit 2, never
-"clean" — and a repository can legitimately contain invalid Python: a parser's own test corpus, a
-vendored tree, a fixture directory. `.gitignore` cannot express it, because those files are
-deliberately committed, and an opt-out marker cannot save a file that never parses far enough for
-its comments to be read. On the pinned ruff checkout, whose 374 deliberately-unparsable parser
-fixtures turned `tooprolix check .` into exit 2 with zero findings, two globs are the whole fix:
-
-```toml
-[tool.tooprolix]
-exclude = ["crates/*/resources", "crates/ty_completion_eval/truth"]
-```
-
-Four things are worth knowing before you write one:
-
-- **The globs are `.gitignore` syntax, resolved relative to the directory of the `pyproject.toml`
-  they are written in** — not to your working directory. One rule therefore means the same thing to
-  `tooprolix check .` at the project root and to the same command run inside a package. A pattern
-  containing a slash is anchored to that directory (`tests/fixtures`); one without is not, and
-  matches at any depth (`*_pb2.py`).
-- **It adds to `.gitignore` rather than replacing it.** Setting `exclude` never starts walking
-  something your `.gitignore` hides.
-- **A path you name directly on the command line is still checked**, which is ruff's default.
-  `exclude` describes where a *walk* should not wander; if you typed the path, you already answered
-  that question. So `tooprolix check vendor/thing.py` works even while `vendor` is excluded.
-- **An excluded tree is not a clean tree, and the tool says so.** If the globs match everything, the
-  run exits 0 — there genuinely are no findings — but it writes to stderr that `exclude` is what
-  emptied the walk. An entry that is empty, blank, or starts with `!` is rejected outright rather
-  than silently excluding everything or nothing.
-
 ## How it is tested
 
 - Rules are exercised on real repositories, not only synthetic fixtures. The pinned corpus spans
