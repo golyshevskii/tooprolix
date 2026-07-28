@@ -42,7 +42,7 @@ use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 use std::fmt;
 
-use crate::extract::{Coordinates, ProseBlock};
+use crate::extract::{Coordinates, ProseBlock, write_address};
 
 /// Width of a word shingle, in words.
 ///
@@ -120,17 +120,28 @@ impl fmt::Display for Cluster<'_> {
             if position > 0 {
                 write!(formatter, ", ")?;
             }
-            write!(formatter, "{}:{}", member.path.display(), member.line_start)?;
+            write_address(
+                formatter,
+                &member.path.display(),
+                member.line_start,
+                member.line_end,
+            )?;
         }
-        write!(
+        write!(formatter, ": duplicate prose (weakest ")?;
+        write_address(
             formatter,
-            ": duplicate prose (weakest {}:{} ~ {}:{}, similarity {:.3})",
-            self.weakest.0.path.display(),
+            &self.weakest.0.path.display(),
             self.weakest.0.line_start,
-            self.weakest.1.path.display(),
+            self.weakest.0.line_end,
+        )?;
+        write!(formatter, " ~ ")?;
+        write_address(
+            formatter,
+            &self.weakest.1.path.display(),
             self.weakest.1.line_start,
-            self.weakest_score,
-        )
+            self.weakest.1.line_end,
+        )?;
+        write!(formatter, ", similarity {:.3})", self.weakest_score)
     }
 }
 
@@ -1041,7 +1052,7 @@ layer down.
         // Assert
         assert_eq!(
             render(&report),
-            "a.py:1, b.py:1: duplicate prose (weakest a.py:1 ~ b.py:1, similarity 1.000)\n"
+            "a.py:1-2, b.py:1-2: duplicate prose (weakest a.py:1-2 ~ b.py:1-2, similarity 1.000)\n"
         );
     }
 
@@ -1211,8 +1222,8 @@ layer down.
         // Assert
         assert_eq!(
             rendered,
-            "a.py:1, b.py:1, c.py:1: duplicate prose \
-             (weakest a.py:1 ~ b.py:1, similarity 1.000)\n"
+            "a.py:1-2, b.py:1-2, c.py:1-2: duplicate prose \
+             (weakest a.py:1-2 ~ b.py:1-2, similarity 1.000)\n"
         );
     }
 
@@ -1608,11 +1619,12 @@ layer down.
         // Act
         let rendered = render(&duplicates(&blocks));
 
-        // Assert — a.py:1 before a.py:5, whatever the texts sort like.
+        // Assert — a.py:1 before a.py:5, whatever the texts sort like. The spans are now visible
+        // in the probe (`1-9` against `5-6`), which is strictly more than it used to observe.
         assert_eq!(
             rendered,
-            "a.py:1, b.py:1: duplicate prose (weakest a.py:1 ~ b.py:1, similarity 1.000)\n\
-             a.py:5, z.py:1: duplicate prose (weakest a.py:5 ~ z.py:1, similarity 1.000)\n"
+            "a.py:1-9, b.py:1-2: duplicate prose (weakest a.py:1-9 ~ b.py:1-2, similarity 1.000)\n\
+             a.py:5-6, z.py:1-2: duplicate prose (weakest a.py:5-6 ~ z.py:1-2, similarity 1.000)\n"
         );
     }
 
@@ -1634,11 +1646,14 @@ layer down.
         // Act
         let rendered = render(&duplicates(&blocks));
 
-        // Assert — the block ending on line 2 comes first.
+        // Assert — the block ending on line 2 comes first. Note what changed here: this probe
+        // ordered by `line_end` while rendering only `line_start`, so both rows read `a.py:1` and
+        // the field under test was invisible in the bytes being compared. `1-2` before `1-3` now
+        // shows it. Sharing one address renderer made a probe strictly more discriminating.
         assert_eq!(
             rendered,
-            "a.py:1, z.py:1: duplicate prose (weakest a.py:1 ~ z.py:1, similarity 1.000)\n\
-             a.py:1, b.py:1: duplicate prose (weakest a.py:1 ~ b.py:1, similarity 1.000)\n"
+            "a.py:1-2, z.py:1-2: duplicate prose (weakest a.py:1-2 ~ z.py:1-2, similarity 1.000)\n\
+             a.py:1-3, b.py:1-2: duplicate prose (weakest a.py:1-3 ~ b.py:1-2, similarity 1.000)\n"
         );
     }
 
@@ -1665,8 +1680,8 @@ layer down.
         // Assert — `Docstring` precedes `Comment` in the enum, so its cluster comes first.
         assert_eq!(
             rendered,
-            "a.py:1, z.py:1: duplicate prose (weakest a.py:1 ~ z.py:1, similarity 1.000)\n\
-             a.py:1, b.py:1: duplicate prose (weakest a.py:1 ~ b.py:1, similarity 1.000)\n"
+            "a.py:1-2, z.py:1-2: duplicate prose (weakest a.py:1-2 ~ z.py:1-2, similarity 1.000)\n\
+             a.py:1-2, b.py:1-2: duplicate prose (weakest a.py:1-2 ~ b.py:1-2, similarity 1.000)\n"
         );
     }
 

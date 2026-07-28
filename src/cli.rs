@@ -531,6 +531,27 @@ pub fn execute<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<ExitSta
     Ok(status)
 }
 
+/// Whether a symlink's target lands inside `root`: `Some(true)` in, `Some(false)` out, `None` when
+/// the question could not be answered at all.
+///
+/// **Both sides are canonicalised, and that is the whole function.** A lexical comparison is
+/// defeated by `.`, by `..`, and by a symlinked ancestor directory — and the walk root is whatever
+/// the user typed, so it can be any of the three. Comparing a resolved target against an unresolved
+/// root is the compare-before-normalising defect this repository has already shipped more than once.
+///
+/// `None` is returned rather than a guess when either side fails to canonicalise — a broken
+/// component mid-path, a permission denial on an ancestor — and the caller treats it as "not
+/// measured". That is the fail-closed direction: the alternative is claiming a file was measured
+/// because the check that would have said otherwise could not run.
+///
+/// Cost: two `realpath` chains per symlink **named `*.py`**, of which the six pinned corpus
+/// checkouts hold zero and this repository holds zero. Nothing on any measured path calls this.
+fn resolved_inside(link: &Path, root: &Path) -> Option<bool> {
+    let target = std::fs::canonicalize(link).ok()?;
+    let root = std::fs::canonicalize(root).ok()?;
+    Some(target.starts_with(root))
+}
+
 /// What a run that read the whole tree and found nothing says.
 ///
 /// Worded as ruff words it, deliberately: this repository's own `make lint.check` already prints
@@ -860,34 +881,53 @@ fn python_files(root: &Path, config: &Config) -> Result<Walked, Error> {
             Some(kind) if kind.is_file() => files.push(reroot(root, &walked, entry.into_path())),
             // A directory named `thing.py` is not an unread source.
             Some(kind) if kind.is_dir() => {}
-            // A symlink whose target RESOLVES is silent, because it was measured — under the
-            // target's own name, which the walk reaches separately. Marking it skipped would put a
-            // false `complete: false` on any repository that uses an in-tree symlink.
+            // A symlink is silent only when its target is measured **somewhere in this run**, and
+            // that is a question about where the target lands, not about whether it exists.
             //
-            // The justification here used to be borrowed and is now measured. It read: following
-            // symlinks "takes pydantic from 343 findings to 559", so reporting them "would mark
-            // half the corpus incomplete". That number is real but belongs to `follow_links` on a
-            // symlinked **directory** (`pydantic/tests/pydantic_core`) — and this arm is reached
-            // only after `is_python_source` has already returned true, so it never sees one. What
-            // it governs is symlinks named `*.py`, of which the six pinned checkouts hold
-            // **zero** (crewAI 0, langgraph 0, openai-agents-python 0, OpenHands 0, pydantic 0,
-            // requests 0). So this arm is kept because it is correct, not because it is cheap.
+            // The guard used to be `entry.path().exists()`, on the reasoning that a resolving
+            // symlink "was measured under its target's own name". True — but only when that name is
+            // inside the walk. A link pointing out of the tree resolves just as well and is
+            // measured nowhere, ever, and it was falling out of both lists: not in `files`, not in
+            // `skipped`, so `complete` stayed `true`. That was recorded as an accepted residual
+            // while the consequence was silence. It stopped being acceptable the moment a clean run
+            // began to *print* `All checks passed!` — a gap became a false statement, which is the
+            // same escalation the FIFO arm below was written for one contract earlier.
             //
-            // `exists()` and not `symlink_metadata`: the question is whether the TARGET is there,
-            // and `symlink_metadata` deliberately does not follow the link — it answers "symlink"
-            // for both cases and would silently collapse the two. `exists()` is also false when the
-            // target cannot be statted for any other reason, which lands the entry in `skipped`;
-            // that is the fail-loud direction, since such a file was not measured either.
-            Some(kind) if kind.is_symlink() && entry.path().exists() => {}
-            // ... and one that dangles is the FIFO case in different clothing: a `.py` the walk
-            // saw, nobody opened, and nothing was ever behind. Silence here was the last way a
-            // document could still say `complete: true` about a tree holding an unread `.py`.
-            Some(kind) if kind.is_symlink() => skipped.push(Skipped {
-                path: reroot(root, &walked, entry.into_path())
-                    .display()
-                    .to_string(),
-                reason: "symlink target does not resolve".to_owned(),
-            }),
+            // The residual also claimed the two cases were indistinguishable. They are not:
+            // canonicalise both sides and compare. Both, not one — `.`, `..` and a symlinked
+            // ancestor each defeat a lexical test, and the walk root is whatever the user typed.
+            //
+            // The justification for keeping the in-tree case silent is measured rather than
+            // borrowed. An earlier comment read: following symlinks "takes pydantic from 343
+            // findings to 559", so reporting them "would mark half the corpus incomplete". That
+            // number is real but belongs to `follow_links` on a symlinked **directory**
+            // (`pydantic/tests/pydantic_core`) — and this arm is reached only after
+            // `is_python_source` has returned true, so it never sees one. What it governs is
+            // symlinks named `*.py`, of which the six pinned checkouts hold **zero** (crewAI 0,
+            // langgraph 0, openai-agents-python 0, `OpenHands` 0, pydantic 0, requests 0), and this
+            // repository none. The in-tree arm is kept because it is correct, not because it is
+            // cheap: reporting it would be a false `complete: false` on a file that really was read.
+            Some(kind) if kind.is_symlink() => match resolved_inside(entry.path(), &walked) {
+                // Measured under its target's name, which this same walk reaches separately.
+                Some(true) => {}
+                // Out of the tree, or unresolvable. The two reasons are kept apart because the
+                // reader acts on them differently: a dangling link is broken and a link out of the
+                // tree means there is another tree to check. Unresolvable — a broken component
+                // mid-path, a permission denial on an ancestor — takes the same branch as
+                // out-of-tree, which is the fail-closed direction: an address this run could not
+                // even resolve is the last thing to claim as measured.
+                resolution => skipped.push(Skipped {
+                    path: reroot(root, &walked, entry.into_path())
+                        .display()
+                        .to_string(),
+                    reason: if resolution == Some(false) {
+                        "symlink target is outside the checked tree, so it was measured nowhere"
+                    } else {
+                        "symlink target does not resolve"
+                    }
+                    .to_owned(),
+                }),
+            },
             // What is left is a FIFO, a socket or a device that happens to end in `.py`. It passes
             // the extension test and fails `is_file()`, so it used to be dropped into neither
             // channel — and the document then claimed `complete: true` about a tree holding a `.py`

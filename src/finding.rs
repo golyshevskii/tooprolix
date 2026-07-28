@@ -61,7 +61,7 @@ use serde::{Serialize, Serializer};
 
 use crate::detect::duplicate::Cluster;
 use crate::detect::volume::Overrun;
-use crate::extract::{ProseBlock, ProseKind};
+use crate::extract::{ProseBlock, ProseKind, write_address};
 use crate::rules::Rule;
 
 /// The version of the JSON document produced by `--format json`.
@@ -126,9 +126,20 @@ impl Location {
 impl fmt::Display for Location {
     /// `path:line-end_line`, or `path:line` when the block occupies a single line.
     ///
-    /// The `path:line` prefix is unchanged and is still the form every editor and every CI
-    /// annotation parser already understands — a range suffix is ignored by a parser that stops at
-    /// the first number, so nothing that worked on 0.3.0 addresses stops working.
+    /// # This is a break for some consumers, taken deliberately
+    ///
+    /// The claim that used to stand here — "a range suffix is ignored by a parser that stops at the
+    /// first number, so nothing that worked on 0.3.0 stops working" — is **false**, and it was
+    /// checked rather than reasoned about. A consumer that reads `path:line` as a prefix and stops
+    /// at the first integer is indeed unaffected. A consumer that splits on `:` and parses the
+    /// second field strictly as an integer accepted `api.py:1:` and **rejects** `api.py:1-26:`, and
+    /// that is the ordinary shape of an editor jump-to-line integration.
+    ///
+    /// So this is a break, not a superset, and it is taken because the consumer count is provably
+    /// zero: nothing is published, `PyPI` answers 404, and the repository is private. The price of
+    /// the same change after publication is a major version. Recorded plainly instead of defended
+    /// with a compatibility story that does not hold — this crate has already shipped one comment
+    /// justifying a decision with a figure that measured false, and one is enough.
     ///
     /// # Why the end is worth the two characters
     ///
@@ -153,11 +164,7 @@ impl fmt::Display for Location {
     /// ever were, `path:9-4` would be a nonsense address a consumer would try to parse, where
     /// `path:9` is merely incomplete. The comparison fails closed.
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(formatter, "{}:{}", self.path, self.line)?;
-        if self.end_line > self.line {
-            write!(formatter, "-{}", self.end_line)?;
-        }
-        Ok(())
+        write_address(formatter, &self.path, self.line, self.end_line)
     }
 }
 
@@ -541,6 +548,62 @@ mod tests {
         // Assert
         assert_eq!(spanning.to_string(), "api.py:1-26");
         assert_eq!(single.to_string(), "api.py:7");
+    }
+
+    /// One block has **one** address, whichever of this crate's three renderers writes it.
+    ///
+    /// `Location::Display` is the address a user reads, but it was never the only impl that formats
+    /// one: [`crate::detect::duplicate::Cluster`] and [`crate::detect::volume::Overrun`] each wrote
+    /// `path:line` by hand. The CLI happened to route through `Location` alone, so text and JSON
+    /// agreed — but "one owner **by construction**" was not true while three impls independently
+    /// decided what an address looks like, and the README's "every address is `path:start-end`" was
+    /// false of two of them.
+    ///
+    /// This is the test that makes the claim structural: it compares the other two renderings
+    /// against `Location`'s own output for the same block, so a fourth renderer, or a divergent
+    /// edit to either of these, is a red test rather than a documentation drift.
+    #[test]
+    fn one_block_has_one_address_in_every_renderer() {
+        // Arrange — one overrun and one cluster over blocks that really span several lines, so an
+        // address that dropped the range is visibly different rather than accidentally equal.
+        let long = format!("\"\"\"Overview.\n{}\"\"\"\n", "word ".repeat(231));
+        let long_blocks = blocks_of("api.py", &long);
+        let overruns = volume(&long_blocks, Limits::default());
+        let overrun = &overruns.overruns[0];
+
+        let paragraph = "# The retry budget here is deliberately small, and that matters because\n\
+                         # the upstream service rate limits us on every fourth call.\n";
+        let mut members = blocks_of("client.py", paragraph);
+        members.extend(blocks_of("worker.py", paragraph));
+        let clusters = duplicates(&members);
+        let cluster = &clusters.clusters[0];
+
+        // Act — the address each of the three renderers writes for the same first block.
+        let overrun_address = Location::of(overrun.block).to_string();
+        let cluster_address = Location::of(cluster.members[0]).to_string();
+
+        // Assert — the fixture can tell a range from a bare line at all ...
+        assert_eq!(overrun_address, "api.py:1-2");
+        assert_eq!(cluster_address, "client.py:1-2");
+        // ... and neither detector spells it its own way.
+        assert!(
+            overrun
+                .to_string()
+                .starts_with(&format!("{overrun_address}:")),
+            "the volume diagnostic writes its own address: {overrun}"
+        );
+        assert!(
+            cluster
+                .to_string()
+                .starts_with(&format!("{cluster_address},")),
+            "the duplicate diagnostic writes its own address: {cluster}"
+        );
+        assert!(
+            cluster
+                .to_string()
+                .contains(&format!("weakest {cluster_address} ~ ")),
+            "the weakest edge writes its own address: {cluster}"
+        );
     }
 
     /// The volume line must name the code, the size, the limit, the unit and the marker.

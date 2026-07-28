@@ -31,8 +31,15 @@ src/config.py:1-26: TPX002 docstring is 243 words long, over the 200-word limit 
 ```
 
 Every address is `path:start-end`, so the size of the block is in the line you already read — a
-243-word docstring is 26 lines, and you know where to stop before opening the file. A block that
-occupies a single line is written `path:line`, with no range.
+243-word docstring is 26 lines, and you know where to stop before opening the file. Every reported
+block spans at least two lines, so in practice every address carries a range; one-line prose is
+never a finding at all.
+
+> [!NOTE]
+> `path:start-end` is a **break** from 0.3.0's `path:line` for anything that parses the address
+> strictly. A tool that reads the leading `path:line` and stops at the first number is unaffected;
+> one that splits on `:` and requires an integer is not. Taken deliberately while nothing is
+> published and there are no consumers.
 
 ...and when there is nothing to report and the whole tree was read:
 
