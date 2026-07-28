@@ -796,11 +796,36 @@ fn python_files(root: &Path, config: &Config) -> Result<Walked, Error> {
         }
         match entry.file_type() {
             Some(kind) if kind.is_file() => files.push(reroot(root, &walked, entry.into_path())),
-            // A directory named `thing.py` is not an unread source, and a **symlink** to one is a
-            // deliberate omission rather than a failure: `follow_links` is off because following it
-            // takes pydantic from 343 findings to 559, counting the same sources twice. Reporting
-            // either as unmeasured would mark half the corpus incomplete.
-            Some(kind) if kind.is_dir() || kind.is_symlink() => {}
+            // A directory named `thing.py` is not an unread source.
+            Some(kind) if kind.is_dir() => {}
+            // A symlink whose target RESOLVES is silent, because it was measured — under the
+            // target's own name, which the walk reaches separately. Marking it skipped would put a
+            // false `complete: false` on any repository that uses an in-tree symlink.
+            //
+            // The justification here used to be borrowed and is now measured. It read: following
+            // symlinks "takes pydantic from 343 findings to 559", so reporting them "would mark
+            // half the corpus incomplete". That number is real but belongs to `follow_links` on a
+            // symlinked **directory** (`pydantic/tests/pydantic_core`) — and this arm is reached
+            // only after `is_python_source` has already returned true, so it never sees one. What
+            // it governs is symlinks named `*.py`, of which the six pinned checkouts hold
+            // **zero** (crewAI 0, langgraph 0, openai-agents-python 0, OpenHands 0, pydantic 0,
+            // requests 0). So this arm is kept because it is correct, not because it is cheap.
+            //
+            // `exists()` and not `symlink_metadata`: the question is whether the TARGET is there,
+            // and `symlink_metadata` deliberately does not follow the link — it answers "symlink"
+            // for both cases and would silently collapse the two. `exists()` is also false when the
+            // target cannot be statted for any other reason, which lands the entry in `skipped`;
+            // that is the fail-loud direction, since such a file was not measured either.
+            Some(kind) if kind.is_symlink() && entry.path().exists() => {}
+            // ... and one that dangles is the FIFO case in different clothing: a `.py` the walk
+            // saw, nobody opened, and nothing was ever behind. Silence here was the last way a
+            // document could still say `complete: true` about a tree holding an unread `.py`.
+            Some(kind) if kind.is_symlink() => skipped.push(Skipped {
+                path: reroot(root, &walked, entry.into_path())
+                    .display()
+                    .to_string(),
+                reason: "symlink target does not resolve".to_owned(),
+            }),
             // What is left is a FIFO, a socket or a device that happens to end in `.py`. It passes
             // the extension test and fails `is_file()`, so it used to be dropped into neither
             // channel — and the document then claimed `complete: true` about a tree holding a `.py`

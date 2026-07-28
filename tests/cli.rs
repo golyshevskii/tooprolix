@@ -2549,11 +2549,24 @@ fn an_unreadable_directory_inside_the_tree_is_skipped_rather_than_fatal() {
 /// `.py`. The drop predates this contract; the false claim does not, which is what makes it a defect
 /// now rather than a quirk.
 ///
-/// The neighbouring guard is asserted in the same test: a **symlink** to a `.py` also fails
-/// `is_file()`, and it must stay silent. Not following links is a measured decision — pydantic goes
-/// from 343 findings to 559 when they are followed — so reporting every symlinked source as skipped
-/// would mark half the corpus incomplete. Without this half, the fix for the FIFO is free to
-/// over-reach and nothing notices.
+/// **Three positions, one run, one exact-set assertion**, because the guard is a discrimination and
+/// not a rule — a test that checks any one of them cannot tell an under-reach from an over-reach:
+///
+/// | entry | reported? | why |
+/// |---|---|---|
+/// | `probe.py`, a FIFO | **yes** | a `.py` nobody opened, and reading it would block forever |
+/// | `alias.py`, a symlink that resolves | **no** | its target is measured under its real name; reporting it is a false `complete: false` on a legitimate in-tree symlink |
+/// | `dead.py`, a symlink that dangles | **yes** | nothing was ever behind it, so it is the FIFO case wearing a different `file_type` |
+///
+/// The middle row used to be defended by the wrong number. The comment said following symlinks
+/// "takes pydantic from 343 findings to 559", so reporting them "would mark half the corpus
+/// incomplete" — but that figure is about `follow_links` on a symlinked **directory**
+/// (`pydantic/tests/pydantic_core`, verified to be one), and this arm is only reached *after*
+/// `is_python_source` returns true, so it never sees a directory. What it actually governs is
+/// symlinks **named `*.py`**, and the corpus has, measured across all six pinned checkouts:
+/// crewAI 0, langgraph 0, openai-agents-python 0, `OpenHands` 0, pydantic 0, requests 0 — **zero**.
+/// The cost of the middle row is therefore zero, and it is kept for correctness rather than for
+/// volume: a resolving symlink really was measured, under its target's name.
 #[test]
 #[cfg(unix)]
 fn a_path_named_python_that_is_not_a_regular_file_is_not_counted_as_measured() {
@@ -2563,6 +2576,25 @@ fn a_path_named_python_that_is_not_a_regular_file_is_not_counted_as_measured() {
     scratch.write("pkg/dup.py", SHARED_RATIONALE);
     std::os::unix::fs::symlink(scratch.root.join("real.py"), scratch.root.join("alias.py"))
         .expect("a symlink is creatable");
+    let dangling = scratch.root.join("dead.py");
+    std::os::unix::fs::symlink(scratch.root.join("nothing-is-here.py"), &dangling)
+        .expect("a symlink is creatable");
+    // The two symlinks must differ in exactly one observable, or the pair proves nothing. Checked
+    // through both metadata calls on purpose: `symlink_metadata` does not follow and answers
+    // "symlink" for both, while `metadata` follows and is the one that separates them. Picking the
+    // wrong one in the implementation inverts the behaviour silently, so the fixture pins which is
+    // which before the run rather than trusting the names.
+    assert!(
+        std::fs::symlink_metadata(&dangling)
+            .expect("the link itself exists")
+            .is_symlink()
+            && std::fs::metadata(&dangling).is_err(),
+        "`dead.py` resolves, so it is a second copy of the `alias.py` case"
+    );
+    assert!(
+        std::fs::metadata(scratch.root.join("alias.py")).is_ok_and(|meta| meta.is_file()),
+        "`alias.py` does not resolve, so it is a second copy of the `dead.py` case"
+    );
     // `mkfifo(1)` rather than `mkfifo(2)`: the crate denies `unsafe`, and pulling in `libc` for one
     // call would put a new entry in a `Cargo.lock` that `--locked` makes load-bearing. POSIX.
     let fifo = scratch.root.join("probe.py");
@@ -2599,17 +2631,34 @@ fn a_path_named_python_that_is_not_a_regular_file_is_not_counted_as_measured() {
         .iter()
         .map(|entry| entry["path"].as_str().expect("a path"))
         .collect();
+    // The exact set, and that is what makes one assertion cover both failure directions: dropping
+    // `dead.py` is an under-reach, adding `alias.py` is an over-reach, and neither can hide behind
+    // a length check or a `contains`.
     assert_eq!(
         skipped,
-        vec!["./probe.py"],
-        "the FIFO is missing, or the symlink was dragged in with it: {document}"
+        vec!["./dead.py", "./probe.py"],
+        "the FIFO or the dangling symlink is missing, or the resolving symlink was dragged in \
+         with them: {document}"
     );
     assert_eq!(walked.status.code(), Some(1), "{walked:?}");
-    // ... the symlink stays silent and uncounted, exactly as before ...
+    // ... the symlink that RESOLVES stays silent and uncounted ...
     assert!(
         !stderr_of(&walked).contains("alias.py"),
-        "a symlinked source was reported as unread; not following links is deliberate: {:?}",
+        "a symlinked source whose target was measured under its own name was reported as unread: \
+         {:?}",
         stderr_of(&walked)
+    );
+    // ... and the one that does not resolve says why, rather than borrowing the FIFO's reason.
+    assert!(
+        document["skipped"]
+            .as_array()
+            .expect("an array")
+            .iter()
+            .any(|entry| entry["path"] == "./dead.py"
+                && entry["reason"]
+                    .as_str()
+                    .is_some_and(|reason| reason.contains("resolve"))),
+        "the dangling symlink is reported without saying what was wrong with it: {document}"
     );
     assert!(
         stdout_of(&walked).contains("in 2 places"),
