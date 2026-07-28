@@ -149,20 +149,19 @@ impl fmt::Display for Location {
     /// in the JSON as `end_line`, so the text format was the only consumer paying to open a second
     /// document for a fact the tool had in hand.
     ///
-    /// # One owner, and what that owns
+    /// # One owner, and where it actually lives
     ///
-    /// This is the **only** place an address becomes a string, and a `TPX003` message reaches it
-    /// five times over — the anchor, each address in `render_others`, and both ends of `weakest`. A
-    /// second renderer for the secondary addresses would be a second owner, and two owners of one
-    /// format is the divergence this arrangement exists to make impossible. The cost is real and is
-    /// accepted: a cluster line is longer than it was, by up to `2 + digits` per address it names.
+    /// The format itself is **not** owned here — it is [`crate::extract::write_address`], which this
+    /// impl and both detectors' `Display` impls call. Saying "the only place an address becomes a
+    /// string" was true until that function gained three callers, and it is corrected rather than
+    /// left standing: two owners of one format is the divergence the shared function exists to make
+    /// impossible, and a doc comment claiming sole ownership is how the second owner gets written.
     ///
-    /// # `>` and not `!=`
-    ///
-    /// A range is written only when the end is genuinely past the start. `end_line == line` is a
-    /// single-line block, and `end_line < line` cannot be built by [`Location::of`] — but if one
-    /// ever were, `path:9-4` would be a nonsense address a consumer would try to parse, where
-    /// `path:9` is merely incomplete. The comparison fails closed.
+    /// What this impl owns is that a *finding's* address goes through that function at all. One
+    /// `TPX003` message reaches it **`2 + n` times** for a cluster of `n` rendered members — the
+    /// anchor, each address `render_others` prints, and both ends of `weakest` — so a two-member
+    /// cluster reaches it four times and a folded twelve-member one thirteen. The cost is real and
+    /// accepted: a cluster line grows by up to `2 + digits` per address it names.
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         write_address(formatter, &self.path, self.line, self.end_line)
     }

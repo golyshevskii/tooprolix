@@ -2704,31 +2704,50 @@ fn an_unreadable_directory_inside_the_tree_is_skipped_rather_than_fatal() {
 /// `.py`. The drop predates this contract; the false claim does not, which is what makes it a defect
 /// now rather than a quirk.
 ///
-/// **Three positions, one run, one exact-set assertion**, because the guard is a discrimination and
-/// not a rule — a test that checks any one of them cannot tell an under-reach from an over-reach:
+/// **Four positions, one run, one exact-set assertion.** Every one of them is now reported, and the
+/// set is asserted exactly rather than by `contains`, so a rule that stopped covering any single
+/// position is red here.
 ///
 /// | entry | reported? | why |
 /// |---|---|---|
 /// | `probe.py`, a FIFO | **yes** | a `.py` nobody opened, and reading it would block forever |
-/// | `alias.py`, a symlink into **this** tree | **no** | its target is measured under its real name; reporting it is a false `complete: false` on a legitimate in-tree symlink |
-/// | `outsider.py`, a symlink **out of** this tree | **yes** | its target is under no root this walk covers, so it is measured nowhere — the same unread `.py` as the FIFO, reached differently |
-/// | `dead.py`, a symlink that dangles | **yes** | nothing was ever behind it, so it is the FIFO case wearing a different `file_type` |
+/// | `alias.py`, a symlink into this tree | **yes** | not followed, therefore not measured *as this entry* |
+/// | `outsider.py`, a symlink out of this tree | **yes** | same |
+/// | `dead.py`, a symlink that dangles | **yes** | same |
 ///
-/// The `outsider.py` row is the one that was wrong. "A resolving symlink was measured under its
-/// target's name" is true only when that name is **inside the walk**, and the middle two rows are
-/// the two halves of a distinction the guard used to collapse — `exists()` answers the same for
-/// both. It stopped being a residual the moment a clean run began to *say* `All checks passed!`:
-/// silence about an unmeasured `.py` is a gap, a green sentence about it is a false statement.
+/// # 🔴 The middle two rows used to read **no**, and deleting that exception is the point
 ///
-/// The middle row used to be defended by the wrong number. The comment said following symlinks
-/// "takes pydantic from 343 findings to 559", so reporting them "would mark half the corpus
-/// incomplete" — but that figure is about `follow_links` on a symlinked **directory**
-/// (`pydantic/tests/pydantic_core`, verified to be one), and this arm is only reached *after*
-/// `is_python_source` returns true, so it never sees a directory. What it actually governs is
-/// symlinks **named `*.py`**, and the corpus has, measured across all six pinned checkouts:
-/// crewAI 0, langgraph 0, openai-agents-python 0, `OpenHands` 0, pydantic 0, requests 0 — **zero**.
-/// The cost of the middle row is therefore zero, and it is kept for correctness rather than for
-/// volume: a resolving symlink really was measured, under its target's name.
+/// This table was a discrimination three times over, and each version was wrong in a way the next
+/// one only narrowed:
+///
+/// 1. `alias.py` silent whenever `exists()` — broken by a target **outside** the walked tree, which
+///    resolves just as well and is measured nowhere: a green `All checks passed!` over an unread
+///    `TPX001`;
+/// 2. silent when the target canonicalised **under the walk root** — broken by a sibling directory
+///    whose name is a mere string prefix of the root, restoring the same false green;
+/// 3. silent when the target is under the root — broken by a target that is under the root and
+///    still never walked: a non-`.py` name (`./notes.txt`), a hidden directory, a gitignored path,
+///    an `exclude`d path. All four exited **0** in silence.
+///
+/// The root cause never moved. The guard asked *"where does the target live"* while the invariant
+/// is *"was the target measured in this run"*, and each round answered the wrong question more
+/// precisely. So the exception is gone rather than guarded a fourth time: **a `*.py`-named symlink
+/// is skipped, always**, and there is no longer a question to get wrong. `complete: false` and
+/// exit 1 follow by construction instead of from a predicate that has to be right.
+///
+/// The dangling case is now **subsumed** rather than special: `dead.py` and `alias.py` take one
+/// path and carry one reason. The `exists()`-versus-`symlink_metadata` reasoning task 5 recorded
+/// here existed only to separate them, and it is deleted with the distinction it served.
+///
+/// What this costs is measured and it is nothing: symlinks named `*.py` number **zero** across all
+/// six pinned checkouts (crewAI 0, langgraph 0, openai-agents-python 0, `OpenHands` 0, pydantic 0,
+/// requests 0) and zero in this repository.
+///
+/// ⚠️ Naming a symlink directly — `tooprolix check alias.py` — still **measures** it, and that is
+/// not an inconsistency. An explicit argument is an instruction about one file, not a claim about a
+/// tree's completeness; ruff resolves explicit arguments past its own exclusions for the same
+/// reason. `a_single_file_is_checked_and_the_help_says_what_that_misses` and the direct-FIFO half
+/// of this test hold that end.
 #[test]
 #[cfg(unix)]
 fn a_path_named_python_that_is_not_a_regular_file_is_not_counted_as_measured() {
@@ -2753,21 +2772,20 @@ fn a_path_named_python_that_is_not_a_regular_file_is_not_counted_as_measured() {
     let dangling = scratch.root.join("dead.py");
     std::os::unix::fs::symlink(scratch.root.join("nothing-is-here.py"), &dangling)
         .expect("a symlink is creatable");
-    // The two symlinks must differ in exactly one observable, or the pair proves nothing. Checked
-    // through both metadata calls on purpose: `symlink_metadata` does not follow and answers
-    // "symlink" for both, while `metadata` follows and is the one that separates them. Picking the
-    // wrong one in the implementation inverts the behaviour silently, so the fixture pins which is
-    // which before the run rather than trusting the names.
+    // The three links still have to differ from each other on disk, or the fixture is one case
+    // written three times — but they no longer have to differ in the OUTCOME, and that is the
+    // change. `dead.py` must dangle and the other two must resolve; the run treats all three
+    // identically, which is exactly what makes the contract impossible to get wrong.
     assert!(
         std::fs::symlink_metadata(&dangling)
             .expect("the link itself exists")
             .is_symlink()
             && std::fs::metadata(&dangling).is_err(),
-        "`dead.py` resolves, so it is a second copy of the `alias.py` case"
+        "`dead.py` resolves, so the fixture no longer covers the dangling case at all"
     );
     assert!(
         std::fs::metadata(scratch.root.join("alias.py")).is_ok_and(|meta| meta.is_file()),
-        "`alias.py` does not resolve, so it is a second copy of the `dead.py` case"
+        "`alias.py` does not resolve, so the fixture no longer covers the resolving case at all"
     );
     // `mkfifo(1)` rather than `mkfifo(2)`: the crate denies `unsafe`, and pulling in `libc` for one
     // call would put a new entry in a `Cargo.lock` that `--locked` makes load-bearing. POSIX.
@@ -2810,30 +2828,28 @@ fn a_path_named_python_that_is_not_a_regular_file_is_not_counted_as_measured() {
     // a length check or a `contains`.
     assert_eq!(
         skipped,
-        vec!["./dead.py", "./outsider.py", "./probe.py"],
-        "the FIFO, the dangling symlink or the out-of-tree symlink is missing, or the in-tree \
-         symlink was dragged in with them: {document}"
+        vec!["./alias.py", "./dead.py", "./outsider.py", "./probe.py"],
+        "a `.py`-named entry the walk never read is missing from the report: {document}"
     );
     assert_eq!(walked.status.code(), Some(1), "{walked:?}");
-    // ... the symlink that RESOLVES stays silent and uncounted ...
-    assert!(
-        !stderr_of(&walked).contains("alias.py"),
-        "a symlinked source whose target was measured under its own name was reported as unread: \
-         {:?}",
-        stderr_of(&walked)
-    );
-    // ... and the one that does not resolve says why, rather than borrowing the FIFO's reason.
-    assert!(
-        document["skipped"]
-            .as_array()
-            .expect("an array")
-            .iter()
-            .any(|entry| entry["path"] == "./dead.py"
-                && entry["reason"]
-                    .as_str()
-                    .is_some_and(|reason| reason.contains("resolve"))),
-        "the dangling symlink is reported without saying what was wrong with it: {document}"
-    );
+    // ... every symlink says the same thing, and it is the reason that is now true of all of them:
+    // the walk did not follow it. This assertion used to require `alias.py` to be ABSENT from
+    // stderr and `dead.py` to say "resolve" — two outcomes for two cases the tool could not
+    // reliably tell apart. One reason for one rule.
+    for link in ["./alias.py", "./dead.py", "./outsider.py"] {
+        assert!(
+            document["skipped"]
+                .as_array()
+                .expect("an array")
+                .iter()
+                .any(|entry| entry["path"] == link
+                    && entry["reason"]
+                        .as_str()
+                        .is_some_and(|reason| reason.contains("symlink"))),
+            "{link} is missing, or is reported without saying it was a link the walk did not \
+             follow: {document}"
+        );
+    }
     assert!(
         stdout_of(&walked).contains("in 2 places"),
         "the two real sources stopped being a cluster, so the walk changed shape: {}",
@@ -2857,32 +2873,41 @@ fn a_path_named_python_that_is_not_a_regular_file_is_not_counted_as_measured() {
     );
 }
 
-/// A tree holding a link to a source this walk never measures must not be told it passed.
+/// A tree holding a symlinked source must not be told it passed — and the link points **inside**.
 ///
-/// The sharp end of the same guard, isolated from the exact-set test above so that the failure it
-/// describes is legible on its own: an otherwise-clean tree, one symlink out of it, and the tool
-/// used to print `All checks passed!` and exit **0** over a 260-word `TPX001` nobody had read.
+/// The sharp end of the rule, isolated from the exact-set test so the failure is legible alone: an
+/// otherwise-clean tree, one link, and `All checks passed!` with exit **0** over a `TPX001` nobody
+/// had read.
 ///
-/// The out-of-tree target is proved to be a real finding **first**. Without that, this passes on a
-/// build where the link points at something that would have been clean anyway, and the assertion
-/// would be about nothing.
+/// 🔴 **The link deliberately resolves to a file inside this very tree**, which is the case that
+/// was silent through all three previous versions of the guard and the one the `fable` review
+/// finally broke: the target is `notes.txt`, under the walk root, resolvable — and never walked,
+/// because it is not named `*.py`. A hidden directory, a gitignored path and an `exclude`d path all
+/// reproduce it identically. No containment test can answer this, because "under the root" was
+/// never the same question as "measured by this run". The rule is now positional and total: a
+/// `*.py`-named symlink is skipped, so the tree cannot be called whole whatever the target is.
+///
+/// The target is proved to be a real finding **first**, through the direct-argument path. Without
+/// that, this passes on a build where the link points at something that would have been clean
+/// anyway, and the assertion would be about nothing.
 #[test]
 #[cfg(unix)]
-fn a_link_out_of_the_walked_tree_is_not_reported_as_a_clean_measurement() {
-    // Arrange
-    let elsewhere = Scratch::new("outside-target");
-    let target = elsewhere.write("fat.py", &SHARED_RATIONALE.repeat(10));
-    let elsewhere_run = elsewhere.check(&[]);
-    assert_eq!(
-        elsewhere_run.status.code(),
-        Some(1),
-        "the out-of-tree target is not a finding, so this test asserts nothing: {elsewhere_run:?}"
-    );
-
-    let scratch = Scratch::new("link-out-of-tree");
+fn a_tree_holding_a_symlinked_source_is_not_reported_as_a_clean_measurement() {
+    // Arrange — the target is INSIDE the tree and is not a `*.py`, so the walk never reaches it.
+    let scratch = Scratch::new("link-inside-tree");
     scratch.write("clean.py", "\"\"\"Short.\"\"\"\n");
-    std::os::unix::fs::symlink(&target, scratch.root.join("alias.py"))
-        .expect("a symlink is creatable");
+    scratch.write("notes.txt", &SHARED_RATIONALE.repeat(10));
+    std::os::unix::fs::symlink(
+        scratch.root.join("notes.txt"),
+        scratch.root.join("alias.py"),
+    )
+    .expect("a symlink is creatable");
+    let named_directly = scratch.check_from("", "alias.py");
+    assert_eq!(
+        named_directly.status.code(),
+        Some(1),
+        "the target is not a finding, so this test asserts nothing: {named_directly:?}"
+    );
 
     // Act
     let output = scratch.check(&[]);
@@ -2908,79 +2933,13 @@ fn a_link_out_of_the_walked_tree_is_not_reported_as_a_clean_measurement() {
             .any(|entry| entry["path"] == "./alias.py"),
         "the link is not named as unread: {document}"
     );
-}
-
-/// "Inside the tree" is a question about **path components**, not about string prefixes.
-///
-/// 🔴 **The directory names are load-bearing. `treeXtra` must keep a name that begins with the
-/// whole of `tree`, and neither may be renamed to anything else.** They look arbitrary and they are
-/// not: `/…/tree` is a string prefix of `/…/treeXtra/fat.py` while being no prefix of it in path
-/// terms, so this fixture is the only shape in the suite that can tell the two comparisons apart.
-/// Rename `treeXtra` to `other` and this test still passes against a guard that has been disabled.
-/// The arrange block below asserts the property rather than trusting the names, so a tidy-up is a
-/// red test with a message instead of a silent loss of coverage.
-///
-/// The guard is `Path::starts_with`, which is component-wise and therefore correct. Nothing pinned
-/// *that*, and the gap was found by mutation: replacing the line with
-/// `target.to_string_lossy().starts_with(root.to_string_lossy().as_ref())` — the most plausible
-/// refactor anyone would reach for — passed the **entire** suite while restoring the original
-/// defect in full, a green `All checks passed!` over a `TPX001` measured nowhere. Every other
-/// fixture puts the outside target under `outside/` or `../tree`, names that are not string
-/// prefixes of the root, so none of them constrains this property.
-#[test]
-#[cfg(unix)]
-fn a_sibling_whose_name_merely_starts_with_the_root_is_still_outside_it() {
-    // Arrange — one scratch, two sibling directories, and the walk root is the shorter name.
-    let scratch = Scratch::new("prefix-siblings");
-    scratch.write("tree/clean.py", "\"\"\"Short.\"\"\"\n");
-    let outside = scratch.write("treeXtra/fat.py", &SHARED_RATIONALE.repeat(10));
-    std::os::unix::fs::symlink(&outside, scratch.root.join("tree/sibling.py"))
-        .expect("a symlink is creatable");
-
-    // ... and the fixture really has the shape it claims, so renaming either directory fails here
-    // and says why, rather than quietly making the test unable to detect the defect.
-    let root = scratch.root.join("tree");
+    // ... and the very same file, named directly, IS measured. Asserted here beside the silence so
+    // the distinction cannot be read as an inconsistency: an explicit argument is an instruction
+    // about one file, not a claim about a tree's completeness.
     assert!(
-        outside
-            .to_string_lossy()
-            .starts_with(root.to_string_lossy().as_ref()),
-        "the sibling's name is no longer a STRING prefix of the walk root, so this fixture can no \
-         longer tell `Path::starts_with` from a string comparison: {} vs {}",
-        root.display(),
-        outside.display()
-    );
-    assert!(
-        !outside.starts_with(&root),
-        "the sibling really is inside the walk root, so there is nothing to discriminate: {} vs {}",
-        root.display(),
-        outside.display()
-    );
-
-    // Act — the root is named relatively, which is also how a user would type it.
-    let output = scratch.check_from("", "tree");
-    let json = Command::new(env!("CARGO_BIN_EXE_tooprolix"))
-        .args(["check", "tree", "--format", "json"])
-        .current_dir(&scratch.root)
-        .output()
-        .expect("the binary cargo just built is executable");
-
-    // Assert
-    assert_eq!(
-        stdout_of(&output),
-        "",
-        "a `.py` in a SIBLING directory was counted as inside the tree, so the run announced a \
-         measurement it never made"
-    );
-    assert_eq!(output.status.code(), Some(1), "{output:?}");
-    let document = document_of(&json);
-    assert_eq!(document["complete"], false, "{document}");
-    assert!(
-        document["skipped"]
-            .as_array()
-            .expect("an array")
-            .iter()
-            .any(|entry| entry["path"] == "tree/sibling.py"),
-        "the link out to the sibling directory is not named as unread: {document}"
+        stdout_of(&named_directly).contains("TPX001"),
+        "naming the link directly stopped measuring it: {:?}",
+        stdout_of(&named_directly)
     );
 }
 
