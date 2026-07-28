@@ -416,9 +416,18 @@ pub fn execute<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<ExitSta
         );
     }
 
-    let Walked { files, excluded } = python_files(&path, &config)?;
+    let Walked {
+        files,
+        excluded,
+        skipped: unwalkable,
+    } = python_files(&path, &config)?;
     let excluded_measurable = excluded.len();
-    if files.is_empty() {
+    // `unwalkable.is_empty()` as well, and for the same reason the sentence below no longer claims
+    // the tree was unmeasured: this line blames an *absence* of Python, and when the walk found a
+    // `.py` it could not read, absence is not what happened. The skip is already reported, with the
+    // path and the reason, so saying "no Python files" beside it is a second answer that contradicts
+    // the first.
+    if files.is_empty() && unwalkable.is_empty() {
         // A walk that visited nothing scores every repository clean. Saying so is the difference
         // between "no findings" and "no measurement".
         eprintln!("warning: no Python files under {}", path.display());
@@ -442,8 +451,13 @@ pub fn execute<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<ExitSta
         // crate's public API. The paths the walk observed are, and they are in `excluded`.
         if excluded_measurable > 0 {
             eprintln!(
+                // Says what the walk did and stops there. It used to end "an excluded tree is not
+                // a measured one", which reads as a completeness claim and contradicts the
+                // document for the same run — where `complete` is `true`, correctly: `exclude` is
+                // a boundary the project drew, and inside it the tree really was measured whole.
+                // Only `skipped` moves `complete`, and no excluded path is ever in `skipped`.
                 "warning: `exclude` in {} removed {excluded_measurable} path(s) that could have \
-                 been measured; an excluded tree is not a measured one",
+                 been measured; nothing outside the excluded set was left to check",
                 config.source.as_ref().map_or_else(
                     || "the configuration".to_owned(),
                     |p| p.display().to_string()
@@ -452,8 +466,13 @@ pub fn execute<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<ExitSta
         }
     }
 
-    let (sources, skipped) = read(&files);
-    report_unknown_marker_codes(&sources);
+    // The walk's refusals and the read's are one list from here on. They are the same fact — this
+    // file was not measured — and the exit code, the document and the stderr block all read the one
+    // list, so none of them can disagree about whether the tree was complete.
+    let (sources, mut skipped, mut warnings) = read(&files);
+    skipped.extend(unwalkable);
+    report_unknown_marker_codes(&sources, &mut warnings);
+    warn_sorted(warnings);
     let findings = findings(sources, &config);
     // The guarantee, in one expression: `Success` — the only variant that reports 0 — is
     // unreachable while anything was skipped, whatever the findings say. `skipped` is filled
@@ -735,13 +754,67 @@ fn python_files(root: &Path, config: &Config) -> Result<Walked, Error> {
     }
 
     let mut files = Vec::new();
+    let mut skipped = Vec::new();
     for entry in builder.build() {
-        let entry = entry.map_err(|error| Error::Walk {
-            path: root.to_path_buf(),
-            message: error.to_string(),
-        })?;
-        if entry.file_type().is_some_and(|kind| kind.is_file()) && is_python_source(entry.path()) {
-            files.push(reroot(root, &walked, entry.into_path()));
+        let entry = match entry {
+            Ok(entry) => entry,
+            // The walk is the THIRD channel a file can be lost through, after the read and the
+            // parse, and it was the one still holding the all-or-nothing contract: one `?` here
+            // threw away every path already collected and made the whole run exit 2. Measured on a
+            // tree of one readable finding beside one `chmod 000` directory: `exit 2`, zero
+            // findings, no document — the exact outcome this contract exists to delete.
+            //
+            // Depth is the discriminator, and it is the crate's own: an error at **depth 0** is the
+            // root of the walk, so nothing was read and the run genuinely could not start (exit 2).
+            // Anything deeper is part of a tree that did start. Verified against the walker rather
+            // than assumed — an unreadable subdirectory reports `Some(1)`, one two levels down
+            // `Some(3)`, an unreadable root `Some(0)`.
+            //
+            // Fails closed: an error carrying no path, or no depth at all (a malformed ignore file,
+            // a symlink loop), is still fatal. Only a named entry below the root becomes a skip.
+            Err(error) => {
+                if let ignore::Error::WithPath { path, err } = &error
+                    && err.depth().is_some_and(|depth| depth > 0)
+                {
+                    skipped.push(Skipped {
+                        path: reroot(root, &walked, path.clone()).display().to_string(),
+                        // The inner error, not `error`: the outer `WithPath` renders as
+                        // `{path}: {err}` and `Skipped` already carries the path.
+                        reason: err.to_string(),
+                    });
+                    continue;
+                }
+                return Err(Error::Walk {
+                    path: root.to_path_buf(),
+                    message: error.to_string(),
+                });
+            }
+        };
+
+        if !is_python_source(entry.path()) {
+            continue;
+        }
+        match entry.file_type() {
+            Some(kind) if kind.is_file() => files.push(reroot(root, &walked, entry.into_path())),
+            // A directory named `thing.py` is not an unread source, and a **symlink** to one is a
+            // deliberate omission rather than a failure: `follow_links` is off because following it
+            // takes pydantic from 343 findings to 559, counting the same sources twice. Reporting
+            // either as unmeasured would mark half the corpus incomplete.
+            Some(kind) if kind.is_dir() || kind.is_symlink() => {}
+            // What is left is a FIFO, a socket or a device that happens to end in `.py`. It passes
+            // the extension test and fails `is_file()`, so it used to be dropped into neither
+            // channel — and the document then claimed `complete: true` about a tree holding a `.py`
+            // nobody opened. Reading it is not the answer (a FIFO blocks forever); saying so is.
+            //
+            // `None` — which the crate produces only for a stdin entry this tool never asks for —
+            // lands here too, because an entry whose kind cannot be established is exactly the one
+            // not to claim as measured.
+            _ => skipped.push(Skipped {
+                path: reroot(root, &walked, entry.into_path())
+                    .display()
+                    .to_string(),
+                reason: "not a regular file".to_owned(),
+            }),
         }
     }
     // Taken out from behind the lock rather than unwrapped out of the `Arc`: the builder still owns
@@ -752,7 +825,11 @@ fn python_files(root: &Path, config: &Config) -> Result<Walked, Error> {
             .lock()
             .expect("the walk is serial and nothing in the filter panics"),
     );
-    Ok(Walked { files, excluded })
+    Ok(Walked {
+        files,
+        excluded,
+        skipped,
+    })
 }
 
 /// What a walk found, and what `exclude` kept it from finding.
@@ -773,6 +850,17 @@ struct Walked {
     /// deliberately never learns how big that subtree was, because learning it means descending
     /// into it and losing the pruning that makes `exclude` affordable at all.
     excluded: Vec<PathBuf>,
+    /// Everything the **walk** could not measure, in the same shape [`read`] produces.
+    ///
+    /// A refusal, exactly like a read failure, and merged with those before anything looks at the
+    /// list — a file lost to an unreadable parent directory and a file lost to a syntax error are
+    /// the same fact for every consumer, and splitting them into two vocabularies is how one of
+    /// them stays fatal after the other is fixed.
+    ///
+    /// Two sources: a directory the walker could not enter (below the root — at the root the run
+    /// could not start and that is still [`Error::Walk`]), and an entry named `*.py` that is not a
+    /// regular file.
+    skipped: Vec<Skipped>,
 }
 
 /// Puts a walked path back under the root **as the user typed it**.
@@ -802,14 +890,20 @@ fn reroot(typed: &Path, walked: &Path, path: PathBuf) -> PathBuf {
 ///
 /// Plural, as the error it replaces was: reporting only the first failure makes fixing a repository
 /// an exercise in re-running the tool once per broken file.
-fn read(files: &[PathBuf]) -> (Vec<Source>, Vec<Skipped>) {
+fn read(files: &[PathBuf]) -> (Vec<Source>, Vec<Skipped>, Vec<String>) {
     let mut sources = Vec::new();
     let mut skipped = Vec::new();
+    // Collected rather than printed, because this loop runs in walk order and the walk is
+    // deliberately unordered — see [`python_files`]. Printing from here made the diagnostics a
+    // function of the directory layout; [`warn_sorted`] is where they become a function of the
+    // tree. The same guard `report_skipped` and `Report::new` already apply, in the third place
+    // that needed it.
+    let mut warnings = Vec::new();
 
     for file in files {
         match extract::read_source(file).and_then(|text| {
             let blocks = extract::extract(file, &text)?;
-            Ok(sources_of(blocks, &text))
+            Ok(sources_of(blocks, &text, &mut warnings))
         }) {
             Ok(read) => sources.extend(read),
             // Both halves of the `and_then` land here, and that is the point: an io failure
@@ -823,7 +917,19 @@ fn read(files: &[PathBuf]) -> (Vec<Source>, Vec<Skipped>) {
         }
     }
 
-    (sources, skipped)
+    (sources, skipped, warnings)
+}
+
+/// Prints collected diagnostics to stderr in a deterministic order.
+///
+/// One line per warning, sorted. Sorting the rendered strings rather than a key is deliberate and
+/// enough: every line begins `warning: {path}:{line}:`, so the order is by path and the warnings
+/// for one file end up adjacent — which is also what [`report_skipped`] does with its block.
+fn warn_sorted(mut warnings: Vec<String>) {
+    warnings.sort();
+    for warning in warnings {
+        eprintln!("{warning}");
+    }
 }
 
 /// Pairs every block with the marker on the physical line above it, and reports the near-misses.
@@ -833,7 +939,10 @@ fn read(files: &[PathBuf]) -> (Vec<Source>, Vec<Skipped>) {
 /// carries what the marker silences, not the text it was written as, and giving it a third field to
 /// carry a string only the warning reads would put a diagnostic channel inside the type that
 /// callers of [`findings`] have to build.
-fn sources_of(blocks: Vec<ProseBlock>, text: &str) -> Vec<Source> {
+///
+/// Near-misses are appended to `warnings` rather than printed, so that [`warn_sorted`] can order
+/// them: this function is called once per file from a loop running in walk order.
+fn sources_of(blocks: Vec<ProseBlock>, text: &str, warnings: &mut Vec<String>) -> Vec<Source> {
     // Most files in a real repository yield no blocks at all, and indexing their lines to look
     // above zero of them is pure cost. The measured shape of the corpus is the argument: 663 files
     // on the reference checkout against 10 findings.
@@ -865,12 +974,12 @@ fn sources_of(blocks: Vec<ProseBlock>, text: &str) -> Vec<Source> {
                         .get(line_number - 1)
                         .is_some_and(|line| rules::is_near_miss(line))
                 {
-                    eprintln!(
+                    warnings.push(format!(
                         "warning: {}:{line_number}: this is not an opt-out marker and silences \
                          nothing; the form is `# !TPX001` — `# !TPX001,TPX002` for several, \
                          `# !TPX*` for all",
                         block.path.display(),
-                    );
+                    ));
                 }
             }
             Source { block, suppressed }
@@ -882,15 +991,18 @@ fn sources_of(blocks: Vec<ProseBlock>, text: &str) -> Vec<Source> {
 ///
 /// A warning and not a failure — see [`crate::rules`] for why this is loud where the configuration
 /// is fatal. The finding still appears, so the typo fails closed either way.
-fn report_unknown_marker_codes(sources: &[Source]) {
+///
+/// Appends rather than prints, for the reason [`read`] does: `sources` is in walk order, so
+/// emitting from here made the output depend on the filesystem. [`warn_sorted`] owns the order.
+fn report_unknown_marker_codes(sources: &[Source], warnings: &mut Vec<String>) {
     for source in sources {
         for code in source.suppressed.unknown_codes() {
-            eprintln!(
+            warnings.push(format!(
                 "warning: {}:{}: `{code}` in an opt-out marker is not a rule code; it silences \
                  nothing",
                 source.block.path.display(),
                 source.block.line_start.saturating_sub(1),
-            );
+            ));
         }
     }
 }

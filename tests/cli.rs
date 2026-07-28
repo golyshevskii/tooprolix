@@ -2450,3 +2450,239 @@ fn exit_two_now_means_only_that_the_run_could_not_start() {
         "an unparsable file still refuses to run, so exit 2 was never narrowed: {unparsable_file:?}"
     );
 }
+
+/// The walk has its own way to fail, and it must not be the all-or-nothing contract in disguise.
+///
+/// The read channel was made graceful; this is the channel one screen up. A directory the walker
+/// cannot enter is a *part of the tree that could not be read*, which the settled table numbers 1 —
+/// not "the run could not start", which is the only thing left that numbers 2.
+///
+/// Both positions are probed in one test, because only the pair is a contract: a fix that turns
+/// **every** walk error into a skip would delete exit 2 altogether, and a fix that turns none of
+/// them into a skip is the defect. The discriminator is depth — the root is depth 0 — so the root
+/// case is asserted at the same time, on the same kind of io failure, with the same mode bits.
+#[test]
+#[cfg(unix)]
+fn an_unreadable_directory_inside_the_tree_is_skipped_rather_than_fatal() {
+    use std::os::unix::fs::PermissionsExt as _;
+
+    // Arrange — a real finding is at stake, so "no findings" cannot be mistaken for "nothing there".
+    let scratch = Scratch::new("walk-unreadable");
+    scratch.write("fat.py", &long_comment("retry policy"));
+    let locked = scratch.root.join("locked");
+    std::fs::create_dir(&locked).expect("a scratch directory is creatable");
+    std::fs::write(locked.join("hidden.py"), SHARED_RATIONALE).expect("writable");
+    std::fs::set_permissions(&locked, std::fs::Permissions::from_mode(0o000)).expect("chmod");
+
+    // Act
+    let inside = scratch.check(&["--format", "json"]);
+    let inside_text = scratch.check(&[]);
+    // ... and the same failure applied to the ROOT of the walk, which really cannot start.
+    std::fs::set_permissions(&scratch.root, std::fs::Permissions::from_mode(0o000)).expect("chmod");
+    let at_the_root = Command::new(env!("CARGO_BIN_EXE_tooprolix"))
+        .args(["check", scratch.root.to_str().expect("utf-8")])
+        .current_dir(repository_root())
+        .output()
+        .expect("the binary cargo just built is executable");
+
+    // Restore before asserting, or a failure leaves an undeletable tree behind.
+    std::fs::set_permissions(&scratch.root, std::fs::Permissions::from_mode(0o755)).expect("chmod");
+    std::fs::set_permissions(&locked, std::fs::Permissions::from_mode(0o755)).expect("chmod");
+
+    // Assert — mid-walk: the run continues, reports what it read, and never exits 0 ...
+    assert_eq!(
+        inside.status.code(),
+        Some(1),
+        "an unreadable directory inside the tree still takes the whole run down: {inside:?}"
+    );
+    let document = document_of(&inside);
+    assert_eq!(
+        document["complete"], false,
+        "a directory the walk could not enter left the run marked whole: {document}"
+    );
+    assert_eq!(
+        document["findings"][0]["code"], "TPX001",
+        "the finding of the readable file was thrown away with the walk error: {document}"
+    );
+    assert!(
+        document["skipped"]
+            .as_array()
+            .is_some_and(|entries| entries.len() == 1
+                && entries[0]["path"]
+                    .as_str()
+                    .is_some_and(|path| path.ends_with("locked"))),
+        "the unreadable directory is in neither channel: {document}"
+    );
+    assert!(
+        stdout_of(&inside_text).contains("TPX001") && stderr_of(&inside_text).contains("locked"),
+        "text: {:?} / {:?}",
+        stdout_of(&inside_text),
+        stderr_of(&inside_text)
+    );
+
+    // ... and at the root, where nothing could be read at all, 2 still means what it says.
+    assert_eq!(
+        at_the_root.status.code(),
+        Some(2),
+        "an unreadable ROOT was reported as a partial measurement, so exit 2 is now unreachable \
+         and the guard fails open: {at_the_root:?}"
+    );
+    assert_eq!(stdout_of(&at_the_root), "");
+}
+
+/// A path named `*.py` that was never opened must not be counted as measured.
+///
+/// A FIFO passes the extension test and fails `is_file()`, so it was dropped from the walk into
+/// neither channel — and the document then said `complete: true` about a tree holding an unread
+/// `.py`. The drop predates this contract; the false claim does not, which is what makes it a defect
+/// now rather than a quirk.
+///
+/// The neighbouring guard is asserted in the same test: a **symlink** to a `.py` also fails
+/// `is_file()`, and it must stay silent. Not following links is a measured decision — pydantic goes
+/// from 343 findings to 559 when they are followed — so reporting every symlinked source as skipped
+/// would mark half the corpus incomplete. Without this half, the fix for the FIFO is free to
+/// over-reach and nothing notices.
+#[test]
+#[cfg(unix)]
+fn a_path_named_python_that_is_not_a_regular_file_is_not_counted_as_measured() {
+    // Arrange
+    let scratch = Scratch::new("walk-not-a-file");
+    scratch.write("real.py", SHARED_RATIONALE);
+    scratch.write("pkg/dup.py", SHARED_RATIONALE);
+    std::os::unix::fs::symlink(scratch.root.join("real.py"), scratch.root.join("alias.py"))
+        .expect("a symlink is creatable");
+    // `mkfifo(1)` rather than `mkfifo(2)`: the crate denies `unsafe`, and pulling in `libc` for one
+    // call would put a new entry in a `Cargo.lock` that `--locked` makes load-bearing. POSIX.
+    let fifo = scratch.root.join("probe.py");
+    let made = Command::new("mkfifo")
+        .arg(&fifo)
+        .status()
+        .expect("mkfifo(1) is a POSIX utility");
+    assert!(
+        made.success(),
+        "the fixture needs a real FIFO to prove anything"
+    );
+    assert!(
+        !fifo.is_file() && fifo.exists(),
+        "the fixture is an ordinary file, so it proves nothing"
+    );
+
+    // Act
+    let walked = scratch.check(&["--format", "json"]);
+    let named = Command::new(env!("CARGO_BIN_EXE_tooprolix"))
+        .args(["check", "probe.py", "--format", "json"])
+        .current_dir(&scratch.root)
+        .output()
+        .expect("the binary cargo just built is executable");
+
+    // Assert — the FIFO is named as unmeasured, and the run says so ...
+    let document = document_of(&walked);
+    assert_eq!(
+        document["complete"], false,
+        "a tree holding an unread `.py` reported itself fully measured: {document}"
+    );
+    let skipped: Vec<&str> = document["skipped"]
+        .as_array()
+        .expect("an array")
+        .iter()
+        .map(|entry| entry["path"].as_str().expect("a path"))
+        .collect();
+    assert_eq!(
+        skipped,
+        vec!["./probe.py"],
+        "the FIFO is missing, or the symlink was dragged in with it: {document}"
+    );
+    assert_eq!(walked.status.code(), Some(1), "{walked:?}");
+    // ... the symlink stays silent and uncounted, exactly as before ...
+    assert!(
+        !stderr_of(&walked).contains("alias.py"),
+        "a symlinked source was reported as unread; not following links is deliberate: {:?}",
+        stderr_of(&walked)
+    );
+    assert!(
+        stdout_of(&walked).contains("in 2 places"),
+        "the two real sources stopped being a cluster, so the walk changed shape: {}",
+        stdout_of(&walked)
+    );
+
+    // ... and naming it directly is not a silent success either.
+    assert_eq!(
+        named.status.code(),
+        Some(1),
+        "a FIFO named directly exited 0 with `no Python files`: {named:?}"
+    );
+    assert_eq!(document_of(&named)["complete"], false);
+    // ... and it does not ALSO claim the path holds no Python. The skip already said what happened;
+    // "no Python files under probe.py" is a second, contradicting answer about the same run, which
+    // is the defect class this whole round is about one more time.
+    assert!(
+        !stderr_of(&named).contains("no Python files"),
+        "the run blamed an absence of Python for a `.py` it had just reported as unread: {:?}",
+        stderr_of(&named)
+    );
+}
+
+/// Every marker diagnostic comes out in a deterministic order, and the proof is not a re-run.
+///
+/// `report_skipped` and `Report::new` both sort; these two did not, and rode the walk order
+/// instead. **Re-running twice on one filesystem cannot show it** — the directory order is stable
+/// on a given disk, so an order-dependent output is byte-identical to itself all day. The property
+/// is therefore asserted directly: the emitted sequence must be sorted, on input whose walk order
+/// is demonstrably not.
+///
+/// Both channels are checked, because they are separate call sites one screen apart, and the whole
+/// class here is a guard applied in one place and missed in its sibling.
+#[test]
+fn the_marker_diagnostics_are_emitted_in_a_deterministic_order() {
+    // Arrange — names chosen so alphabetical order is not the order they are written in, and one
+    // of them is nested, so a walk that descends last cannot accidentally agree with the sort.
+    let block = |name: &str| {
+        format!(
+            "# The {name} path is described here because the reason is not obvious from the code.\n\
+             # It matters on retry, where the caller expects steady progress on every attempt.\n"
+        )
+    };
+    let names = ["middle", "zebra", "beta", "alpha", "nested/deep"];
+
+    let unknown = Scratch::new("order-unknown-code");
+    let near_miss = Scratch::new("order-near-miss");
+    for name in names {
+        unknown.write(
+            &format!("{name}.py"),
+            &format!("# !TPX999\n{}", block(name)),
+        );
+        near_miss.write(
+            &format!("{name}.py"),
+            &format!("# !nonsense TPX001\n{}", block(name)),
+        );
+    }
+
+    // Act
+    let unknown_output = unknown.check(&[]);
+    let near_miss_output = near_miss.check(&[]);
+
+    // Assert
+    for (label, output, needle) in [
+        ("unknown code", &unknown_output, "is not a rule code"),
+        ("near miss", &near_miss_output, "is not an opt-out marker"),
+    ] {
+        let lines: Vec<&str> = stderr_of(output)
+            .lines()
+            .filter(|line| line.contains(needle))
+            .collect();
+        assert_eq!(
+            lines.len(),
+            names.len(),
+            "{label}: the fixture did not produce one diagnostic per file, so ordering is \
+             untestable: {:?}",
+            stderr_of(output)
+        );
+        let mut sorted = lines.clone();
+        sorted.sort_unstable();
+        assert_eq!(
+            lines, sorted,
+            "{label}: the diagnostics are in walk order, so the run is only reproducible on a \
+             filesystem that happens to enumerate in this order"
+        );
+    }
+}
