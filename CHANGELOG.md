@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1](https://github.com/golyshevskii/tooprolix/compare/v0.2.0...v0.2.1) - 2026-07-28
+
+### Added
+
+- add the `exclude` key to [tool.tooprolix] ([#7](https://github.com/golyshevskii/tooprolix/pull/7))
+
 ## [0.2.0](https://github.com/golyshevskii/tooprolix/compare/v0.1.0...v0.2.0) - 2026-07-27
 
 ### Added
