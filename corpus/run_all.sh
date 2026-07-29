@@ -30,7 +30,7 @@
 # cluster counts `change-finding-model-to-clusters` recorded. Two of the three disagreements
 # between the two walks are explained in REPORT.md §7.4 rather than averaged away.
 #
-# ## 🔴 The trap, and why $CORPUS_ROOT must have no ancestor `.gitignore`
+# ## The trap, and why $CORPUS_ROOT must have no ancestor `.gitignore`
 #
 # The `ignore` crate collects `.gitignore` files from the **ancestors** of the start path, and
 # `src/cli.rs` builds its walk with `require_git(false)`, so it does that whether or not any
@@ -50,7 +50,20 @@
 set -euo pipefail
 
 readonly REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-readonly BINARY="${TOOPROLIX_BIN:-$REPO_ROOT/target/release/tooprolix}"
+BINARY="${TOOPROLIX_BIN:-$REPO_ROOT/target/release/tooprolix}"
+# Resolved to an absolute path HERE, before the `-x` check below, because the guard and the run do
+# not share a working directory: the check runs in the caller's cwd, while every invocation happens
+# inside `(cd "$CORPUS_ROOT" && "$BINARY" …)` and a relative program path resolves against the
+# child's cwd. Measured with a stub at each location, both named `bin/tooprolix`:
+#     GUARD PASSED for: bin/tooprolix     <- blessed the caller-cwd copy
+#     I AM B (corpus-root copy)           <- ran the other one
+# The guard blessed one binary and the measurement timed another, silently, and the numbers land in
+# corpus/runs/ and REPORT.md. `$PWD/` rather than `realpath`, which is not present on a stock macOS.
+# `corpus/bench.py` does the same with `Path.absolute()`, so all three runners land on one file.
+if [[ "$BINARY" != /* ]]; then
+	BINARY="$PWD/$BINARY"
+fi
+readonly BINARY
 readonly RUNS_DIR="$REPO_ROOT/corpus/runs"
 
 if [[ -z "${CORPUS_ROOT:-}" ]]; then
