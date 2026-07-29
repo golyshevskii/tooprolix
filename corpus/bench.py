@@ -16,6 +16,9 @@ machine is recorded next to the numbers in `corpus/REPORT.md` §7.6.
 
 Usage:
     CORPUS_ROOT=/somewhere/outside uv run python3 corpus/bench.py
+
+`TOOPROLIX_BIN` selects the binary, exactly as it does for `corpus/run_all.sh` and
+`corpus/determinism_check.sh`; a positional argument overrides it. See `binary_from`.
 """
 
 from __future__ import annotations
@@ -46,6 +49,30 @@ EXPECT_EXIT: int = 1
 
 #: Samples per root, plus one discarded run to warm the page cache.
 SAMPLES: int = 10
+
+#: Where `cargo build --release` puts the binary. The same fallback the two shell runners use.
+DEFAULT_BINARY: Path = Path(__file__).resolve().parents[1] / "target/release/tooprolix"
+
+
+def binary_from(argv: Sequence[str]) -> Path:
+    """
+    Return the binary to measure: an explicit argument, else `$TOOPROLIX_BIN`, else the release build.
+
+    `corpus/run_all.sh` and `corpus/determinism_check.sh` both read
+    `${TOOPROLIX_BIN:-$REPO_ROOT/target/release/tooprolix}`; this module used to read `argv[0]` and
+    that fallback path and nothing else. So `TOOPROLIX_BIN=/somewhere/else` reached two of the three
+    runners and was a silent no-op against the third — it went on timing `target/release/tooprolix`
+    and reported a benchmark of a binary nobody had asked for. Substituting a binary is how this
+    epic proves a harness measures what it says it measures, and a mutation one tool ignores is not
+    a proof about that tool.
+
+    The positional argument still wins, because naming a path on the command line is more specific
+    than exporting one; the shell runners take no positional binary, so nothing disagrees.
+    """
+    if argv:
+        return Path(argv[0])
+    override: str | None = os.environ.get("TOOPROLIX_BIN")
+    return Path(override) if override else DEFAULT_BINARY
 
 
 def time_run(binary: Path, root: str, *, expect_exit: int, cwd: Path | None = None) -> float:
@@ -88,7 +115,8 @@ def verify_subject(binary: Path, name: str, root: str, runs_dir: Path, *, cwd: P
     One owner for those expectations; a second copy is the defect this epic keeps paying for.
 
     # Raises
-    `RuntimeError` if the artifact is missing or unreadable, or if the findings differ from it.
+    `RuntimeError` if the artifact is missing or unreadable, if the binary cannot be run at all, or
+    if the findings differ from it.
     """
     recorded = runs_dir / f"{name}.json"
     if not recorded.is_file():
@@ -96,7 +124,16 @@ def verify_subject(binary: Path, name: str, root: str, runs_dir: Path, *, cwd: P
             f"{recorded} does not exist; run corpus/run_all.sh first — timing a tree that has no "
             f"recorded measurement is timing an unknown tree"
         )
-    done = subprocess.run([str(binary), "check", root, "--format", "json"], capture_output=True, cwd=cwd, check=False)
+    # The same `OSError` handling `time_run` has always had. It is needed HERE too because this
+    # check now runs first, so a mistyped `TOOPROLIX_BIN` reaches the binary through this call and
+    # not through the timer — and `main` only catches `RuntimeError`, so without this the harness
+    # died with a raw `FileNotFoundError` instead of its own abort line.
+    try:
+        done = subprocess.run(
+            [str(binary), "check", root, "--format", "json"], capture_output=True, cwd=cwd, check=False
+        )
+    except OSError as error:
+        raise RuntimeError(f"{binary} could not be run: {error}") from error
     try:
         measured = json.loads(done.stdout)["findings"]
     except (ValueError, KeyError) as error:
@@ -119,7 +156,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             file=sys.stderr,
         )
         return 2
-    binary = Path(argv[0]) if argv else Path(__file__).resolve().parents[1] / "target/release/tooprolix"
+    binary = binary_from(argv)
 
     runs_dir = Path(__file__).resolve().parent / "runs"
 

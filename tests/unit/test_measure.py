@@ -160,6 +160,17 @@ def test_percentile_uses_nearest_rank(series: list[int], percent: int, expected:
         (" source / destination", False),
         (" first - second", False),
         (" width * height", False),
+        # Prose that merely CONTAINS a bracket. Nothing here is a statement — every one fails to
+        # parse — but each carries the punctuation a shape-based heuristic reaches for first, and
+        # a loosening to `"(" in body -> True` is what moves the 117 of the no-ship verdict to 111
+        # (`tests/unit/test_restatement_verdict.py`). Before these rows that loosening left the
+        # whole suite green.
+        (" release the lock (the caller owns it)", False),
+        (" retry up to MAX_RETRIES (see the table above)", False),
+        (" the rows [and their headers] are copied verbatim", False),
+        # Prose with a bracket that DOES parse: a bare parenthesised name is still a phrase, so
+        # this row reaches the exemption branch rather than the SyntaxError path above it.
+        (" (deprecated)", False),
     ],
 )
 def test_looks_like_code_separates_commented_out_code_from_prose(raw: str, expected: bool) -> None:

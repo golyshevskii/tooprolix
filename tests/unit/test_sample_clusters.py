@@ -25,6 +25,7 @@ Run: make test
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -108,6 +109,30 @@ class TestDeterminism:
         )
         assert [cluster.line for cluster in sampled] == [1, 2]
 
+    @pytest.mark.parametrize("arrival", [("z.py", "a.py"), ("a.py", "z.py")], ids=["reversed", "in-order"])
+    def test_two_clusters_on_the_same_line_of_different_files_are_ordered_by_path(
+        self, arrival: tuple[str, str]
+    ) -> None:
+        """
+        The PATH half of the ordering key, which nothing above could see.
+
+        Every other fixture in this file puts all its findings in one file, so `Cluster.address`
+        was compared on its `line` alone: dropping the path from the key left all 218
+        tests green while the sample order fell back to the order the findings arrived in — the
+        precise failure claim 3 of the module docstring says must be impossible ("a sample that
+        depends on input order is a sample that can be tuned"). Same class as the task-6 defect
+        where a probe compared an ordering by a field its own rendering omitted.
+
+        Both arrival orders are parametrised because only the reversed one can fail: a stable sort
+        on an equal key returns the input untouched, so the in-order case passes under the broken
+        key too and would be a test that agrees with the bug half the time.
+        """
+        report = {"findings": [finding(path, 5, 0.8) for path in arrival]}
+
+        sampled = sample_clusters.near_clusters("repo", report)
+
+        assert [cluster.path for cluster in sampled] == ["a.py", "z.py"]
+
 
 class TestTheSampleHasAFloor:
     """AC1 requires at least 20 findings; the tool must have a red path when it cannot reach it."""
@@ -129,3 +154,38 @@ class TestTheSampleHasAFloor:
             for index in range(4)
         }
         assert len(sample_clusters.round_robin(pools, per_repo=5, minimum=20)) == 20
+
+
+class TestTheEntryPointRefusesRatherThanSampleNothing:
+    """
+    `main`'s two pre-flight refusals, both reachable without a single checkout on disk.
+
+    They are the difference between "no sample was drawn" and "the sample is empty", and the
+    sampler's whole output is Markdown that a human then annotates — an empty document is a
+    plausible thing to page past. Both are exit 2 ("could not start"), distinct from the exit 1
+    `SampleTooSmall` uses for "started, drew too few".
+    """
+
+    def test_an_unset_corpus_root_exits_two(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        monkeypatch.delenv("CORPUS_ROOT", raising=False)
+
+        assert sample_clusters.main([]) == 2
+        assert "CORPUS_ROOT" in capsys.readouterr().err
+
+    def test_a_runs_directory_holding_no_near_clusters_exits_two(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """
+        An empty pool must name `run_all.sh`, not print a zero-cluster sample.
+
+        This epic's verification policy counts a run over an empty finding set as RED, and a
+        sampler that emitted `# AC1 sample — 0 near clusters` would be that run wearing a heading.
+        """
+        monkeypatch.setenv("CORPUS_ROOT", str(tmp_path))
+        empty_runs = tmp_path / "runs"
+        empty_runs.mkdir()
+
+        assert sample_clusters.main(["--runs", str(empty_runs)]) == 2
+        assert "run_all.sh" in capsys.readouterr().err

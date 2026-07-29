@@ -13,12 +13,17 @@ loses the fixture the detector exists to pass.
 
 WHAT THESE TESTS DO AND DO NOT PIN. They pin the fixture verdicts, both constants, the stemmer, and
 the score that separates the red-team fixture from the threshold. They do **not** pin the 117
-itself, which needs `corpus/checkouts/` (git-ignored). Two knobs move that count with every test
-below still green, and both were found by review rather than by writing the tests:
+itself, which needs `corpus/checkouts/` (git-ignored). Two knobs move that count without moving any
+fixture verdict, and both were found by review rather than by writing the tests. **Both are now
+pinned:**
 
-* `_stem` replaced by the identity function -> 117 becomes 100 (now pinned, see the stemmer test);
-* `looks_like_code` loosened, e.g. `or "(" in raw` -> 117 becomes 111. NOT pinned. It is the filter
-  that produces the subtracted 20, and it is only nailed down at its two extremes here.
+* `_stem` replaced by the identity function -> 117 becomes 100 (see the stemmer test);
+* `looks_like_code` loosened, e.g. `or "(" in raw` -> 117 becomes 111 — the filter that produces
+  the subtracted 20. It used to be nailed down only at its two extremes, so that loosening left all
+  201 tests green; measured 2026-07-29 by inserting `if "(" in body: return True`.
+  `test_a_prose_restatement_carrying_parentheses_stays_in_the_117` is the middle case that closes
+  it, together with the bracket rows of
+  `test_measure.py::test_looks_like_code_separates_commented_out_code_from_prose`.
 
 So a green suite means "the setting the verdict was argued from is still that setting", not "the
 reference count is still 117". The count is reproduced by `make corpus.measure` and recorded in
@@ -56,6 +61,12 @@ RUSSIAN = "# увеличиваем счётчик\ncounter += 1\n"
 # `ruff ERA001`'s territory, which the issue puts Out of scope — so this hit is a false positive
 # by construction, and 420 of pydantic's 514 candidates are this class.
 COMMENTED_OUT_CODE = "# print(df, file_path)\nprint(df, file_path)\n"
+
+# A real restatement whose comment carries a parenthesis. It scores 2 of 4 stems against
+# `lock.release()`, so it is a candidate, and it is PROSE — the brackets are an aside, not a call.
+# This is the fixture that separates "is a restatement" from "is commented-out code" on the one
+# input where a shape-based filter gets it wrong.
+PROSE_WITH_PARENTHESES = "# release the lock (see above)\nlock.release()\n"
 
 
 def hits(tmp_path: Path, source: str) -> list[measure.RestatementHit]:
@@ -200,3 +211,24 @@ def test_commented_out_code_is_flagged_and_carries_its_own_marker(tmp_path: Path
 
     assert len(found) == 1
     assert found[0].code_like is True
+
+
+def test_a_prose_restatement_carrying_parentheses_stays_in_the_117(tmp_path: Path) -> None:
+    """
+    The knob the module docstring used to record as NOT pinned, and the reason it mattered.
+
+    `looks_like_code` is the filter that subtracts the 20 commented-out hits from the 137
+    candidates, so every hit it misclassifies moves the 117 the no-ship verdict is argued from.
+    Loosening it — `or "(" in raw`, the review's own example — takes 117 to 111, and before this
+    test every fixture in this file survived that: the positive fixture has no bracket, and the
+    commented-out fixture is code with or without the filter. Both extremes, neither middle.
+
+    This is the middle. `# release the lock (see above)` is a restatement of `lock.release()` —
+    it must be counted (`len == 1`) AND counted as prose (`code_like is False`). The two
+    assertions are not the same one twice: a filter that swallowed the whole hit would fail the
+    first, and a filter that reclassified it as ERA001's would fail the second.
+    """
+    found = hits(tmp_path, PROSE_WITH_PARENTHESES)
+
+    assert len(found) == 1
+    assert found[0].code_like is False
