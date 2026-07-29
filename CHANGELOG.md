@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.3](https://github.com/golyshevskii/tooprolix/compare/v0.3.2...v0.3.3) - 2026-07-29
+
+### Other
+
+- measure coverage in both languages, and make the numbers trustworthy ([#15](https://github.com/golyshevskii/tooprolix/pull/15))
+
 ## [0.3.2](https://github.com/golyshevskii/tooprolix/compare/v0.3.1...v0.3.2) - 2026-07-29
 
 ### Added
