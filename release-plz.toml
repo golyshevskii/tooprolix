@@ -25,6 +25,9 @@ publish = false
 # release on EVERY push to main; we only want a release when the Release PR itself is merged.
 release_always = false
 
+# cargo-semver-checks covers public Rust API compatibility, not Python, CLI or behavioural changes.
+semver_check = true
+
 # Tag and GitHub release stay on — they are the deliverable of ToDo 4 and are what
 # `package-python-distribution-and-publish-0-1-0` hangs the wheel build off.
 git_tag_enable = true
