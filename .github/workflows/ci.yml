@@ -39,8 +39,12 @@ jobs:
   #
   # Keep this count honest. It read "Six jobs" while there were seven — the
   # `coverage` job was added without updating it — and then eight when
-  # `cargo-doc` landed. A comment that miscounts the file it sits in is the
-  # cheapest possible thing to get wrong and the easiest to believe.
+  # `cargo-doc` landed. It briefly read "Nine" for a `pr-title` job that now
+  # lives in `.github/workflows/release-contract.yml` instead, because that
+  # gate needs a `pull_request: types: [… edited]` trigger and putting it on
+  # this shared one would re-run all eight jobs on every description typo. A
+  # comment that miscounts the file it sits in is the cheapest possible thing
+  # to get wrong and the easiest to believe.
   #
   # The Rust jobs are deliberately NOT named `test`/`lint` — those names are
   # already taken by the Python jobs above and are registered as required
