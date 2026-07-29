@@ -3007,3 +3007,200 @@ fn the_marker_diagnostics_are_emitted_in_a_deterministic_order() {
         );
     }
 }
+
+/// AC1 — the version the binary prints is the one in `Cargo.toml`, not a literal it carries.
+///
+/// The comparison is between two **artifacts**: the bytes the real binary wrote and the real
+/// `Cargo.toml` read off disk. Comparing against `env!("CARGO_PKG_VERSION")` from inside this test
+/// would have been shorter and would have graded a self-report — the same constant the CLI reads,
+/// so a CLI that printed a literal `0.0.0` could still be made to pass by editing one place. It is
+/// also the invariant `pyproject.toml`'s `dynamic = ["version"]` depends on: one owner of the
+/// number, no manual copies.
+///
+/// The date is not compared to a value — there is nothing to compare it *to* that is not the same
+/// build script's answer — so it is pinned by **shape**: `unknown`, or an ISO date. Wall-clock is
+/// what Decisions #14 forbids, and a build script that fell back to `SystemTime::now()` would still
+/// pass this; what stops that is `--version` being byte-identical across two builds of one commit,
+/// which is AC2 and lives outside the test suite because it needs two builds.
+#[test]
+fn the_version_is_the_one_in_cargo_toml_and_carries_a_build_date() {
+    // Arrange
+    let manifest = std::fs::read_to_string(repository_root().join("Cargo.toml"))
+        .expect("the manifest is next to the tests");
+    let declared = manifest
+        .lines()
+        .take_while(|line| !line.starts_with("[lib]"))
+        .find_map(|line| line.strip_prefix("version = \""))
+        .and_then(|rest| rest.split('"').next())
+        .expect("[package] declares a version");
+
+    // Act
+    let output = tooprolix(&["--version"]);
+    let printed = stdout_of(&output);
+
+    // Assert
+    assert_eq!(output.status.code(), Some(0), "{output:?}");
+    let date = printed
+        .strip_prefix(&format!("tooprolix {declared} ("))
+        .and_then(|rest| rest.strip_suffix(")\n"))
+        .unwrap_or_else(|| {
+            panic!("`--version` is not `tooprolix {declared} (<date>)`: {printed:?}")
+        });
+    assert!(
+        date == "unknown"
+            || (date.len() == 10
+                && date.split('-').count() == 3
+                && date.chars().all(|c| c.is_ascii_digit() || c == '-')),
+        "the build date is neither `unknown` nor an ISO date: {date:?}"
+    );
+}
+
+/// AC3 — one registry feeds `--rules` and the Rules block of `--help`, so the text cannot drift.
+///
+/// The assertion is containment of the **rendered bytes**: every line `--rules` printed appears in
+/// `--help` indented by two spaces. A test that only checked both mentioned `TPX001` would survive
+/// exactly the mutation this exists to catch — a description hardcoded in the help text next to a
+/// different one in the registry.
+///
+/// `TPX004` is listed and is deliberately **not** a [`Rule`]: it is a number that has been spoken
+/// for, not a detector that runs, and `Rule::ALL` stays three long so `ignore = ["TPX004"]` and
+/// `# !TPX004` keep being refused.
+#[test]
+fn the_rules_listing_and_the_help_render_the_same_registry() {
+    // Act
+    let rules = tooprolix(&["--rules"]);
+    let help = tooprolix(&["--help"]);
+
+    // Assert
+    assert_eq!(rules.status.code(), Some(0), "{rules:?}");
+    assert_eq!(help.status.code(), Some(0), "{help:?}");
+
+    let listed: Vec<&str> = stdout_of(&rules).lines().collect();
+    assert_eq!(
+        listed.len(),
+        4,
+        "`--rules` does not list the three shipping rules plus reserved TPX004: {:?}",
+        stdout_of(&rules)
+    );
+    for line in &listed {
+        assert!(
+            stdout_of(&help).contains(&format!("  {line}\n")),
+            "`--help` does not carry the line `--rules` printed, so the two have separate copies \
+             of the text: {line:?} not in {:?}",
+            stdout_of(&help)
+        );
+    }
+    for code in ["TPX001", "TPX002", "TPX003", "TPX004"] {
+        assert!(
+            listed.iter().any(|line| line.starts_with(code)),
+            "`--rules` does not list {code}: {:?}",
+            stdout_of(&rules)
+        );
+    }
+    assert!(
+        listed[3].contains("Reserved"),
+        "TPX004 is not marked reserved, so `--rules` claims a detector that does not run: {:?}",
+        listed[3]
+    );
+}
+
+/// AC3 — the binary and every documented rule table say the same thing, so there is no fourth owner.
+///
+/// This grades the real Markdown files against the real stdout. It is also the guard on the
+/// release-day flip: when `Implemented` becomes `Released` in one file and not the others, this
+/// reddens instead of shipping three answers to "is this rule available?".
+#[test]
+fn the_rules_listing_agrees_with_every_documented_table() {
+    // Arrange
+    let rules = tooprolix(&["--rules"]);
+    let documents = ["README.md", "docs/rules-and-configuration.md"];
+
+    // Assert — the loop below iterates over `--rules` output, so an empty one would make every
+    // assertion in it vacuous. Measured: without these two lines this test PASSED on a binary that
+    // did not have `--rules` at all.
+    assert_eq!(rules.status.code(), Some(0), "{rules:?}");
+    assert_eq!(
+        stdout_of(&rules).lines().count(),
+        4,
+        "`--rules` printed nothing to compare the tables against: {:?}",
+        stdout_of(&rules)
+    );
+    for line in stdout_of(&rules).lines() {
+        let (code, rest) = line.split_at(6);
+        let rest = rest.trim_start();
+        let (status, description) = rest
+            .split_once(char::is_whitespace)
+            .expect("every catalogue line is `code status description`");
+        let row = format!("| `{code}` | {} | {status} |", description.trim_start());
+        for document in documents {
+            let text = std::fs::read_to_string(repository_root().join(document))
+                .unwrap_or_else(|error| panic!("{document} is readable: {error}"));
+            assert!(
+                text.contains(&row),
+                "{document} does not carry the row `--rules` printed: {row:?}"
+            );
+        }
+    }
+}
+
+/// AC4 — the discovery surface, pinned as a regression: it was already right and must stay right.
+///
+/// The two new flags are documented by the same text that documents the old ones, which is the only
+/// reason a user who ran `--help` before this change would find them.
+#[test]
+fn the_discovery_surface_names_every_flag_and_an_unknown_command_points_at_it() {
+    // Act
+    let help = tooprolix(&["--help"]);
+    let unknown = tooprolix(&["badcommand"]);
+    let short = tooprolix(&["-V"]);
+
+    // Assert
+    assert_eq!(help.status.code(), Some(0), "{help:?}");
+    for flag in ["--help", "--version", "--rules", "--format"] {
+        assert!(
+            stdout_of(&help).contains(flag),
+            "`--help` does not document {flag}: {:?}",
+            stdout_of(&help)
+        );
+    }
+
+    assert_eq!(unknown.status.code(), Some(2), "{unknown:?}");
+    assert!(
+        stderr_of(&unknown).contains("unknown subcommand `badcommand`")
+            && stderr_of(&unknown).contains("Run `tooprolix --help`"),
+        "an unknown command no longer points at the help: {:?}",
+        stderr_of(&unknown)
+    );
+
+    // ruff's own convention, checked against ruff 0.16.0: `-V` and `--version` both work.
+    assert_eq!(short.status.code(), Some(0), "{short:?}");
+    assert_eq!(stdout_of(&short), stdout_of(&tooprolix(&["--version"])));
+}
+
+/// A flag that reports and exits takes nothing else, so `--version --rules` cannot silently pick.
+///
+/// The precedent is `--format` given twice: this parser refuses an ambiguous command line rather
+/// than letting one side win. `--help` is deliberately left alone — it already ignores everything
+/// after it, that is shipped behaviour, and tightening it would change an exit code this task
+/// promised not to touch.
+#[test]
+fn two_reporting_flags_at_once_are_refused_rather_than_ranked() {
+    for arguments in [
+        vec!["--version", "--rules"],
+        vec!["--rules", "--version"],
+        vec!["--version", "check", "."],
+        vec!["--rules", "src"],
+    ] {
+        let output = tooprolix(&arguments);
+        assert_eq!(
+            output.status.code(),
+            Some(2),
+            "{arguments:?} was not refused: {output:?}"
+        );
+        assert!(
+            stderr_of(&output).contains("takes no other arguments"),
+            "{arguments:?} was refused without saying why: {:?}",
+            stderr_of(&output)
+        );
+    }
+}

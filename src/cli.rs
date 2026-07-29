@@ -106,7 +106,7 @@
 //! is exactly this. But `TPX003` is cross-file by construction: `duplicates` compares the blocks it
 //! was handed and nothing else, so a single-file run can only ever find duplicates *inside that
 //! file*. A user who reads exit 0 there as a verdict on the repository has been misled by silence,
-//! so [`HELP`] says it in as many words.
+//! so [`help`] says it in as many words.
 
 use std::ffi::{OsStr, OsString};
 use std::io::IsTerminal;
@@ -125,12 +125,72 @@ use crate::finding::{Finding, Report, Skipped};
 use crate::rules::{self, Rule, Suppression, parse_marker};
 
 /// The `--help` text, and the only place the command grammar is written down.
-pub const HELP: &str = "\
+///
+/// A function rather than the `const HELP: &str` this used to be, and the reason is
+/// [`rules::CATALOGUE`]: the Rules block below is rendered from the same array `--rules` prints, so
+/// the two cannot say different things about `TPX002`. A `const` cannot concatenate a rendered
+/// block, and the alternative — the same three sentences written out here *and* in the catalogue,
+/// pinned by a test — is two owners with a tripwire rather than one owner, which is what the task
+/// this shipped in refused. Nothing outside the crate ever read the constant; the `--help` **text**
+/// is the contract, and it is unchanged apart from the two new options and the rules wording.
+#[must_use]
+pub fn help() -> String {
+    let mut text = String::from(HELP_BEFORE_RULES);
+    for line in rules_listing().lines() {
+        text.push_str("  ");
+        text.push_str(line);
+        text.push('\n');
+    }
+    text.push_str(HELP_AFTER_RULES);
+    text
+}
+
+/// The rule catalogue exactly as `tooprolix --rules` writes it: one line per code, no indent.
+///
+/// [`help`] embeds these same lines indented by two spaces, which is what
+/// `the_rules_listing_and_the_help_render_the_same_registry` compares — the bytes, not the fact
+/// that both mention `TPX001`.
+///
+/// The widths are the longest code plus two and the longest status plus two, so the description
+/// column starts in the same place on every row.
+fn rules_listing() -> String {
+    use std::fmt::Write as _;
+
+    rules::CATALOGUE
+        .iter()
+        .fold(String::new(), |mut text, rule| {
+            writeln!(
+                text,
+                "{:<8}{:<13}{}",
+                rule.code, rule.status, rule.description
+            )
+            .expect("writing into a String cannot fail");
+            text
+        })
+}
+
+/// `tooprolix <semver> (<date>)`, with the version from `Cargo.toml` and the date from the commit.
+///
+/// Neither half is written down here. The version is `CARGO_PKG_VERSION`, so `Cargo.toml` stays the
+/// one owner of the number that `pyproject.toml`'s `dynamic = ["version"]` also defers to. The date
+/// is `build.rs`'s answer — the **commit** date, or `unknown` — because a `--version` that moved
+/// with the wall clock would differ between two builds of one commit.
+fn version_line() -> String {
+    format!(
+        "tooprolix {} ({})",
+        env!("CARGO_PKG_VERSION"),
+        env!("TOOPROLIX_COMMIT_DATE")
+    )
+}
+
+const HELP_BEFORE_RULES: &str = "\
 tooprolix — a prose budget linter for Python.
 
 Usage:
   tooprolix check <path> [--format text|json]
   tooprolix --help
+  tooprolix --version
+  tooprolix --rules
 
 Arguments:
   <path>    A Python file, a directory, or `.`. Directories are walked; `.gitignore`
@@ -144,12 +204,18 @@ Options:
             \"skipped\", \"excluded\", \"findings\"}, including on a clean run. All
             five are always present. Giving it twice is an error, not last-wins.
   --help    Show this text.
+  --version Print `tooprolix <version> (<commit date>)`. The date is the date of
+            the commit the binary was built from, not the date it was built, so
+            two builds of one commit answer identically. A build from a tree with
+            no git history says `unknown` rather than guessing.
+  --rules   Print the rule table below and nothing else, for a script. Each of
+            these three flags takes no other argument.
 
 Rules:
-  TPX001    A comment run longer than `comment-max-volume` words.
-  TPX002    A docstring longer than `docstring-max-volume` words.
-  TPX003    One explanation repeated across two or more blocks.
+";
 
+const HELP_AFTER_RULES: &str = "
+  The limits are `comment-max-volume` and `docstring-max-volume`, both in words.
   Volume is measured in WORDS, after normalisation — not lines and not characters.
   The limit is the last size still allowed: a block of exactly the limit is silent.
 
@@ -288,6 +354,10 @@ enum Invocation {
     },
     /// `tooprolix --help`.
     Help,
+    /// `tooprolix --version` or `tooprolix -V`.
+    Version,
+    /// `tooprolix --rules`.
+    Rules,
 }
 
 /// Everything that makes a run exit 2 — every one of them a failure to *start*.
@@ -392,7 +462,15 @@ pub(crate) fn status<I: IntoIterator<Item = OsString>>(arguments: I) -> ExitStat
 pub fn execute<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<ExitStatus, Error> {
     let (path, format) = match parse(arguments)? {
         Invocation::Help => {
-            print!("{HELP}");
+            print!("{}", help());
+            return Ok(ExitStatus::Success);
+        }
+        Invocation::Version => {
+            println!("{}", version_line());
+            return Ok(ExitStatus::Success);
+        }
+        Invocation::Rules => {
+            print!("{}", rules_listing());
             return Ok(ExitStatus::Success);
         }
         Invocation::Check { path, format } => (path, format),
@@ -618,7 +696,7 @@ fn report_skipped(skipped: &[Skipped], config: &Config) {
 ///
 /// Hand-written, and that is a recorded decision: the grammar is one subcommand, one positional and
 /// one option, so a derive-macro argument parser would be a dependency tree and a second home for
-/// the help text that [`HELP`] already owns.
+/// the help text that [`help`] already owns.
 ///
 /// **`arguments` does NOT include the program name.** It used to, silently — this function opened
 /// with `.skip(1)` while [`run`]'s parameter was documented as "the command line", so a caller
@@ -635,8 +713,18 @@ fn parse<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<Invocation, E
     let Some(first) = arguments.next().transpose()? else {
         return Err(Error::Usage("expected a subcommand".to_owned()));
     };
+    // `--help` is deliberately NOT in the `alone` group below. It has ignored everything after it
+    // since 0.1.0 — `tooprolix --help --format=yaml` exits 0 — and that is shipped behaviour this
+    // additive change promised not to move. The two new flags start strict, which is the direction
+    // that stays free: loosening later breaks nobody.
     if matches!(first.as_str(), "--help" | "-h") {
         return Ok(Invocation::Help);
+    }
+    if matches!(first.as_str(), "--version" | "-V") {
+        return alone(Invocation::Version, &first, &mut arguments);
+    }
+    if first == "--rules" {
+        return alone(Invocation::Rules, &first, &mut arguments);
     }
     if first != "check" {
         return Err(Error::Usage(format!("unknown subcommand `{first}`")));
@@ -685,6 +773,30 @@ fn parse<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<Invocation, E
             })
         },
     )
+}
+
+/// A flag that reports and exits takes nothing else, so `--version --rules` is refused, not ranked.
+///
+/// Same reasoning as [`set_format`] one function down, and the same precedent: this parser answers
+/// an ambiguous command line with an error rather than picking a winner. Ranking them would make
+/// `tooprolix --version --rules` print one of the two things asked for and say nothing about the
+/// other — a script reading the output would be silently short one answer. It also catches
+/// `tooprolix --rules src`, where the user meant `check`.
+///
+/// # Errors
+///
+/// [`Error::Usage`] when anything at all follows the flag.
+fn alone<I: Iterator<Item = Result<String, Error>>>(
+    invocation: Invocation,
+    flag: &str,
+    rest: &mut I,
+) -> Result<Invocation, Error> {
+    match rest.next().transpose()? {
+        None => Ok(invocation),
+        Some(extra) => Err(Error::Usage(format!(
+            "`{flag}` takes no other arguments; got `{extra}`"
+        ))),
+    }
 }
 
 /// Records the format, refusing a second `--format` rather than letting the last one win.
@@ -1259,6 +1371,12 @@ mod tests {
             command(&["check", "--help"]).expect("valid"),
             Invocation::Help
         );
+        // `-V` and not `-v`: the short form is ruff's, checked against ruff 0.16.0 rather than
+        // guessed, and `-v` is what ruff spells `--verbose`. There is no `-r` for `--rules`,
+        // because ruff has no such flag to copy and inventing one is what the task ruled out.
+        assert_eq!(command(&["--version"]).expect("valid"), Invocation::Version);
+        assert_eq!(command(&["-V"]).expect("valid"), Invocation::Version);
+        assert_eq!(command(&["--rules"]).expect("valid"), Invocation::Rules);
     }
 
     /// Every way of getting the command line wrong is an error rather than a default.
@@ -1279,6 +1397,12 @@ mod tests {
             vec!["check", "src", "--format", "json", "--format", "text"],
             vec!["check", "src", "--format=json", "--format=json"],
             vec!["check", "src", "--fix"],
+            // Two reporting flags at once: ranking them would answer one of the two questions
+            // asked and stay silent about the other. Same rule as `--format` twice.
+            vec!["--version", "--rules"],
+            vec!["--rules", "--version"],
+            vec!["-V", "--help"],
+            vec!["--rules", "src"],
         ] {
             assert!(
                 command(&arguments).is_err(),

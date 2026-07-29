@@ -6,6 +6,60 @@ the exit code means, and the shape of the JSON document.
 For the rules themselves — thresholds, suppression markers, `pyproject.toml` — see
 [rules-and-configuration.md](rules-and-configuration.md).
 
+## The four invocations
+
+```console
+$ tooprolix check <path> [--format text|json]
+$ tooprolix --help
+$ tooprolix --version
+$ tooprolix --rules
+```
+
+`--help`, `--version` and `--rules` all exit **0** and write to stdout. An unknown subcommand or an
+unknown option exits **2** and points at `tooprolix --help`.
+
+### `--version`
+
+```console
+$ tooprolix --version
+tooprolix 0.3.1 (2026-07-28)
+```
+
+`-V` is the same thing, spelled ruff's way. The version comes from `Cargo.toml` — the one owner of
+that number, which is why `pyproject.toml` declares `dynamic = ["version"]`.
+
+The date in brackets is the **date of the commit the binary was built from, not the date it was
+built**. Two builds of one commit, hours apart, print the same line; if that were the wall clock the
+binary would not be reproducible and the string could not identify what is running. A build from a
+tree with no git history and no `SOURCE_DATE_EPOCH` prints `unknown` rather than substituting
+today's date — `unknown` is a true answer and a guess is not.
+
+`SOURCE_DATE_EPOCH`, when set, wins over git. That is the [reproducible-builds
+convention](https://reproducible-builds.org/docs/source-date-epoch/), and it is the only way a
+package built from an archive rather than a checkout can carry a real date.
+
+### `--rules`
+
+```console
+$ tooprolix --rules
+TPX001  Implemented  A comment run longer than its word limit
+TPX002  Implemented  A docstring longer than its word limit
+TPX003  Implemented  One explanation repeated across comments and docstrings, reported once with every place it appears
+TPX004  Reserved     Comments that restate the following code
+```
+
+Three columns — code, status, description — separated by spaces, one rule per line, nothing else on
+stdout. `--help` embeds the identical lines, and both come from one array in `src/rules.rs`, so the
+CLI cannot describe a rule differently from [rules-and-configuration.md](rules-and-configuration.md).
+
+`TPX004` is listed as `Reserved` and is **not** an accepted code: `ignore = ["TPX004"]` is still a
+fatal configuration error and `# !TPX004` still suppresses nothing. Being documented and being
+accepted are different things, deliberately.
+
+Each of the three flags takes no other argument — `tooprolix --version --rules` is an error, not a
+ranking, for the same reason `--format` given twice is. `--help` is the exception and ignores what
+follows it, which is behaviour from 0.1.0.
+
 ## Finding addresses
 
 Every finding points to `path:start-end`:

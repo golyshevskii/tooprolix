@@ -29,9 +29,137 @@
 //! `use`/call that way gives E0433, because a build script is compiled before the feature
 //! resolution that would activate an optional build-dependency. So `pyo3-build-config` stays
 //! non-optional in Cargo.toml. Measured in epic 1; do not "tidy" this into a `cfg`.
+//!
+//! # The second job: the date `--version` prints
+//!
+//! `TOOPROLIX_COMMIT_DATE` is the other half of `tooprolix --version`, and it is the **commit**
+//! date rather than the wall clock (epic 2, Decisions #14): a binary whose `--version` changes
+//! because an hour passed is not reproducible, and two builds of one commit would disagree about
+//! what they are. There are three sources, in this order, and the order is the whole design:
+//!
+//! 1. **`SOURCE_DATE_EPOCH`** — the cross-ecosystem convention for "pretend the build happened
+//!    then". It wins over git because it is the only thing a *release* build can set: the wheel is
+//!    built from an sdist, which carries no `.git` at all.
+//! 2. **`git log -1 --format=%cs`** — the committer date of `HEAD`, already `YYYY-MM-DD` (`%cs` is
+//!    the short committer date; no `--date=` needed and no formatting on our side).
+//! 3. **`unknown`** — a tree with no git and no `SOURCE_DATE_EPOCH`. Deliberately not today's date:
+//!    substituting the wall clock is exactly the thing being avoided, and a build that cannot know
+//!    its provenance should say so rather than invent one.
+//!
+//! ⚠️ **Emitting the `rerun-if` lines is what makes the answer true rather than merely printed.**
+//! Cargo's default is to re-run a build script whenever any file in the package changes; the moment
+//! this file emits one `rerun-if-changed`, that default is **replaced** by exactly what is listed.
+//! So all four lines below are load-bearing: `build.rs` itself (or editing this file would not
+//! re-run it), `.git/HEAD` (moving between branches), the file `HEAD` points at (committing on the
+//! current branch), and `SOURCE_DATE_EPOCH`. Miss the ref file and `--version` reports the date of
+//! whatever commit was checked out the last time the script happened to run.
+
+use std::path::Path;
+use std::process::Command;
 
 fn main() {
     if std::env::var_os("CARGO_FEATURE_PYTHON").is_some() {
         pyo3_build_config::add_libpython_rpath_link_args();
+    }
+
+    println!("cargo:rerun-if-changed=build.rs");
+    println!("cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH");
+    for path in git_inputs() {
+        println!("cargo:rerun-if-changed={path}");
+    }
+    println!("cargo:rustc-env=TOOPROLIX_COMMIT_DATE={}", commit_date());
+}
+
+/// The date to stamp into the binary: `SOURCE_DATE_EPOCH`, then git, then `unknown`.
+fn commit_date() -> String {
+    if let Some(epoch) = source_date_epoch() {
+        return epoch;
+    }
+    git(&["log", "-1", "--format=%cs"]).unwrap_or_else(|| "unknown".to_owned())
+}
+
+/// `SOURCE_DATE_EPOCH` as `YYYY-MM-DD` UTC, or `None` if it is unset or not a number.
+///
+/// The civil-date arithmetic is spelled out rather than pulled from `chrono` or `time`: this is a
+/// build script, a build dependency is paid for by every consumer on every build, and the whole
+/// computation is Howard Hinnant's `civil_from_days` — proleptic Gregorian, no leap seconds, which
+/// is exactly what `SOURCE_DATE_EPOCH` is defined to be. An unparsable value falls through to git
+/// rather than failing the build: it is somebody else's environment variable.
+fn source_date_epoch() -> Option<String> {
+    let seconds: i64 = std::env::var("SOURCE_DATE_EPOCH")
+        .ok()?
+        .trim()
+        .parse()
+        .ok()?;
+    let days = seconds.div_euclid(86_400);
+
+    // Shift the epoch to 0000-03-01 so that a leap day lands at the end of the 400-year era.
+    let shifted = days + 719_468;
+    let era = shifted.div_euclid(146_097);
+    let day_of_era = shifted.rem_euclid(146_097);
+    let year_of_era =
+        (day_of_era - day_of_era / 1_460 + day_of_era / 36_524 - day_of_era / 146_096) / 365;
+    let day_of_year = day_of_era - (365 * year_of_era + year_of_era / 4 - year_of_era / 100);
+    let month_prime = (5 * day_of_year + 2) / 153;
+
+    let day = day_of_year - (153 * month_prime + 2) / 5 + 1;
+    let month = if month_prime < 10 {
+        month_prime + 3
+    } else {
+        month_prime - 9
+    };
+    let year = year_of_era + era * 400 + i64::from(month <= 2);
+
+    Some(format!("{year:04}-{month:02}-{day:02}"))
+}
+
+/// The files whose contents decide what `git log -1` answers, so cargo re-runs when they move.
+///
+/// `.git/HEAD` covers a checkout; the ref it names covers a commit on the current branch. A
+/// detached HEAD has the SHA in `.git/HEAD` itself, so the second path is simply absent.
+///
+/// `rev-parse --absolute-git-dir` rather than a literal `.git`: in a linked worktree `.git` is a
+/// *file*, and the real HEAD lives in `<main>/.git/worktrees/<name>/HEAD`. Hard-coding the
+/// directory would have watched a file that never changes and reported a stale date in exactly the
+/// setup this epic's sub-agents work in.
+///
+/// An empty answer means the date is `unknown` and can never become anything else without an edit
+/// to this file — which `rerun-if-changed=build.rs` covers — so there is nothing left to watch.
+fn git_inputs() -> Vec<String> {
+    let Some(git_dir) = git(&["rev-parse", "--absolute-git-dir"]) else {
+        return Vec::new();
+    };
+    let head = Path::new(&git_dir).join("HEAD");
+    if !head.is_file() {
+        return Vec::new();
+    }
+
+    let mut inputs = vec![head.display().to_string()];
+    // `--symbolic-full-name` is empty on a detached HEAD, which is the case with no ref file.
+    if let Some(reference) = git(&["symbolic-ref", "--quiet", "HEAD"]) {
+        let path = Path::new(&git_dir).join(&reference);
+        if path.is_file() {
+            inputs.push(path.display().to_string());
+        }
+    }
+    inputs
+}
+
+/// One git invocation, trimmed, or `None` when git is missing, fails, or answers nothing.
+///
+/// Every failure mode collapses to `None` on purpose: a build outside a repository, a machine with
+/// no git, and a repository with no commits are all "the date is not knowable here", and the caller
+/// has exactly one thing to do about all three.
+fn git(arguments: &[&str]) -> Option<String> {
+    let output = Command::new("git").args(arguments).output().ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    let text = String::from_utf8(output.stdout).ok()?;
+    let trimmed = text.trim();
+    if trimmed.is_empty() {
+        None
+    } else {
+        Some(trimmed.to_owned())
     }
 }
