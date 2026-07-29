@@ -3007,3 +3007,286 @@ fn the_marker_diagnostics_are_emitted_in_a_deterministic_order() {
         );
     }
 }
+
+/// AC1 — the version the binary prints is the one in `Cargo.toml`, not a literal it carries.
+///
+/// The comparison is between two **artifacts**: the bytes the real binary wrote and the real
+/// `Cargo.toml` read off disk. Comparing against `env!("CARGO_PKG_VERSION")` from inside this test
+/// would have been shorter and would have graded a self-report — the same constant the CLI reads,
+/// so a CLI that printed a literal `0.0.0` could still be made to pass by editing one place. It is
+/// also the invariant `pyproject.toml`'s `dynamic = ["version"]` depends on: one owner of the
+/// number, no manual copies.
+///
+/// **The date gets exactly the same treatment, and git is its oracle.** It used to be pinned by
+/// *shape* — ten characters of digits and dashes — which graded nothing: a `commit_date()` that
+/// ignored git and returned the literal `"2024-03-01"` passed the whole suite, and so did a stale
+/// build whose date was two years wrong. Both were reproduced. `git log -1 --format=%cs` is an
+/// artifact this crate does not produce, so comparing the binary's bytes to it kills the literal,
+/// a fake `git` on `PATH` answering `2026-99-99`, an invalid civil date, and a build script that
+/// did not re-run — with one assertion instead of a two-build diff nobody runs in CI.
+///
+/// The three branches are the three states the build script can be in, and only the first is not
+/// an equality — with `SOURCE_DATE_EPOCH` set there is no second artifact to ask, because the
+/// environment variable *is* the answer. Nothing here returns early: a skipped branch that reports
+/// success is the fail-open guard this epic keeps finding.
+#[test]
+fn the_version_is_the_one_in_cargo_toml_and_carries_a_build_date() {
+    // Arrange
+    let manifest = std::fs::read_to_string(repository_root().join("Cargo.toml"))
+        .expect("the manifest is next to the tests");
+    let declared = manifest
+        .lines()
+        .take_while(|line| !line.starts_with("[lib]"))
+        .find_map(|line| line.strip_prefix("version = \""))
+        .and_then(|rest| rest.split('"').next())
+        .expect("[package] declares a version");
+
+    // Act
+    let output = tooprolix(&["--version"]);
+    let printed = stdout_of(&output);
+
+    // Assert
+    assert_eq!(output.status.code(), Some(0), "{output:?}");
+    let date = printed
+        .strip_prefix(&format!("tooprolix {declared} ("))
+        .and_then(|rest| rest.strip_suffix(")\n"))
+        .unwrap_or_else(|| {
+            panic!("`--version` is not `tooprolix {declared} (<date>)`: {printed:?}")
+        });
+    match (
+        std::env::var_os("SOURCE_DATE_EPOCH"),
+        our_git(&["log", "-1", "--format=%cs"]),
+    ) {
+        (Some(epoch), _) => assert!(
+            date.len() == 10
+                && date.split('-').count() == 3
+                && date.chars().all(|c| c.is_ascii_digit() || c == '-'),
+            "SOURCE_DATE_EPOCH={epoch:?} was set, so the date is that epoch and there is no second \
+             artifact to check it against — but it is not even an ISO date: {date:?}"
+        ),
+        (None, Some(committed)) => assert_eq!(
+            date, committed,
+            "`--version` does not print the commit date git reports. Either the build script is \
+             not reading git, or cargo did not re-run it and the binary is carrying the date of an \
+             older commit."
+        ),
+        (None, None) => assert_eq!(
+            date, "unknown",
+            "this package has no git history of its own and SOURCE_DATE_EPOCH is unset, so the \
+             only honest answer is `unknown` — a date here comes from somewhere that is not this \
+             package, which is what Decisions #14 forbids"
+        ),
+    }
+}
+
+/// [`git`], but only when the repository git discovers is **this package's own**.
+///
+/// Without this the oracle is circular in the one layout that matters. Git's discovery walks
+/// *upward*, so an extracted sdist or a `cargo vendor` tree sitting inside an unrelated checkout
+/// answers with the **host** repository's commit date — and this test then computed its expected
+/// value from that same foreign repository, so the wrong date graded as correct. Reproduced: a
+/// tree with no `.git` of its own printed `2020-01-01` from the repository above it, and this test
+/// passed. The containment has to be here as well as in `build.rs`; checking only the build script
+/// would leave a test that cannot fail for the thing it exists to check.
+///
+/// ⚠️ **Both sides are canonicalised before they are compared.** On macOS `/tmp` is a symlink to
+/// `/private/tmp`, so `--show-toplevel` and `CARGO_MANIFEST_DIR` name the same directory with
+/// different strings whenever the checkout is reached through one — including in this epic's own
+/// scratch directories. A string comparison would fail closed on a perfectly good repository and
+/// turn every `--version` into `unknown`, which is worse than the bug being fixed.
+fn our_git(arguments: &[&str]) -> Option<String> {
+    let canonical = |path: &str| std::fs::canonicalize(path).ok();
+    let toplevel = git(&["rev-parse", "--show-toplevel"])?;
+    if canonical(&toplevel)? != canonical(&repository_root().display().to_string())? {
+        return None;
+    }
+    git(arguments)
+}
+
+/// One `git` invocation from the repository root, or `None` when git cannot answer.
+///
+/// The same collapse-to-`None` as `build.rs`: no git on `PATH`, not a checkout, and a repository
+/// with no commits are all "git has no answer", and the caller treats all three alike. Callers
+/// wanting the date want [`our_git`] instead — this one will happily answer about a repository
+/// that merely encloses the package.
+fn git(arguments: &[&str]) -> Option<String> {
+    let output = Command::new("git")
+        .args(arguments)
+        .current_dir(repository_root())
+        .output()
+        .ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    let text = String::from_utf8(output.stdout).ok()?;
+    let trimmed = text.trim();
+    if trimmed.is_empty() {
+        None
+    } else {
+        Some(trimmed.to_owned())
+    }
+}
+
+/// AC3 — one registry feeds `--rules` and the Rules block of `--help`, so the text cannot drift.
+///
+/// The assertion is containment of the **rendered bytes**: every line `--rules` printed appears in
+/// `--help` indented by two spaces. A test that only checked both mentioned `TPX001` would survive
+/// exactly the mutation this exists to catch — a description hardcoded in the help text next to a
+/// different one in the registry.
+///
+/// `TPX004` is listed and is deliberately **not** a [`Rule`]: it is a number that has been spoken
+/// for, not a detector that runs, and `Rule::ALL` stays three long so `ignore = ["TPX004"]` and
+/// `# !TPX004` keep being refused.
+#[test]
+fn the_rules_listing_and_the_help_render_the_same_registry() {
+    // Act
+    let rules = tooprolix(&["--rules"]);
+    let help = tooprolix(&["--help"]);
+
+    // Assert
+    assert_eq!(rules.status.code(), Some(0), "{rules:?}");
+    assert_eq!(help.status.code(), Some(0), "{help:?}");
+
+    let listed: Vec<&str> = stdout_of(&rules).lines().collect();
+    assert_eq!(
+        listed.len(),
+        4,
+        "`--rules` does not list the three shipping rules plus reserved TPX004: {:?}",
+        stdout_of(&rules)
+    );
+    for line in &listed {
+        assert!(
+            stdout_of(&help).contains(&format!("  {line}\n")),
+            "`--help` does not carry the line `--rules` printed, so the two have separate copies \
+             of the text: {line:?} not in {:?}",
+            stdout_of(&help)
+        );
+    }
+    for code in ["TPX001", "TPX002", "TPX003", "TPX004"] {
+        assert!(
+            listed.iter().any(|line| line.starts_with(code)),
+            "`--rules` does not list {code}: {:?}",
+            stdout_of(&rules)
+        );
+    }
+    assert!(
+        listed[3].contains("Reserved"),
+        "TPX004 is not marked reserved, so `--rules` claims a detector that does not run: {:?}",
+        listed[3]
+    );
+}
+
+/// AC3 — the binary and every documented rule table say the same thing, so there is no fourth owner.
+///
+/// This grades the real Markdown files against the real stdout. It is also the guard on the
+/// release-day flip: when `Implemented` becomes `Released` in one file and not the others, this
+/// reddens instead of shipping three answers to "is this rule available?".
+#[test]
+fn the_rules_listing_agrees_with_every_documented_table() {
+    // Arrange
+    let rules = tooprolix(&["--rules"]);
+    let documents = ["README.md", "docs/rules-and-configuration.md"];
+
+    // Assert — the loop below iterates over `--rules` output, so an empty one would make every
+    // assertion in it vacuous. Measured: without these two lines this test PASSED on a binary that
+    // did not have `--rules` at all.
+    assert_eq!(rules.status.code(), Some(0), "{rules:?}");
+    assert_eq!(
+        stdout_of(&rules).lines().count(),
+        4,
+        "`--rules` printed nothing to compare the tables against: {:?}",
+        stdout_of(&rules)
+    );
+    let expected: Vec<String> = stdout_of(&rules)
+        .lines()
+        .map(|line| {
+            let (code, rest) = line.split_at(6);
+            let (status, description) = rest
+                .trim_start()
+                .split_once(char::is_whitespace)
+                .expect("every catalogue line is `code status description`");
+            format!("| `{code}` | {} | {status} |", description.trim_start())
+        })
+        .collect();
+
+    // Equality of the whole set of `TPX` rows, not a `contains` per row. A whole-file `contains`
+    // passed while the visible table was stale and the right row sat in a fenced code block or an
+    // HTML comment; narrowing it to "some line starting with `|`" does not fix that, because a
+    // fenced row starts with `|` too. Requiring the document's rows to BE the binary's rows, in
+    // order, closes the stale row, the hidden duplicate and the extra row at once.
+    for document in documents {
+        let text = std::fs::read_to_string(repository_root().join(document))
+            .unwrap_or_else(|error| panic!("{document} is readable: {error}"));
+        let rows: Vec<String> = text
+            .lines()
+            .map(|line| line.trim_end().to_owned())
+            .filter(|line| line.starts_with("| `TPX"))
+            .collect();
+        assert_eq!(
+            rows, expected,
+            "the rule rows in {document} are not the ones `--rules` printed"
+        );
+    }
+}
+
+/// AC4 — the discovery surface, pinned as a regression: it was already right and must stay right.
+///
+/// The two new flags are documented by the same text that documents the old ones, which is the only
+/// reason a user who ran `--help` before this change would find them.
+#[test]
+fn the_discovery_surface_names_every_flag_and_an_unknown_command_points_at_it() {
+    // Act
+    let help = tooprolix(&["--help"]);
+    let unknown = tooprolix(&["badcommand"]);
+    let short = tooprolix(&["-V"]);
+
+    // Assert
+    assert_eq!(help.status.code(), Some(0), "{help:?}");
+    for flag in ["--help", "--version", "--rules", "--format"] {
+        assert!(
+            stdout_of(&help).contains(flag),
+            "`--help` does not document {flag}: {:?}",
+            stdout_of(&help)
+        );
+    }
+
+    assert_eq!(unknown.status.code(), Some(2), "{unknown:?}");
+    assert!(
+        stderr_of(&unknown).contains("unknown subcommand `badcommand`")
+            && stderr_of(&unknown).contains("Run `tooprolix --help`"),
+        "an unknown command no longer points at the help: {:?}",
+        stderr_of(&unknown)
+    );
+
+    // ruff's own convention, checked against ruff 0.16.0: `-V` and `--version` both work.
+    assert_eq!(short.status.code(), Some(0), "{short:?}");
+    assert_eq!(stdout_of(&short), stdout_of(&tooprolix(&["--version"])));
+}
+
+/// A flag that reports and exits takes nothing else, so `--version --rules` cannot silently pick.
+///
+/// The precedent is `--format` given twice: this parser refuses an ambiguous command line rather
+/// than letting one side win. `--help` is deliberately left alone — it already ignores everything
+/// after it, that is shipped behaviour, and tightening it would change an exit code this task
+/// promised not to touch.
+#[test]
+fn two_reporting_flags_at_once_are_refused_rather_than_ranked() {
+    for arguments in [
+        vec!["--version", "--rules"],
+        vec!["--rules", "--version"],
+        vec!["--version", "check", "."],
+        vec!["--rules", "src"],
+    ] {
+        let output = tooprolix(&arguments);
+        assert_eq!(
+            output.status.code(),
+            Some(2),
+            "{arguments:?} was not refused: {output:?}"
+        );
+        assert!(
+            stderr_of(&output).contains("takes no other arguments"),
+            "{arguments:?} was refused without saying why: {:?}",
+            stderr_of(&output)
+        );
+    }
+}

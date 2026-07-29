@@ -210,6 +210,67 @@ impl Rule {
     }
 }
 
+/// One row of the catalogue `tooprolix --rules` prints and `--help` embeds.
+///
+/// The fields are the three columns of the table in `docs/rules-and-configuration.md` and in the
+/// README, in that order, because those two files and this array now say the same sentence and a
+/// test compares them byte for byte.
+///
+/// `status` is a `&'static str` and not an enum on purpose, against `type-no-stringly`: it is a
+/// *label*, not a decision anything branches on — nothing in this crate reads it, three documents
+/// render it, and `CONTRIBUTING.md`'s release-day checklist flips every one of them from
+/// `Implemented` to `Released` on publication day. An enum would turn that one-word edit into a
+/// variant rename plus a `match`, and would still not stop the label being wrong.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
+pub struct Documented {
+    /// The `TPX` code, as it appears in output and in a marker.
+    pub code: &'static str,
+    /// One line saying what the rule detects.
+    pub description: &'static str,
+    /// Whether the rule ships today.
+    pub status: &'static str,
+}
+
+/// Every `TPX` number that has been spoken for, shipping or not, with its one-line description.
+///
+/// 🔴 **This is not the registry of rules that exist — [`Rule::ALL`] is, and it stays three long.**
+/// The distinction is load-bearing: `Rule::ALL` answers "which codes does this tool accept", and
+/// three separate consumers read it for that ([`Rule::from_code`], `ignore` validation in
+/// [`crate::config`], and marker parsing below). Adding a `TPX004` variant so that `--rules` could
+/// print it would have made `ignore = ["TPX004"]` and `# !TPX004` start being *accepted* — a
+/// configuration silently switching off a detector that does not exist, and a marker silently
+/// claiming to suppress one. `TPX004` is documented here and refused there, which is the honest
+/// pair, and `the_registry_is_the_single_owner_of_the_codes` pins both halves.
+///
+/// The single owner of the **text**. Before this existed the same sentence was written three times
+/// — in the help string, in the README table, and in `docs/rules-and-configuration.md` — and two of
+/// the three had already drifted apart. The wording here is the documentation's, because a user
+/// reads the table far more often than the help.
+pub const CATALOGUE: [Documented; 4] = [
+    Documented {
+        code: "TPX001",
+        description: "A comment run longer than its word limit",
+        status: "Implemented",
+    },
+    Documented {
+        code: "TPX002",
+        description: "A docstring longer than its word limit",
+        status: "Implemented",
+    },
+    Documented {
+        code: "TPX003",
+        description: "One explanation repeated across comments and docstrings, reported once with \
+                      every place it appears",
+        status: "Implemented",
+    },
+    Documented {
+        code: "TPX004",
+        description: "Comments that restate the following code",
+        status: "Reserved",
+    },
+];
+
 impl serde::Serialize for Rule {
     /// A rule is its code in JSON, never its Rust variant name.
     ///
@@ -593,7 +654,7 @@ fn is_legacy_marker(body: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{Rule, parse_marker};
+    use super::{CATALOGUE, Rule, parse_marker};
     use crate::extract::ProseKind;
 
     /// The code namespace is a published contract: a rename after 0.1.0 breaks the JSON schema, the
@@ -616,6 +677,68 @@ mod tests {
         );
         assert_eq!(Rule::from_code("TPX999"), None);
         assert_eq!(Rule::from_code("tpx001"), None, "codes are upper case");
+    }
+
+    /// The catalogue documents every number; `Rule::ALL` decides which ones the tool *accepts*.
+    ///
+    /// Two things go wrong if these drift, and each has its own assertion below. Renaming a code in
+    /// one place leaves `--rules` describing `TPX003` under a heading nothing answers to. Promoting
+    /// the catalogue into the acceptance path — the tempting way to make `--rules` list `TPX004` —
+    /// makes `ignore = ["TPX004"]` and `# !TPX004` start being accepted for a detector that does
+    /// not exist, which is the pair `each_rule_owns_exactly_one_code…` pins from the other side.
+    #[test]
+    fn the_catalogue_documents_the_rules_that_exist_and_one_that_deliberately_does_not() {
+        for (rule, documented) in Rule::ALL.into_iter().zip(CATALOGUE) {
+            assert_eq!(
+                rule.code(),
+                documented.code,
+                "the catalogue and the rule registry disagree about the codes, in order"
+            );
+            assert_eq!(documented.status, "Implemented");
+        }
+
+        // Codes and statuses lining up is not enough: swapping the TPX001 and TPX002 *descriptions*
+        // and updating both Markdown copies to match left all six new tests passing while the tool
+        // documented the comment detector as the docstring one. The oracle is the kind-to-code
+        // mapping this module already owns, so a description is checked against the detector that
+        // actually runs under that code rather than against nothing.
+        //
+        // ⚠️ **This covers TPX001 and TPX002 and nothing else, deliberately.** Swapping the TPX003
+        // and TPX004 descriptions still passes every test in this repository — measured. There is
+        // no oracle to build for those two: TPX004 has no detector at all, and TPX003's would be a
+        // keyword match of exactly the weak kind that reads as coverage without being any. The gap
+        // is recorded rather than papered over; `Rule::volume_for` is the only real mapping there
+        // is, so it is the only one used.
+        for (kind, own, other) in [
+            (ProseKind::Comment, "comment", "docstring"),
+            (ProseKind::Docstring, "docstring", "comment"),
+        ] {
+            let code = Rule::volume_for(kind).code();
+            let documented = CATALOGUE
+                .iter()
+                .find(|entry| entry.code == code)
+                .unwrap_or_else(|| panic!("{code} runs but is not documented"));
+            let description = documented.description.to_lowercase();
+            assert!(
+                description.contains(own) && !description.contains(other),
+                "{code} detects {kind:?} blocks, but its description is about the other kind: {:?}",
+                documented.description
+            );
+        }
+
+        let reserved = CATALOGUE[Rule::ALL.len()];
+        assert_eq!(reserved.code, "TPX004");
+        assert_eq!(reserved.status, "Reserved");
+        assert_eq!(
+            Rule::from_code(reserved.code),
+            None,
+            "a documented code became an accepted one: `ignore` and markers would now take TPX004"
+        );
+        assert_eq!(
+            CATALOGUE.len(),
+            Rule::ALL.len() + 1,
+            "the catalogue grew without the rules doing so, or the reverse"
+        );
     }
 
     /// A docstring must never be reported under the comment code, and the reverse.

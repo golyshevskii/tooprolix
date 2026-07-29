@@ -51,6 +51,9 @@ whole **never** exits 0 — see the [CLI contract](docs/cli-contract.md).
 | `TPX003` | One explanation repeated across comments and docstrings, reported once with every place it appears | Implemented |
 | `TPX004` | Comments that restate the following code | Reserved |
 
+`tooprolix --rules` prints this table; `tooprolix --version` prints the version and the date of the
+commit it was built from.
+
 Some prose earns its length. Put a marker on the line directly above the block:
 
 ```python
