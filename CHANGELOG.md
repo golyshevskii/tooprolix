@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.5](https://github.com/golyshevskii/tooprolix/compare/v0.3.4...v0.3.5) - 2026-07-29
+
+### Fixed
+
+- take the branch evidence from the API, not from the squash body
+- grade the subject that lands, not only the title before the merge
+
+### Other
+
+- cut the release-contract gate to the part config cannot replace
+- gate the PR title and document what decides the version
+
 ## [0.3.4](https://github.com/golyshevskii/tooprolix/compare/v0.3.3...v0.3.4) - 2026-07-29
 
 ### Other
