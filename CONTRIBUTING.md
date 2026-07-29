@@ -13,7 +13,7 @@ Types in use: `feat`, `fix`, `perf`, `refactor`, `test`, `docs`, `chore`, `ci`, 
 A breaking change is marked with `!` (`feat!: …`) or a `BREAKING CHANGE:` footer.
 
 This is not a style preference — it is load-bearing, and it is load-bearing **on the pull request
-title**, not on the individual commits. ⚠️ This paragraph used to say that release-plz reads *these
+title**, not on the individual commits. This paragraph used to say that release-plz reads *these
 messages* to compute the version. Under this repository's squash merge that is **false**, and it is
 the sentence that made losing a version boundary feel safe. The next section is what actually
 happens; read it before opening a pull request.
@@ -46,11 +46,32 @@ Proved in both directions by this repository's own history: #5 `feat!:` → **v0
 **v0.3.0**, #7 `feat:` → v0.2.1, #15 `ci:` → v0.3.3, **#17 no type → v0.3.4 ❌**.
 
 **A CI job now grades this**, because "remember to title the PR correctly" depends on attention at
-exactly the moment attention is scarce. The `pr-title` job runs `scripts/pr_title_gate.py` against
-the real title from the event payload and the real commits from the API, and fails when either the
-title does not parse or the branch carries a `!` / `BREAKING CHANGE:` the title does not. Its
-failure message names the bump your title would produce and the bump you probably wanted. It fails
-closed: an unreadable title or commit list is red, never a skip.
+exactly the moment attention is scarce. `.github/workflows/release-contract.yml` runs
+`scripts/pr_title_gate.py` **twice over**, and the second time is the one that matters:
+
+- on `pull_request` (including **`edited`**, so editing a title re-grades it) it reads the real
+  title from the event payload and the real commits from the API, and fails when either the title
+  does not parse or the branch carries a `!` / `BREAKING CHANGE:` the title does not;
+- on `push` to `main` it grades **the subject that actually landed**. GitHub's squash dialog lets
+  whoever merges edit the subject at that moment, so the pre-merge check is a proxy and this is the
+  artifact. It fires before the Release PR is merged — a separate, manual step — so a boundary
+  caught here is still correctable.
+
+The failure message names the bump your title would produce and the bump you probably wanted. It
+fails closed: an unreadable title, an unreachable API, a commit list at the API's 250-commit cap, or
+an event it does not recognise are all red, never a skip.
+
+**Two things it deliberately cannot do**, so nobody reads more into a green than is there:
+
+- **It cannot detect a breaking change nobody declared.** If the code breaks the API while every
+  commit and the title both say `fix:`, this job is satisfied and the release is a patch. The gate
+  compares *declarations*; it does not diff the API. `cargo-semver-checks` is the tool that would,
+  and it is a candidate for the publication task, not something this job approximates.
+- **It runs the pull request's own code**, like every other job here — a pull request may edit the
+  gate to `exit 0` in the same commit that breaks the contract. That is a property of CI, not of
+  this gate; the mitigations are branch protection and reading the diff, and branch protection is
+  measured impossible on this repository today (see below). Both are owned by the
+  `flip-public-and-publish-to-pypi` task.
 
 ### The bump table — measured, both halves
 
@@ -79,6 +100,70 @@ Three consequences, each of which surprises somebody:
    The type chooses the CHANGELOG *section*, not whether a bump happens. The only thing producing no
    release is a commit that leaves the packaged content byte-identical — an `--allow-empty` `feat!:`
    answers `already up to date`.
+
+<details>
+<summary><strong>How the bump table was measured</strong> — the commands and their output</summary>
+
+Recorded so the table is checkable rather than trusted. **release-plz 0.3.160**, throwaway clones
+outside any checkout, one commit per run, each appending a comment to `src/main.rs` so a packaged
+file genuinely changes.
+
+⚠️ **The harness has one non-obvious trap, and it produced a wrong answer first.** release-plz reads
+the commits up to the branch's **upstream ref**, not up to local `HEAD`. Without the
+`git update-ref` line below, every single case answers `already up to date` — including the known
+`feat!:` control, which is how the bug was caught rather than published.
+
+```bash
+git clone /path/to/tooprolix clone && cd clone
+git checkout -B measure a21881f && git branch --set-upstream-to=origin/main measure
+# for each case:
+git reset --hard a21881f && git clean -fd
+printf '\n// measurement\n' >> src/main.rs
+git add -A && git commit -m "$SUBJECT"
+git update-ref refs/remotes/origin/main HEAD   # ← without this, everything reads "already up to date"
+release-plz update            # then read the version line and `git diff CHANGELOG.md`
+```
+
+`0.x`, on the live `v0.3.4` tag (2026-07-29):
+
+```
+fix: a fix                   -> 0.3.4 -> 0.3.5      ### Fixed
+feat: a feature              -> 0.3.4 -> 0.3.5      ### Added
+chore: a chore               -> 0.3.4 -> 0.3.5
+docs: a doc change           -> 0.3.4 -> 0.3.5
+feat!: a breaking feature    -> 0.3.4 -> 0.4.0      ### Added   - [**breaking**] …
+fix!: a breaking fix         -> 0.3.4 -> 0.4.0
+feat!: but --allow-empty     -> already up to date
+Audit the Rust code with …   -> 0.3.4 -> 0.3.5      ### Other   ← PR #17's title, reproduced
+```
+
+`1.x`, on a throwaway clone tagged `v1.0.0` with `Cargo.toml` set to `1.0.0` (2026-07-29):
+
+```
+fix: a fix                   -> 1.0.0 -> 1.0.1
+feat: a feature              -> 1.0.0 -> 1.1.0
+chore: / docs: / perf: / refactor:  -> 1.0.0 -> 1.0.1
+feat!: a breaking feature    -> 1.0.0 -> 2.0.0
+fix!: a breaking fix         -> 1.0.0 -> 2.0.0
+BREAKING CHANGE: footer      -> 1.0.0 -> 2.0.0
+feat!: but --allow-empty     -> already up to date
+```
+
+The same harness measured the **grammar** boundaries that `scripts/pr_title_gate.py` implements —
+each one is cited in the docstring of the test that pins it:
+
+```
+feat()!: break the API       -> 0.3.4 -> 0.3.5   ← an EMPTY scope silently voids the `!`
+feat( )!: break the API      -> 0.3.4 -> 0.4.0   ← a scope of one space IS a scope
+feat(cli)!: break the API    -> 0.3.4 -> 0.4.0
+fix:no space after the colon -> 0.3.4 -> 0.3.5   ### Fixed  ← the space is not required
+BREAKING CHANGE: x           -> 0.3.4 -> 0.4.0     BREAKING CHANGE #123  -> 0.4.0
+BREAKING-CHANGE: x           -> 0.3.4 -> 0.4.0     BREAKING-CHANGE #123  -> 0.4.0
+BREAKING CHANGE#123          -> 0.3.4 -> 0.3.5     breaking change: x    -> 0.3.5
+BREAKING CHANGES: x          -> 0.3.4 -> 0.3.5
+```
+
+</details>
 
 ⚠️ **None of this is a property of release-plz in general — it is a property of `git_only = true`
 in `release-plz.toml`.** The version comes from the git tag, not from a registry, because this crate
@@ -153,13 +238,17 @@ make rust.doc         # cargo doc, warnings are errors      -> CI job "cargo-doc
 existed the crate carried five rustdoc diagnostics with every other job green — one of them a link
 to a function that had been renamed away. `RUSTDOCFLAGS="-D warnings"` is what makes them fail.
 
-Two more jobs have no `make` target because neither grades the source tree. An **eighth** job,
-`coverage`, runs `make cov` — see below. **It is deliberately not a required check**: it protects
-the measuring instrument (that the coverage toolchain still resolves and that the report grader
-still accepts a real run), not the shipped artifact. A **ninth** job, `pr-title`, grades the pull
-request title — see "What decides the version number" above. It runs on `pull_request` events only
-and reports success on a push to `main`, where there is no title to grade; its guards are unit
-tested by `tests/unit/test_pr_title_gate.py` under `make test`.
+An **eighth** job in `ci.yml`, `coverage`, runs `make cov` — see below. **It is deliberately not a
+required check**: it protects the measuring instrument (that the coverage toolchain still resolves
+and that the report grader still accepts a real run), not the shipped artifact.
+
+A ninth check, `release-contract`, lives in its **own workflow file** rather than in `ci.yml` — see
+"What decides the version number" above. It needs a `pull_request: types: [… edited]` trigger, and
+`edited` also fires on pull-request *body* edits, so putting it on `ci.yml`'s shared trigger would
+re-run all eight jobs — including the 25-minute `coverage` — every time somebody fixes a typo in a
+description. Its guards are unit tested by `tests/unit/test_pr_title_gate.py` under `make test`,
+including the workflow file itself: no job-level `if:`, no `paths:`, `set -euo pipefail` kept and no
+`|| true` appended, all asserted by parsing the YAML.
 
 **None of them is enforced by branch protection today — not one.** This paragraph used to say that
 `lint`, `type` and `test` were required; that was measured false on 2026-07-29:
@@ -173,10 +262,11 @@ request with every Rust gate red is still mergeable.** Read the job results your
 merging; do not treat a green merge button as a green build. Registering the required set is part
 of making the repository public, and it is owned by the `flip-public-and-publish-to-pypi` task.
 
-The same is true of the `pr-title` job, and it is the other thing the merge button does not tell
-you: a red `pr-title` is a warning today and becomes a barrier the moment protection is registered.
-Until then, a mispriced release is one ignored red X away — which is precisely how `v0.3.4`
-happened, when there was no X at all.
+The same is true of `release-contract`, and it is the other thing the merge button does not tell
+you: a red `release-contract` is a warning today and becomes a barrier the moment protection is
+registered. Until then, a mispriced release is one ignored red X away — which is precisely how
+`v0.3.4` happened, when there was no X at all. Its `push: main` half is what still fires *after* an
+ignored X, and that is why it exists.
 
 `make rust.fmt` and `make lint.fix` are the fixing counterparts. `make help` lists everything.
 

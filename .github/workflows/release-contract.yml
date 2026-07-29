@@ -1,0 +1,125 @@
+name: release contract
+
+# The release contract, which is a different question from "does the code work" and therefore a
+# different workflow from ci.yml.
+#
+# This repository squash-merges, so the squashed commit's SUBJECT is the pull request TITLE, and
+# conventional-commits parsing reads the subject — the branch's own subjects become body prose that
+# nothing parses. PR #17 was titled `Audit the Rust code with /rust-skills, and close what it found`
+# over a branch carrying `fix!: stop on a closed pipe…`; the `!` survived into the body of `033ceeb`
+# at line 77 and the release was **v0.3.4**, a patch, for a breaking change.
+#
+# ─── Why this is its own file rather than a ninth job in ci.yml ───
+#
+# `edited` is the reason. A title check that does not re-run when the title is edited grades a
+# string that no longer exists — measured on PR #19: editing the title fired NO run, and the check
+# kept reporting its verdict about the previous title. `on: pull_request:` with no `types:` fires
+# only on `opened, synchronize, reopened`.
+#
+# But `edited` also fires when the pull request BODY is edited, and on the shared ci.yml trigger
+# that would re-run all eight jobs — including `coverage`, which reinstruments the whole crate and
+# is budgeted 25 minutes — every time somebody fixes a typo in a description. Splitting the trigger
+# costs one file and keeps that blast radius to the one cheap job that actually cares.
+#
+# ─── Two triggers, because a pre-merge check is a proxy and the merge can edit the artifact ───
+#
+# `pull_request` grades the title BEFORE the merge. That is necessary and not sufficient: GitHub's
+# squash dialog lets whoever merges edit the subject at that moment, and no branch protection exists
+# on this repository to prevent it (private, no Pro: `branches/main/protection` is 404). So the
+# string release-plz finally parses can differ from every string the pre-merge check ever saw.
+#
+# `push: main` closes that by grading the subject that ACTUALLY landed, which is the thing
+# release-plz reads. It fires after the merge but BEFORE the Release PR is merged — a separate,
+# manual step — so a boundary caught there is still correctable.
+#
+# ─── The standing rules this file inherits from ci.yml ───
+#
+# No `paths:` and no `if:` on any job: a SKIPPED check does not satisfy a required status check, so
+# a filter added today wedges the pull request on the day branch protection is enabled. Both rules,
+# plus `set -euo pipefail` and the absence of any `|| true` escape hatch, are asserted by
+# `TestTheWorkflowCannotDisableItsOwnGate` in `tests/unit/test_pr_title_gate.py` — parsed as YAML,
+# because a substring assertion about this file was already fooled once by its own comments.
+#
+# Every `uses:` is SHA-pinned with a version comment, like every action in ci.yml.
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    # `edited` is load-bearing — see above. The other three are the default set, restated because
+    # naming `types:` at all replaces the default rather than adding to it.
+    types: [opened, synchronize, reopened, edited]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  release-contract:
+    name: release-contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Job-level permissions REPLACE the workflow-level `contents: read`, so both are named.
+    # `pull-requests: read` is what lets `gh api .../pulls/<n>/commits` see a private repository.
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+
+      # `PR_TITLE` is passed through the ENVIRONMENT, never interpolated into the shell body. A
+      # title is attacker-controlled text; `${{ … }}` inside `run:` would be command injection.
+      #
+      # `uv run --no-project python3` is how the Makefile runs `scripts/coverage_report.py` and what
+      # CONTRIBUTING.md's toolchain rule requires. `--no-project` because the gate imports nothing
+      # from this repository, so there is no environment to sync.
+      - name: scripts/pr_title_gate.py
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          set -euo pipefail
+          case "${EVENT_NAME}" in
+            pull_request)
+              # The REAL commits of the pull request, from the API, never a summary of them.
+              # `--slurp` returns an array of PAGES rather than of commits, and `jq 'add'` is what
+              # flattens it; `pipefail` makes a failure anywhere in this pipe red, and the script
+              # refuses a payload that is still nested.
+              gh api "repos/${REPO}/pulls/${PR_NUMBER}/commits" --paginate --slurp \
+                | jq 'add' > "${RUNNER_TEMP}/commits.json"
+              uv run --no-project python3 scripts/pr_title_gate.py \
+                --event pull_request --commits "${RUNNER_TEMP}/commits.json"
+              ;;
+            push)
+              # What release-plz will actually parse: the subject and body that landed on `main`.
+              git log -1 --format=%B > "${RUNNER_TEMP}/merged.txt"
+              uv run --no-project python3 scripts/pr_title_gate.py \
+                --event push --merged-message "${RUNNER_TEMP}/merged.txt"
+              ;;
+            *)
+              # An ALLOW-LIST. The previous shape was "if not a pull_request, exit 0", so a
+              # `merge_group` event — or any trigger a later task adds — reported success having
+              # graded nothing. An unexpected input shape must never be the thing that switches a
+              # guard off. The script's `--event` choices refuse it a second time.
+              echo "release-contract: refusing to run on an unrecognised event '${EVENT_NAME}'" >&2
+              exit 1
+              ;;
+          esac

@@ -61,17 +61,62 @@ from typing import Any
 # rather than a third list invented here. `TestTheKnownTypesAreTheOnesContributingDeclares` reads
 # the document and fails if the two ever drift, so the gate cannot start refusing a type the
 # contributing guide tells people to use.
+#
+# ⚠️ Reviewed and REJECTED, so it is not re-raised: deriving this set from `git log --format=%s` on
+# `main` instead. It sounds like the empirical choice and is the wrong one — history contains the
+# types that have been NEEDED so far, not the types that are allowed, so the first pull request to
+# legitimately want `docs:` or `build:` would be refused by a gate citing a list nobody wrote down.
+# The drift test is a check against the DOCUMENT on purpose; it is not, and is not meant to be, a
+# check against reality.
 KNOWN_TYPES = frozenset({"feat", "fix", "perf", "refactor", "test", "docs", "chore", "ci", "build"})
 
-# `<type>(<optional scope>)!: <summary>`. Anchored, and the space after the colon is required —
-# that is the Conventional Commits grammar release-plz parses, and a gate looser than the parser it
-# stands in for would pass titles the parser then ignores.
-_SUBJECT = re.compile(r"^(?P<type>[A-Za-z]+)(?:\((?P<scope>[^()]*)\))?(?P<bang>!)?:[ \t]+(?P<summary>\S.*)$")
+# `<type>(<optional scope>)!: <summary>`.
+#
+# Every boundary here was MEASURED against release-plz 0.3.160 rather than read off the spec,
+# because the only grammar that matters is the one the release tool actually implements. A gate
+# STRICTER than the parser blocks a legitimate title — loud, and fixed by editing it. A gate LOOSER
+# than the parser passes a title the parser then misprices — silent, and the whole reason this job
+# exists. The two that were measured wrong, and are now right:
+#
+#   `feat()!: x`  -> release-plz answers 0.3.5, a PATCH, and files the raw subject with no
+#                    `[**breaking**]` marker. An EMPTY scope silently voids the `!`. So the scope
+#                    is `[^()]+`, not `[^()]*` — this was the dangerous direction.
+#   `feat( )!: x` -> 0.4.0. A scope of one space IS a scope, so the rule is non-empty, not
+#                    non-blank, and tightening further would be stricter than the parser.
+#   `fix:no space`-> 0.3.5 under `### Fixed` with the summary parsed. release-plz does not require
+#                    the space, so neither does this: `[ \t]*`, not `[ \t]+`.
+_SUBJECT = re.compile(r"^(?P<type>[A-Za-z]+)(?:\((?P<scope>[^()]+)\))?(?P<bang>!)?:[ \t]*(?P<summary>\S.*)$")
 
 # The footer form of a breaking change. Case-SENSITIVE and anchored to the start of a line, which
 # is the spec's own rule: matched loosely, every commit body that discusses a breaking change would
 # become one, and a gate that fires on prose is a gate people learn to route around.
-_BREAKING_FOOTER = re.compile(r"^BREAKING[ -]CHANGE:", re.MULTILINE)
+#
+# Both separators, because Conventional Commits allows `token: value` AND `token #value`, and
+# release-plz implements both — MEASURED, one commit per run at the live `v0.3.4` tag:
+#
+#   BREAKING CHANGE: x   -> 0.4.0     BREAKING CHANGE #123  -> 0.4.0
+#   BREAKING-CHANGE: x   -> 0.4.0     BREAKING-CHANGE #123  -> 0.4.0
+#   BREAKING CHANGE#123  -> 0.3.5     breaking change: x    -> 0.3.5
+#   BREAKING CHANGES: x  -> 0.3.5
+#
+# The hash form was missed entirely before this, which is the dangerous direction: a commit whose
+# only declaration was `BREAKING CHANGE #123` read as non-breaking here and as breaking there. The
+# three that answer 0.3.5 are deliberately NOT matched — `BREAKING CHANGES:` especially, which is a
+# plausible thing to write in prose.
+_BREAKING_FOOTER = re.compile(r"^BREAKING[ -]CHANGE(?::| #)", re.MULTILINE)
+
+# After a squash merge GitHub renders each of the branch's commit subjects as a `* ` bullet in the
+# body of the squashed commit. That is where `033ceeb` kept its `fix!:` — at body line 77, where
+# nothing parsed it — so this is how they are read back out when grading what landed on `main`.
+_SQUASH_BULLET = re.compile(r"^[ \t]*[*+-][ \t]+(?P<subject>\S.*)$", re.MULTILINE)
+
+# `repos/{owner}/{repo}/pulls/{n}/commits` returns AT MOST 250 commits and `--paginate` cannot lift
+# it — the cap is on the endpoint, not the page size ("Lists a maximum of 250 commits for a pull
+# request", GitHub REST documentation). A 251-commit pull request whose only `!` sits past the cap
+# comes back looking clean, so a list that reaches this length is refused rather than graded. It
+# will never fire here; a guard that silently grades half its input is the fail-open shape this
+# epic keeps shipping.
+API_COMMIT_CAP = 250
 
 
 @dataclass(frozen=True)
@@ -164,6 +209,19 @@ def grade_pull_request(title: str, commit_messages: Sequence[str]) -> list[str]:
             f"  {_SQUASH_NOTE}"
         )
 
+    if len(commit_messages) >= API_COMMIT_CAP:
+        # Refuse rather than grade a truncation. See API_COMMIT_CAP: past 250 the endpoint stops
+        # listing, so "no `!` in these commits" stops being a statement about the branch. Returning
+        # early, because every judgement below this line would be made about a partial branch.
+        truncated = (
+            f"this pull request has at least {API_COMMIT_CAP} commits, which is the maximum the "
+            f"GitHub API lists for a pull request — `--paginate` cannot lift it. The commit list is "
+            f"therefore possibly truncated, and a breaking change past that point would be "
+            f"invisible here. Refusing to grade a branch this gate can only half-see: split the "
+            f"pull request, or declare the bump in the title deliberately."
+        )
+        return [*failures, truncated]
+
     if not commit_messages:
         # Every pull request has at least one commit, so zero means this gate read the wrong thing:
         # a failed API call, the wrong PR number, a `jq` filter that selected nothing. Passing here
@@ -191,6 +249,37 @@ def grade_pull_request(title: str, commit_messages: Sequence[str]) -> list[str]:
         )
 
     return failures
+
+
+def grade_merged_commit(subject: str, body: str) -> list[str]:
+    """
+    Grade the commit that actually landed on `main` — the artifact, not the proxy.
+
+    The pull-request check above grades what the title WAS. GitHub's squash dialog lets whoever
+    merges edit the subject at that moment, and no branch protection exists on this repository to
+    stop them, so the string release-plz finally parses can differ from every string the pre-merge
+    gate ever saw. This is the only check that reads what release-plz will read.
+
+    It fires on `push: main`, which is after the merge but BEFORE the Release PR is merged — a
+    separate, manual step. So a boundary caught here is still correctable, which is the entire
+    reason it is worth running at all.
+
+    The branch's own subjects are recovered from the `* ` bullets the squash left in the body, and
+    graded against the landed subject exactly as the pull-request path grades commits against a
+    title. Only bullets and line-anchored footers count as declarations: the body of `d6e7561`
+    contains three lines mentioning `fix!:` or `BREAKING CHANGE:` while *describing* this defect,
+    and a substring scan fires on all three.
+
+    ⚠️ HEAD only, deliberately. A push carrying several commits is graded by its tip, which is the
+    shape every squash merge and every Release PR merge takes. Grading the whole pushed range would
+    mean reading `github.event.before`, which is all-zeros on branch creation.
+    """
+    bullets = [match["subject"] for match in _SQUASH_BULLET.finditer(body)]
+    # The body also goes in whole, exactly once, so a line-anchored `BREAKING CHANGE:` footer is
+    # seen — a footer never appears inside a bullet subject. It doubles as the reason the list is
+    # never empty, so a squashed single commit with no bullets is graded rather than tripping the
+    # empty-list refusal, which is about a failed API read and means nothing on this path.
+    return grade_pull_request(subject, [*bullets, body])
 
 
 def commit_messages_from(payload: Path) -> list[str]:
@@ -221,18 +310,39 @@ def commit_messages_from(payload: Path) -> list[str]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Grade a pull request title as a Conventional Commit.")
-    parser.add_argument("--commits", type=Path, required=True, help="JSON written by `gh api .../pulls/<n>/commits`")
+    parser = argparse.ArgumentParser(description="Grade the release contract of a pull request or a merged commit.")
+    # `choices` is the event ALLOW-LIST, and it is the point of passing the event at all. The
+    # previous shape refused only what it recognised as not-a-pull-request and let everything else
+    # through: a `merge_group` event — or any trigger added later — reported success with no title
+    # and no commits, which is an unexpected input shape switching the guard off. argparse now
+    # refuses an unknown event before any grading happens, and the workflow's `case` refuses it a
+    # second time. Two layers, both loud.
+    parser.add_argument("--event", required=True, choices=("pull_request", "push"))
+    parser.add_argument("--commits", type=Path, help="`pull_request`: JSON from `gh api .../pulls/<n>/commits`")
+    parser.add_argument("--merged-message", type=Path, help="`push`: the full message of the commit that landed")
     args = parser.parse_args()
 
-    # From the event payload through the environment, never from an argument a workflow could
-    # summarise or a caller could supply by hand. Unset is a broken wiring, not a valid title.
-    title = os.environ.get("PR_TITLE")
-    if title is None:
-        print("pr-title-gate: PR_TITLE is not set, so there is no title to grade — refusing.", file=sys.stderr)
-        return 1
+    if args.event == "pull_request":
+        if args.commits is None:
+            print("pr-title-gate: --commits is required for a pull_request event — refusing.", file=sys.stderr)
+            return 1
+        # From the event payload through the environment, never from an argument a workflow could
+        # summarise or a caller could supply by hand. Unset is broken wiring, not a valid title.
+        title = os.environ.get("PR_TITLE")
+        if title is None:
+            print("pr-title-gate: PR_TITLE is not set, so there is no title to grade — refusing.", file=sys.stderr)
+            return 1
+        failures = grade_pull_request(title, commit_messages_from(args.commits))
+    else:
+        if args.merged_message is None:
+            print("pr-title-gate: --merged-message is required for a push event — refusing.", file=sys.stderr)
+            return 1
+        # `git log -1 --format=%B`, written by git, read here. The subject is its first line; the
+        # rest is the body the squash left behind.
+        message = args.merged_message.read_text(encoding="utf-8")
+        subject, _, body = message.partition("\n")
+        failures = grade_merged_commit(subject, body)
 
-    failures = grade_pull_request(title, commit_messages_from(args.commits))
     if failures:
         for failure in failures:
             print(f"pr-title-gate: {failure}", file=sys.stderr)
