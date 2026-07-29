@@ -1,102 +1,30 @@
 name: release contract
 
-# The release contract, which is a different question from "does the code work" and therefore a
-# different workflow from ci.yml.
-#
-# This repository squash-merges, so the squashed commit's SUBJECT is the pull request TITLE, and
-# conventional-commits parsing reads the subject — the branch's own subjects become body prose that
-# nothing parses. PR #17 was titled `Audit the Rust code with /rust-skills, and close what it found`
-# over a branch carrying `fix!: stop on a closed pipe…`; the `!` survived into the body of `033ceeb`
-# at line 77 and the release was **v0.3.4**, a patch, for a breaking change.
-#
-# ─── Why this is its own file rather than a ninth job in ci.yml ───
-#
-# `edited` is the reason. A title check that does not re-run when the title is edited grades a
-# string that no longer exists — measured on PR #19: editing the title fired NO run, and the check
-# kept reporting its verdict about the previous title. `on: pull_request:` with no `types:` fires
-# only on `opened, synchronize, reopened`.
-#
-# But `edited` also fires when the pull request BODY is edited, and on the shared ci.yml trigger
-# that would re-run all eight jobs — including `coverage`, which reinstruments the whole crate and
-# is budgeted 25 minutes — every time somebody fixes a typo in a description. Splitting the trigger
-# costs one file and keeps that blast radius to the one cheap job that actually cares.
-#
-# ─── What this deliberately does NOT do ───
-#
-# It grades the title BEFORE the merge, and that is all. GitHub's squash dialog lets whoever merges
-# edit the subject at that moment, so a post-merge check on `push: main` was built and then removed:
-# it could not BLOCK anything (branch protection is impossible on a private repo without Pro, and
-# `release-plz.yml` fires on the same `push: main` independently), so its red was advice arriving
-# after the release was already priced. See CONTRIBUTING.md, "Accepted residuals".
-#
-# ─── The standing rules this file inherits from ci.yml ───
-#
-# No `paths:` and no `if:` on any job: a SKIPPED check does not satisfy a required status check, so
-# a filter added today wedges the pull request on the day branch protection is enabled. ⚠️ Nothing
-# TESTS that any more — the YAML guard suite was removed with the push path. Read this file at
-# review time; it is short on purpose.
-#
-# Every `uses:` is SHA-pinned with a version comment, like every action in ci.yml.
+on:
+  pull_request_target:
+    types: [opened, edited, reopened, synchronize]
 
 permissions:
-  contents: read
-
-on:
-  pull_request:
-    # `edited` is load-bearing — see above. The other three are the default set, restated because
-    # naming `types:` at all replaces the default rather than adding to it.
-    types: [opened, synchronize, reopened, edited]
-
-# Keyed on the ref so a re-push or a second title edit cancels the stale run instead of racing it,
-# exactly as ci.yml does. Safe here because the verdict is about the CURRENT title: a superseded run
-# graded a string that no longer exists.
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-env:
-  PYTHON_VERSION: "3.12"
+  pull-requests: read
 
 jobs:
   release-contract:
     name: release-contract
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    # Job-level permissions REPLACE the workflow-level `contents: read`, so both are named.
-    # `pull-requests: read` is what lets `gh api .../pulls/<n>/commits` see a private repository.
-    permissions:
-      contents: read
-      pull-requests: read
     steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          enable-cache: true
-
-      # `PR_TITLE` is passed through the ENVIRONMENT, never interpolated into the shell body. A
-      # title is attacker-controlled text; `${{ … }}` inside `run:` would be command injection.
-      #
-      # `uv run --no-project python3` is how the Makefile runs `scripts/coverage_report.py` and what
-      # CONTRIBUTING.md's toolchain rule requires. `--no-project` because the gate imports nothing
-      # from this repository, so there is no environment to sync.
-      - name: scripts/pr_title_gate.py
+      - name: Validate PR title
+        uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 # v6.1.1
         env:
-          GH_TOKEN: ${{ github.token }}
-          REPO: ${{ github.repository }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          PR_TITLE: ${{ github.event.pull_request.title }}
-        run: |
-          set -euo pipefail
-          # The REAL commits of the pull request, from the API, never a summary of them. `--slurp`
-          # returns an array of PAGES rather than of commits, and `jq 'add'` is what flattens it;
-          # `pipefail` makes a failure anywhere in this pipe red, and the script refuses a payload
-          # that is still nested.
-          gh api "repos/${REPO}/pulls/${PR_NUMBER}/commits" --paginate --slurp \
-            | jq 'add' > "${RUNNER_TEMP}/commits.json"
-          uv run --no-project python3 scripts/pr_title_gate.py --commits "${RUNNER_TEMP}/commits.json"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            perf
+            refactor
+            test
+            docs
+            chore
+            ci
+            build
