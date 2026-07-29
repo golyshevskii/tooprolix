@@ -31,6 +31,8 @@ Run: make test
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -56,18 +58,26 @@ def python_report(files: set[str], *, branch: bool = True) -> dict[str, Any]:
     }
 
 
-def rust_report(files: set[str]) -> dict[str, Any]:
+def rust_report(files: set[str], root: Path = REPO_ROOT) -> dict[str, Any]:
     """Build a cargo-llvm-cov report shell that claims to have measured exactly `files`."""
     return {
         "data": [
             {
-                "files": [{"filename": str(REPO_ROOT / name)} for name in sorted(files)],
+                "files": [{"filename": str(root / name)} for name in sorted(files)],
                 "totals": {"lines": {"percent": 98.07146908678389}},
             }
         ],
         "type": "llvm.coverage.json.export",
         "version": "3.1.0",
     }
+
+
+def fake_crate(root: Path, sources: dict[str, str]) -> None:
+    """Lay out a throwaway `src/` tree so the guard can be tested away from this repository."""
+    for name, body in sources.items():
+        path = root / "src" / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(body, encoding="utf-8")
 
 
 class TestThePercentageIsNeverRoundedUp:
@@ -342,3 +352,113 @@ class TestTheReportIsGradedNotJustRead:
         assert "src/detect.rs" in walked
 
         verify_report_measured_the_source_tree(rust_report(walked - {"src/detect.rs"}), RUST_REPORT_FORMAT, REPO_ROOT)
+
+
+class TestAMissingRustFileIsOnlyExcusedWhenThereIsNothingToInstrument:
+    """
+    `cargo llvm-cov` reports what the compiler instrumented, so a `.rs` file with no functions is
+    legitimately absent from the report. A file that DOES define functions is a different thing
+    entirely: it is orphaned from the module tree, or gated behind a feature this run does not
+    enable. Either way it left the denominator in silence while every gate stayed green — `cargo
+    fmt`, `clippy` and `cargo test` all walk the module tree and never see it.
+
+    Tested on a throwaway crate rather than on this repository, so the case survives `src/detect.rs`
+    one day gaining a function.
+    """
+
+    def test_a_file_with_no_functions_may_be_absent(self, tmp_path: Path) -> None:
+        fake_crate(tmp_path, {"lib.rs": "pub mod wiring;\n", "wiring.rs": "pub mod a;\npub mod b;\n"})
+        walked = measurable_source_files(tmp_path, RUST_REPORT_FORMAT)
+
+        assert walked == {"src/lib.rs", "src/wiring.rs"}
+
+        verify_report_measured_the_source_tree(rust_report({"src/lib.rs"}, root=tmp_path), RUST_REPORT_FORMAT, tmp_path)
+
+    def test_a_file_that_defines_functions_may_not_be_absent(self, tmp_path: Path) -> None:
+        fake_crate(tmp_path, {"lib.rs": "pub mod a;\n", "orphan.rs": "pub fn one() {}\npub fn two() {}\n"})
+
+        with pytest.raises(ValueError, match=r"never measured.*src/orphan\.rs"):
+            verify_report_measured_the_source_tree(
+                rust_report({"src/lib.rs"}, root=tmp_path), RUST_REPORT_FORMAT, tmp_path
+            )
+
+
+class TestTheGuardIsWiredIntoTheEntryPoint:
+    """
+    Everything above tests the guard as a function. This tests that the production path still CALLS
+    it, which nothing else does — the Makefile invokes the script, and a script whose `main` no
+    longer verifies would leave all of those tests passing and `make cov.check` green while writing
+    a badge from a report that measured the wrong thing.
+
+    These two run the script exactly as the Makefile does, and they assert the ORDERING as well as
+    the outcome: a rejected report must leave `--out` untouched, because the committed badge going
+    stale is what makes `make cov.check` fail afterwards. A guard that ran after the write would
+    exit non-zero and still have blessed a fresh wrong SVG on disk.
+    """
+
+    def run_script(self, report: dict[str, Any], out: Path, tmp_path: Path) -> subprocess.CompletedProcess[str]:
+        report_path = tmp_path / "report.json"
+        report_path.write_text(json.dumps(report), encoding="utf-8")
+        return subprocess.run(
+            [
+                sys.executable,
+                str(REPO_ROOT / "scripts" / "coverage_badge.py"),
+                "--report",
+                str(report_path),
+                "--format",
+                PYTHON_REPORT_FORMAT,
+                "--label",
+                "python coverage",
+                "--out",
+                str(out),
+            ],
+            capture_output=True,
+            text=True,
+            cwd=REPO_ROOT,
+            check=False,
+        )
+
+    def test_an_honest_report_is_accepted_and_the_badge_is_written(self, tmp_path: Path) -> None:
+        out = tmp_path / "badge.svg"
+        walked = measurable_source_files(REPO_ROOT, PYTHON_REPORT_FORMAT)
+
+        result = self.run_script(python_report(walked), out, tmp_path)
+
+        assert result.returncode == 0, result.stderr
+        assert out.read_text(encoding="utf-8").startswith("<svg ")
+
+    def test_a_rejected_report_exits_non_zero_and_writes_nothing(self, tmp_path: Path) -> None:
+        out = tmp_path / "badge.svg"
+        walked = measurable_source_files(REPO_ROOT, PYTHON_REPORT_FORMAT)
+
+        result = self.run_script(python_report(walked, branch=False), out, tmp_path)
+
+        assert result.returncode != 0
+        assert "branch coverage" in result.stderr
+        assert not out.exists(), "the badge was written from a report the guard rejected"
+
+
+class TestTheTwoStatementsOfTheExclusionContractHaveTheSameShape:
+    """
+    The denominator is declared twice on purpose — `[tool.coverage.run]` in `pyproject.toml` and
+    `_SOURCE_TREES` here — because a check that reads the same configuration it checks agrees with
+    any edit to it. Two statements only work as a cross-check while they mean the same thing.
+
+    `omit` names `corpus/checkouts/*` and `corpus/fixtures/*`: the two data trees at the TOP of
+    `corpus/`. A walker that instead skipped any directory called `fixtures` at any depth would
+    disagree the day production code lands in `corpus/pkg/fixtures/`: coverage.py would measure it,
+    the walker would not expect it, and the guard would refuse the run while reporting that the
+    denominator "is meant to be production code only" — about a file that is production code.
+    Fail-closed, but with the wrong diagnosis, which is worse than no message.
+    """
+
+    def test_only_the_top_level_data_trees_are_excluded(self, tmp_path: Path) -> None:
+        corpus = tmp_path / "corpus"
+        for name in ["real.py", "fixtures/oracle.py", "checkouts/vendor/mod.py", "pkg/fixtures/helper.py"]:
+            path = corpus / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("x = 1\n", encoding="utf-8")
+
+        walked = measurable_source_files(tmp_path, PYTHON_REPORT_FORMAT)
+
+        assert walked == {"corpus/real.py", "corpus/pkg/fixtures/helper.py"}

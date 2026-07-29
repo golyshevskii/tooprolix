@@ -6,7 +6,10 @@ until the PyPI flip, so a hosted badge endpoint has nothing to read and a gist e
 the README to one person's account. The SVG is generated from the coverage tool's own JSON report,
 committed, and CI regenerates it and fails on `git diff` — the drift gate is the whole design.
 
-Two properties this script exists to hold, both of them tested in `tests/unit/test_coverage_badge.py`:
+Three properties this script exists to hold. `tests/unit/test_coverage_badge.py` tests each one as a
+function AND, in `TestTheGuardIsWiredIntoTheEntryPoint`, runs this script the way the Makefile runs
+it — because a guard that is only reachable through a function call can be unwired from `main` with
+every test still passing:
 
   1. **the number is never typed by a human.** `percent_from_report` reads it out of the report the
      coverage tool wrote, so the badge and the tool cannot disagree by transcription.
@@ -128,14 +131,14 @@ _SOURCE_TREES: dict[str, tuple[str, str, tuple[str, ...]]] = {
     PYTHON_REPORT_FORMAT: ("corpus", ".py", ("checkouts", "fixtures")),
 }
 
-# Formats whose reports list source files that were never executed, and for which "every file on
-# disk must appear" is therefore a sound requirement. coverage.py does this — it walks `source` and
-# reports an untouched module at 0%, which is exactly how a file dropping out of discovery becomes
-# detectable. `cargo llvm-cov` does not: it reports what the compiler instrumented, so a file with
-# no instrumentable items is legitimately absent. Measured, not assumed — `src/detect.rs` is 26
-# lines of module docs plus two `pub mod` declarations, and requiring it made `make rust.cov` fail
-# on the real repository. Both formats are still checked in the other direction (nothing outside the
-# source tree may be in the denominator), which is sound for both.
+# Formats whose reports list source files that were never executed, so "every file on disk must
+# appear" is unconditional. coverage.py does this — it walks `source` and reports an untouched
+# module at 0%, which is exactly how a file dropping out of discovery becomes detectable.
+#
+# `cargo llvm-cov` does not: it reports what the compiler instrumented. A missing `.rs` is therefore
+# excused there, but only when the file defines no functions — see the check below, which applies
+# that condition instead of exempting the whole format. Both formats are checked in the other
+# direction (nothing outside the source tree may be in the denominator) unconditionally.
 _FORMATS_THAT_REPORT_UNEXECUTED_FILES = {PYTHON_REPORT_FORMAT}
 
 
@@ -153,7 +156,12 @@ def measurable_source_files(repo_root: Path, report_format: str) -> set[str]:
     return {
         path.relative_to(repo_root).as_posix()
         for path in root.rglob(f"*{suffix}")
-        if path.is_file() and not set(path.relative_to(root).parts[:-1]) & set(excluded)
+        # `parts[:1]` — the TOP-level directory only, matching the shape of the `omit` globs in
+        # pyproject.toml (`corpus/checkouts/*`, `corpus/fixtures/*`). Skipping any directory named
+        # `fixtures` at any depth would make the two statements of the contract disagree the day
+        # production code lands in `corpus/pkg/fixtures/`, and the guard would then reject the run
+        # with a message about test data, about a file that is not test data.
+        if path.is_file() and not set(path.relative_to(root).parts[:1]) & set(excluded)
     }
 
 
@@ -201,7 +209,21 @@ def verify_report_measured_the_source_tree(data: Any, report_format: str, repo_r
     expected = measurable_source_files(repo_root, report_format)
     measured = _measured_files(data, report_format, repo_root)
 
-    if (missing := expected - measured) and report_format in _FORMATS_THAT_REPORT_UNEXECUTED_FILES:
+    missing = expected - measured
+    if missing and report_format not in _FORMATS_THAT_REPORT_UNEXECUTED_FILES:
+        # llvm-cov reports what the compiler instrumented, so a source file with nothing to
+        # instrument is legitimately absent — `src/detect.rs` is 26 lines of module documentation
+        # and two `pub mod` declarations. That is the ONLY excuse, and it is checked rather than
+        # assumed: a file that defines functions and is still missing has left the denominator
+        # silently, because it was orphaned from the module tree or gated behind a feature this run
+        # does not enable. `cargo fmt`, `clippy` and `cargo test` all walk the module tree, so none
+        # of them would notice either.
+        #
+        # `fn ` in the file text is the whole test. Its known ceiling is a `fn` appearing only
+        # inside a doc-comment example, which would demand an entry llvm-cov will never produce —
+        # that fails loudly and is fixed by wiring the module up or saying why it has no code.
+        missing = {name for name in missing if "fn " in (repo_root / name).read_text(encoding="utf-8")}
+    if missing:
         raise ValueError(
             f"the coverage report never measured {len(missing)} source file(s) that exist on disk: "
             f"{', '.join(sorted(missing))} — they are outside the denominator, so the percentage is "
