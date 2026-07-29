@@ -3055,7 +3055,7 @@ fn the_version_is_the_one_in_cargo_toml_and_carries_a_build_date() {
         });
     match (
         std::env::var_os("SOURCE_DATE_EPOCH"),
-        git(&["rev-parse", "--is-inside-work-tree"]).as_deref(),
+        our_git(&["log", "-1", "--format=%cs"]),
     ) {
         (Some(epoch), _) => assert!(
             date.len() == 10
@@ -3064,25 +3064,51 @@ fn the_version_is_the_one_in_cargo_toml_and_carries_a_build_date() {
             "SOURCE_DATE_EPOCH={epoch:?} was set, so the date is that epoch and there is no second \
              artifact to check it against — but it is not even an ISO date: {date:?}"
         ),
-        (None, Some("true")) => assert_eq!(
-            Some(date.to_owned()),
-            git(&["log", "-1", "--format=%cs"]),
+        (None, Some(committed)) => assert_eq!(
+            date, committed,
             "`--version` does not print the commit date git reports. Either the build script is \
              not reading git, or cargo did not re-run it and the binary is carrying the date of an \
              older commit."
         ),
-        (None, _) => assert_eq!(
+        (None, None) => assert_eq!(
             date, "unknown",
-            "there is no git here and no SOURCE_DATE_EPOCH, so the only honest answer is \
-             `unknown` — a date here is a guess, which is what Decisions #14 forbids"
+            "this package has no git history of its own and SOURCE_DATE_EPOCH is unset, so the \
+             only honest answer is `unknown` — a date here comes from somewhere that is not this \
+             package, which is what Decisions #14 forbids"
         ),
     }
+}
+
+/// [`git`], but only when the repository git discovers is **this package's own**.
+///
+/// Without this the oracle is circular in the one layout that matters. Git's discovery walks
+/// *upward*, so an extracted sdist or a `cargo vendor` tree sitting inside an unrelated checkout
+/// answers with the **host** repository's commit date — and this test then computed its expected
+/// value from that same foreign repository, so the wrong date graded as correct. Reproduced: a
+/// tree with no `.git` of its own printed `2020-01-01` from the repository above it, and this test
+/// passed. The containment has to be here as well as in `build.rs`; checking only the build script
+/// would leave a test that cannot fail for the thing it exists to check.
+///
+/// ⚠️ **Both sides are canonicalised before they are compared.** On macOS `/tmp` is a symlink to
+/// `/private/tmp`, so `--show-toplevel` and `CARGO_MANIFEST_DIR` name the same directory with
+/// different strings whenever the checkout is reached through one — including in this epic's own
+/// scratch directories. A string comparison would fail closed on a perfectly good repository and
+/// turn every `--version` into `unknown`, which is worse than the bug being fixed.
+fn our_git(arguments: &[&str]) -> Option<String> {
+    let canonical = |path: &str| std::fs::canonicalize(path).ok();
+    let toplevel = git(&["rev-parse", "--show-toplevel"])?;
+    if canonical(&toplevel)? != canonical(&repository_root().display().to_string())? {
+        return None;
+    }
+    git(arguments)
 }
 
 /// One `git` invocation from the repository root, or `None` when git cannot answer.
 ///
 /// The same collapse-to-`None` as `build.rs`: no git on `PATH`, not a checkout, and a repository
-/// with no commits are all "git has no answer", and the caller treats all three alike.
+/// with no commits are all "git has no answer", and the caller treats all three alike. Callers
+/// wanting the date want [`our_git`] instead — this one will happily answer about a repository
+/// that merely encloses the package.
 fn git(arguments: &[&str]) -> Option<String> {
     let output = Command::new("git")
         .args(arguments)

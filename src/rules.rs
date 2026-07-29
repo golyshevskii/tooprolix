@@ -702,6 +702,13 @@ mod tests {
         // documented the comment detector as the docstring one. The oracle is the kind-to-code
         // mapping this module already owns, so a description is checked against the detector that
         // actually runs under that code rather than against nothing.
+        //
+        // ⚠️ **This covers TPX001 and TPX002 and nothing else, deliberately.** Swapping the TPX003
+        // and TPX004 descriptions still passes every test in this repository — measured. There is
+        // no oracle to build for those two: TPX004 has no detector at all, and TPX003's would be a
+        // keyword match of exactly the weak kind that reads as coverage without being any. The gap
+        // is recorded rather than papered over; `Rule::volume_for` is the only real mapping there
+        // is, so it is the only one used.
         for (kind, own, other) in [
             (ProseKind::Comment, "comment", "docstring"),
             (ProseKind::Docstring, "docstring", "comment"),

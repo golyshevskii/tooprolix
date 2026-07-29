@@ -41,18 +41,23 @@
 //!    then". It wins over git because it is the only thing a *release* build can set: the wheel is
 //!    built from an sdist, which carries no `.git` at all.
 //! 2. **`git log -1 --format=%cs`** — the committer date of `HEAD`, already `YYYY-MM-DD` (`%cs` is
-//!    the short committer date; no `--date=` needed and no formatting on our side).
-//! 3. **`unknown`** — a tree with no git and no `SOURCE_DATE_EPOCH`. Deliberately not today's date:
-//!    substituting the wall clock is exactly the thing being avoided, and a build that cannot know
-//!    its provenance should say so rather than invent one.
+//!    the short committer date; no `--date=` needed and no formatting on our side) — but **only
+//!    when the repository git finds is this package's own**. See [`git_is_this_package`].
+//! 3. **`unknown`** — anything else. Deliberately not today's date and deliberately not somebody
+//!    else's commit date: substituting the wall clock is the thing being avoided, and a build that
+//!    cannot know its provenance should say so rather than borrow one.
 //!
 //! ⚠️ **Emitting the `rerun-if` lines is what makes the answer true rather than merely printed.**
 //! Cargo's default is to re-run a build script whenever any file in the package changes; the moment
 //! this file emits one `rerun-if-changed`, that default is **replaced** by exactly what is listed.
-//! So all four lines below are load-bearing: `build.rs` itself (or editing this file would not
-//! re-run it), `.git/HEAD` (moving between branches), the file `HEAD` points at (committing on the
-//! current branch), and `SOURCE_DATE_EPOCH`. Miss the ref file and `--version` reports the date of
-//! whatever commit was checked out the last time the script happened to run.
+//! So every line below is load-bearing: `build.rs` itself (or editing this file would not re-run
+//! it), `HEAD` (moving between branches), the file `HEAD` points at (committing on the current
+//! branch), and the three environment variables that can change the answer with no file to watch —
+//! `SOURCE_DATE_EPOCH`, and `GIT_DIR`/`GIT_WORK_TREE`, which redirect git's discovery outright.
+//! Miss the ref file and `--version` reports the date of whatever commit was checked out the last
+//! time the script happened to run. The git paths are emitted **only** when git is the source: when
+//! `SOURCE_DATE_EPOCH` decides the answer, or when the repository is not ours, no commit in it can
+//! change what this binary prints, so watching it would only cause spurious rebuilds.
 
 use std::process::Command;
 
@@ -62,19 +67,57 @@ fn main() {
     }
 
     println!("cargo:rerun-if-changed=build.rs");
-    println!("cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH");
-    for path in git_inputs() {
-        println!("cargo:rerun-if-changed={path}");
+    for variable in ["SOURCE_DATE_EPOCH", "GIT_DIR", "GIT_WORK_TREE"] {
+        println!("cargo:rerun-if-env-changed={variable}");
     }
-    println!("cargo:rustc-env=TOOPROLIX_COMMIT_DATE={}", commit_date());
+
+    let date = match source_date_epoch() {
+        Some(epoch) => epoch,
+        None if git_is_this_package() => {
+            for path in git_inputs() {
+                println!("cargo:rerun-if-changed={path}");
+            }
+            git(&["log", "-1", "--format=%cs"]).unwrap_or_else(|| "unknown".to_owned())
+        }
+        None => "unknown".to_owned(),
+    };
+    println!("cargo:rustc-env=TOOPROLIX_COMMIT_DATE={date}");
 }
 
-/// The date to stamp into the binary: `SOURCE_DATE_EPOCH`, then git, then `unknown`.
-fn commit_date() -> String {
-    if let Some(epoch) = source_date_epoch() {
-        return epoch;
+/// Whether the repository git discovers is **this package's own**, rather than one enclosing it.
+///
+/// 🔴 **Git's discovery walks upward, and without this the date is silently borrowed.** A tree with
+/// no `.git` of its own — an unpacked sdist, an extracted `cargo package` archive, a `cargo vendor`
+/// directory — inherits whatever repository happens to sit above it. Reproduced: a copy of this
+/// package with no git history at all, placed inside an unrelated checkout, stamped that host's
+/// `2020-01-01` into `--version` and called it this package's commit date. Task 13 builds the wheel
+/// from an sdist, so this is on the publication path rather than in a corner.
+///
+/// ⚠️ **Both paths are canonicalised before they are compared, and that is not tidying.** On macOS
+/// `/tmp` is a symlink to `/private/tmp`, so `--show-toplevel` answers `/private/tmp/…` for a tree
+/// reached as `/tmp/…` — the same directory, two strings. Comparing them raw would refuse a
+/// perfectly good repository and print `unknown` for every build under such a path, which is a
+/// worse failure than the one this closes: a wrong date is at least visibly wrong, whereas
+/// `unknown` everywhere looks like the feature working as designed.
+///
+/// Equality with the manifest directory, not "is the manifest inside the work tree" — the vendored
+/// tree *is* inside the host's work tree, which is the whole problem. The cost is that this package
+/// would report `unknown` if it ever became a member of a workspace whose repository root sits
+/// above it; that is not the layout today, and `unknown` is the safe direction to be wrong in.
+fn git_is_this_package() -> bool {
+    let canonical = |path: &str| std::fs::canonicalize(path).ok();
+    let Some(toplevel) = git(&["rev-parse", "--show-toplevel"]) else {
+        return false;
+    };
+    let Ok(manifest) = std::env::var("CARGO_MANIFEST_DIR") else {
+        return false;
+    };
+    match (canonical(&toplevel), canonical(&manifest)) {
+        (Some(top), Some(here)) => top == here,
+        // A path that will not canonicalise is a question we cannot answer, and the answer to an
+        // unanswerable provenance question is `unknown`, never "probably ours".
+        _ => false,
     }
-    git(&["log", "-1", "--format=%cs"]).unwrap_or_else(|| "unknown".to_owned())
 }
 
 /// `SOURCE_DATE_EPOCH` as `YYYY-MM-DD` UTC, or `None` if it is unset or not a number.

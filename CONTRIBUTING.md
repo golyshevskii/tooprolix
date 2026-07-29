@@ -47,6 +47,10 @@ release goes out, all of them move together:
   `the_rules_listing_agrees_with_every_documented_table` in `tests/cli.rs` turns each line the
   binary printed into a table row and requires the `| \`TPX…` rows of both Markdown files to be
   exactly that list, in order, so changing one of the three reddens the suite;
+- refresh the worked `--version` example in `docs/cli-contract.md` (`tooprolix 0.3.1 (2026-07-28)`).
+  It is a commit date, so it goes stale at every release and **nothing watches it** — the rule
+  tables have a test, this line does not, and writing one would mean pinning a date that is
+  supposed to move;
 - verify every install and output example against the **published wheel**, not a local build.
 
 ## Run the gates before you push

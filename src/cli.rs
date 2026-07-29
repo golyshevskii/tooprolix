@@ -206,8 +206,9 @@ Options:
   --help    Show this text.
   --version Print `tooprolix <version> (<commit date>)`. The date is the date of
             the commit the binary was built from, not the date it was built, so
-            two builds of one commit answer identically. A build from a tree with
-            no git history says `unknown` rather than guessing.
+            two builds of one commit answer identically. A tree with no git
+            history OF ITS OWN says `unknown` rather than guessing — a copy
+            unpacked inside some other repository borrows no date from it.
   --rules   Print the rule table below and nothing else, for a script. Each of
             these three flags takes no other argument.
 

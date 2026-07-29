@@ -30,9 +30,14 @@ that number, which is why `pyproject.toml` declares `dynamic = ["version"]`.
 
 The date in brackets is the **date of the commit the binary was built from, not the date it was
 built**. Two builds of one commit, hours apart, print the same line; if that were the wall clock the
-binary would not be reproducible and the string could not identify what is running. A build from a
-tree with no git history and no `SOURCE_DATE_EPOCH` prints `unknown` rather than substituting
-today's date — `unknown` is a true answer and a guess is not.
+binary would not be reproducible and the string could not identify what is running.
+
+A build whose source tree has no git history **of its own**, and no `SOURCE_DATE_EPOCH`, prints
+`unknown` rather than substituting today's date — `unknown` is a true answer and a guess is not.
+"Of its own" is the load-bearing part: git's discovery walks upward, so an unpacked sdist or a
+`cargo vendor` directory sitting inside some unrelated checkout would otherwise report **that**
+repository's commit date as though it were this package's. The build script requires the repository
+git finds to be rooted exactly at this package before it will believe it.
 
 `SOURCE_DATE_EPOCH`, when set, wins over git. That is the [reproducible-builds
 convention](https://reproducible-builds.org/docs/source-date-epoch/), and it is the only way a
