@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.4](https://github.com/golyshevskii/tooprolix/compare/v0.3.3...v0.3.4) - 2026-07-29
+
+### Other
+
+- Audit the Rust code with /rust-skills, and close what it found ([#17](https://github.com/golyshevskii/tooprolix/pull/17))
+
 ## [0.3.3](https://github.com/golyshevskii/tooprolix/compare/v0.3.2...v0.3.3) - 2026-07-29
 
 ### Other
