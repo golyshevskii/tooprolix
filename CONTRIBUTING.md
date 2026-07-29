@@ -139,9 +139,13 @@ could:
   before the crate exists, so `cargo llvm-cov` never instruments it and it appears in no row of the
   report. Its ~190 lines are unmeasured, not covered.
 - **Rust branch coverage is not reported at all** on the pinned stable toolchain — llvm-cov's
-  `Branches` column reads `-`. The Rust badge is **line** coverage. The Python badge has
-  `branch = true` and folds branches in, which is one of the reasons the two are never added
-  together into a single figure.
+  `Branches` column reads `-`. The Rust badge is **line** coverage; the Python badge folds branches
+  in (`branch = true`). They are two different measures, which is why they are never added together
+  into a single figure and why neither is described as comparable to the other.
+- **The 6 doctests are not in the Rust number.** `cargo llvm-cov` skips doctests unless
+  `--doctests` is passed, and that flag needs a nightly toolchain — on the pinned 1.97.0 it fails
+  with `error: 2 nightly options were parsed`. So `make rust.cov` instruments **188 of the 194**
+  tests `make rust.test` runs, and code reached only by a doctest counts as uncovered.
 - **The Python number measures `corpus/` only** (`[tool.coverage.run] source` in `pyproject.toml`),
   which is the throwaway research tooling — the product itself is Rust. `tests/unit` is the runner's
   input, never part of the denominator: a denominator containing the tests climbs when you write

@@ -27,7 +27,12 @@ LOCK ?= corpus/corpus.lock
 # `.gitignore` already covers, so neither the JSON nor cargo's instrumented build ever shows up in
 # the `git diff` the drift gate reads. The committed artifacts are the two SVGs and nothing else.
 COV_DIR ?= target/coverage
-COV_BADGES = assets/coverage-rust.svg assets/coverage-python.svg
+# `override`, not a plain assignment, and not `?=`. `make cov.check COV_BADGES=README.md` otherwise
+# retargets the gate from the command line and it prints "ok: both coverage badges match a fresh
+# measurement" having compared neither — measured, rc=0 on a tree where the real gate exits 2. CI
+# passes no override, so this was never a live hole; it is closed because a success message about
+# files the gate never looked at is the exact shape this repository treats as a defect.
+override COV_BADGES = assets/coverage-rust.svg assets/coverage-python.svg
 
 .PHONY: help lint.fix lint.check type test corpus.measure \
 	rust.fmt rust.fmt.check rust.lint rust.test rust.build.nopython py.build \
@@ -214,6 +219,15 @@ py.build: ## Rebuild and reinstall the Rust extension into .venv
 #     `corpus/checkouts/` on disk), so the lines only it reaches count as uncovered. That is the
 #     truth about a test that does not run in CI, and un-ignoring it here would be buying coverage
 #     with a gate that cannot run.
+#   - 🔴 THE COVERAGE RUN IS NOT THE TEST RUN. `cargo llvm-cov` skips doctests unless `--doctests`
+#     is passed, so `make rust.cov` instruments **188 of the 194 tests** `make rust.test` runs — the
+#     6 doctests (`test result: ok. 6 passed`, the `Doc-tests tooprolix` target) are absent from it
+#     entirely, and code reached only by a doctest is reported uncovered.
+#     `--doctests` is NOT available here, and that is measured rather than assumed: on the pinned
+#     stable 1.97.0 it fails with `error: 2 nightly options were parsed`, because cargo-llvm-cov
+#     drives rustdoc with `-Z unstable-options --persist-doctests`. Getting those 6 into the number
+#     would mean moving the whole repository to a nightly toolchain, which is a far larger decision
+#     than a badge. So they stay out, stated rather than silent.
 #   - Rust BRANCH coverage is not reported at all: the `Branches` column of llvm-cov reads `-` on
 #     the pinned stable 1.97.0 (it needs a nightly-only flag). The Rust badge is LINE coverage. The
 #     Python badge has `branch = true` and folds branches into its figure — the two badges are

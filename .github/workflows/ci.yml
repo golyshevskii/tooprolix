@@ -243,9 +243,14 @@ jobs:
   # is known. It still carries no `paths:` and no `if:` — a SKIPPED check does not satisfy a
   # required one, so a path filter added today would wedge the PR on the day it is registered.
   #
-  # It repeats the whole Rust test run under instrumentation and the whole Python test run under
-  # coverage, so it is the slowest job here. Splitting it in two would double the toolchain setup
-  # to save nothing: `git diff` has to see both files at once anyway.
+  # It re-runs the Rust tests under instrumentation and the Python tests under coverage, so it is
+  # the slowest job here. Splitting it in two would double the toolchain setup to save nothing:
+  # `git diff` has to see both files at once anyway.
+  #
+  # ⚠️ It is NOT a repeat of the whole `cargo-test` job: `cargo llvm-cov` does not run doctests
+  # without `--doctests`, which needs a nightly toolchain, so this job instruments 188 of the 194
+  # tests `make rust.test` runs. `cargo-test` above remains the only job that executes the 6
+  # doctests. Written down in the Makefile's coverage block too, next to the other exclusions.
   coverage:
     name: coverage
     runs-on: ubuntu-latest

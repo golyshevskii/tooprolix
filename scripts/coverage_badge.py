@@ -13,10 +13,13 @@ Two properties this script exists to hold, both of them tested in `tests/unit/te
   2. **the output depends on nothing but the number.** No clock, no hostname, no run id, no network.
      Same percentage in, byte-identical file out — otherwise the CI drift gate would fire on every
      run and be turned off within a week.
+  3. **the report is graded before the number is believed.** `verify_report_measured_the_source_tree`
+     refuses a report that measured less than the whole source tree, or measured it with branch
+     coverage off. Those failures all RAISE the percentage, so nothing downstream can catch them.
 
-Usage:
+Usage (this is the exact invocation in the Makefile's `rust.cov` recipe):
 
-    python3 scripts/coverage_badge.py --report target/llvm-cov/cov.json --format llvm-cov \
+    python3 scripts/coverage_badge.py --report target/coverage/llvm-cov.json --format llvm-cov \
         --label "rust coverage" --out assets/coverage-rust.svg
 
 Run: make rust.cov / make py.cov
@@ -94,13 +97,17 @@ def percent_from_report(report: Path, report_format: str) -> float:
     Both lookups fail with `KeyError` on a report that does not carry the field, rather than
     defaulting to 0.0: a badge reading `0.0%` is a claim about the code, and a schema change is a
     fact about the parser. The two must not look the same.
+
+    ⚠️ The two numbers are NOT the same measure, and the badges are labelled separately for exactly
+    this reason: the Rust figure is line coverage, while coverage.py's `percent_covered` folds
+    branches in (`branch = true`). Do not add them together or describe them as comparable.
     """
     data: Any = json.loads(report.read_text(encoding="utf-8"))
 
     if report_format == RUST_REPORT_FORMAT:
-        # `cargo llvm-cov --json --summary-only`. LINE coverage, matching what coverage.py reports
-        # for the Python side; llvm-cov's `regions` and `functions` totals are different measures
-        # and mixing them across the two badges would make the pair incomparable.
+        # `cargo llvm-cov --json --summary-only`. LINE coverage, because it is the only whole-crate
+        # measure llvm-cov offers here: `branches` reads 0/0 on the pinned stable toolchain, and
+        # `regions`/`functions`/`instantiations` are different questions again.
         return float(data["data"][0]["totals"]["lines"]["percent"])
 
     if report_format == PYTHON_REPORT_FORMAT:
@@ -111,6 +118,103 @@ def percent_from_report(report: Path, report_format: str) -> float:
     raise ValueError(f"unknown report format: {report_format!r}")
 
 
+# The measurement contract, per language: (source directory, extension, subdirectories that are test
+# DATA rather than code). Deliberately NOT read out of `[tool.coverage.run]` — a check that reads the
+# same configuration as the thing it checks agrees with any edit to that configuration, which is the
+# whole defect. This is the second, independent statement of the denominator, and
+# `verify_report_measured_the_source_tree` is where the two are made to agree.
+_SOURCE_TREES: dict[str, tuple[str, str, tuple[str, ...]]] = {
+    RUST_REPORT_FORMAT: ("src", ".rs", ()),
+    PYTHON_REPORT_FORMAT: ("corpus", ".py", ("checkouts", "fixtures")),
+}
+
+# Formats whose reports list source files that were never executed, and for which "every file on
+# disk must appear" is therefore a sound requirement. coverage.py does this — it walks `source` and
+# reports an untouched module at 0%, which is exactly how a file dropping out of discovery becomes
+# detectable. `cargo llvm-cov` does not: it reports what the compiler instrumented, so a file with
+# no instrumentable items is legitimately absent. Measured, not assumed — `src/detect.rs` is 26
+# lines of module docs plus two `pub mod` declarations, and requiring it made `make rust.cov` fail
+# on the real repository. Both formats are still checked in the other direction (nothing outside the
+# source tree may be in the denominator), which is sound for both.
+_FORMATS_THAT_REPORT_UNEXECUTED_FILES = {PYTHON_REPORT_FORMAT}
+
+
+def measurable_source_files(repo_root: Path, report_format: str) -> set[str]:
+    """
+    Walk the filesystem for the source files a coverage run of `report_format` must measure.
+
+    Walked, not listed. A hard-coded list of today's four corpus modules would keep agreeing with a
+    report that never discovered a fifth file added beside them — and coverage.py genuinely does not
+    discover unexecuted files inside a directory that is not an importable package, so the file
+    would leave the denominator and push the percentage UP with nothing to show for it.
+    """
+    root_name, suffix, excluded = _SOURCE_TREES[report_format]
+    root = repo_root / root_name
+    return {
+        path.relative_to(repo_root).as_posix()
+        for path in root.rglob(f"*{suffix}")
+        if path.is_file() and not set(path.relative_to(root).parts[:-1]) & set(excluded)
+    }
+
+
+def _measured_files(data: Any, report_format: str, repo_root: Path) -> set[str]:
+    if report_format == RUST_REPORT_FORMAT:
+        names = [entry["filename"] for entry in data["data"][0]["files"]]
+    else:
+        names = list(data["files"])
+    measured = set()
+    for name in names:
+        path = Path(name)
+        # llvm-cov writes absolute paths; coverage.py writes repository-relative ones. A path that
+        # is not under the repository is kept verbatim so it shows up as unexpected rather than
+        # raising something unreadable here.
+        measured.add(
+            path.relative_to(repo_root).as_posix()
+            if path.is_absolute() and path.is_relative_to(repo_root)
+            else path.as_posix()
+        )
+    return measured
+
+
+def verify_report_measured_the_source_tree(data: Any, report_format: str, repo_root: Path) -> None:
+    """
+    Refuse a report that measured something other than the whole source tree.
+
+    Reading the percentage out of the report grades the number; this grades the report. Every
+    failure below produces a report that is internally consistent and carries a plausible, FRESH
+    percentage — and in each case the percentage rises because less was measured:
+
+      - `branch = true` removed: 52.37% becomes 53.20% on this repository, measuring statements only;
+      - a source file that fell out of discovery: gone from the denominator entirely;
+      - `tests/unit` added to `source`: the badge then climbs whenever someone writes test code,
+        which is the one thing this task's AC1 forbids in writing.
+
+    None of those leave a trace in the badge, so none of them can be caught downstream.
+    """
+    if report_format == PYTHON_REPORT_FORMAT and not data["meta"]["branch_coverage"]:
+        raise ValueError(
+            "the coverage report says branch coverage was OFF, so this percentage counts statements "
+            "only and is not the measure the badge claims; restore `branch = true` under "
+            "[tool.coverage.run] in pyproject.toml"
+        )
+
+    expected = measurable_source_files(repo_root, report_format)
+    measured = _measured_files(data, report_format, repo_root)
+
+    if (missing := expected - measured) and report_format in _FORMATS_THAT_REPORT_UNEXECUTED_FILES:
+        raise ValueError(
+            f"the coverage report never measured {len(missing)} source file(s) that exist on disk: "
+            f"{', '.join(sorted(missing))} — they are outside the denominator, so the percentage is "
+            f"higher than the truth"
+        )
+    if extra := measured - expected:
+        raise ValueError(
+            f"the coverage report measured files outside the source tree: {', '.join(sorted(extra))} "
+            f"— the denominator is meant to be production code only, and one that contains the tests "
+            f"grows whenever more test code is written"
+        )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--report", type=Path, required=True, help="JSON report written by the coverage tool")
@@ -118,6 +222,13 @@ def main() -> int:
     parser.add_argument("--label", required=True, help="badge label, e.g. 'rust coverage'")
     parser.add_argument("--out", type=Path, required=True, help="SVG file to write")
     args = parser.parse_args()
+
+    data: Any = json.loads(args.report.read_text(encoding="utf-8"))
+    # Grade the report BEFORE writing anything. A rejected report leaves the committed badge
+    # untouched, so `make cov.check` then fails on a stale badge rather than blessing a fresh wrong
+    # one — the guard is on the path every `make rust.cov` / `make py.cov` takes, not on a test that
+    # only runs when the report happens to be lying around.
+    verify_report_measured_the_source_tree(data, args.format, Path(__file__).resolve().parents[1])
 
     percent = percent_from_report(args.report, args.format)
     args.out.write_text(render_badge(args.label, percent), encoding="utf-8")
