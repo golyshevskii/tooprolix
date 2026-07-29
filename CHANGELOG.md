@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.6](https://github.com/golyshevskii/tooprolix/compare/v0.3.5...v0.3.6) - 2026-07-29
+
+### Fixed
+
+- audit the Python tests with /pytest-testing, and close what could not fail ([#21](https://github.com/golyshevskii/tooprolix/pull/21))
+
 ## [0.3.5](https://github.com/golyshevskii/tooprolix/compare/v0.3.4...v0.3.5) - 2026-07-29
 
 ### Fixed
