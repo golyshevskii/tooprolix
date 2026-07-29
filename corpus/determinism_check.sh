@@ -35,7 +35,16 @@
 set -euo pipefail
 
 readonly REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-readonly BINARY="${TOOPROLIX_BIN:-$REPO_ROOT/target/release/tooprolix}"
+BINARY="${TOOPROLIX_BIN:-$REPO_ROOT/target/release/tooprolix}"
+# Absolute before the `-x` check, for the reason spelled out in corpus/run_all.sh: this guard runs
+# in the caller's cwd while every run below happens inside `(cd "$CORPUS_ROOT" && "$BINARY" …)`, so
+# a relative path is judged against one directory and executed against another. It matters more
+# here than anywhere — claim 1 of this script is that repeated runs of ONE binary agree, and it
+# cannot be that if the binary is chosen by whichever directory is current.
+if [[ "$BINARY" != /* ]]; then
+	BINARY="$PWD/$BINARY"
+fi
+readonly BINARY
 readonly LOCKFILE="$REPO_ROOT/Cargo.lock"
 
 # The subject of the double run. `pydantic` is mature human-written OSS with 167 findings across

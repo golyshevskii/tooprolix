@@ -16,6 +16,10 @@ machine is recorded next to the numbers in `corpus/REPORT.md` §7.6.
 
 Usage:
     CORPUS_ROOT=/somewhere/outside uv run python3 corpus/bench.py
+
+`TOOPROLIX_BIN` selects the binary, exactly as it does for `corpus/run_all.sh` and
+`corpus/determinism_check.sh`, and it is the ONLY way to select it — this script takes no
+arguments. See `binary_from`.
 """
 
 from __future__ import annotations
@@ -46,6 +50,36 @@ EXPECT_EXIT: int = 1
 
 #: Samples per root, plus one discarded run to warm the page cache.
 SAMPLES: int = 10
+
+#: Where `cargo build --release` puts the binary. The same fallback the two shell runners use.
+DEFAULT_BINARY: Path = Path(__file__).resolve().parents[1] / "target/release/tooprolix"
+
+
+def binary_from() -> Path:
+    """
+    Return the binary to measure: `$TOOPROLIX_BIN`, else the release build. One channel, no second.
+
+    `corpus/run_all.sh` and `corpus/determinism_check.sh` both read
+    `${TOOPROLIX_BIN:-$REPO_ROOT/target/release/tooprolix}`; this module used to read `argv[0]` and
+    that fallback path and nothing else. So `TOOPROLIX_BIN=/somewhere/else` reached two of the three
+    runners and was a silent no-op against the third — it went on timing `target/release/tooprolix`
+    and reported a benchmark of a binary nobody had asked for. Substituting a binary is how this
+    epic proves a harness measures what it says it measures, and a mutation one tool ignores is not
+    a proof about that tool.
+
+    There is deliberately **no** positional override. Ranking an argument above the variable put the
+    divergence straight back: `TOOPROLIX_BIN=/A corpus/bench.py /B` measured B while both shells
+    measured A. That the shells accept no positional is not agreement — they simply cannot express
+    the choice. With the channel gone, "all three see the same substitution" is true by
+    construction rather than by a precedence rule a reader has to trust.
+    """
+    override: str | None = os.environ.get("TOOPROLIX_BIN")
+    # Resolved against the CALLER's cwd, once, before anyone runs it. The runs below pass
+    # `cwd=CORPUS_ROOT` to `subprocess.run`, and a relative program path is resolved against the
+    # CHILD's cwd — so a relative `TOOPROLIX_BIN` would silently mean a different file here than it
+    # does to the shells' `-x` guard. `absolute()` and not `resolve()`: it matches `$PWD/$BINARY` in
+    # the shells exactly, and it keeps the operator's own spelling in the error messages.
+    return (Path(override) if override else DEFAULT_BINARY).absolute()
 
 
 def time_run(binary: Path, root: str, *, expect_exit: int, cwd: Path | None = None) -> float:
@@ -88,7 +122,8 @@ def verify_subject(binary: Path, name: str, root: str, runs_dir: Path, *, cwd: P
     One owner for those expectations; a second copy is the defect this epic keeps paying for.
 
     # Raises
-    `RuntimeError` if the artifact is missing or unreadable, or if the findings differ from it.
+    `RuntimeError` if the artifact is missing or unreadable, if the binary cannot be run at all, or
+    if the findings differ from it.
     """
     recorded = runs_dir / f"{name}.json"
     if not recorded.is_file():
@@ -96,12 +131,32 @@ def verify_subject(binary: Path, name: str, root: str, runs_dir: Path, *, cwd: P
             f"{recorded} does not exist; run corpus/run_all.sh first — timing a tree that has no "
             f"recorded measurement is timing an unknown tree"
         )
-    done = subprocess.run([str(binary), "check", root, "--format", "json"], capture_output=True, cwd=cwd, check=False)
+    # The same `OSError` handling `time_run` has always had. It is needed HERE too because this
+    # check now runs first, so a mistyped `TOOPROLIX_BIN` reaches the binary through this call and
+    # not through the timer — and `main` only catches `RuntimeError`, so without this the harness
+    # died with a raw `FileNotFoundError` instead of its own abort line.
+    try:
+        done = subprocess.run(
+            [str(binary), "check", root, "--format", "json"], capture_output=True, cwd=cwd, check=False
+        )
+    except OSError as error:
+        raise RuntimeError(f"{binary} could not be run: {error}") from error
     try:
         measured = json.loads(done.stdout)["findings"]
     except (ValueError, KeyError) as error:
         raise RuntimeError(f"{binary} check {root} --format json did not produce a report: {error}") from error
-    expected = json.loads(recorded.read_text(encoding="utf-8"))["findings"]
+    # The recorded artifact is read inside a `try` for the same reason the measured output is: a
+    # run killed midway leaves a truncated `runs/<name>.json` and a schema bump leaves one without
+    # `findings`, and `main` catches only `RuntimeError`. Without this the harness tracebacked while
+    # the docstring above promised an abort for an unreadable artifact.
+    try:
+        expected = json.loads(recorded.read_text(encoding="utf-8"))["findings"]
+    except (OSError, ValueError, KeyError) as error:
+        raise RuntimeError(
+            f"{recorded.name} is not a readable run artifact ({type(error).__name__}: {error}); "
+            f"re-record it with corpus/run_all.sh — timing against an unreadable measurement is "
+            f"timing against nothing"
+        ) from error
     if measured != expected:
         raise RuntimeError(
             f"{root} does not match {recorded.name}: {len(measured)} findings measured against "
@@ -112,6 +167,15 @@ def verify_subject(binary: Path, name: str, root: str, runs_dir: Path, *, cwd: P
 def main(argv: Sequence[str] | None = None) -> int:
     """Print the median/min/max per root. Returns a process exit code."""
     argv = list(argv or [])
+    if argv:
+        # Refused rather than ignored. Ignoring it would time the default binary while the operator
+        # believed they had selected the one they named — the same "measured something else" that
+        # `binary_from` exists to close.
+        print(
+            f"error: corpus/bench.py takes no arguments; select the binary with TOOPROLIX_BIN. Got: {argv}",
+            file=sys.stderr,
+        )
+        return 2
     corpus_root = os.environ.get("CORPUS_ROOT")
     if not corpus_root:
         print(
@@ -119,7 +183,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             file=sys.stderr,
         )
         return 2
-    binary = Path(argv[0]) if argv else Path(__file__).resolve().parents[1] / "target/release/tooprolix"
+    binary = binary_from()
 
     runs_dir = Path(__file__).resolve().parent / "runs"
 

@@ -258,3 +258,23 @@ class TestCalibrationTolerance:
         blocks.append(block(words(10), path="small.py"))
         with pytest.raises(units.CalibrationError):
             units.calibrate(blocks, units.count_words, {"docstring": 2})
+
+
+class TestTheEntryPointRefusesWithoutASubject:
+    """
+    `main`'s one pre-flight refusal, and the only part of it reachable without the checkouts.
+
+    Everything below this line in `main` needs the compiled `tooprolix` extension and 773 MB of
+    corpus; this check needs neither, and it is what stops a comparison being run against whatever
+    directory the shell happened to be in.
+    """
+
+    def test_an_unset_corpus_root_exits_two_before_anything_is_loaded(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        monkeypatch.delenv("CORPUS_ROOT", raising=False)
+
+        assert units.main([]) == 2
+        captured = capsys.readouterr()
+        assert "CORPUS_ROOT" in captured.err
+        assert captured.out == "", "a calibration table was printed for a run with no population"
