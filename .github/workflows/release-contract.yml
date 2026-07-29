@@ -55,7 +55,14 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # ⚠️ `false`, and this is the ONE place this workflow deliberately differs from ci.yml.
+  #
+  # ci.yml cancels in progress because a stale *code* result is worthless — a re-push replaces the
+  # code the run was grading. A stale *release-contract* verdict is the opposite: it is the only
+  # record that a mispriced subject landed on `main`. With cancellation on, a later clean push to
+  # `main` cancels the bad push's run, the red disappears, and an absent red reads as "fine" —
+  # while release-plz's own jobs are untouched and the patch-priced Release PR survives.
+  cancel-in-progress: false
 
 env:
   PYTHON_VERSION: "3.12"
@@ -109,10 +116,28 @@ jobs:
                 --event pull_request --commits "${RUNNER_TEMP}/commits.json"
               ;;
             push)
-              # What release-plz will actually parse: the subject and body that landed on `main`.
+              # What release-plz will actually parse: the subject that landed on `main`.
               git log -1 --format=%B > "${RUNNER_TEMP}/merged.txt"
-              uv run --no-project python3 scripts/pr_title_gate.py \
-                --event push --merged-message "${RUNNER_TEMP}/merged.txt"
+              # The branch's declarations come from the API, NOT from the squash body. The body is
+              # edited in the same dialog box as the subject, so reconstructing the branch from its
+              # `* ` bullets could be disarmed in the same keystroke that mispriced the release —
+              # measured: bullets deleted, or an empty body, and the breaking change escaped.
+              # Resolving the landed SHA to its pull request reaches evidence the merger does not
+              # control. An empty array here is legitimate (a direct push has no pull request); an
+              # API failure is not, and `pipefail` stops the step.
+              gh api "repos/${REPO}/commits/${GITHUB_SHA}/pulls" --paginate --slurp \
+                | jq 'add' > "${RUNNER_TEMP}/pulls.json"
+              PR_FOR_SHA="$(jq -r '.[0].number // empty' "${RUNNER_TEMP}/pulls.json")"
+              if [ -n "${PR_FOR_SHA}" ]; then
+                gh api "repos/${REPO}/pulls/${PR_FOR_SHA}/commits" --paginate --slurp \
+                  | jq 'add' > "${RUNNER_TEMP}/merged-commits.json"
+                uv run --no-project python3 scripts/pr_title_gate.py \
+                  --event push --merged-message "${RUNNER_TEMP}/merged.txt" \
+                  --commits "${RUNNER_TEMP}/merged-commits.json"
+              else
+                uv run --no-project python3 scripts/pr_title_gate.py \
+                  --event push --merged-message "${RUNNER_TEMP}/merged.txt"
+              fi
               ;;
             *)
               # An ALLOW-LIST. The previous shape was "if not a pull_request, exit 0", so a

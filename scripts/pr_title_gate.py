@@ -85,7 +85,10 @@ KNOWN_TYPES = frozenset({"feat", "fix", "perf", "refactor", "test", "docs", "cho
 #                    non-blank, and tightening further would be stricter than the parser.
 #   `fix:no space`-> 0.3.5 under `### Fixed` with the summary parsed. release-plz does not require
 #                    the space, so neither does this: `[ \t]*`, not `[ \t]+`.
-_SUBJECT = re.compile(r"^(?P<type>[A-Za-z]+)(?:\((?P<scope>[^()]+)\))?(?P<bang>!)?:[ \t]*(?P<summary>\S.*)$")
+#   `feat!:<NBSP>x`-> 0.4.0 under `### Added`, fully parsed, so U+00A0 is accepted too. Listed
+#                    literally rather than widened to `\s`, which would also accept separators
+#                    nobody has measured — extend this class only with a measurement.
+_SUBJECT = re.compile(r"^(?P<type>[A-Za-z]+)(?:\((?P<scope>[^()]+)\))?(?P<bang>!)?:[ \t\u00a0]*(?P<summary>\S.*)$")
 
 # The footer form of a breaking change. Case-SENSITIVE and anchored to the start of a line, which
 # is the spec's own rule: matched loosely, every commit body that discusses a breaking change would
@@ -104,11 +107,6 @@ _SUBJECT = re.compile(r"^(?P<type>[A-Za-z]+)(?:\((?P<scope>[^()]+)\))?(?P<bang>!
 # three that answer 0.3.5 are deliberately NOT matched — `BREAKING CHANGES:` especially, which is a
 # plausible thing to write in prose.
 _BREAKING_FOOTER = re.compile(r"^BREAKING[ -]CHANGE(?::| #)", re.MULTILINE)
-
-# After a squash merge GitHub renders each of the branch's commit subjects as a `* ` bullet in the
-# body of the squashed commit. That is where `033ceeb` kept its `fix!:` — at body line 77, where
-# nothing parsed it — so this is how they are read back out when grading what landed on `main`.
-_SQUASH_BULLET = re.compile(r"^[ \t]*[*+-][ \t]+(?P<subject>\S.*)$", re.MULTILINE)
 
 # `repos/{owner}/{repo}/pulls/{n}/commits` returns AT MOST 250 commits and `--paginate` cannot lift
 # it — the cap is on the endpoint, not the page size ("Lists a maximum of 250 commits for a pull
@@ -251,7 +249,7 @@ def grade_pull_request(title: str, commit_messages: Sequence[str]) -> list[str]:
     return failures
 
 
-def grade_merged_commit(subject: str, body: str) -> list[str]:
+def grade_merged_commit(subject: str, body: str, branch_commits: Sequence[str] | None) -> list[str]:
     """
     Grade the commit that actually landed on `main` — the artifact, not the proxy.
 
@@ -264,22 +262,33 @@ def grade_merged_commit(subject: str, body: str) -> list[str]:
     separate, manual step. So a boundary caught here is still correctable, which is the entire
     reason it is worth running at all.
 
-    The branch's own subjects are recovered from the `* ` bullets the squash left in the body, and
-    graded against the landed subject exactly as the pull-request path grades commits against a
-    title. Only bullets and line-anchored footers count as declarations: the body of `d6e7561`
-    contains three lines mentioning `fix!:` or `BREAKING CHANGE:` while *describing* this defect,
-    and a substring scan fires on all three.
+    `branch_commits` is the pull request's REAL commits, fetched by resolving the landed SHA
+    through `repos/{owner}/{repo}/commits/{sha}/pulls` and then `pulls/{n}/commits` — the same
+    source the pull-request path already trusts, and the reason this check is worth anything.
+
+    ⚠️ It used to reconstruct them from the `* ` bullets the squash leaves in the BODY, and that was
+    the identical defect one box over: the merge dialog edits the body and the subject together, so
+    deleting the bullets — or emptying the body — disarmed the check in the same keystroke.
+    Measured on the real merge: bullets present rc=1, bullets deleted rc=0, empty body rc=0. No
+    bullet parser survives here; a cleverer one would only move the seam again.
+
+    `None` means the landed commit has no associated pull request — a direct push to `main`. That
+    is not an API failure and not a refusal: there is no branch to compare against, so the commit
+    is graded on its own, which is the entire artifact in that case. The body still goes in whole,
+    so a line-anchored `BREAKING CHANGE:` footer in it demands a `!` in the subject.
 
     ⚠️ HEAD only, deliberately. A push carrying several commits is graded by its tip, which is the
     shape every squash merge and every Release PR merge takes. Grading the whole pushed range would
-    mean reading `github.event.before`, which is all-zeros on branch creation.
+    mean reading `github.event.before`, which is all-zeros on branch creation. Recorded as an
+    accepted residual in CONTRIBUTING.md rather than left to be rediscovered.
     """
-    bullets = [match["subject"] for match in _SQUASH_BULLET.finditer(body)]
-    # The body also goes in whole, exactly once, so a line-anchored `BREAKING CHANGE:` footer is
-    # seen — a footer never appears inside a bullet subject. It doubles as the reason the list is
-    # never empty, so a squashed single commit with no bullets is graded rather than tripping the
-    # empty-list refusal, which is about a failed API read and means nothing on this path.
-    return grade_pull_request(subject, [*bullets, body])
+    if branch_commits is None:
+        return grade_pull_request(subject, [f"{subject}\n{body}"])
+    # The body rides along as a second, free signal: a `BREAKING CHANGE:` footer that a merger
+    # typed straight into the squash message belongs to no branch commit and would otherwise be
+    # invisible. It cannot produce a false positive that the bullets used to, because nothing here
+    # reads bullets any more — only `_BREAKING_FOOTER`, which is anchored to the start of a line.
+    return grade_pull_request(subject, [*branch_commits, body])
 
 
 def commit_messages_from(payload: Path) -> list[str]:
@@ -318,7 +327,7 @@ def main() -> int:
     # refuses an unknown event before any grading happens, and the workflow's `case` refuses it a
     # second time. Two layers, both loud.
     parser.add_argument("--event", required=True, choices=("pull_request", "push"))
-    parser.add_argument("--commits", type=Path, help="`pull_request`: JSON from `gh api .../pulls/<n>/commits`")
+    parser.add_argument("--commits", type=Path, help="JSON from `gh api .../pulls/<n>/commits` for either event")
     parser.add_argument("--merged-message", type=Path, help="`push`: the full message of the commit that landed")
     args = parser.parse_args()
 
@@ -341,7 +350,12 @@ def main() -> int:
         # rest is the body the squash left behind.
         message = args.merged_message.read_text(encoding="utf-8")
         subject, _, body = message.partition("\n")
-        failures = grade_merged_commit(subject, body)
+        # `--commits` present = the landed SHA resolved to a pull request, and these are its REAL
+        # commits. Absent = no associated pull request, i.e. a direct push, which is graded on its
+        # own. The workflow only omits the flag when the resolution genuinely returned nothing; an
+        # API call that FAILS stops the step before this line, because it runs under `pipefail`.
+        branch_commits = commit_messages_from(args.commits) if args.commits is not None else None
+        failures = grade_merged_commit(subject, body, branch_commits)
 
     if failures:
         for failure in failures:

@@ -54,12 +54,34 @@ exactly the moment attention is scarce. `.github/workflows/release-contract.yml`
   does not parse or the branch carries a `!` / `BREAKING CHANGE:` the title does not;
 - on `push` to `main` it grades **the subject that actually landed**. GitHub's squash dialog lets
   whoever merges edit the subject at that moment, so the pre-merge check is a proxy and this is the
-  artifact. It fires before the Release PR is merged — a separate, manual step — so a boundary
-  caught here is still correctable.
+  artifact. It resolves the landed commit to its pull request and re-reads that pull request's
+  **real** commits from the API — deliberately not the `* ` bullets in the squash body, because the
+  body is edited in the same dialog box as the subject and a body-derived check is disarmed by the
+  same keystroke that misprices the release. A commit with no associated pull request (a direct
+  push) is graded on its own.
 
 The failure message names the bump your title would produce and the bump you probably wanted. It
 fails closed: an unreadable title, an unreachable API, a commit list at the API's 250-commit cap, or
 an event it does not recognise are all red, never a skip.
+
+**What a red actually does, stated plainly: nothing, yet.** Neither half can block a merge, because
+branch protection is impossible on this repository — private without GitHub Pro, so
+`branches/main/protection` is 404 and rulesets are 403. Both are red X's a human has to read. The
+`push` half in particular does **not** block `release-plz.yml`, which handles the same `push: main`
+independently: a red gate does not stop the Release PR being opened, merged, or tagged. Its entire
+value is that it tells a human *in time* — the Release PR is a separate, manual merge, so a boundary
+caught on `push` is still correctable. Do not describe it as more than that. Both become real
+barriers when `flip-public-and-publish-to-pypi` makes the repository public and registers the
+required set.
+
+**Accepted residuals — recorded, not overlooked:**
+
+- **The `push` check grades HEAD only.** A push carrying several commits is graded by its tip, so a
+  mispriced commit followed by a clean one goes green while release-plz reads the whole range.
+  Grading the range needs `github.event.before`, which is all-zeros on branch creation. Every merge
+  this repository makes — squash, and the Release PR — is a single commit, which is why this is
+  accepted rather than closed.
+- **The gate compares declarations, never the API itself.** See the two limits below.
 
 **Two things it deliberately cannot do**, so nobody reads more into a green than is there:
 

@@ -37,7 +37,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 import pytest
 from pr_title_gate import (
@@ -464,6 +464,39 @@ class TestTheGrammarMatchesWhatReleasePlzActuallyParses:
         """
         assert parse_subject("feat( )!: break the API") == Subject(type="feat", breaking=True)
 
+    def test_a_non_breaking_space_after_the_colon_is_accepted(self) -> None:
+        r"""
+        MEASURED: `feat!:\u00a0break API` -> `0.3.4 -> 0.4.0` under `### Added`, summary parsed. A
+        U+00A0 pasted from a document is a real thing and release-plz reads straight through it.
+
+        Listed literally in `_SUBJECT` rather than widened to `\\s`, which would also accept
+        separators nobody has measured — this class errs strict only where measurement is missing.
+        """
+        assert parse_subject("feat!:\u00a0break API") == Subject(type="feat", breaking=True)
+
+    def test_leading_whitespace_on_the_subject_is_tolerated_like_release_plz_tolerates_it(self) -> None:
+        r"""
+        Codex claimed a leading space makes release-plz fall back to PATCH. It does not reproduce.
+
+        That claim would have made `strip()` the LOOSE, dangerous direction.
+
+        MEASURED, with the leading space verified byte-exact in the stored commit (`--cleanup=verbatim`,
+        `git log -1 --format=%s | od -c` showing the space at byte 0):
+
+            " feat!: break API"        -> 0.3.4 -> 0.4.0   [**breaking**]
+            "  feat!: break API"       -> 0.3.4 -> 0.4.0   [**breaking**]
+            "\u00a0feat!: break API"   -> 0.3.4 -> 0.4.0   [**breaking**]
+
+        So stripping matches the parser and no change was made. Pinned here so the claim is not
+        re-raised and re-investigated a third time.
+        """
+        assert parse_subject(" feat!: break API") == Subject(type="feat", breaking=True)
+        assert parse_subject("\u00a0feat!: break API") == Subject(type="feat", breaking=True)
+
+    def test_a_space_before_the_bang_is_not_a_conventional_subject(self) -> None:
+        """MEASURED: `feat !: break API` -> `0.3.4 -> 0.3.5`, raw subject, no breaking marker."""
+        assert parse_subject("feat !: break API") is None
+
     def test_no_space_after_the_colon_is_accepted_because_release_plz_accepts_it(self) -> None:
         """
         MEASURED: `fix:no space after the colon` -> `0.3.4 -> 0.3.5` filed under `### Fixed` with
@@ -502,6 +535,7 @@ class TestTheBreakingFooterMatchesWhatReleasePlzActuallyParses:
             "BREAKING CHANGE#123",  # MEASURED -> 0.3.5: no space before the hash, not a footer
             "breaking change: the exit codes changed",  # MEASURED -> 0.3.5: the token is uppercase
             "BREAKING CHANGES: the exit codes changed",  # MEASURED -> 0.3.5: singular, not plural
+            "breaking-change: API",  # MEASURED -> 0.3.5: codex claimed 0.4.0; it does not reproduce
         ],
     )
     def test_a_form_release_plz_ignores_is_not_breaking_here_either(self, footer: str) -> None:
@@ -538,51 +572,81 @@ class TestATruncatedCommitListIsRefused:
 
 class TestTheSubjectThatActuallyLandedOnMainIsGraded:
     """
-    F1.2, and it is the difference between grading a proxy and grading the artifact.
+    F1.2/G1 — the difference between grading a proxy and grading the artifact.
 
     A pre-merge title check grades what the title WAS. GitHub's squash dialog lets the merger edit
     the subject at the moment of merge, and no branch protection exists here to stop them, so the
-    string release-plz finally parses can differ from every string this gate ever saw. The only
-    thing that grades what release-plz will actually read is the subject that landed on `main`.
+    string release-plz finally parses can differ from every string the pre-merge gate ever saw.
 
-    It fires after the merge but BEFORE the Release PR is merged — a separate, manual step — so a
-    boundary caught here is still correctable.
+    ⚠️ The first version of this reconstructed the branch's commits from the `* ` bullets the squash
+    leaves in the BODY — and that was the same defect one box over: the body is edited in the same
+    dialog as the subject. Measured on the real merge: deleting the bullets, or emptying the body,
+    let the breaking change through at rc=0. The evidence now comes from the API — the landed SHA
+    is resolved to its pull request and that pull request's REAL commits are graded — which is the
+    same source the `pull_request` path already trusts and is not editable from the merge dialog.
 
-    After a squash the branch's own commit subjects survive as `* ` bullets in the body. That is
-    where `033ceeb` kept its `fix!:`, and reading them back out is what makes this the same
-    comparison the pull-request path makes.
+    A direct push with no associated pull request is not a refusal: there is no branch to compare,
+    so the landed commit is graded on its own, which is the whole artifact in that case.
     """
 
     def test_the_real_merged_033ceeb_is_rejected(self) -> None:
-        failures = grade_merged_commit(MERGED_17_SUBJECT, MERGED_17_BODY)
+        failures = grade_merged_commit(MERGED_17_SUBJECT, MERGED_17_BODY, PR_17_COMMITS)
 
         assert failures, "the commit that actually shipped v0.3.4 as a patch was graded as fine"
 
-    def test_a_valid_subject_over_the_same_body_is_still_rejected(self) -> None:
+    def test_a_valid_subject_over_the_same_branch_is_still_rejected(self) -> None:
         """The squash-dialog exploit: a title that passed the pre-merge gate, edited at merge."""
-        assert grade_merged_commit("fix: audit the Rust code (#17)", MERGED_17_BODY)
+        assert grade_merged_commit("fix: audit the Rust code (#17)", MERGED_17_BODY, PR_17_COMMITS)
+
+    def test_the_bullets_being_deleted_from_the_body_changes_nothing(self) -> None:
+        """
+        G1, and it is the whole point of the rewrite. The merger controls the body as well as the
+        subject, so a reconstruction that reads the body can be disarmed in the same keystroke.
+        With the evidence taken from the API, an empty body is still red.
+        """
+        assert grade_merged_commit("fix: audit the Rust code (#17)", "", PR_17_COMMITS)
+        assert grade_merged_commit("fix: audit the Rust code (#17)", "no bullets here", PR_17_COMMITS)
+
+    def test_a_bullet_shaped_line_in_prose_is_no_longer_a_false_red(self) -> None:
+        """
+        The mirror of the above, and the reason no bullet parser survives: an indented `* fix!: …`
+        inside an example block used to be read as a declaration. The API says what the branch
+        actually contained, so prose cannot fake one either way.
+        """
+        body = "Example of what NOT to write:\n\n    * fix!: stop on a closed pipe\n"
+
+        assert grade_merged_commit("ci: gate the PR title (#19)", body, ["ci: gate the PR title"]) == []
 
     def test_declaring_the_break_in_the_landed_subject_is_accepted(self) -> None:
-        assert grade_merged_commit("fix!: audit the Rust code (#17)", MERGED_17_BODY) == []
+        assert grade_merged_commit("fix!: audit the Rust code (#17)", MERGED_17_BODY, PR_17_COMMITS) == []
 
     def test_a_release_commit_is_accepted(self) -> None:
         """`chore: release v0.3.4 (#18)` is what release-plz's own merge looks like."""
-        assert grade_merged_commit("chore: release v0.3.4 (#18)", "") == []
+        assert grade_merged_commit("chore: release v0.3.4 (#18)", "", ["chore: release v0.3.4"]) == []
 
-    def test_prose_about_breaking_changes_is_not_a_breaking_marker(self) -> None:
-        """
-        The false-positive case, and it is not hypothetical: the body of `d6e7561` — this gate's
-        own commit — contains three lines mentioning `fix!:` or `BREAKING CHANGE:` while describing
-        the defect. A substring scan fires three times on it. Markers are read only from `* ` bullet
-        subjects and line-anchored footers, which is why this is silent.
-        """
-        body = (
-            "found` over a branch carrying `fix!: stop on a closed pipe, and refuse a\n"
-            "change. Re-measured on the live tag: the same change under a `fix!:` title\n"
-            "and that no commit on the branch carries a `!` or a `BREAKING CHANGE:` footer\n"
-        )
 
-        assert grade_merged_commit("ci: gate the PR title (#19)", body) == []
+class TestADirectPushWithNoPullRequestIsGradedOnItsOwn:
+    """
+    G1's second case. `commits/{sha}/pulls` legitimately returns nothing for a commit pushed
+    straight to `main`, and that is not an API failure — there is simply no branch to compare
+    against. The landed commit is then the entire artifact: its subject must parse, and a
+    line-anchored `BREAKING CHANGE:` footer in its own body must be declared in that subject.
+    """
+
+    def test_a_non_conventional_direct_push_is_rejected(self) -> None:
+        assert grade_merged_commit("Fixed the thing", "", None)
+
+    def test_a_clean_direct_push_is_accepted(self) -> None:
+        assert grade_merged_commit("fix: stop on a closed pipe", "some prose", None) == []
+
+    def test_a_footer_in_its_own_body_still_demands_a_bang(self) -> None:
+        body = "\nBREAKING CHANGE: the exit codes changed\n"
+
+        assert grade_merged_commit("fix: stop on a closed pipe", body, None)
+        assert grade_merged_commit("fix!: stop on a closed pipe", body, None) == []
+
+    def test_a_breaking_subject_is_accepted(self) -> None:
+        assert grade_merged_commit("feat!: a deliberate break", "", None) == []
 
 
 class TestThePushPathIsWiredIntoTheEntryPoint:
@@ -591,33 +655,46 @@ class TestThePushPathIsWiredIntoTheEntryPoint:
     arrives in a file written by `git log -1 --format=%B`, and the event is named explicitly.
     """
 
-    def run_script(self, message: str, tmp_path: Path) -> subprocess.CompletedProcess[str]:
+    def run_script(
+        self, message: str, tmp_path: Path, commits: list[str] | None = None
+    ) -> subprocess.CompletedProcess[str]:
         message_path = tmp_path / "merged.txt"
         message_path.write_text(message, encoding="utf-8")
+        argv = [
+            sys.executable,
+            str(REPO_ROOT / "scripts" / "pr_title_gate.py"),
+            "--event",
+            "push",
+            "--merged-message",
+            str(message_path),
+        ]
+        if commits is not None:
+            # What the workflow writes after resolving the landed SHA to its pull request. Absent
+            # means the resolution found none — a direct push.
+            commits_path = tmp_path / "merged-commits.json"
+            commits_path.write_text(json.dumps([{"commit": {"message": m}} for m in commits]), encoding="utf-8")
+            argv += ["--commits", str(commits_path)]
         return subprocess.run(
-            [
-                sys.executable,
-                str(REPO_ROOT / "scripts" / "pr_title_gate.py"),
-                "--event",
-                "push",
-                "--merged-message",
-                str(message_path),
-            ],
-            capture_output=True,
-            text=True,
-            cwd=REPO_ROOT,
-            env={"PATH": "/usr/bin:/bin"},
-            check=False,
+            argv, capture_output=True, text=True, cwd=REPO_ROOT, env={"PATH": "/usr/bin:/bin"}, check=False
         )
 
-    def test_the_real_merged_033ceeb_exits_non_zero(self) -> None:
-        import tempfile
-
-        with tempfile.TemporaryDirectory() as tmp:
-            result = self.run_script(f"{MERGED_17_SUBJECT}\n\n{MERGED_17_BODY}", Path(tmp))
+    def test_the_real_merged_033ceeb_exits_non_zero(self, tmp_path: Path) -> None:
+        result = self.run_script(f"{MERGED_17_SUBJECT}\n\n{MERGED_17_BODY}", tmp_path, commits=PR_17_COMMITS)
 
         assert result.returncode != 0, "the commit that actually shipped v0.3.4 as a patch was accepted"
         assert "fix!: stop on a closed pipe" in result.stderr
+
+    def test_an_emptied_body_does_not_disarm_it(self, tmp_path: Path) -> None:
+        """G1 end to end: the merger deletes the bullets, the API still says what the branch was."""
+        result = self.run_script(f"{MERGED_17_SUBJECT}\n\n", tmp_path, commits=PR_17_COMMITS)
+
+        assert result.returncode != 0
+        assert "fix!: stop on a closed pipe" in result.stderr
+
+    def test_a_direct_push_with_no_pull_request_is_still_graded(self, tmp_path: Path) -> None:
+        result = self.run_script("Fixed the thing\n\nno type, no pull request\n", tmp_path)
+
+        assert result.returncode != 0, "a direct push to main was not graded at all"
 
     def test_a_clean_merge_exits_zero(self, tmp_path: Path) -> None:
         result = self.run_script("ci: gate the PR title (#19)\n\nSome prose.\n", tmp_path)
@@ -775,12 +852,86 @@ class TestTheWorkflowCannotDisableItsOwnGate:
                 if "pr_title_gate.py" in line or "gh api" in line:
                     assert "||" not in line, f"an invocation carries an escape hatch:\n{line}"
 
-    def test_the_title_still_comes_from_the_event_payload(self) -> None:
-        joined = (REPO_ROOT / ".github" / "workflows" / self.GATE_WORKFLOW).read_text(encoding="utf-8")
+    # Every input the gate branches on must come from the event payload, spelled exactly. A literal
+    # here — `EVENT_NAME: pull_request` — is not a typo, it is the guard being switched off from
+    # the line above it, and it leaves every invocation assertion satisfied.
+    PAYLOAD_ENV: ClassVar[dict[str, str]] = {
+        "EVENT_NAME": "${{ github.event_name }}",
+        "REPO": "${{ github.repository }}",
+        "PR_NUMBER": "${{ github.event.pull_request.number }}",
+        "PR_TITLE": "${{ github.event.pull_request.title }}",
+    }
 
-        assert "PR_TITLE: ${{ github.event.pull_request.title }}" in joined, (
-            "the gate must read the REAL title from the event payload, never a value a workflow "
-            "input or a job summary supplies"
+    def test_every_branching_input_comes_from_the_event_payload(self) -> None:
+        """
+        G4. Parsed, and compared against the exact expression — not merely "is a `${{ }}` of some
+        kind", because `${{ inputs.title }}` is also one of those and is a self-report.
+        """
+        for step in self.gate_steps():
+            env: dict[str, Any] = step.get("env") or {}
+            for key, expected in self.PAYLOAD_ENV.items():
+                if key in env:
+                    assert env[key] == expected, f"`{key}` is {env[key]!r}, not the payload value"
+        declared = {k: v for step in self.gate_steps() for k, v in (step.get("env") or {}).items()}
+        for key, expected in self.PAYLOAD_ENV.items():
+            assert declared.get(key) == expected, f"`{key}` is no longer wired to the event payload"
+
+    def test_no_step_can_be_skipped_or_have_its_failure_ignored(self) -> None:
+        """
+        G4, and it is N11's lesson one layer down: closing the JOB level left the STEP level open.
+
+        `continue-on-error: true` makes the step fail and the job report success. A step-level `if:`
+        makes it not run at all. Either one leaves the invocation exactly where the other tests look
+        for it, and the check goes green having graded nothing.
+        """
+        jobs: Any = self.workflow(self.GATE_WORKFLOW)["jobs"]
+
+        for job_name, job in jobs.items():
+            for step in job["steps"]:
+                name = step.get("name", step.get("uses", "?"))
+                for key in ("if", "continue-on-error"):
+                    assert key not in step, f"{job_name} / `{name}` carries `{key}:`"
+
+    def test_a_verdict_on_main_is_not_cancellable_by_a_later_push(self) -> None:
+        """
+        G2. `cancel-in-progress: true` lets a later clean push to `main` cancel the bad push's run,
+        so the red vanishes while release-plz's jobs carry on and the patch-priced Release PR
+        survives. An absent red reads as "fine".
+
+        ci.yml cancels for a good reason — a stale CODE result is worthless. A stale
+        release-contract verdict is the only record that a mispriced subject landed.
+        """
+        concurrency: Any = self.workflow(self.GATE_WORKFLOW).get("concurrency") or {}
+
+        assert concurrency.get("cancel-in-progress") is not True, (
+            "a later push must not be able to cancel away the record that a mispriced subject landed"
+        )
+
+    def test_the_push_path_takes_its_evidence_from_the_api(self) -> None:
+        """
+        G1. The branch's declarations must come from `commits/<sha>/pulls`, not from the squash
+        body — the body is edited in the same dialog as the subject, so a body-derived check is
+        disarmed by the same keystroke that misprices the release.
+
+        ⚠️ Fetching the evidence and USING it are two assertions, not one. The first version of this
+        checked only that the `commits/<sha>/pulls` call was still in the shell — so replacing
+        `--commits …` with a second `--merged-message …` left the API call intact, the gate grading
+        with no branch evidence at all, and this test GREEN. That is the same defect as asserting
+        that *an* invocation exists when the workflow makes two.
+        """
+        joined = "\n".join(self.invocations())
+        logical = [line for line in joined.replace("\\\n", " ").splitlines() if "--event push" in line]
+
+        assert "commits/${GITHUB_SHA}/pulls" in joined, (
+            "the push path no longer resolves the landed SHA to its pull request, so its evidence "
+            "is back to being merger-editable"
+        )
+        assert any("--commits" in line for line in logical), (
+            "the push path fetches the pull request's commits and then does not pass them to the "
+            "gate — the evidence is gathered and thrown away"
+        )
+        assert any("--commits" not in line for line in logical), (
+            "the direct-push branch (no associated pull request) is gone; it must still be graded"
         )
 
     def test_the_gate_fires_when_a_title_is_edited(self) -> None:
