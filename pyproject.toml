@@ -92,14 +92,6 @@ lint = [
 ]
 test = [
     "pytest>=9.1.1",
-    # `tests/unit/test_pr_title_gate.py` only, to PARSE `.github/workflows/*.yml` rather than
-    # pattern-match near them. It is here because a substring assertion about a workflow was
-    # already fooled once by that workflow's own comments — it looked for `scripts/pr_title_gate.py`
-    # and found it in a `name:` and three comment lines, so replacing the command with `echo` left
-    # the test green. The guards that keep the release-contract gate alive (no job-level `if:`, no
-    # `paths:`, `set -euo pipefail` kept, no `|| true` appended) are structural facts about YAML,
-    # and only a parser can assert them.
-    "pyyaml>=6.0.2",
     # `make py.cov` only. It rides in the `test` group because that is the group `make test`
     # already installs and pytest-cov is inert unless `--cov` is passed — a second group would
     # mean a second resolve of the same pytest for no behavioural difference. It is pure Python,

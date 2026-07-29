@@ -47,41 +47,47 @@ Proved in both directions by this repository's own history: #5 `feat!:` → **v0
 
 **A CI job now grades this**, because "remember to title the PR correctly" depends on attention at
 exactly the moment attention is scarce. `.github/workflows/release-contract.yml` runs
-`scripts/pr_title_gate.py` **twice over**, and the second time is the one that matters:
-
-- on `pull_request` (including **`edited`**, so editing a title re-grades it) it reads the real
-  title from the event payload and the real commits from the API, and fails when either the title
-  does not parse or the branch carries a `!` / `BREAKING CHANGE:` the title does not;
-- on `push` to `main` it grades **the subject that actually landed**. GitHub's squash dialog lets
-  whoever merges edit the subject at that moment, so the pre-merge check is a proxy and this is the
-  artifact. It resolves the landed commit to its pull request and re-reads that pull request's
-  **real** commits from the API — deliberately not the `* ` bullets in the squash body, because the
-  body is edited in the same dialog box as the subject and a body-derived check is disarmed by the
-  same keystroke that misprices the release. A commit with no associated pull request (a direct
-  push) is graded on its own.
+`scripts/pr_title_gate.py` on `pull_request` — including **`edited`**, so editing a title re-grades
+it — reading the real title from the event payload and the real commits from the API, and failing
+when either the title does not parse or the branch carries a `!` / `BREAKING CHANGE:` the title does
+not.
 
 The failure message names the bump your title would produce and the bump you probably wanted. It
-fails closed: an unreadable title, an unreachable API, a commit list at the API's 250-commit cap, or
-an event it does not recognise are all red, never a skip.
+fails closed: an unreadable title, an unreachable API, a nested or empty commit payload, and a
+commit list at the API's 250-commit cap are all red, never a skip.
 
-**What a red actually does, stated plainly: nothing, yet.** Neither half can block a merge, because
-branch protection is impossible on this repository — private without GitHub Pro, so
-`branches/main/protection` is 404 and rulesets are 403. Both are red X's a human has to read. The
-`push` half in particular does **not** block `release-plz.yml`, which handles the same `push: main`
-independently: a red gate does not stop the Release PR being opened, merged, or tagged. Its entire
-value is that it tells a human *in time* — the Release PR is a separate, manual merge, so a boundary
-caught on `push` is still correctable. Do not describe it as more than that. Both become real
-barriers when `flip-public-and-publish-to-pypi` makes the repository public and registers the
-required set.
+**What a red actually does, stated plainly: nothing, yet.** It cannot block a merge, because branch
+protection is impossible on this repository — private without GitHub Pro, so
+`branches/main/protection` is 404 and rulesets are 403. It is a red X a human has to read. It
+becomes a real barrier when `flip-public-and-publish-to-pypi` makes the repository public and
+registers the required set.
+
+⚠️ **One case where the PR title is NOT what release-plz reads**, measured 2026-07-29 and worth
+knowing because the sentence above is otherwise stated flatly. This repository is set to
+`squash_merge_commit_title: COMMIT_OR_PR_TITLE`, which uses the **commit's** subject when the pull
+request has **exactly one commit**, and falls back to the PR title only when there is more than one.
+Measured across every **merged** pull request on this repository: #5/#7/#9/#15 have 4 commits, #11
+has 6, #13 and **#17** have 3 — never one, so the fallback to the PR title fired every time,
+including the one that mispriced. (Counted on merged PRs deliberately: an open PR's commit count
+still moves, so it is not evidence.)
+On a single-commit pull request the gate grades the title while release-plz reads the commit
+subject, so the gate is **over-strict** there: a false red is possible, a false green is not. It
+errs safe, which is why it is documented rather than fixed.
 
 **Accepted residuals — recorded, not overlooked:**
 
-- **The `push` check grades HEAD only.** A push carrying several commits is graded by its tip, so a
-  mispriced commit followed by a clean one goes green while release-plz reads the whole range.
-  Grading the range needs `github.event.before`, which is all-zeros on branch creation. Every merge
-  this repository makes — squash, and the Release PR — is a single commit, which is why this is
-  accepted rather than closed.
-- **The gate compares declarations, never the API itself.** See the two limits below.
+- **Nothing tests the workflow YAML.** A `|| true` appended to the invocation, a job- or step-level
+  `if:`, or a dropped `set -o pipefail` disables the gate and no test in this repository notices. A
+  YAML-parsing suite that caught all of those existed and was **deliberately removed** to keep this
+  feature small, along with the `pyyaml` dependency it needed. The mitigation is that
+  `release-contract.yml` is ~100 lines and changes to it are visible in a pull request diff — read
+  it at review time.
+- **There is no post-merge check.** One was built, on `push: main`, grading the subject that
+  actually landed — because GitHub's squash dialog lets whoever merges edit the subject after the
+  gate has passed. It was removed: it could not **block** anything (no branch protection, and
+  `release-plz.yml` fires on the same `push: main` independently), so its red was advice arriving
+  after the release was already priced. **The residual is real**: a subject edited in the merge
+  dialog is graded by nothing. Check the squash subject before you confirm the merge.
 
 **Two things it deliberately cannot do**, so nobody reads more into a green than is there:
 
@@ -92,8 +98,7 @@ required set.
 - **It runs the pull request's own code**, like every other job here — a pull request may edit the
   gate to `exit 0` in the same commit that breaks the contract. That is a property of CI, not of
   this gate; the mitigations are branch protection and reading the diff, and branch protection is
-  measured impossible on this repository today (see below). Both are owned by the
-  `flip-public-and-publish-to-pypi` task.
+  measured impossible on this repository today. Owned by `flip-public-and-publish-to-pypi`.
 
 ### The bump table — measured, both halves
 
@@ -268,9 +273,8 @@ A ninth check, `release-contract`, lives in its **own workflow file** rather tha
 "What decides the version number" above. It needs a `pull_request: types: [… edited]` trigger, and
 `edited` also fires on pull-request *body* edits, so putting it on `ci.yml`'s shared trigger would
 re-run all eight jobs — including the 25-minute `coverage` — every time somebody fixes a typo in a
-description. Its guards are unit tested by `tests/unit/test_pr_title_gate.py` under `make test`,
-including the workflow file itself: no job-level `if:`, no `paths:`, `set -euo pipefail` kept and no
-`|| true` appended, all asserted by parsing the YAML.
+description. The gate's logic is unit tested by `tests/unit/test_pr_title_gate.py` under
+`make test`; **the workflow file itself is not** — see "Accepted residuals" above.
 
 **None of them is enforced by branch protection today — not one.** This paragraph used to say that
 `lint`, `type` and `test` were required; that was measured false on 2026-07-29:
@@ -287,8 +291,8 @@ of making the repository public, and it is owned by the `flip-public-and-publish
 The same is true of `release-contract`, and it is the other thing the merge button does not tell
 you: a red `release-contract` is a warning today and becomes a barrier the moment protection is
 registered. Until then, a mispriced release is one ignored red X away — which is precisely how
-`v0.3.4` happened, when there was no X at all. Its `push: main` half is what still fires *after* an
-ignored X, and that is why it exists.
+`v0.3.4` happened, when there was no X at all. Nothing fires after the merge; see "Accepted
+residuals" above.
 
 `make rust.fmt` and `make lint.fix` are the fixing counterparts. `make help` lists everything.
 

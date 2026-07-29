@@ -23,9 +23,15 @@ Everything here grades the ARTIFACT: the real title string and the real commit m
 the gate reads a value the author or the workflow summarises for it — that is the recurring defect
 of this epic, and `TestTheGateReadsTheArtifactAndFailsClosed` is where it is held.
 
-`TestTheGuardIsWiredIntoTheEntryPoint` runs the script the way `.github/workflows/ci.yml` runs it,
-because a guard reachable only through a function call can be deleted from `main` with every other
-test in this file still passing.
+`TestTheGuardIsWiredIntoTheEntryPoint` runs the script the way
+`.github/workflows/release-contract.yml` runs it, because a guard reachable only through a function
+call can be deleted from `main` with every other test in this file still passing.
+
+⚠️ What is NOT guarded here, deliberately: the workflow YAML itself. A `|| true`, a job- or
+step-level `if:`, or a dropped `set -o pipefail` disables the gate and no test in this repository
+notices. The YAML-parsing suite that caught those was removed with the post-merge check to keep this
+feature small — an accepted trade, recorded in CONTRIBUTING.md under "Accepted residuals". The
+workflow is 102 lines; read it at review time.
 
 Run: make test
 """
@@ -37,7 +43,6 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, ClassVar
 
 import pytest
 from pr_title_gate import (
@@ -45,7 +50,6 @@ from pr_title_gate import (
     KNOWN_TYPES,
     Subject,
     bump_for,
-    grade_merged_commit,
     grade_pull_request,
     message_is_breaking,
     parse_subject,
@@ -310,14 +314,7 @@ class TestTheGuardIsWiredIntoTheEntryPoint:
         if title is not None:
             env["PR_TITLE"] = title
         return subprocess.run(
-            [
-                sys.executable,
-                str(REPO_ROOT / "scripts" / "pr_title_gate.py"),
-                "--event",
-                "pull_request",
-                "--commits",
-                str(commits_path),
-            ],
+            [sys.executable, str(REPO_ROOT / "scripts" / "pr_title_gate.py"), "--commits", str(commits_path)],
             capture_output=True,
             text=True,
             cwd=REPO_ROOT,
@@ -354,8 +351,6 @@ class TestTheGuardIsWiredIntoTheEntryPoint:
             [
                 sys.executable,
                 str(REPO_ROOT / "scripts" / "pr_title_gate.py"),
-                "--event",
-                "pull_request",
                 "--commits",
                 str(tmp_path / "does-not-exist.json"),
             ],
@@ -385,14 +380,7 @@ class TestTheGuardIsWiredIntoTheEntryPoint:
         commits_path.write_text(json.dumps([[{"commit": {"message": "fix!: a break"}}]]), encoding="utf-8")
 
         result = subprocess.run(
-            [
-                sys.executable,
-                str(REPO_ROOT / "scripts" / "pr_title_gate.py"),
-                "--event",
-                "pull_request",
-                "--commits",
-                str(commits_path),
-            ],
+            [sys.executable, str(REPO_ROOT / "scripts" / "pr_title_gate.py"), "--commits", str(commits_path)],
             capture_output=True,
             text=True,
             cwd=REPO_ROOT,
@@ -405,28 +393,6 @@ class TestTheGuardIsWiredIntoTheEntryPoint:
         assert "list indices" not in result.stderr, (
             "this is the accidental failure the deleted guard leaves behind, not the guard firing"
         )
-
-
-# The squashed merge commit that PR #17 actually produced, read out of `git log -1 033ceeb` on
-# 2026-07-29. The subject carries GitHub's ` (#17)` suffix, and the branch's three commit subjects
-# survive as `* ` bullets in the body — including the `fix!:` at body line 77, which is the marker
-# that existed, survived the merge, and was read by nothing. Reproduced verbatim rather than fetched
-# with `git` at test time: `actions/checkout` clones to depth 1, so this commit does not exist in
-# CI's checkout and a test that shelled out to git would fail there for the wrong reason.
-MERGED_17_SUBJECT = "Audit the Rust code with /rust-skills, and close what it found (#17)"
-MERGED_17_BODY = """\
-* fix: normalise an exclude glob before judging it, and gate rustdoc
-
-The /rust-skills audit of `src/**/*.rs`, `build.rs` and `tests/*.rs` against the
-skill's 265 rules across 26 categories.
-
-* fix!: stop on a closed pipe, and refuse a backslash in `exclude`
-
-This is a fix rather than a break: the entry was never honoured, so no working
-configuration changes meaning.
-
-* fix: report an unwritable stdout instead of exiting in silence
-"""
 
 
 class TestTheGrammarMatchesWhatReleasePlzActuallyParses:
@@ -568,390 +534,3 @@ class TestATruncatedCommitListIsRefused:
 
     def test_a_list_one_short_of_the_cap_is_graded_normally(self) -> None:
         assert grade_pull_request("fix: a valid title", ["fix: clean"] * (API_COMMIT_CAP - 1)) == []
-
-
-class TestTheSubjectThatActuallyLandedOnMainIsGraded:
-    """
-    F1.2/G1 — the difference between grading a proxy and grading the artifact.
-
-    A pre-merge title check grades what the title WAS. GitHub's squash dialog lets the merger edit
-    the subject at the moment of merge, and no branch protection exists here to stop them, so the
-    string release-plz finally parses can differ from every string the pre-merge gate ever saw.
-
-    ⚠️ The first version of this reconstructed the branch's commits from the `* ` bullets the squash
-    leaves in the BODY — and that was the same defect one box over: the body is edited in the same
-    dialog as the subject. Measured on the real merge: deleting the bullets, or emptying the body,
-    let the breaking change through at rc=0. The evidence now comes from the API — the landed SHA
-    is resolved to its pull request and that pull request's REAL commits are graded — which is the
-    same source the `pull_request` path already trusts and is not editable from the merge dialog.
-
-    A direct push with no associated pull request is not a refusal: there is no branch to compare,
-    so the landed commit is graded on its own, which is the whole artifact in that case.
-    """
-
-    def test_the_real_merged_033ceeb_is_rejected(self) -> None:
-        failures = grade_merged_commit(MERGED_17_SUBJECT, MERGED_17_BODY, PR_17_COMMITS)
-
-        assert failures, "the commit that actually shipped v0.3.4 as a patch was graded as fine"
-
-    def test_a_valid_subject_over_the_same_branch_is_still_rejected(self) -> None:
-        """The squash-dialog exploit: a title that passed the pre-merge gate, edited at merge."""
-        assert grade_merged_commit("fix: audit the Rust code (#17)", MERGED_17_BODY, PR_17_COMMITS)
-
-    def test_the_bullets_being_deleted_from_the_body_changes_nothing(self) -> None:
-        """
-        G1, and it is the whole point of the rewrite. The merger controls the body as well as the
-        subject, so a reconstruction that reads the body can be disarmed in the same keystroke.
-        With the evidence taken from the API, an empty body is still red.
-        """
-        assert grade_merged_commit("fix: audit the Rust code (#17)", "", PR_17_COMMITS)
-        assert grade_merged_commit("fix: audit the Rust code (#17)", "no bullets here", PR_17_COMMITS)
-
-    def test_a_bullet_shaped_line_in_prose_is_no_longer_a_false_red(self) -> None:
-        """
-        The mirror of the above, and the reason no bullet parser survives: an indented `* fix!: …`
-        inside an example block used to be read as a declaration. The API says what the branch
-        actually contained, so prose cannot fake one either way.
-        """
-        body = "Example of what NOT to write:\n\n    * fix!: stop on a closed pipe\n"
-
-        assert grade_merged_commit("ci: gate the PR title (#19)", body, ["ci: gate the PR title"]) == []
-
-    def test_declaring_the_break_in_the_landed_subject_is_accepted(self) -> None:
-        assert grade_merged_commit("fix!: audit the Rust code (#17)", MERGED_17_BODY, PR_17_COMMITS) == []
-
-    def test_a_release_commit_is_accepted(self) -> None:
-        """`chore: release v0.3.4 (#18)` is what release-plz's own merge looks like."""
-        assert grade_merged_commit("chore: release v0.3.4 (#18)", "", ["chore: release v0.3.4"]) == []
-
-
-class TestADirectPushWithNoPullRequestIsGradedOnItsOwn:
-    """
-    G1's second case. `commits/{sha}/pulls` legitimately returns nothing for a commit pushed
-    straight to `main`, and that is not an API failure — there is simply no branch to compare
-    against. The landed commit is then the entire artifact: its subject must parse, and a
-    line-anchored `BREAKING CHANGE:` footer in its own body must be declared in that subject.
-    """
-
-    def test_a_non_conventional_direct_push_is_rejected(self) -> None:
-        assert grade_merged_commit("Fixed the thing", "", None)
-
-    def test_a_clean_direct_push_is_accepted(self) -> None:
-        assert grade_merged_commit("fix: stop on a closed pipe", "some prose", None) == []
-
-    def test_a_footer_in_its_own_body_still_demands_a_bang(self) -> None:
-        body = "\nBREAKING CHANGE: the exit codes changed\n"
-
-        assert grade_merged_commit("fix: stop on a closed pipe", body, None)
-        assert grade_merged_commit("fix!: stop on a closed pipe", body, None) == []
-
-    def test_a_breaking_subject_is_accepted(self) -> None:
-        assert grade_merged_commit("feat!: a deliberate break", "", None) == []
-
-
-class TestThePushPathIsWiredIntoTheEntryPoint:
-    """
-    The `push: main` half of the entry point, run the way the workflow runs it: the commit message
-    arrives in a file written by `git log -1 --format=%B`, and the event is named explicitly.
-    """
-
-    def run_script(
-        self, message: str, tmp_path: Path, commits: list[str] | None = None
-    ) -> subprocess.CompletedProcess[str]:
-        message_path = tmp_path / "merged.txt"
-        message_path.write_text(message, encoding="utf-8")
-        argv = [
-            sys.executable,
-            str(REPO_ROOT / "scripts" / "pr_title_gate.py"),
-            "--event",
-            "push",
-            "--merged-message",
-            str(message_path),
-        ]
-        if commits is not None:
-            # What the workflow writes after resolving the landed SHA to its pull request. Absent
-            # means the resolution found none — a direct push.
-            commits_path = tmp_path / "merged-commits.json"
-            commits_path.write_text(json.dumps([{"commit": {"message": m}} for m in commits]), encoding="utf-8")
-            argv += ["--commits", str(commits_path)]
-        return subprocess.run(
-            argv, capture_output=True, text=True, cwd=REPO_ROOT, env={"PATH": "/usr/bin:/bin"}, check=False
-        )
-
-    def test_the_real_merged_033ceeb_exits_non_zero(self, tmp_path: Path) -> None:
-        result = self.run_script(f"{MERGED_17_SUBJECT}\n\n{MERGED_17_BODY}", tmp_path, commits=PR_17_COMMITS)
-
-        assert result.returncode != 0, "the commit that actually shipped v0.3.4 as a patch was accepted"
-        assert "fix!: stop on a closed pipe" in result.stderr
-
-    def test_an_emptied_body_does_not_disarm_it(self, tmp_path: Path) -> None:
-        """G1 end to end: the merger deletes the bullets, the API still says what the branch was."""
-        result = self.run_script(f"{MERGED_17_SUBJECT}\n\n", tmp_path, commits=PR_17_COMMITS)
-
-        assert result.returncode != 0
-        assert "fix!: stop on a closed pipe" in result.stderr
-
-    def test_a_direct_push_with_no_pull_request_is_still_graded(self, tmp_path: Path) -> None:
-        result = self.run_script("Fixed the thing\n\nno type, no pull request\n", tmp_path)
-
-        assert result.returncode != 0, "a direct push to main was not graded at all"
-
-    def test_a_clean_merge_exits_zero(self, tmp_path: Path) -> None:
-        result = self.run_script("ci: gate the PR title (#19)\n\nSome prose.\n", tmp_path)
-
-        assert result.returncode == 0, result.stderr
-
-    def test_a_missing_merged_message_exits_non_zero(self, tmp_path: Path) -> None:
-        result = subprocess.run(
-            [sys.executable, str(REPO_ROOT / "scripts" / "pr_title_gate.py"), "--event", "push"],
-            capture_output=True,
-            text=True,
-            cwd=REPO_ROOT,
-            env={"PATH": "/usr/bin:/bin"},
-            check=False,
-        )
-
-        assert result.returncode != 0
-
-    @pytest.mark.parametrize("event", ["merge_group", "workflow_dispatch", "schedule", ""])
-    def test_an_unrecognised_event_is_refused(self, event: str, tmp_path: Path) -> None:
-        """
-        F5, and it is defect class 2 — a guard switched off by an input shape nobody anticipated.
-
-        The previous wiring said "if this is not a `pull_request`, exit 0", so a `merge_group` event
-        — or any trigger a later task adds — reported SUCCESS having graded nothing at all. The
-        allow-list inverts that: the two known events are handled, everything else is refused.
-        """
-        message_path = tmp_path / "merged.txt"
-        message_path.write_text("fix: whatever\n", encoding="utf-8")
-        result = subprocess.run(
-            [
-                sys.executable,
-                str(REPO_ROOT / "scripts" / "pr_title_gate.py"),
-                "--event",
-                event,
-                "--merged-message",
-                str(message_path),
-            ],
-            capture_output=True,
-            text=True,
-            cwd=REPO_ROOT,
-            env={"PATH": "/usr/bin:/bin"},
-            check=False,
-        )
-
-        assert result.returncode != 0, f"the event {event!r} was accepted and graded nothing"
-
-
-class TestTheWorkflowCannotDisableItsOwnGate:
-    """
-    F3. Every assertion above runs the SCRIPT; none of them can see the workflow that calls it, and
-    a gate is only as real as its invocation.
-
-    Deleting the invocation is caught by the last test here, but deletion was never the cheap
-    attack. `|| true` appended, `set -o pipefail` dropped, `if: false` added to the job — each one
-    leaves the script perfect, the workflow syntactically valid, and the gate dead. Those are the
-    four this class pins, and every one of them is mutation-proved.
-
-    Parsed as YAML, not substring-matched. That is why `pyyaml` is now in the `test` dependency
-    group: the previous substring assertion looked for `scripts/pr_title_gate.py`, which also
-    appears in a `name:` and in three comment lines, so replacing the command with `echo` left the
-    test GREEN — satisfied by prose about the guard it no longer had. `scripts/coverage_report.py`
-    set this precedent: parse the artifact, do not pattern-match near it.
-    """
-
-    GATE_WORKFLOW = "release-contract.yml"
-    # The workflows whose jobs are gates. `release-plz.yml` is excluded deliberately: it is a
-    # release mechanism, not a check, and its jobs legitimately carry conditions.
-    GATE_WORKFLOWS = ("ci.yml", "release-contract.yml")
-
-    def workflow(self, name: str) -> dict[Any, Any]:
-        import yaml
-
-        loaded: Any = yaml.safe_load((REPO_ROOT / ".github" / "workflows" / name).read_text(encoding="utf-8"))
-        assert isinstance(loaded, dict)
-        return loaded
-
-    def triggers(self, name: str) -> dict[str, Any]:
-        """
-        Return a workflow's `on:` block.
-
-        Looked up under `True`, not `"on"`. YAML 1.1 — which is what PyYAML implements —
-        resolves the unquoted plain scalar `on` to the BOOLEAN true, so `workflow["on"]` raises
-        `KeyError` on a file that plainly reads `on:`. Both spellings are accepted here so a
-        future quoted `"on":` does not silently skip these assertions.
-        """
-        loaded = self.workflow(name)
-        block: Any = loaded[True] if True in loaded else loaded["on"]
-        assert isinstance(block, dict)
-        return block
-
-    def gate_steps(self) -> list[dict[str, Any]]:
-        jobs: Any = self.workflow(self.GATE_WORKFLOW)["jobs"]
-        return [step for job in jobs.values() for step in job["steps"]]
-
-    def invocations(self) -> list[str]:
-        """Return the shell bodies that actually run the gate."""
-        return [step["run"] for step in self.gate_steps() if "scripts/pr_title_gate.py" in str(step.get("run", ""))]
-
-    @pytest.mark.parametrize("name", GATE_WORKFLOWS)
-    def test_no_gate_job_carries_a_condition_or_a_path_filter(self, name: str) -> None:
-        """
-        AC3, as a test rather than as a parse someone ran by hand once.
-
-        A SKIPPED check does not satisfy a required status check — it stays pending — so a job-level
-        `if:` or `paths:` wedges the pull request at "Expected — waiting for status to be reported"
-        on the day branch protection is enabled, with CI entirely green.
-        """
-        jobs: Any = self.workflow(name)["jobs"]
-
-        assert jobs, f"{name} declares no jobs"
-        for job_name, job in jobs.items():
-            for key in ("if", "paths", "paths-ignore"):
-                assert key not in job, f"{name}: job `{job_name}` carries `{key}:`"
-
-    def test_both_paths_are_actually_invoked(self) -> None:
-        """
-        BOTH, named individually. Asserting only that *an* invocation exists is not enough: this
-        workflow runs the gate twice, so deleting the whole `pull_request` branch left the `push`
-        branch satisfying the assertion and the mutation came back GREEN. The two are separate
-        guarantees — one grades the proxy before the merge, the other the artifact after it — and a
-        test that cannot tell them apart protects neither.
-        """
-        joined = "\n".join(self.invocations())
-
-        assert joined, "no step in the gate workflow runs scripts/pr_title_gate.py"
-        assert "--event pull_request" in joined, "the pre-merge title check is no longer invoked"
-        assert "--event push" in joined, "the merged-subject check is no longer invoked"
-
-    def test_every_invocation_runs_under_pipefail(self) -> None:
-        """
-        Without `pipefail` the `gh api … | jq …` pipe reports the exit status of `jq`, so an API
-        failure leaves an empty-but-valid commit list and the shell carries on. The script's own
-        empty-list refusal catches that one — but `set -e` is what stops the step at the first
-        failure at all, and dropping either is a one-word edit.
-        """
-        for body in self.invocations():
-            assert "set -euo pipefail" in body, f"an invocation lost `set -euo pipefail`:\n{body}"
-
-    def test_no_invocation_has_an_escape_hatch(self) -> None:
-        """
-        `|| true`, `|| :`, `|| exit 0` — any trailing disjunction turns a red gate green while
-        leaving every other test in this file passing. This is the cheapest possible way to disable
-        the gate and the hardest to notice in review.
-
-        ⚠️ Backslash continuations are joined FIRST, and that is not tidiness. The first version of
-        this test scanned raw lines and asked whether a line mentioning `pr_title_gate.py` carried
-        `||` — and the real invocation spans two physical lines, so appending `|| true` to the
-        continuation put the escape hatch on a line that names neither the script nor `gh api`. The
-        mutation came back GREEN. A shell guard has to be read in shell's units, not in YAML's.
-        """
-        for body in self.invocations():
-            logical = body.replace("\\\n", " ")
-            for line in logical.splitlines():
-                if "pr_title_gate.py" in line or "gh api" in line:
-                    assert "||" not in line, f"an invocation carries an escape hatch:\n{line}"
-
-    # Every input the gate branches on must come from the event payload, spelled exactly. A literal
-    # here — `EVENT_NAME: pull_request` — is not a typo, it is the guard being switched off from
-    # the line above it, and it leaves every invocation assertion satisfied.
-    PAYLOAD_ENV: ClassVar[dict[str, str]] = {
-        "EVENT_NAME": "${{ github.event_name }}",
-        "REPO": "${{ github.repository }}",
-        "PR_NUMBER": "${{ github.event.pull_request.number }}",
-        "PR_TITLE": "${{ github.event.pull_request.title }}",
-    }
-
-    def test_every_branching_input_comes_from_the_event_payload(self) -> None:
-        """
-        G4. Parsed, and compared against the exact expression — not merely "is a `${{ }}` of some
-        kind", because `${{ inputs.title }}` is also one of those and is a self-report.
-        """
-        for step in self.gate_steps():
-            env: dict[str, Any] = step.get("env") or {}
-            for key, expected in self.PAYLOAD_ENV.items():
-                if key in env:
-                    assert env[key] == expected, f"`{key}` is {env[key]!r}, not the payload value"
-        declared = {k: v for step in self.gate_steps() for k, v in (step.get("env") or {}).items()}
-        for key, expected in self.PAYLOAD_ENV.items():
-            assert declared.get(key) == expected, f"`{key}` is no longer wired to the event payload"
-
-    def test_no_step_can_be_skipped_or_have_its_failure_ignored(self) -> None:
-        """
-        G4, and it is N11's lesson one layer down: closing the JOB level left the STEP level open.
-
-        `continue-on-error: true` makes the step fail and the job report success. A step-level `if:`
-        makes it not run at all. Either one leaves the invocation exactly where the other tests look
-        for it, and the check goes green having graded nothing.
-        """
-        jobs: Any = self.workflow(self.GATE_WORKFLOW)["jobs"]
-
-        for job_name, job in jobs.items():
-            for step in job["steps"]:
-                name = step.get("name", step.get("uses", "?"))
-                for key in ("if", "continue-on-error"):
-                    assert key not in step, f"{job_name} / `{name}` carries `{key}:`"
-
-    def test_a_verdict_on_main_is_not_cancellable_by_a_later_push(self) -> None:
-        """
-        G2. `cancel-in-progress: true` lets a later clean push to `main` cancel the bad push's run,
-        so the red vanishes while release-plz's jobs carry on and the patch-priced Release PR
-        survives. An absent red reads as "fine".
-
-        ci.yml cancels for a good reason — a stale CODE result is worthless. A stale
-        release-contract verdict is the only record that a mispriced subject landed.
-        """
-        concurrency: Any = self.workflow(self.GATE_WORKFLOW).get("concurrency") or {}
-
-        assert concurrency.get("cancel-in-progress") is not True, (
-            "a later push must not be able to cancel away the record that a mispriced subject landed"
-        )
-
-    def test_the_push_path_takes_its_evidence_from_the_api(self) -> None:
-        """
-        G1. The branch's declarations must come from `commits/<sha>/pulls`, not from the squash
-        body — the body is edited in the same dialog as the subject, so a body-derived check is
-        disarmed by the same keystroke that misprices the release.
-
-        ⚠️ Fetching the evidence and USING it are two assertions, not one. The first version of this
-        checked only that the `commits/<sha>/pulls` call was still in the shell — so replacing
-        `--commits …` with a second `--merged-message …` left the API call intact, the gate grading
-        with no branch evidence at all, and this test GREEN. That is the same defect as asserting
-        that *an* invocation exists when the workflow makes two.
-        """
-        joined = "\n".join(self.invocations())
-        logical = [line for line in joined.replace("\\\n", " ").splitlines() if "--event push" in line]
-
-        assert "commits/${GITHUB_SHA}/pulls" in joined, (
-            "the push path no longer resolves the landed SHA to its pull request, so its evidence "
-            "is back to being merger-editable"
-        )
-        assert any("--commits" in line for line in logical), (
-            "the push path fetches the pull request's commits and then does not pass them to the "
-            "gate — the evidence is gathered and thrown away"
-        )
-        assert any("--commits" not in line for line in logical), (
-            "the direct-push branch (no associated pull request) is gone; it must still be graded"
-        )
-
-    def test_the_gate_fires_when_a_title_is_edited(self) -> None:
-        """
-        F1.1, and it is the finding that made this fix round necessary.
-
-        `on: pull_request:` with no `types:` fires on `opened, synchronize, reopened` ONLY. Editing
-        a title fires nothing, so the check keeps reporting the verdict it reached about the
-        PREVIOUS title — proved live on PR #19, where changing the title produced no new run at all.
-        Reversed, that is the exploit: pass the gate with a good title, edit it to a mispricing one,
-        merge on a stale green.
-        """
-        on = self.triggers(self.GATE_WORKFLOW)
-
-        assert "edited" in on["pull_request"]["types"], (
-            "a title edit must re-run the gate, or its verdict describes a title that no longer exists"
-        )
-
-    def test_the_gate_also_grades_what_landed_on_main(self) -> None:
-        """F1.2 — the pre-merge check is a proxy; the squash subject on `main` is the artifact."""
-        on = self.triggers(self.GATE_WORKFLOW)
-
-        assert on["push"]["branches"] == ["main"]

@@ -21,24 +21,20 @@ name: release contract
 # is budgeted 25 minutes — every time somebody fixes a typo in a description. Splitting the trigger
 # costs one file and keeps that blast radius to the one cheap job that actually cares.
 #
-# ─── Two triggers, because a pre-merge check is a proxy and the merge can edit the artifact ───
+# ─── What this deliberately does NOT do ───
 #
-# `pull_request` grades the title BEFORE the merge. That is necessary and not sufficient: GitHub's
-# squash dialog lets whoever merges edit the subject at that moment, and no branch protection exists
-# on this repository to prevent it (private, no Pro: `branches/main/protection` is 404). So the
-# string release-plz finally parses can differ from every string the pre-merge check ever saw.
-#
-# `push: main` closes that by grading the subject that ACTUALLY landed, which is the thing
-# release-plz reads. It fires after the merge but BEFORE the Release PR is merged — a separate,
-# manual step — so a boundary caught there is still correctable.
+# It grades the title BEFORE the merge, and that is all. GitHub's squash dialog lets whoever merges
+# edit the subject at that moment, so a post-merge check on `push: main` was built and then removed:
+# it could not BLOCK anything (branch protection is impossible on a private repo without Pro, and
+# `release-plz.yml` fires on the same `push: main` independently), so its red was advice arriving
+# after the release was already priced. See CONTRIBUTING.md, "Accepted residuals".
 #
 # ─── The standing rules this file inherits from ci.yml ───
 #
 # No `paths:` and no `if:` on any job: a SKIPPED check does not satisfy a required status check, so
-# a filter added today wedges the pull request on the day branch protection is enabled. Both rules,
-# plus `set -euo pipefail` and the absence of any `|| true` escape hatch, are asserted by
-# `TestTheWorkflowCannotDisableItsOwnGate` in `tests/unit/test_pr_title_gate.py` — parsed as YAML,
-# because a substring assertion about this file was already fooled once by its own comments.
+# a filter added today wedges the pull request on the day branch protection is enabled. ⚠️ Nothing
+# TESTS that any more — the YAML guard suite was removed with the push path. Read this file at
+# review time; it is short on purpose.
 #
 # Every `uses:` is SHA-pinned with a version comment, like every action in ci.yml.
 
@@ -50,19 +46,13 @@ on:
     # `edited` is load-bearing — see above. The other three are the default set, restated because
     # naming `types:` at all replaces the default rather than adding to it.
     types: [opened, synchronize, reopened, edited]
-  push:
-    branches: [main]
 
+# Keyed on the ref so a re-push or a second title edit cancels the stale run instead of racing it,
+# exactly as ci.yml does. Safe here because the verdict is about the CURRENT title: a superseded run
+# graded a string that no longer exists.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  # ⚠️ `false`, and this is the ONE place this workflow deliberately differs from ci.yml.
-  #
-  # ci.yml cancels in progress because a stale *code* result is worthless — a re-push replaces the
-  # code the run was grading. A stale *release-contract* verdict is the opposite: it is the only
-  # record that a mispriced subject landed on `main`. With cancellation on, a later clean push to
-  # `main` cancels the bad push's run, the red disappears, and an absent red reads as "fine" —
-  # while release-plz's own jobs are untouched and the patch-priced Release PR survives.
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 env:
   PYTHON_VERSION: "3.12"
@@ -98,53 +88,15 @@ jobs:
       - name: scripts/pr_title_gate.py
         env:
           GH_TOKEN: ${{ github.token }}
-          EVENT_NAME: ${{ github.event_name }}
           REPO: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_TITLE: ${{ github.event.pull_request.title }}
         run: |
           set -euo pipefail
-          case "${EVENT_NAME}" in
-            pull_request)
-              # The REAL commits of the pull request, from the API, never a summary of them.
-              # `--slurp` returns an array of PAGES rather than of commits, and `jq 'add'` is what
-              # flattens it; `pipefail` makes a failure anywhere in this pipe red, and the script
-              # refuses a payload that is still nested.
-              gh api "repos/${REPO}/pulls/${PR_NUMBER}/commits" --paginate --slurp \
-                | jq 'add' > "${RUNNER_TEMP}/commits.json"
-              uv run --no-project python3 scripts/pr_title_gate.py \
-                --event pull_request --commits "${RUNNER_TEMP}/commits.json"
-              ;;
-            push)
-              # What release-plz will actually parse: the subject that landed on `main`.
-              git log -1 --format=%B > "${RUNNER_TEMP}/merged.txt"
-              # The branch's declarations come from the API, NOT from the squash body. The body is
-              # edited in the same dialog box as the subject, so reconstructing the branch from its
-              # `* ` bullets could be disarmed in the same keystroke that mispriced the release —
-              # measured: bullets deleted, or an empty body, and the breaking change escaped.
-              # Resolving the landed SHA to its pull request reaches evidence the merger does not
-              # control. An empty array here is legitimate (a direct push has no pull request); an
-              # API failure is not, and `pipefail` stops the step.
-              gh api "repos/${REPO}/commits/${GITHUB_SHA}/pulls" --paginate --slurp \
-                | jq 'add' > "${RUNNER_TEMP}/pulls.json"
-              PR_FOR_SHA="$(jq -r '.[0].number // empty' "${RUNNER_TEMP}/pulls.json")"
-              if [ -n "${PR_FOR_SHA}" ]; then
-                gh api "repos/${REPO}/pulls/${PR_FOR_SHA}/commits" --paginate --slurp \
-                  | jq 'add' > "${RUNNER_TEMP}/merged-commits.json"
-                uv run --no-project python3 scripts/pr_title_gate.py \
-                  --event push --merged-message "${RUNNER_TEMP}/merged.txt" \
-                  --commits "${RUNNER_TEMP}/merged-commits.json"
-              else
-                uv run --no-project python3 scripts/pr_title_gate.py \
-                  --event push --merged-message "${RUNNER_TEMP}/merged.txt"
-              fi
-              ;;
-            *)
-              # An ALLOW-LIST. The previous shape was "if not a pull_request, exit 0", so a
-              # `merge_group` event — or any trigger a later task adds — reported success having
-              # graded nothing. An unexpected input shape must never be the thing that switches a
-              # guard off. The script's `--event` choices refuse it a second time.
-              echo "release-contract: refusing to run on an unrecognised event '${EVENT_NAME}'" >&2
-              exit 1
-              ;;
-          esac
+          # The REAL commits of the pull request, from the API, never a summary of them. `--slurp`
+          # returns an array of PAGES rather than of commits, and `jq 'add'` is what flattens it;
+          # `pipefail` makes a failure anywhere in this pipe red, and the script refuses a payload
+          # that is still nested.
+          gh api "repos/${REPO}/pulls/${PR_NUMBER}/commits" --paginate --slurp \
+            | jq 'add' > "${RUNNER_TEMP}/commits.json"
+          uv run --no-project python3 scripts/pr_title_gate.py --commits "${RUNNER_TEMP}/commits.json"
