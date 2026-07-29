@@ -54,7 +54,6 @@
 //! current branch), and `SOURCE_DATE_EPOCH`. Miss the ref file and `--version` reports the date of
 //! whatever commit was checked out the last time the script happened to run.
 
-use std::path::Path;
 use std::process::Command;
 
 fn main() {
@@ -115,32 +114,46 @@ fn source_date_epoch() -> Option<String> {
 
 /// The files whose contents decide what `git log -1` answers, so cargo re-runs when they move.
 ///
-/// `.git/HEAD` covers a checkout; the ref it names covers a commit on the current branch. A
-/// detached HEAD has the SHA in `.git/HEAD` itself, so the second path is simply absent.
+/// `HEAD` covers changing branch or detaching; the ref `HEAD` names covers committing on the branch
+/// you are already on. Both halves are needed and neither substitutes for the other — on an
+/// attached branch `HEAD` is the constant text `ref: refs/heads/<branch>` and does **not** change
+/// when you commit.
 ///
-/// `rev-parse --absolute-git-dir` rather than a literal `.git`: in a linked worktree `.git` is a
-/// *file*, and the real HEAD lives in `<main>/.git/worktrees/<name>/HEAD`. Hard-coding the
-/// directory would have watched a file that never changes and reported a stale date in exactly the
-/// setup this epic's sub-agents work in.
+/// ⚠️ **Every path here comes from `git rev-parse --git-path`, and joining onto a git directory by
+/// hand is the bug this replaced.** In a linked worktree the two halves live in *different*
+/// directories: `HEAD` is per-worktree (`<main>/.git/worktrees/<name>/HEAD`) while
+/// `refs/heads/<branch>` is in the **common** directory (`<main>/.git/refs/heads/<branch>`).
+/// Building `<absolute-git-dir>/<ref>` therefore produced a path that does not exist, the ref was
+/// silently dropped, only the never-changing `HEAD` was watched, and the date went stale and stayed
+/// stale — measured in a real linked worktree on a real attached branch. `--git-path` is the
+/// command that knows that mapping; it is right in a plain checkout, a worktree and a bare repo.
 ///
-/// An empty answer means the date is `unknown` and can never become anything else without an edit
-/// to this file — which `rerun-if-changed=build.rs` covers — so there is nothing left to watch.
+/// **The ref path is emitted even when no file is there yet, and that is deliberate.** A packed ref
+/// (`git gc`, a fresh clone) has no loose file until the next commit writes one, and `packed-refs`
+/// is *not* rewritten by that commit — so filtering on existence would drop the one path that is
+/// about to appear. Measured: cargo treats a watched path that is missing as permanently dirty
+/// ("the file `…` is missing"), which re-runs this script and recompiles the crate on every build.
+/// That is a real cost, it is bounded — it self-heals the moment the ref is unpacked — and it is
+/// the safe side of the trade: a spurious rebuild is noise, a stale `--version` is a lie. It also
+/// makes watching `packed-refs` redundant rather than merely unnecessary, which is why it is not
+/// here: while the ref is packed the missing path already forces a fresh answer every time.
+///
+/// An empty answer means there is no git here at all, so the date is `unknown`. Nothing is watched
+/// then, on purpose: the only path available would be a guess like `.git/HEAD`, which is missing,
+/// which by the measurement above would recompile the crate on **every** build of the published
+/// sdist forever. A checkout that gains a `.git` after being built needs one `touch build.rs`; the
+/// release path does not go through git at all and is covered by `rerun-if-env-changed`.
 fn git_inputs() -> Vec<String> {
-    let Some(git_dir) = git(&["rev-parse", "--absolute-git-dir"]) else {
+    let Some(head) = git(&["rev-parse", "--git-path", "HEAD"]) else {
         return Vec::new();
     };
-    let head = Path::new(&git_dir).join("HEAD");
-    if !head.is_file() {
-        return Vec::new();
-    }
 
-    let mut inputs = vec![head.display().to_string()];
-    // `--symbolic-full-name` is empty on a detached HEAD, which is the case with no ref file.
-    if let Some(reference) = git(&["symbolic-ref", "--quiet", "HEAD"]) {
-        let path = Path::new(&git_dir).join(&reference);
-        if path.is_file() {
-            inputs.push(path.display().to_string());
-        }
+    let mut inputs = vec![head];
+    // Empty on a detached HEAD — where the SHA is in `HEAD` itself, so there is no ref to watch.
+    if let Some(reference) = git(&["symbolic-ref", "--quiet", "HEAD"])
+        && let Some(path) = git(&["rev-parse", "--git-path", &reference])
+    {
+        inputs.push(path);
     }
     inputs
 }

@@ -14,9 +14,10 @@ For output format, exit codes, and the JSON schema, see [cli-contract.md](cli-co
 | `TPX003` | One explanation repeated across comments and docstrings, reported once with every place it appears | Implemented |
 | `TPX004` | Comments that restate the following code | Reserved |
 
-`tooprolix --rules` prints this table, and the three columns are the same three strings — the CLI
-and this file render one array in `src/rules.rs`, so a description cannot be right in one of them
-and stale in the other. `Reserved` is what `TPX004` is; the paragraph below says why.
+`tooprolix --rules` prints these same three columns. The CLI renders them from one array in
+`src/rules.rs`; this table is written by hand, and a test (`the_rules_listing_agrees_with_every_documented_table`)
+compares the binary's output against the rows above, so the two cannot drift apart unnoticed.
+`Reserved` is what `TPX004` is; the paragraph below says why.
 
 ### Volume boundaries
 

@@ -44,8 +44,9 @@ release goes out, all of them move together:
   `docs/rules-and-configuration.md`, and the `status` field of `CATALOGUE` in `src/rules.rs`, which
   is what `tooprolix --rules` prints — and only after reference-corpus validation records the
   result. The three cannot be flipped separately:
-  `the_rules_listing_agrees_with_every_documented_table` in `tests/cli.rs` compares the binary's
-  stdout to both Markdown tables byte for byte, so changing one of the three reddens the suite;
+  `the_rules_listing_agrees_with_every_documented_table` in `tests/cli.rs` turns each line the
+  binary printed into a table row and requires the `| \`TPX…` rows of both Markdown files to be
+  exactly that list, in order, so changing one of the three reddens the suite;
 - verify every install and output example against the **published wheel**, not a local build.
 
 ## Run the gates before you push

@@ -697,6 +697,28 @@ mod tests {
             assert_eq!(documented.status, "Implemented");
         }
 
+        // Codes and statuses lining up is not enough: swapping the TPX001 and TPX002 *descriptions*
+        // and updating both Markdown copies to match left all six new tests passing while the tool
+        // documented the comment detector as the docstring one. The oracle is the kind-to-code
+        // mapping this module already owns, so a description is checked against the detector that
+        // actually runs under that code rather than against nothing.
+        for (kind, own, other) in [
+            (ProseKind::Comment, "comment", "docstring"),
+            (ProseKind::Docstring, "docstring", "comment"),
+        ] {
+            let code = Rule::volume_for(kind).code();
+            let documented = CATALOGUE
+                .iter()
+                .find(|entry| entry.code == code)
+                .unwrap_or_else(|| panic!("{code} runs but is not documented"));
+            let description = documented.description.to_lowercase();
+            assert!(
+                description.contains(own) && !description.contains(other),
+                "{code} detects {kind:?} blocks, but its description is about the other kind: {:?}",
+                documented.description
+            );
+        }
+
         let reserved = CATALOGUE[Rule::ALL.len()];
         assert_eq!(reserved.code, "TPX004");
         assert_eq!(reserved.status, "Reserved");

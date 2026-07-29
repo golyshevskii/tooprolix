@@ -3017,11 +3017,18 @@ fn the_marker_diagnostics_are_emitted_in_a_deterministic_order() {
 /// also the invariant `pyproject.toml`'s `dynamic = ["version"]` depends on: one owner of the
 /// number, no manual copies.
 ///
-/// The date is not compared to a value — there is nothing to compare it *to* that is not the same
-/// build script's answer — so it is pinned by **shape**: `unknown`, or an ISO date. Wall-clock is
-/// what Decisions #14 forbids, and a build script that fell back to `SystemTime::now()` would still
-/// pass this; what stops that is `--version` being byte-identical across two builds of one commit,
-/// which is AC2 and lives outside the test suite because it needs two builds.
+/// **The date gets exactly the same treatment, and git is its oracle.** It used to be pinned by
+/// *shape* — ten characters of digits and dashes — which graded nothing: a `commit_date()` that
+/// ignored git and returned the literal `"2024-03-01"` passed the whole suite, and so did a stale
+/// build whose date was two years wrong. Both were reproduced. `git log -1 --format=%cs` is an
+/// artifact this crate does not produce, so comparing the binary's bytes to it kills the literal,
+/// a fake `git` on `PATH` answering `2026-99-99`, an invalid civil date, and a build script that
+/// did not re-run — with one assertion instead of a two-build diff nobody runs in CI.
+///
+/// The three branches are the three states the build script can be in, and only the first is not
+/// an equality — with `SOURCE_DATE_EPOCH` set there is no second artifact to ask, because the
+/// environment variable *is* the answer. Nothing here returns early: a skipped branch that reports
+/// success is the fail-open guard this epic keeps finding.
 #[test]
 fn the_version_is_the_one_in_cargo_toml_and_carries_a_build_date() {
     // Arrange
@@ -3046,13 +3053,52 @@ fn the_version_is_the_one_in_cargo_toml_and_carries_a_build_date() {
         .unwrap_or_else(|| {
             panic!("`--version` is not `tooprolix {declared} (<date>)`: {printed:?}")
         });
-    assert!(
-        date == "unknown"
-            || (date.len() == 10
+    match (
+        std::env::var_os("SOURCE_DATE_EPOCH"),
+        git(&["rev-parse", "--is-inside-work-tree"]).as_deref(),
+    ) {
+        (Some(epoch), _) => assert!(
+            date.len() == 10
                 && date.split('-').count() == 3
-                && date.chars().all(|c| c.is_ascii_digit() || c == '-')),
-        "the build date is neither `unknown` nor an ISO date: {date:?}"
-    );
+                && date.chars().all(|c| c.is_ascii_digit() || c == '-'),
+            "SOURCE_DATE_EPOCH={epoch:?} was set, so the date is that epoch and there is no second \
+             artifact to check it against — but it is not even an ISO date: {date:?}"
+        ),
+        (None, Some("true")) => assert_eq!(
+            Some(date.to_owned()),
+            git(&["log", "-1", "--format=%cs"]),
+            "`--version` does not print the commit date git reports. Either the build script is \
+             not reading git, or cargo did not re-run it and the binary is carrying the date of an \
+             older commit."
+        ),
+        (None, _) => assert_eq!(
+            date, "unknown",
+            "there is no git here and no SOURCE_DATE_EPOCH, so the only honest answer is \
+             `unknown` — a date here is a guess, which is what Decisions #14 forbids"
+        ),
+    }
+}
+
+/// One `git` invocation from the repository root, or `None` when git cannot answer.
+///
+/// The same collapse-to-`None` as `build.rs`: no git on `PATH`, not a checkout, and a repository
+/// with no commits are all "git has no answer", and the caller treats all three alike.
+fn git(arguments: &[&str]) -> Option<String> {
+    let output = Command::new("git")
+        .args(arguments)
+        .current_dir(repository_root())
+        .output()
+        .ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    let text = String::from_utf8(output.stdout).ok()?;
+    let trimmed = text.trim();
+    if trimmed.is_empty() {
+        None
+    } else {
+        Some(trimmed.to_owned())
+    }
 }
 
 /// AC3 — one registry feeds `--rules` and the Rules block of `--help`, so the text cannot drift.
@@ -3125,21 +3171,35 @@ fn the_rules_listing_agrees_with_every_documented_table() {
         "`--rules` printed nothing to compare the tables against: {:?}",
         stdout_of(&rules)
     );
-    for line in stdout_of(&rules).lines() {
-        let (code, rest) = line.split_at(6);
-        let rest = rest.trim_start();
-        let (status, description) = rest
-            .split_once(char::is_whitespace)
-            .expect("every catalogue line is `code status description`");
-        let row = format!("| `{code}` | {} | {status} |", description.trim_start());
-        for document in documents {
-            let text = std::fs::read_to_string(repository_root().join(document))
-                .unwrap_or_else(|error| panic!("{document} is readable: {error}"));
-            assert!(
-                text.contains(&row),
-                "{document} does not carry the row `--rules` printed: {row:?}"
-            );
-        }
+    let expected: Vec<String> = stdout_of(&rules)
+        .lines()
+        .map(|line| {
+            let (code, rest) = line.split_at(6);
+            let (status, description) = rest
+                .trim_start()
+                .split_once(char::is_whitespace)
+                .expect("every catalogue line is `code status description`");
+            format!("| `{code}` | {} | {status} |", description.trim_start())
+        })
+        .collect();
+
+    // Equality of the whole set of `TPX` rows, not a `contains` per row. A whole-file `contains`
+    // passed while the visible table was stale and the right row sat in a fenced code block or an
+    // HTML comment; narrowing it to "some line starting with `|`" does not fix that, because a
+    // fenced row starts with `|` too. Requiring the document's rows to BE the binary's rows, in
+    // order, closes the stale row, the hidden duplicate and the extra row at once.
+    for document in documents {
+        let text = std::fs::read_to_string(repository_root().join(document))
+            .unwrap_or_else(|error| panic!("{document} is readable: {error}"));
+        let rows: Vec<String> = text
+            .lines()
+            .map(|line| line.trim_end().to_owned())
+            .filter(|line| line.starts_with("| `TPX"))
+            .collect();
+        assert_eq!(
+            rows, expected,
+            "the rule rows in {document} are not the ones `--rules` printed"
+        );
     }
 }
 
