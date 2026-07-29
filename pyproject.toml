@@ -92,6 +92,11 @@ lint = [
 ]
 test = [
     "pytest>=9.1.1",
+    # `make py.cov` only. It rides in the `test` group because that is the group `make test`
+    # already installs and pytest-cov is inert unless `--cov` is passed — a second group would
+    # mean a second resolve of the same pytest for no behavioural difference. It is pure Python,
+    # so the three `--only-group` gates stay Rust-free (epic-1 rule, this task's AC4).
+    "pytest-cov>=7.0.0",
 ]
 type = [
     "ty>=0.0.63",
@@ -205,7 +210,7 @@ split-on-trailing-comma = false # If a comma is placed after the last member in 
 # installed package, so tests/unit/ imports it as a top-level module. ty needs the same search
 # path or it cannot resolve the import. (ty rejects unknown config keys, so a typo here fails
 # the gate loudly rather than being ignored.)
-extra-paths = ["corpus"]
+extra-paths = ["corpus", "scripts"]
 
 [tool.ty.src]
 # ty's equivalent of ruff's extend-exclude (verified: with this key `ty check .` passes on a
@@ -230,10 +235,44 @@ testpaths = ["tests/unit"]
 # throwaway code nor an editable install of the crate — and an editable install here would mean
 # compiling Rust on every `make test`, which is exactly what `--only-group` avoids.
 # Still current: this is the live mechanism, not a leftover from before the backend existed.
-pythonpath = ["corpus"]
+pythonpath = ["corpus", "scripts"]
 addopts = [
     "-ra",              # Show short summary for all non-passing tests
     "--strict-config",  # Any warnings while parsing the pytest configuration raise errors
     "--strict-markers", # Markers not registered in configuration raise errors
     "--import-mode=importlib"
 ]
+
+# Coverage of the PRODUCTION Python in this repository, which is `corpus/` and nothing else.
+#
+# `source` is the DENOMINATOR, and that is why `tests/unit` is not in it even though the lint and
+# type gates run on both (`LINT_PATHS`/`TY_PATHS` in the Makefile). A denominator that includes the
+# test files makes the badge climb whenever someone writes more test code, which measures the
+# opposite of what a coverage badge is for. `tests/unit` stays the runner's INPUT (`testpaths`
+# above), never its subject.
+[tool.coverage.run]
+branch = true
+source = ["corpus"]
+# coverage.py otherwise drops a `.coverage` SQLite file in the repository root, one `git add .` away
+# from being committed. `target/coverage/` is where the JSON reports already go and `.gitignore`
+# already covers `target`, so one line here beats a new ignore rule. Verified: with this key the
+# root stays clean; without it `git status` shows `?? .coverage` after `make py.cov`.
+data_file = "target/coverage/.coverage"
+# Both of these are test DATA, and the first one is also a determinism hazard:
+#   - `corpus/checkouts/` is six whole third-party repositories, cloned from `corpus.lock` on
+#     demand and gitignored. It is present on a machine that has run `make corpus.measure` and
+#     absent on a fresh clone, so leaving it in `source` would make the percentage depend on what
+#     happens to be on disk — the badge would differ between this laptop and CI by thousands of
+#     unexecuted files.
+#   - `corpus/fixtures/sample.py` is the hand-counted oracle for tests/unit/test_measure.py. It is
+#     input to a test, not code that runs.
+omit = [
+    "corpus/checkouts/*",
+    "corpus/fixtures/*",
+]
+
+[tool.coverage.report]
+# Show which lines are missing: the number on the badge is the headline, this is what an audit acts
+# on. Tasks 9-11 are the consumers.
+show_missing = true
+skip_covered = false

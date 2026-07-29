@@ -66,6 +66,10 @@ make rust.lint        # cargo clippy -D warnings            -> CI job "cargo-cli
 make rust.test        # cargo test                          -> CI job "cargo-test"
 ```
 
+A seventh job, `coverage`, runs `make cov.check` — see below. **It is deliberately not a required
+check yet**: it is new, and how noisy a regenerate-and-diff gate is on real pull requests has not
+been observed.
+
 **Only three of them are enforced by branch protection today: `lint`, `type` and `test`.**
 `cargo-fmt`, `cargo-clippy` and `cargo-test` run and report, but they are not yet registered as
 required status checks — that is a repository-settings change only the repo owner can make. Until
@@ -93,6 +97,55 @@ invalidated by the Rust source change. Always use:
 ```bash
 make py.build         # uv sync --reinstall-package tooprolix
 ```
+
+## Coverage and the README badges
+
+The two percentages in the README come from `assets/coverage-rust.svg` and
+`assets/coverage-python.svg`, which are **generated files committed to the repository**. The repo is
+private until the PyPI flip, so a codecov or shields endpoint has nothing it can read.
+
+```bash
+make rust.cov         # cargo llvm-cov  -> assets/coverage-rust.svg
+make py.cov           # pytest --cov    -> assets/coverage-python.svg
+make cov              # both
+make cov.check        # both, then fail if the committed SVGs are stale  -> CI job "coverage"
+```
+
+`make rust.cov` needs one tool that this repository does not pin for you — `cargo llvm-cov` is a
+separate cargo subcommand crate, not a rustup component:
+
+```bash
+cargo install cargo-llvm-cov --locked
+```
+
+The `llvm-tools` component it shells out to *is* pinned, in `rust-toolchain.toml`. Without the
+subcommand you get `error: no such command: llvm-cov`; without the component `cargo llvm-cov` fails
+looking for `llvm-profdata`.
+
+**Edit a badge only by regenerating it.** If `make cov.check` fails, run `make cov` and commit the
+SVGs; do not hand-edit the number, and do not add a `--fail-under` threshold — picking one before
+the code audits would be picking a number to match today's code.
+
+⚠️ `tests/unit/test_coverage_badge.py` asserts that both committed SVGs exist and that the README
+embeds them, so **`make test` — and therefore `make py.cov` — fails while a badge file is missing**,
+which is a small chicken-and-egg if you delete one. That is deliberate: a guard that skipped the
+check when it could not find the file would be disabled by renaming the file. Recover with
+`git restore assets/coverage-*.svg`, then `make cov`.
+
+What the two numbers do **not** include, because a percentage implies it measured everything it
+could:
+
+- **`build.rs` is invisible to the Rust number.** It is a build script, compiled and run on the host
+  before the crate exists, so `cargo llvm-cov` never instruments it and it appears in no row of the
+  report. Its ~190 lines are unmeasured, not covered.
+- **Rust branch coverage is not reported at all** on the pinned stable toolchain — llvm-cov's
+  `Branches` column reads `-`. The Rust badge is **line** coverage. The Python badge has
+  `branch = true` and folds branches in, which is one of the reasons the two are never added
+  together into a single figure.
+- **The Python number measures `corpus/` only** (`[tool.coverage.run] source` in `pyproject.toml`),
+  which is the throwaway research tooling — the product itself is Rust. `tests/unit` is the runner's
+  input, never part of the denominator: a denominator containing the tests climbs when you write
+  more tests.
 
 ## Snapshot tests
 

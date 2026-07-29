@@ -234,3 +234,61 @@ jobs:
 
       - name: make rust.test
         run: make rust.test
+
+  # The drift gate for the two README badges. It regenerates both from a fresh measurement and
+  # fails on `git diff`, which is the only thing that makes committing a generated file honest.
+  #
+  # NOT registered as a required status check yet, deliberately: it is new, and nobody has watched
+  # how often a legitimate pull request moves a percentage by a tenth. Register it once the noise
+  # is known. It still carries no `paths:` and no `if:` — a SKIPPED check does not satisfy a
+  # required one, so a path filter added today would wedge the PR on the day it is registered.
+  #
+  # It repeats the whole Rust test run under instrumentation and the whole Python test run under
+  # coverage, so it is the slowest job here. Splitting it in two would double the toolchain setup
+  # to save nothing: `git diff` has to see both files at once anyway.
+  coverage:
+    name: coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      UV_MANAGED_PYTHON: "1"
+      INSTA_UPDATE: "no"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+
+      # Same reason as in cargo-test: `make rust.cov` runs the test binaries, which link and load
+      # libpython.
+      - name: Install a managed Python for the pyo3 build script
+        run: uv python install "${PYTHON_VERSION}"
+
+      # `llvm-tools` comes from rust-toolchain.toml, so this also proves the pin resolves.
+      - name: Show the pinned toolchain
+        run: rustup show
+
+      # The cargo SUBCOMMAND, which is not a rustup component and so is not in
+      # rust-toolchain.toml. A prebuilt binary from the tool's own maintainer, rather than
+      # `cargo install cargo-llvm-cov` compiling it from source on every run (minutes, every job).
+      #
+      # v2.85.3 — SHA verified against the source repo rather than copied on trust:
+      # `git/ref/tags/v2.85.3` -> commit 18b1216e. Same practice as the rust-cache pin above.
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@18b1216eba7f8039b0f8d131d5473787f0edce68 # v2.85.3
+        with:
+          tool: cargo-llvm-cov
+
+      - name: Cache Rust artifacts
+        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: make cov.check
+        run: make cov.check

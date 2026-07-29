@@ -9,16 +9,29 @@ UV ?= uv
 # The toolchain is pinned in rust-toolchain.toml, so plain `cargo` already resolves to 1.97.0.
 CARGO ?= cargo
 
-# Paths the Python gates run on. This is a Rust project with one Python corner: the
-# throwaway corpus measurement.
-LINT_PATHS ?= corpus tests/unit
-TY_PATHS ?= corpus tests/unit
+# Paths the Python gates run on. This is a Rust project with two Python corners: the throwaway
+# corpus measurement, and `scripts/coverage_badge.py`, the badge generator.
+#
+# ⚠️ These are LINT paths and they are deliberately NOT the coverage denominator, which is
+# `[tool.coverage.run] source` in pyproject.toml and lists `corpus` alone. The overlap is a
+# coincidence of two tools looking at the same directory for different reasons: lint asks "is this
+# file well formed", coverage asks "how much of this file did the tests run". Putting `tests/unit`
+# in the second one would make the badge climb every time someone writes more test code.
+LINT_PATHS ?= corpus scripts tests/unit
+TY_PATHS ?= corpus scripts tests/unit
 
 # Corpus measurement inputs.
 LOCK ?= corpus/corpus.lock
 
+# Where the two coverage tools drop their machine-readable reports. Under `target/`, which
+# `.gitignore` already covers, so neither the JSON nor cargo's instrumented build ever shows up in
+# the `git diff` the drift gate reads. The committed artifacts are the two SVGs and nothing else.
+COV_DIR ?= target/coverage
+COV_BADGES = assets/coverage-rust.svg assets/coverage-python.svg
+
 .PHONY: help lint.fix lint.check type test corpus.measure \
-	rust.fmt rust.fmt.check rust.lint rust.test rust.build.nopython py.build
+	rust.fmt rust.fmt.check rust.lint rust.test rust.build.nopython py.build \
+	rust.cov py.cov cov cov.check
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*##"; printf "Usage: make <target>\n\nTargets:\n"} \
@@ -182,3 +195,79 @@ rust.build.nopython: ## Build the standalone binary with the pyo3 feature OFF, a
 # Deleting the venv looks like a clean slate and is not one.
 py.build: ## Rebuild and reinstall the Rust extension into .venv
 	@$(UV) sync --reinstall-package tooprolix
+
+# -----------------------------------------------------------------------------------------------
+# Coverage. Two numbers, two badges, never one: the Rust crate is the product and `corpus/` is
+# throwaway research tooling, so a combined percentage would average two things measured against
+# unrelated denominators and look more precise than either (EPIC scope guard).
+#
+# There is deliberately NO `--fail-under` / threshold on either target. A threshold before the
+# audits of tasks 9-11 would be a number picked to match today's code rather than a decision, and
+# picking it is the user's call once the audits have said what the uncovered surface actually is.
+#
+# ⚠️ What these numbers do NOT cover, said out loud because a percentage implies it measured
+# everything it could:
+#   - `build.rs` is a BUILD SCRIPT. cargo compiles and runs it on the host before the crate exists,
+#     so `cargo llvm-cov` does not instrument it and it appears in no row of the Rust report. Its
+#     ~190 lines of civil-date arithmetic and git containment are therefore unmeasured, not 100%.
+#   - `tests/volume_corpus.rs`'s `volume_finds_something_on_the_corpus` is `#[ignore]`d (it needs
+#     `corpus/checkouts/` on disk), so the lines only it reaches count as uncovered. That is the
+#     truth about a test that does not run in CI, and un-ignoring it here would be buying coverage
+#     with a gate that cannot run.
+#   - Rust BRANCH coverage is not reported at all: the `Branches` column of llvm-cov reads `-` on
+#     the pinned stable 1.97.0 (it needs a nightly-only flag). The Rust badge is LINE coverage. The
+#     Python badge has `branch = true` and folds branches into its figure — the two badges are
+#     labelled separately for this reason among others.
+
+rust.cov: ## Measure Rust line coverage and regenerate assets/coverage-rust.svg
+	@mkdir -p $(COV_DIR)
+	@# No `--features python` guard of its own here on purpose. `src/lib.rs` already carries a
+	@# `#[cfg(all(test, not(feature = "python")))] compile_error!`, which fires on ANY test
+	@# compilation without the feature, not only on `cargo test` — verified 2026-07-29 by running
+	@# this exact command with the flag removed: `cargo llvm-cov` failed to build with
+	@# "the tests must be run with `--features python`" and exit 101. A second copy of a guard that
+	@# already fails loud would only be a second thing to keep in sync.
+	@$(FIND_PYTHON) $(CARGO) llvm-cov --locked --features python --summary-only \
+		--json --output-path $(COV_DIR)/llvm-cov.json
+	@$(UV) run --no-project python3 scripts/coverage_badge.py \
+		--report $(COV_DIR)/llvm-cov.json --format llvm-cov \
+		--label "rust coverage" --out assets/coverage-rust.svg
+
+py.cov: ## Measure Python coverage of corpus/ and regenerate assets/coverage-python.svg
+	@mkdir -p $(COV_DIR)
+	@# `--cov` with no argument means "use [tool.coverage.run] from pyproject.toml", which is where
+	@# the denominator (`source = ["corpus"]`, NOT tests/unit) and `branch = true` are pinned and
+	@# commented. Passing paths here instead would put the denominator in two places.
+	@$(UV) run --only-group test pytest --cov --cov-report=term \
+		--cov-report=json:$(COV_DIR)/coverage.json
+	@$(UV) run --no-project python3 scripts/coverage_badge.py \
+		--report $(COV_DIR)/coverage.json --format coverage.py \
+		--label "python coverage" --out assets/coverage-python.svg
+
+cov: rust.cov py.cov ## Measure both languages and regenerate both badges
+
+# The drift gate, and the only reason committing a generated file is acceptable. CI runs this.
+#
+# 🔴 IT CHECKS THAT THE BADGES ARE TRACKED BEFORE IT DIFFS THEM. `git diff --exit-code -- <path>`
+# exits 0 for a path git knows nothing about, so on an untracked or deleted badge the bare diff
+# would report success having compared nothing — the "a check that can be disabled by renaming a
+# file" failure. `git ls-files --error-unmatch` is what makes this fail closed; verified by running
+# the target with the badges regenerated but not yet added to the index.
+#
+# The diff is worktree-vs-index rather than vs HEAD so that it means the same thing in both places
+# it runs: in CI the index is a fresh checkout of HEAD, so it compares against the committed bytes.
+cov.check: cov ## Regenerate both badges and fail if the committed SVGs are stale (CI gate)
+	@for f in $(COV_BADGES); do \
+		if ! git ls-files --error-unmatch "$$f" >/dev/null 2>&1; then \
+			echo "error: $$f is not tracked by git." >&2; \
+			echo "       'git diff' exits 0 on an untracked path, so this gate would have passed" >&2; \
+			echo "       without comparing anything. Commit the badge or fix its path." >&2; \
+			exit 1; \
+		fi; \
+	done
+	@if ! git diff --exit-code -- $(COV_BADGES); then \
+		echo "error: the committed coverage badges do not match a fresh measurement (diff above)." >&2; \
+		echo "       Run 'make cov' and commit assets/coverage-*.svg." >&2; \
+		exit 1; \
+	fi
+	@echo "ok: both coverage badges match a fresh measurement"

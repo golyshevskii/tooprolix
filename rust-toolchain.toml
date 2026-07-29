@@ -8,5 +8,16 @@
 # was published from. Solving this with `rustup update stable` instead would leave the toolchain
 # version outside the repository, so a fresh clone and CI could drift apart silently.
 channel = "1.97.0"
-# So `make rust.lint` / `make rust.fmt` work on a fresh clone without a manual `rustup component add`.
-components = ["clippy", "rustfmt"]
+# So `make rust.lint` / `make rust.fmt` / `make rust.cov` work on a fresh clone without a manual
+# `rustup component add`. `llvm-tools` is what `cargo llvm-cov` shells out to (llvm-profdata,
+# llvm-cov); it is available for this pinned version — `rustup component list --toolchain 1.97.0`
+# offers `llvm-tools-aarch64-apple-darwin`, so pinning it here does not force the toolchain off 1.97.0.
+#
+# It is in the shared toolchain file rather than a step in the coverage job alone, which means the
+# other three cargo jobs download it too and do not use it. That is the accepted price: a component
+# listed here is installed by rustup on the first `cargo` call, so `make rust.cov` works identically
+# on a fresh clone and on a runner, with nothing to keep in sync between the two.
+#
+# ⚠️ The component is only half the requirement. `cargo llvm-cov` is a separate cargo subcommand
+# crate and is NOT installed by this file — see CONTRIBUTING.md.
+components = ["clippy", "rustfmt", "llvm-tools"]
