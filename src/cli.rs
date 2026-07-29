@@ -109,7 +109,7 @@
 //! so [`help`] says it in as many words.
 
 use std::ffi::{OsStr, OsString};
-use std::io::IsTerminal;
+use std::io::{IsTerminal, Write};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 use std::sync::{Arc, Mutex};
@@ -361,12 +361,18 @@ enum Invocation {
     Rules,
 }
 
-/// Everything that makes a run exit 2 — every one of them a failure to *start*.
+/// Everything that stops a run — all but one of them a failure to *start*.
 ///
 /// There used to be a sixth, `Unreadable`, carrying every file that would not parse. It is gone
 /// rather than unused: a file that cannot be read is no longer a reason to refuse the run, so
 /// keeping the variant would have left a way to spell an outcome the contract no longer has. What
 /// replaces it is [`crate::finding::Skipped`], which is a *report* and not an error.
+///
+/// [`Output`](Error::Output) is the one variant that is **not** a failure to start — the run did
+/// everything right and could not hand the answer over. It is also the only variant that does not
+/// always mean exit 2: `status` reads its [`std::io::ErrorKind`] and turns a closed pipe into a
+/// silent exit 0. That decision lives there, in the single place both entry points pass through,
+/// rather than here, because the *error* is the same fact either way — only the verdict differs.
 #[derive(Debug, ThisError)]
 #[non_exhaustive]
 pub enum Error {
@@ -395,6 +401,15 @@ pub enum Error {
         /// What the walker complained about.
         message: String,
     },
+
+    /// The findings were computed and could not be written to stdout.
+    ///
+    /// Carries the [`std::io::Error`] rather than a rendered string, because the *kind* is what
+    /// `status` has to branch on — a closed pipe is a reader that stopped reading and is not this
+    /// tool's failure, while a full disk is. Flattening it to a message would have made those two
+    /// indistinguishable at the one place that has to tell them apart.
+    #[error("could not write to stdout: {0}")]
+    Output(#[source] std::io::Error),
 }
 
 /// One block, plus whatever the marker above it silences.
@@ -440,9 +455,65 @@ pub fn run<I: IntoIterator<Item = OsString>>(arguments: I) -> ExitCode {
 /// still a value, for a caller that wants to handle it rather than print it.
 pub(crate) fn status<I: IntoIterator<Item = OsString>>(arguments: I) -> ExitStatus {
     execute(arguments).unwrap_or_else(|error| {
+        // A reader that stopped reading is not a failure of this tool, and it is the ONE error that
+        // is not reported. `tooprolix check big/ | head -5` used to exit **101** with
+        // `failed printing to stdout: Broken pipe` on stderr — the Rust default, because `println!`
+        // panics on a write error and nothing here caught it. That is outside the documented 0/1/2
+        // contract entirely, and `| head` is an ordinary thing to do with a linter.
+        //
+        // Exit **0**, which is what ruff answers to the same pipeline (measured). The findings that
+        // were written are correct and the ones that were not are output nobody asked for; a
+        // consumer that closed the pipe has already decided it has what it needs.
+        //
+        // ⚠️ The `kind` test is the whole guard, and widening it is the way this becomes a
+        // fail-open. Every OTHER write failure — a full disk, an I/O error on a redirect — still
+        // falls through to the loud branch below and exits 2. A handler that treated any
+        // `Error::Output` as a clean stop would turn "the answer never reached the file" into a
+        // green run, which is exactly the class this epic keeps finding.
+        if reader_stopped_reading(&error) {
+            return ExitStatus::Success;
+        }
         eprintln!("error: {error}");
         ExitStatus::Error
     })
+}
+
+/// Whether `error` is a consumer that closed the pipe, rather than a failure worth reporting.
+///
+/// A pure function for the same reason [`use_colour`] is one: the *condition* it tests is not
+/// reachable from a test — producing a real `ENOSPC` on stdout is not something a test suite can do
+/// portably — so the decision is separated from the io that feeds it and pinned as a table below.
+/// Without that split the narrowness of this check is untested, and an untested narrowness is how
+/// it silently widens into "every write failure is a clean stop", which would turn a full disk into
+/// a green run.
+fn reader_stopped_reading(error: &Error) -> bool {
+    matches!(error, Error::Output(source) if source.kind() == std::io::ErrorKind::BrokenPipe)
+}
+
+/// Writes to stdout under a single lock, turning any write failure into [`Error::Output`].
+///
+/// Every byte this tool puts on stdout goes through here, and that is what makes the broken-pipe
+/// contract in [`status`] hold for **both** output formats and **both** entry points: `src/main.rs`
+/// and the console script in `src/lib.rs` differ only in how they spell the exit code, and both
+/// reach stdout through this function.
+///
+/// It takes a closure rather than a `&str` so that the findings loop can hold the lock once for the
+/// whole run and stop at the **first** failed write. That matters beyond tidiness: on a closed pipe
+/// the alternative keeps formatting findings nobody is going to read.
+///
+/// # Errors
+///
+/// [`Error::Output`], carrying the [`std::io::Error`] unchanged so its `kind` survives to
+/// [`status`], which is the only thing that interprets it.
+fn emit(write: impl FnOnce(&mut dyn Write) -> std::io::Result<()>) -> Result<(), Error> {
+    let mut out = std::io::stdout().lock();
+    // The explicit flush is not redundant. Rust's stdout is line-buffered to a terminal but BLOCK
+    // buffered to a pipe or a file, so a `--format json` document can sit entirely in the buffer
+    // and only meet the closed pipe when the lock is dropped — where the failure would be silently
+    // discarded rather than becoming an `Err` this function can return.
+    write(&mut out)
+        .and_then(|()| out.flush())
+        .map_err(Error::Output)
 }
 
 /// [`run`] with the outcome still typed, for a caller that is not a process.
@@ -463,15 +534,15 @@ pub(crate) fn status<I: IntoIterator<Item = OsString>>(arguments: I) -> ExitStat
 pub fn execute<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<ExitStatus, Error> {
     let (path, format) = match parse(arguments)? {
         Invocation::Help => {
-            print!("{}", help());
+            emit(|out| out.write_all(help().as_bytes()))?;
             return Ok(ExitStatus::Success);
         }
         Invocation::Version => {
-            println!("{}", version_line());
+            emit(|out| writeln!(out, "{}", version_line()))?;
             return Ok(ExitStatus::Success);
         }
         Invocation::Rules => {
-            print!("{}", rules_listing());
+            emit(|out| out.write_all(rules_listing().as_bytes()))?;
             return Ok(ExitStatus::Success);
         }
         Invocation::Check { path, format } => (path, format),
@@ -574,9 +645,14 @@ pub fn execute<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<ExitSta
     // a crash.
     match format {
         Format::Text => {
-            for finding in &findings {
-                println!("{finding}");
-            }
+            // One lock for the whole list, and the `?` inside stops at the first failed write
+            // rather than formatting the rest of a report that is not going anywhere.
+            emit(|out| {
+                for finding in &findings {
+                    writeln!(out, "{finding}")?;
+                }
+                Ok(())
+            })?;
             // Gated on the OUTCOME, not on `findings.is_empty()`. `Success` is the only variant
             // that reports 0 and it is unreachable while anything was skipped, so this one
             // condition carries both halves of the rule — "no findings" and "the tree was read
@@ -585,7 +661,7 @@ pub fn execute<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<ExitSta
             // line would otherwise assert a completeness the run does not have, which is the
             // outcome the whole graceful contract exists to prevent.
             if matches!(status, ExitStatus::Success) {
-                success_line();
+                success_line()?;
             }
         }
         Format::Json => {
@@ -596,10 +672,21 @@ pub fn execute<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<ExitSta
                 .iter()
                 .map(|path| path.display().to_string())
                 .collect();
-            print!(
-                "{}",
-                Report::new(findings, skipped.clone(), excluded).to_json()
-            );
+            // ⚠️ What a consumer sees if the pipe closes mid-document: a TRUNCATED one. The bytes
+            // written are a prefix of valid JSON and not a valid document, so a reader that stops
+            // reading must not then parse what it got — `| head -c 200 | jq` is a parse error by
+            // construction, not a bug here. There is no honest alternative: the document is larger
+            // than any pipe buffer (114 KB on the pinned corpus), so it cannot be written
+            // atomically, and inventing a closing brace would hand over a document whose
+            // `findings` array silently omitted findings the run did make. A truncated parse error
+            // is loud; a well-formed lie is not.
+            emit(|out| {
+                out.write_all(
+                    Report::new(findings, skipped.clone(), excluded)
+                        .to_json()
+                        .as_bytes(),
+                )
+            })?;
         }
     }
 
@@ -629,7 +716,12 @@ const SUCCESS_LINE: &str = "All checks passed!";
 /// asked — not a diagnostic about the run. That does mean `tooprolix check . | wc -l` answers 1 on
 /// a clean tree where it used to answer 0; `--format json`, which is the interface for machines,
 /// never prints it at all.
-fn success_line() {
+///
+/// # Errors
+///
+/// [`Error::Output`] — it writes to stdout like every other line of output, so a closed pipe here
+/// is the same clean stop it is anywhere else.
+fn success_line() -> Result<(), Error> {
     // Both facts are read here, once, and neither is readable from a test: `is_terminal` depends on
     // what the process was handed and `var_os` on the ambient environment. The *decision* they feed
     // is a pure function precisely so that it can be a table in the tests below.
@@ -639,9 +731,9 @@ fn success_line() {
         // only colour this tool emits anywhere, and `colored`/`owo-colors`/`anstream` would each be
         // a dependency — and a tree to audit, pin and ship to PyPI — for two escape sequences that
         // have not changed since ECMA-48 in 1976.
-        println!("\u{1b}[32m{SUCCESS_LINE}\u{1b}[0m");
+        emit(|out| writeln!(out, "\u{1b}[32m{SUCCESS_LINE}\u{1b}[0m"))
     } else {
-        println!("{SUCCESS_LINE}");
+        emit(|out| writeln!(out, "{SUCCESS_LINE}"))
     }
 }
 
@@ -1287,7 +1379,10 @@ pub fn findings(sources: Vec<Source>, config: &Config) -> Vec<Finding> {
 
 #[cfg(test)]
 mod tests {
-    use super::{Format, Invocation, Source, findings, parse, python_files, use_colour};
+    use super::{
+        Format, Invocation, Source, findings, parse, python_files, reader_stopped_reading,
+        use_colour,
+    };
     use crate::config::Config;
     use crate::detect::volume::Limits;
     use crate::extract::extract;
@@ -1308,6 +1403,44 @@ mod tests {
                 suppressed: marker.and_then(parse_marker).unwrap_or_default(),
             })
             .collect()
+    }
+
+    /// Only a CLOSED PIPE is a clean stop. Every other write failure stays an error.
+    ///
+    /// This is the narrowness of the broken-pipe fix, and it is the half that end-to-end tests
+    /// cannot reach: a test cannot portably fill a disk or break a redirect, so the only way to pin
+    /// "`ENOSPC` is still loud" is to ask the decision directly. Without this table,
+    /// `Error::Output(_) => Success` — dropping the `kind` test entirely — passes the whole suite,
+    /// and a run whose findings never reached the file exits 0.
+    ///
+    /// `Walk` is in the table because the predicate must key on the VARIANT too: an error carrying
+    /// no io at all must never be read as a closed pipe.
+    #[test]
+    fn only_a_closed_pipe_is_a_clean_stop() {
+        use std::io::ErrorKind;
+
+        for (kind, clean, what) in [
+            (ErrorKind::BrokenPipe, true, "a reader that stopped reading"),
+            (ErrorKind::StorageFull, false, "a full disk"),
+            (ErrorKind::PermissionDenied, false, "a refused redirect"),
+            (ErrorKind::Other, false, "an unclassified io failure"),
+        ] {
+            let error = super::Error::Output(std::io::Error::new(kind, "measured"));
+
+            assert_eq!(
+                reader_stopped_reading(&error),
+                clean,
+                "{what} ({kind:?}) was judged wrongly"
+            );
+        }
+
+        assert!(
+            !reader_stopped_reading(&super::Error::Walk {
+                path: PathBuf::from("."),
+                message: "measured".to_owned(),
+            }),
+            "an error carrying no io at all was read as a closed pipe"
+        );
     }
 
     /// Colour is a decision about two facts, and both of them have to be able to veto it.

@@ -3290,3 +3290,92 @@ fn two_reporting_flags_at_once_are_refused_rather_than_ranked() {
         );
     }
 }
+
+/// A consumer that stops reading gets exit 0 and silence, not a panic — in BOTH formats.
+///
+/// `tooprolix check big/ | head -5` used to exit **101** and print
+/// `thread 'main' panicked at ... failed printing to stdout: Broken pipe (os error 32)`, because
+/// Rust's `println!` panics on a write error and nothing caught it. 101 is outside the documented
+/// 0/1/2 contract altogether, and `| head` is an ordinary thing to do with a linter. ruff answers
+/// the identical pipeline with **0**, which is the parity this pins.
+///
+/// The reader is closed *before* the child can write, so the very first write fails and the test
+/// has no race in it. Both formats are covered because the JSON path is a single large `write_all`
+/// and the text path is a loop — different code, same contract.
+///
+/// The stderr assertion is not decoration: exiting 0 while still printing a panic to stderr would
+/// satisfy an exit-code-only test and still be the defect. So is the finding count — a handler that
+/// swallowed every io error would make `| cat` green too, which is why
+/// `a_readable_pipe_still_reports_findings` sits beside this and asserts exit 1.
+#[test]
+fn a_consumer_that_stops_reading_is_not_an_error() {
+    // Arrange — enough findings that the writer is still writing when the reader is gone.
+    let scratch = Scratch::new("broken-pipe");
+    for name in ["alpha", "bravo", "charlie", "delta", "echo", "foxtrot"] {
+        scratch.write(
+            &format!("{name}.py"),
+            &long_comment(&format!("{name} budget")),
+        );
+    }
+
+    for format in [&[][..], &["--format", "json"][..]] {
+        // Act — spawn, then drop the read end before reading a single byte.
+        let mut arguments = vec!["check", "."];
+        arguments.extend_from_slice(format);
+        let mut child = Command::new(env!("CARGO_BIN_EXE_tooprolix"))
+            .args(&arguments)
+            .current_dir(&scratch.root)
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped())
+            .spawn()
+            .expect("the binary cargo just built is executable");
+        drop(child.stdout.take().expect("stdout was piped"));
+
+        let output = child
+            .wait_with_output()
+            .expect("the child is waitable after its pipe is closed");
+        let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
+
+        // Assert
+        assert_eq!(
+            output.status.code(),
+            Some(0),
+            "{arguments:?}: a closed pipe must be exit 0, got {:?} with stderr {stderr:?}",
+            output.status.code()
+        );
+        assert!(
+            !stderr.contains("panicked") && !stderr.contains("Broken pipe"),
+            "{arguments:?}: the panic reached the user: {stderr:?}"
+        );
+    }
+}
+
+/// ... and the clean stop must not swallow a real find: a reader that DOES read still gets exit 1.
+///
+/// The guard in `status` keys on `ErrorKind::BrokenPipe` alone. Widening it to any write failure
+/// would make this test's tree — six files, all with findings — report success, which is the
+/// fail-open shape of the fix rather than the fix.
+#[test]
+fn a_readable_pipe_still_reports_findings() {
+    let scratch = Scratch::new("broken-pipe-readable");
+    for name in ["alpha", "bravo", "charlie"] {
+        scratch.write(
+            &format!("{name}.py"),
+            &long_comment(&format!("{name} budget")),
+        );
+    }
+
+    let output = scratch.check(&[]);
+
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "a fully read run with findings is exit 1: {:?}",
+        stderr_of(&output)
+    );
+    assert!(
+        stdout_of(&output).contains("TPX001"),
+        "the findings themselves went missing: {:?}",
+        stdout_of(&output)
+    );
+}

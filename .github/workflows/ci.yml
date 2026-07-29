@@ -25,7 +25,7 @@ env:
   # re-resolving it. Verified locally with `UV_LOCKED=1 make <target>` for all
   # three targets (see task report) before enabling here.
   UV_LOCKED: "1"
-  # Cargo hygiene for CI, shared by the three cargo-* jobs below. Incremental
+  # Cargo hygiene for CI, shared by every job below that runs cargo. Incremental
   # compilation is pure overhead on a cold runner; the retries stop a flaky
   # crates.io from reading as a code failure.
   CARGO_INCREMENTAL: "0"
@@ -34,8 +34,13 @@ env:
   RUSTUP_MAX_RETRIES: "10"
 
 jobs:
-  # Six jobs: three Python (lint/type/test) and three Rust (cargo-fmt,
-  # cargo-clippy, cargo-test).
+  # Eight jobs: three Python (lint/type/test), four Rust (cargo-fmt,
+  # cargo-clippy, cargo-test, cargo-doc) and coverage.
+  #
+  # Keep this count honest. It read "Six jobs" while there were seven — the
+  # `coverage` job was added without updating it — and then eight when
+  # `cargo-doc` landed. A comment that miscounts the file it sits in is the
+  # cheapest possible thing to get wrong and the easiest to believe.
   #
   # The Rust jobs are deliberately NOT named `test`/`lint` — those names are
   # already taken by the Python jobs above and are registered as required
@@ -181,7 +186,7 @@ jobs:
       # `make rust.lint` and `make rust.test` both carry `--features python`, so without this step
       # NOTHING in CI compiles the crate with the feature OFF — which is the configuration the
       # standalone binary of AC1 is built in. A `use pyo3::…` that escaped the `#[cfg]` would then
-      # break `cargo build` for every consumer while all six checks stayed green. It rides in this
+      # break `cargo build` for every consumer while all eight checks stayed green. It rides in this
       # job rather than a new one because a new job would be a new required status check.
       - name: make rust.build.nopython
         run: make rust.build.nopython

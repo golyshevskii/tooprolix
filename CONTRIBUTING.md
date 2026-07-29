@@ -55,7 +55,7 @@ release goes out, all of them move together:
 
 ## Run the gates before you push
 
-CI runs all six of these on every pull request:
+CI runs all seven of these on every pull request:
 
 ```bash
 make lint.check       # ruff format --check + ruff check   -> CI job "lint"
@@ -64,17 +64,28 @@ make test             # pytest, tests/unit/                 -> CI job "test"
 make rust.fmt.check   # cargo fmt --check                   -> CI job "cargo-fmt"
 make rust.lint        # cargo clippy -D warnings            -> CI job "cargo-clippy"
 make rust.test        # cargo test                          -> CI job "cargo-test"
+make rust.doc         # cargo doc, warnings are errors      -> CI job "cargo-doc"
 ```
 
-A seventh job, `coverage`, runs `make cov` — see below. **It is deliberately not a required check**:
+`make rust.doc` is the rustdoc gate. `cargo doc` exits 0 on a broken intra-doc link, so before it
+existed the crate carried five rustdoc diagnostics with every other job green — one of them a link
+to a function that had been renamed away. `RUSTDOCFLAGS="-D warnings"` is what makes them fail.
+
+An eighth job, `coverage`, runs `make cov` — see below. **It is deliberately not a required check**:
 it protects the measuring instrument (that the coverage toolchain still resolves and that the report
 grader still accepts a real run), not the shipped artifact.
 
-**Only three of them are enforced by branch protection today: `lint`, `type` and `test`.**
-`cargo-fmt`, `cargo-clippy` and `cargo-test` run and report, but they are not yet registered as
-required status checks — that is a repository-settings change only the repo owner can make. Until
-they are registered, a pull request with red Rust gates is still mergeable, so **read the Rust job
-results yourself before merging**; do not treat a green merge button as a green build.
+**None of them is enforced by branch protection today — not one.** This paragraph used to say that
+`lint`, `type` and `test` were required; that was measured false on 2026-07-29:
+`gh api repos/golyshevskii/tooprolix/branches/main/protection` returns **404** and
+`.../rulesets` returns **403 "Upgrade to GitHub Pro or make this repository public"**. A private
+repository without Pro cannot have branch protection at all, so every job here runs and reports
+and none of them can block a merge.
+
+Consequence, and it is the reason this is written down rather than quietly corrected: **a pull
+request with every Rust gate red is still mergeable.** Read the job results yourself before
+merging; do not treat a green merge button as a green build. Registering the required set is part
+of making the repository public, and it is owned by the `flip-public-and-publish-to-pypi` task.
 
 `make rust.fmt` and `make lint.fix` are the fixing counterparts. `make help` lists everything.
 

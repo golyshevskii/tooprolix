@@ -487,6 +487,33 @@ fn read_exclude(value: &toml::Value, path: &Path) -> Result<Vec<String>, Error> 
                 ),
             });
         }
+        // The same class as the two guards above, one separator further out. `normalise_glob`
+        // splits on `/` and nothing else, but `OverrideBuilder` reads `\` as an ESCAPE — so
+        // `vendor\**` is not a two-component path, it is the single literal name `vendor**`, which
+        // matches nothing. Measured on the built binary before this guard, on a tree with one
+        // excluded finding: exit 1 with the finding still reported. On Windows `vendor\**` is the
+        // natural way to write `vendor/**`, so this is the spelling most likely to be typed by
+        // someone whose tree it then silently fails to exclude.
+        //
+        // REFUSED, not rewritten into `/`. A backslash is a legal filename character on POSIX, so
+        // rewriting guesses intent, and it would break the one backslash spelling that is correct
+        // today: `\!vendor` escapes the leading `!` to name a file literally called `!vendor`.
+        // Refusing the class costs that spelling — deliberately, and the message says so — because
+        // a guard that silently changes what a glob means is the failure this whole function
+        // exists to prevent. Fail loud beats guess right.
+        if normalised.contains('\\') {
+            return Err(Error::BadValue {
+                path: path.to_path_buf(),
+                key: "exclude".to_owned(),
+                problem: format!(
+                    "`{raw}` contains a backslash, which is not a path separator here: globs are \
+                     matched with `/` on every platform, and `\\` is read as an escape, so this \
+                     entry would silently exclude nothing. Write `/` instead. (This also refuses \
+                     `\\!name`, the escape for a file literally called `!name`; name it with a \
+                     glob that does not lead with the escape.)"
+                ),
+            });
+        }
         excluded.push(normalised);
     }
 
@@ -891,6 +918,32 @@ mod tests {
                 "[tool.tooprolix]\nexclude = [\".//!vendor\"]\n",
                 "!",
                 "a negated glob behind a separator run",
+            ),
+            // The SECOND compare-before-normalise instance, and the reason `\` is refused outright
+            // rather than rewritten. `normalise_glob` splits on `/` and nothing else, while the
+            // `ignore` crate's `OverrideBuilder` reads `\` as an ESCAPE — so a Windows-shaped
+            // `vendor\**` is not a path with two components, it is the single literal name `vendor**`
+            // that matches nothing. Measured on the built binary before this guard: exit 1 with the
+            // finding still reported, i.e. the tree the user excluded was measured anyway.
+            //
+            // Rewriting `\` into `/` was rejected: on POSIX a backslash is a legal filename
+            // character, so the rewrite would guess intent and break the one spelling that is
+            // currently CORRECT — `\!vendor`, which escapes a leading `!` to name a file literally
+            // called `!vendor`. Refusing the whole class costs that spelling, and that is the
+            // intended consequence rather than a regression: the message says so, and a file named
+            // `!vendor` can still be reached by a glob that does not lead with the escape.
+            //
+            // Note both of these are TOML *literal* strings (single quotes). In a basic string
+            // `"vendor\**"` is a TOML parse error, which is exactly what hid this for so long.
+            (
+                "[tool.tooprolix]\nexclude = ['vendor\\**']\n",
+                "backslash",
+                "a Windows-shaped separator, which the matcher reads as an escape",
+            ),
+            (
+                "[tool.tooprolix]\nexclude = ['\\!vendor']\n",
+                "backslash",
+                "an escaped `!`, refused with the rest of the backslash class",
             ),
             (
                 "[tool.tooprolix]\nexclude = [\"a[\"]\n",

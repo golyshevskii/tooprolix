@@ -62,9 +62,9 @@ test: ## Run the Python tests (pytest, tests/unit)
 corpus.measure: ## Measure the pinned prose corpus and print the distributions
 	@uv run python3 corpus/measure.py --lock $(LOCK)
 
-# The three Rust gates below are one CI job each (cargo-fmt / cargo-clippy / cargo-test) and are
-# what every later task has to keep green. `--locked` everywhere: Cargo.lock is committed, so a
-# gate that silently re-resolved it would not be testing the code that CI builds.
+# The four Rust gates below are one CI job each (cargo-fmt / cargo-clippy / cargo-test /
+# cargo-doc) and are what every later task has to keep green. `--locked` everywhere: Cargo.lock
+# is committed, so a gate that silently re-resolved it would not be testing the code CI builds.
 #
 # FIND_PYTHON exists because pyo3-ffi's build script locates CPython by scanning PATH, so any cargo
 # command that COMPILES the crate silently depends on whichever `python3` comes first. That is an
@@ -110,12 +110,13 @@ rust.fmt.check: ## Check Rust formatting without writing (CI mode)
 # flag makes the gate right, the `compile_error!` makes deleting the flag loud.
 #
 # It lives HERE and not in `.github/workflows/ci.yml` — which is what the task asked for — because
-# ci.yml contains zero direct `cargo` invocations: all six jobs shell out to these recipes
+# ci.yml contains zero direct `cargo` invocations: all eight jobs shell out to these recipes
 # Measured, because this repo's comments are facts: `grep -c "run: make" .github/workflows/ci.yml`
-# prints **7** — one per job, plus the second `make` step (`rust.build.nopython`) in `cargo-clippy` —
-# and `grep -cE '^\s+run:.*cargo'` prints **0**. Putting the flag in the one place both callers go
-# through is also what AC3 actually wants ("the Rust test count in CI equals the local
-# `cargo test --features python` count") — true by construction, not by two edits staying in sync.
+# prints **9** — one per job, plus the second `make` step (`rust.build.nopython`) in
+# `cargo-clippy` — and `grep -cE '^\s+run:.*cargo'` prints **0**. Putting the flag in the one
+# place both callers go through is also what AC3 actually wants ("the Rust test count in CI
+# equals the local `cargo test --features python` count") — true by construction, not by two
+# edits staying in sync.
 rust.lint: ## Lint the Rust code with clippy, warnings are errors
 	@$(FIND_PYTHON) $(CARGO) clippy --all-targets --locked --features python -- -D warnings
 
