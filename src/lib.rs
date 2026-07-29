@@ -27,7 +27,7 @@
 //! all, and with the feature off `otool -L target/debug/tooprolix` lists only
 //! `/usr/lib/libSystem.B.dylib`, so the standalone binary runs without an interpreter. The wheel
 //! turns the feature on through `[tool.maturin] features` in pyproject.toml, and that is also what
-//! makes [`tooprolix::main`](tooprolix::main) — the `[project.scripts]` entry point — exist.
+//! makes `tooprolix::main` — the `[project.scripts]` entry point — exist.
 //!
 //! The price is that `cargo test` with no feature compiles none of the 5 boundary tests at the
 //! bottom of this file and reports a smaller number in silence. `Makefile`'s `rust.lint` and
@@ -123,10 +123,22 @@ mod tooprolix {
         let argv: Vec<OsString> = py.import("sys")?.getattr("argv")?.extract()?;
         let status = crate::cli::status(argv.into_iter().skip(1));
 
-        // A cdylib gets no Rust runtime shutdown — the flush `std::process::ExitCode` buys
-        // `src/main.rs` does not happen here, and CPython exits the process on its own. Rust's
-        // stdout is a `LineWriter`, so newline-terminated findings are already out; this is for
-        // anything that is not, and it costs one syscall on a path that runs once per process.
+        // Belt and braces, and the braces are what actually hold since `cli::emit` stopped writing
+        // through `std::io::stdout()`. Every byte this tool prints now goes through a `BufWriter`
+        // that `emit` flushes explicitly before it returns, so by the time we get here there is
+        // nothing of ours left in Rust's stdout buffer and this flush is a no-op on an empty one.
+        //
+        // It stays because it is one syscall on a path that runs once per process, and because the
+        // reason it was added has not gone away: a cdylib gets no Rust runtime shutdown, so the
+        // flush `std::process::ExitCode` buys `src/main.rs` does not happen here and CPython exits
+        // the process on its own. If anything in this crate ever writes to `std::io::stdout()`
+        // again, this is what gets it out.
+        //
+        // It cannot report a failure — `let _` is deliberate — so it is not part of the write
+        // contract. That contract is `emit`'s, and it is what makes the wheel exit 2 on an
+        // unwritable stdout. Verified on a wheel built from this source: with stdout on a
+        // read-only fd, `tooprolix.main()` returns 2 and prints
+        // `error: could not write to stdout: Bad file descriptor (os error 9)`.
         let _ = std::io::stdout().flush();
 
         Ok(i32::from(status.code()))

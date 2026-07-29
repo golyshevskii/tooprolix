@@ -238,7 +238,7 @@ impl fmt::Display for Overrun<'_> {
 #[derive(Debug, Clone, PartialEq)]
 #[non_exhaustive]
 pub struct Report<'a> {
-    /// The findings, ordered by [`ProseBlock::coordinates`] and then by normalised text, and
+    /// The findings, ordered by `ProseBlock::coordinates` and then by normalised text, and
     /// therefore byte-identical for any arrival order of the same blocks.
     ///
     /// The text is in the key for the same reason it is in `duplicate`'s: two blocks can share a

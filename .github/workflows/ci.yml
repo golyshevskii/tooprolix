@@ -25,7 +25,7 @@ env:
   # re-resolving it. Verified locally with `UV_LOCKED=1 make <target>` for all
   # three targets (see task report) before enabling here.
   UV_LOCKED: "1"
-  # Cargo hygiene for CI, shared by the three cargo-* jobs below. Incremental
+  # Cargo hygiene for CI, shared by every job below that runs cargo. Incremental
   # compilation is pure overhead on a cold runner; the retries stop a flaky
   # crates.io from reading as a code failure.
   CARGO_INCREMENTAL: "0"
@@ -34,8 +34,13 @@ env:
   RUSTUP_MAX_RETRIES: "10"
 
 jobs:
-  # Six jobs: three Python (lint/type/test) and three Rust (cargo-fmt,
-  # cargo-clippy, cargo-test).
+  # Eight jobs: three Python (lint/type/test), four Rust (cargo-fmt,
+  # cargo-clippy, cargo-test, cargo-doc) and coverage.
+  #
+  # Keep this count honest. It read "Six jobs" while there were seven — the
+  # `coverage` job was added without updating it — and then eight when
+  # `cargo-doc` landed. A comment that miscounts the file it sits in is the
+  # cheapest possible thing to get wrong and the easiest to believe.
   #
   # The Rust jobs are deliberately NOT named `test`/`lint` — those names are
   # already taken by the Python jobs above and are registered as required
@@ -181,7 +186,7 @@ jobs:
       # `make rust.lint` and `make rust.test` both carry `--features python`, so without this step
       # NOTHING in CI compiles the crate with the feature OFF — which is the configuration the
       # standalone binary of AC1 is built in. A `use pyo3::…` that escaped the `#[cfg]` would then
-      # break `cargo build` for every consumer while all six checks stayed green. It rides in this
+      # break `cargo build` for every consumer while all eight checks stayed green. It rides in this
       # job rather than a new one because a new job would be a new required status check.
       - name: make rust.build.nopython
         run: make rust.build.nopython
@@ -234,6 +239,58 @@ jobs:
 
       - name: make rust.test
         run: make rust.test
+
+  # The rustdoc gate. NEW in the /rust-skills audit: before it, `.github/workflows/ci.yml` contained
+  # zero mentions of `cargo doc`/`rustdoc`, and `cargo doc` exits 0 on a broken intra-doc link — so
+  # `main` at 962678d carried 5 rustdoc diagnostics with all seven jobs green. One of them
+  # (`[`render_failures`]` in the rustdoc of `python_files`) named a function that exists nowhere in
+  # `src/`; it had been renamed and the doc was never followed.
+  #
+  # It is its OWN job rather than a step inside cargo-clippy, which is the opposite of the choice
+  # `make rust.build.nopython` made. The reason that choice was made there — "a new job would be a
+  # new required status check" — is not true of this repository today: it is private without GitHub
+  # Pro, so `branches/main/protection` is 404 and no check is required at all. A separate job is
+  # therefore free right now, and it is the shape task #14 will want once protection exists, because
+  # a rustdoc failure and a clippy failure are different answers and should not share a red X.
+  #
+  # No `paths:` and no `if:`, like every other job in this file: a SKIPPED check does not satisfy a
+  # required status check, so a filter added today wedges the PR on the day protection is enabled.
+  #
+  # It needs a managed Python for exactly the reason cargo-clippy does — `make rust.doc` carries
+  # `--features python`, so the build script for pyo3-ffi runs and must find an interpreter.
+  # Without it the run dies inside pyo3-ffi before rustdoc emits a single diagnostic, which would be
+  # a gate that fails for the wrong reason rather than a gate that passes.
+  cargo-doc:
+    name: cargo-doc
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      UV_MANAGED_PYTHON: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+
+      - name: Install a managed Python for the pyo3 build script
+        run: uv python install "${PYTHON_VERSION}"
+
+      - name: Show the pinned toolchain
+        run: rustup show
+
+      - name: Cache Rust artifacts
+        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: make rust.doc
+        run: make rust.doc
 
   # There are no coverage badges and nothing here to diff, so what this job protects is the
   # INSTRUMENT rather than a number: it is the only place proving that the coverage toolchain still

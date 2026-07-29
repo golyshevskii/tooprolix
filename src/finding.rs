@@ -151,7 +151,7 @@ impl fmt::Display for Location {
     ///
     /// # One owner, and where it actually lives
     ///
-    /// The format itself is **not** owned here — it is [`crate::extract::write_address`], which this
+    /// The format itself is **not** owned here — it is `crate::extract::write_address`, which this
     /// impl and both detectors' `Display` impls call. Saying "the only place an address becomes a
     /// string" was true until that function gained three callers, and it is corrected rather than
     /// left standing: two owners of one format is the divergence the shared function exists to make

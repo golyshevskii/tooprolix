@@ -3290,3 +3290,146 @@ fn two_reporting_flags_at_once_are_refused_rather_than_ranked() {
         );
     }
 }
+
+/// A consumer that stops reading gets exit 0 and silence, not a panic — in BOTH formats.
+///
+/// `tooprolix check big/ | head -5` used to exit **101** and print
+/// `thread 'main' panicked at ... failed printing to stdout: Broken pipe (os error 32)`, because
+/// Rust's `println!` panics on a write error and nothing caught it. 101 is outside the documented
+/// 0/1/2 contract altogether, and `| head` is an ordinary thing to do with a linter. ruff answers
+/// the identical pipeline with **0**, which is the parity this pins.
+///
+/// The reader is closed *before* the child can write, so the very first write fails and the test
+/// has no race in it. Both formats are covered because the JSON path is a single large `write_all`
+/// and the text path is a loop — different code, same contract.
+///
+/// The stderr assertion is not decoration: exiting 0 while still printing a panic to stderr would
+/// satisfy an exit-code-only test and still be the defect. So is the finding count — a handler that
+/// swallowed every io error would make `| cat` green too, which is why
+/// `a_readable_pipe_still_reports_findings` sits beside this and asserts exit 1.
+#[test]
+fn a_consumer_that_stops_reading_is_not_an_error() {
+    // Arrange — enough findings that the writer is still writing when the reader is gone.
+    let scratch = Scratch::new("broken-pipe");
+    for name in ["alpha", "bravo", "charlie", "delta", "echo", "foxtrot"] {
+        scratch.write(
+            &format!("{name}.py"),
+            &long_comment(&format!("{name} budget")),
+        );
+    }
+
+    for format in [&[][..], &["--format", "json"][..]] {
+        // Act — spawn, then drop the read end before reading a single byte.
+        let mut arguments = vec!["check", "."];
+        arguments.extend_from_slice(format);
+        let mut child = Command::new(env!("CARGO_BIN_EXE_tooprolix"))
+            .args(&arguments)
+            .current_dir(&scratch.root)
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped())
+            .spawn()
+            .expect("the binary cargo just built is executable");
+        drop(child.stdout.take().expect("stdout was piped"));
+
+        let output = child
+            .wait_with_output()
+            .expect("the child is waitable after its pipe is closed");
+        let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
+
+        // Assert
+        assert_eq!(
+            output.status.code(),
+            Some(0),
+            "{arguments:?}: a closed pipe must be exit 0, got {:?} with stderr {stderr:?}",
+            output.status.code()
+        );
+        assert!(
+            !stderr.contains("panicked") && !stderr.contains("Broken pipe"),
+            "{arguments:?}: the panic reached the user: {stderr:?}"
+        );
+    }
+}
+
+/// ... and the clean stop must not swallow a real find: a reader that DOES read still gets exit 1.
+///
+/// The guard in `status` keys on `ErrorKind::BrokenPipe` alone. Widening it to any write failure
+/// would make this test's tree — six files, all with findings — report success, which is the
+/// fail-open shape of the fix rather than the fix.
+#[test]
+fn a_readable_pipe_still_reports_findings() {
+    let scratch = Scratch::new("broken-pipe-readable");
+    for name in ["alpha", "bravo", "charlie"] {
+        scratch.write(
+            &format!("{name}.py"),
+            &long_comment(&format!("{name} budget")),
+        );
+    }
+
+    let output = scratch.check(&[]);
+
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "a fully read run with findings is exit 1: {:?}",
+        stderr_of(&output)
+    );
+    assert!(
+        stdout_of(&output).contains("TPX001"),
+        "the findings themselves went missing: {:?}",
+        stdout_of(&output)
+    );
+}
+
+/// A write failure that is NOT a closed pipe is reported: exit 2, with the reason on stderr.
+///
+/// The injection is a **read-only fd as stdout** — `File::open` gives a fd opened for reading, and
+/// `Stdio::from` hands it to the child as its fd 1. Writing to it fails with `EBADF`. That is a
+/// real failure and not a synthetic one: `sh -c 'echo hi'`, `head` and `/bin/echo` all report
+/// `Bad file descriptor` and exit 1 on the identical fd.
+///
+/// It is the other half of `a_consumer_that_stops_reading_is_not_an_error`. That test pins the one
+/// write failure that is FORGIVEN; this one pins that forgiveness is narrow. Without it, widening
+/// the guard to "any write failure is a clean stop" is invisible end-to-end — the unit table
+/// `only_a_closed_pipe_is_a_clean_stop` catches it, but nothing proves the wiring reaches a real
+/// process with a real broken fd.
+///
+/// This case reached exit 2 only after `emit` stopped writing through `std::io::stdout()`.
+/// Measured on `4ac17da`: `EBADF` was swallowed by std — `write_all` and `flush` both returned
+/// `Ok(())` while the data went nowhere — so `check` exited **1** and the discovery commands
+/// exited **0**, both in complete silence. See `emit`'s documentation for the mechanism.
+#[cfg(unix)]
+#[test]
+fn a_write_failure_that_is_not_a_closed_pipe_is_reported() {
+    let scratch = Scratch::new("readonly-stdout");
+    scratch.write("fat.py", &long_comment("retry budget"));
+    let sink = scratch.write("sink.txt", "");
+
+    // `check` (findings on stdout) and the three discovery commands all go through `emit`.
+    for arguments in [
+        vec!["check", "."],
+        vec!["check", ".", "--format", "json"],
+        vec!["--version"],
+        vec!["--rules"],
+    ] {
+        let readonly = std::fs::File::open(&sink).expect("the sink is openable for reading");
+        let output = Command::new(env!("CARGO_BIN_EXE_tooprolix"))
+            .args(&arguments)
+            .current_dir(&scratch.root)
+            .stdout(std::process::Stdio::from(readonly))
+            .stderr(std::process::Stdio::piped())
+            .output()
+            .expect("the binary cargo just built is executable");
+        let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
+
+        assert_eq!(
+            output.status.code(),
+            Some(2),
+            "{arguments:?}: an unwritable stdout must be exit 2, got {:?} with stderr {stderr:?}",
+            output.status.code()
+        );
+        assert!(
+            stderr.contains("could not write to stdout"),
+            "{arguments:?}: the failure was not named on stderr: {stderr:?}"
+        );
+    }
+}

@@ -128,7 +128,9 @@ claiming a completeness the run does not have. `--format json` never prints it.
 | the tree was read whole, nothing to report | **0** |
 | the tree was read whole, findings were printed | **1** |
 | part of the tree could not be read — with or without findings | **1** |
+| **the consumer stopped reading (a closed pipe)** | **0** |
 | the run could not start: a bad path, a broken `[tool.tooprolix]` | **2** |
+| the output could not be written for any other reason (a full disk) | **2** |
 
 A file that does not parse, or that cannot be opened, does not fail the run: it is named on stderr
 with the reason, the rest of the tree is still checked, and the findings that were reachable are
@@ -136,6 +138,38 @@ printed.
 
 **A tree that was not read whole never exits 0** — that guarantee is what makes the rest safe, so
 "no findings" and "not fully measured" are never the same answer.
+
+### A consumer that stops reading
+
+`tooprolix check . | head -5` exits **0** and prints nothing on stderr. The run itself succeeded —
+it measured the tree and produced the answer — and a reader that closed the pipe has already
+decided it has what it needs. This is what `ruff` answers to the same pipeline. It is deliberately
+**not** an exception to the guarantee above: nothing went unmeasured, only undelivered.
+
+Only a closed pipe is treated this way. Any other failure to write is exit **2** with the reason on
+stderr, because there the answer genuinely did not reach its destination. Both cases are measured,
+not asserted (2026-07-29, macOS/APFS, `aarch64-apple-darwin`):
+
+| stdout is | exit | stderr |
+|---|---|---|
+| a filesystem with no space left (a 2 MB image filled to capacity) | **2** | `error: could not write to stdout: No space left on device (os error 28)` |
+| a fd opened read-only, or a fd pointing at a directory | **2** | `error: could not write to stdout: Bad file descriptor (os error 9)` |
+
+Both rows hold for the text format and for `--format json`, and the second holds for `--version`,
+`--rules` and `--help` as well.
+
+⚠️ **The read-only-fd row is unix-only, and the reason is a standard-library behaviour worth
+knowing about.** `std::io::stdout()` silently discards `EBADF`: writing to an unwritable descriptor
+through it returns `Ok(())` while the bytes go nowhere, so this tool used to exit **1** in complete
+silence on an unwritable stdout. It is specific to `EBADF` — a closed pipe and a full disk both
+travel through the same code correctly. `tooprolix` therefore writes through a safely duplicated
+descriptor instead. On a non-unix platform, where that duplication is not available in safe code,
+an `EBADF`-shaped failure remains silent.
+
+⚠️ **`--format json` piped to a reader that stops early yields a TRUNCATED document**, not a smaller
+valid one. The JSON is a single document larger than any pipe buffer, so it cannot be written
+atomically; if you stop reading, what you have is a prefix and parsing it is an error. Read the
+whole document, or use the text format for streaming.
 
 ### Symlinked sources
 

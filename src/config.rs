@@ -106,7 +106,7 @@ pub struct Config {
     /// own directory.
     ///
     /// Kept as the strings the file wrote, in file order, rather than as a built matcher: the
-    /// matcher is not comparable, and `Config` is compared. [`exclude_matcher`] turns these into
+    /// matcher is not comparable, and `Config` is compared. `exclude_matcher` turns these into
     /// the one the walk uses, and is the *only* thing that does — so the validation [`load`]
     /// performs and the filtering [`crate::cli`] applies can never be built from different rules.
     pub exclude: Vec<String>,
@@ -447,9 +447,30 @@ fn read_exclude(value: &toml::Value, path: &Path) -> Result<Vec<String>, Error> 
             problem: format!("expected a glob string, found {}", entry.type_str()),
         })?;
 
-        // NORMALISE FIRST, then judge, then keep the normalised form. Every line below compares
-        // against `glob` and never against `raw`, because a guard that reads position zero of an
-        // un-normalised string is a guard one space defeats — which is exactly what happened here.
+        // NORMALISE FIRST, then judge the NORMALISED form, then keep it. The order is the whole
+        // guard, and the previous revision only claimed it: it judged `raw.trim()` and normalised
+        // afterwards, so every check read a string the walk would never see.
+        //
+        // Whitespace was never the only thing that could sit in front of the `!`. A `./` hop is a
+        // path component to nobody and is stripped by `normalise_glob`, so `./!vendor` walked past
+        // a guard reading position zero and reached `exclude_matcher` as the bare `!vendor` it
+        // exists to refuse — which that function then spells `!!vendor`.
+        //
+        // What `!!vendor` actually means is worth stating exactly, because the obvious reading is
+        // wrong. It is NOT a double negation that cancels out. `ignore-0.4.31`'s
+        // `Gitignore::add_line` strips a leading `!` with an `if`, not a `while`: the first `!` is
+        // consumed as the whitelist marker and the remainder, `!vendor`, stays as a **literal**
+        // pattern. So the entry becomes "exclude a file whose name is literally `!vendor`" — a
+        // rule that is well-formed, applied, and matches nothing any real tree contains.
+        //
+        // The observable outcome is the same either way, which is why the wrong description
+        // survived a round: measured on the built binary over a tree with one excluded finding,
+        // `"!vendor"` gave exit 2, and `"./!vendor"` and `".//!vendor"` gave **exit 1 with the
+        // finding still reported**. The config looked applied and did nothing, which is precisely
+        // the silent no-op the message below names.
+        //
+        // Comparing before normalising is a recorded defect class of this project, not a
+        // hypothesis; it is the same one `crate::cli` and `discover` both canonicalise against.
         let glob = raw.trim();
 
         if glob.is_empty() {
@@ -460,7 +481,12 @@ fn read_exclude(value: &toml::Value, path: &Path) -> Result<Vec<String>, Error> 
                     .to_owned(),
             });
         }
-        if glob.starts_with('!') {
+        let normalised = normalise_glob(glob).map_err(|problem| Error::BadValue {
+            path: path.to_path_buf(),
+            key: "exclude".to_owned(),
+            problem: format!("`{raw}` {problem}"),
+        })?;
+        if normalised.starts_with('!') {
             return Err(Error::BadValue {
                 path: path.to_path_buf(),
                 key: "exclude".to_owned(),
@@ -470,11 +496,34 @@ fn read_exclude(value: &toml::Value, path: &Path) -> Result<Vec<String>, Error> 
                 ),
             });
         }
-        excluded.push(normalise_glob(glob).map_err(|problem| Error::BadValue {
-            path: path.to_path_buf(),
-            key: "exclude".to_owned(),
-            problem: format!("`{raw}` {problem}"),
-        })?);
+        // The same class as the two guards above, one separator further out. `normalise_glob`
+        // splits on `/` and nothing else, but `OverrideBuilder` reads `\` as an ESCAPE — so
+        // `vendor\**` is not a two-component path, it is the single literal name `vendor**`, which
+        // matches nothing. Measured on the built binary before this guard, on a tree with one
+        // excluded finding: exit 1 with the finding still reported. On Windows `vendor\**` is the
+        // natural way to write `vendor/**`, so this is the spelling most likely to be typed by
+        // someone whose tree it then silently fails to exclude.
+        //
+        // REFUSED, not rewritten into `/`. A backslash is a legal filename character on POSIX, so
+        // rewriting guesses intent, and it would break the one backslash spelling that is correct
+        // today: `\!vendor` escapes the leading `!` to name a file literally called `!vendor`.
+        // Refusing the class costs that spelling — deliberately, and the message says so — because
+        // a guard that silently changes what a glob means is the failure this whole function
+        // exists to prevent. Fail loud beats guess right.
+        if normalised.contains('\\') {
+            return Err(Error::BadValue {
+                path: path.to_path_buf(),
+                key: "exclude".to_owned(),
+                problem: format!(
+                    "`{raw}` contains a backslash, which is not a path separator here: globs are \
+                     matched with `/` on every platform, and `\\` is read as an escape, so this \
+                     entry would silently exclude nothing. Write `/` instead. (This also refuses \
+                     `\\!name`, the escape for a file literally called `!name`; name it with a \
+                     glob that does not lead with the escape.)"
+                ),
+            });
+        }
+        excluded.push(normalised);
     }
 
     Ok(excluded)
@@ -861,6 +910,49 @@ mod tests {
                 "[tool.tooprolix]\nexclude = [\"\\t!vendor\"]\n",
                 "!",
                 "a negated glob behind a tab",
+            ),
+            // The same defect one normalisation further out, and the reason the guard moved below
+            // `normalise_glob`. Whitespace was not the only thing that could sit in front of the
+            // `!`: a `./` hop is stripped by normalisation, so the entry reaches the matcher as the
+            // bare `!vendor` this guard exists to refuse. Measured on the built binary before the
+            // fix, on a tree of one excluded finding: `"!vendor"` was exit 2, and `"./!vendor"` was
+            // **exit 1 with the finding still reported** — the config silently excluded nothing,
+            // which is precisely the no-op the message below describes.
+            (
+                "[tool.tooprolix]\nexclude = [\"./!vendor\"]\n",
+                "!",
+                "a negated glob behind a `./` hop",
+            ),
+            (
+                "[tool.tooprolix]\nexclude = [\".//!vendor\"]\n",
+                "!",
+                "a negated glob behind a separator run",
+            ),
+            // The SECOND compare-before-normalise instance, and the reason `\` is refused outright
+            // rather than rewritten. `normalise_glob` splits on `/` and nothing else, while the
+            // `ignore` crate's `OverrideBuilder` reads `\` as an ESCAPE — so a Windows-shaped
+            // `vendor\**` is not a path with two components, it is the single literal name `vendor**`
+            // that matches nothing. Measured on the built binary before this guard: exit 1 with the
+            // finding still reported, i.e. the tree the user excluded was measured anyway.
+            //
+            // Rewriting `\` into `/` was rejected: on POSIX a backslash is a legal filename
+            // character, so the rewrite would guess intent and break the one spelling that is
+            // currently CORRECT — `\!vendor`, which escapes a leading `!` to name a file literally
+            // called `!vendor`. Refusing the whole class costs that spelling, and that is the
+            // intended consequence rather than a regression: the message says so, and a file named
+            // `!vendor` can still be reached by a glob that does not lead with the escape.
+            //
+            // Note both of these are TOML *literal* strings (single quotes). In a basic string
+            // `"vendor\**"` is a TOML parse error, which is exactly what hid this for so long.
+            (
+                "[tool.tooprolix]\nexclude = ['vendor\\**']\n",
+                "backslash",
+                "a Windows-shaped separator, which the matcher reads as an escape",
+            ),
+            (
+                "[tool.tooprolix]\nexclude = ['\\!vendor']\n",
+                "backslash",
+                "an escaped `!`, refused with the rest of the backslash class",
             ),
             (
                 "[tool.tooprolix]\nexclude = [\"a[\"]\n",
