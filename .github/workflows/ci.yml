@@ -34,13 +34,14 @@ env:
   RUSTUP_MAX_RETRIES: "10"
 
 jobs:
-  # Eight jobs: three Python (lint/type/test), four Rust (cargo-fmt,
-  # cargo-clippy, cargo-test, cargo-doc) and coverage.
+  # Nine jobs: three Python (lint/type/test), four Rust (cargo-fmt,
+  # cargo-clippy, cargo-test, cargo-doc), coverage, and pr-title.
   #
   # Keep this count honest. It read "Six jobs" while there were seven — the
   # `coverage` job was added without updating it — and then eight when
-  # `cargo-doc` landed. A comment that miscounts the file it sits in is the
-  # cheapest possible thing to get wrong and the easiest to believe.
+  # `cargo-doc` landed, and nine when `pr-title` did. A comment that miscounts
+  # the file it sits in is the cheapest possible thing to get wrong and the
+  # easiest to believe.
   #
   # The Rust jobs are deliberately NOT named `test`/`lint` — those names are
   # already taken by the Python jobs above and are registered as required
@@ -356,3 +357,77 @@ jobs:
 
       - name: make cov
         run: make cov
+
+  # The release contract. This repository squash-merges, so the squashed commit's SUBJECT is the
+  # pull request TITLE, and conventional-commits parsing reads the subject — the branch's own
+  # subjects become body prose that nothing parses. PR #17 was titled `Audit the Rust code with
+  # /rust-skills, and close what it found` over a branch carrying `fix!: stop on a closed pipe…`;
+  # the `!` survived into the body of `033ceeb` at line 77 and the release was **v0.3.4**, a patch,
+  # for a breaking change. The tag, the GitHub release and the CHANGELOG entry are all live.
+  #
+  # So this job grades TWO things, and the second is the one that actually failed: that the title
+  # parses as a Conventional Commit with a known type, AND that no commit on the branch carries a
+  # `!` or a `BREAKING CHANGE:` footer the title does not. The grammar check alone would have caught
+  # #17 only by luck — `fix: audit the Rust code` passes it and ships the identical patch.
+  #
+  # The logic is `scripts/pr_title_gate.py`, not inline shell, for the reason
+  # `scripts/coverage_report.py` exists: YAML is not unit-testable, and this gate's guarantee needs
+  # both a bad and a good input proved against it. `tests/unit/test_pr_title_gate.py` runs the
+  # script exactly as the step below does, so a guard deleted from its `main()` reddens `make test`.
+  #
+  # No `paths:` and no `if:` on the JOB, like every other job in this file: a SKIPPED check does not
+  # satisfy a required status check, so a filter added today wedges the PR on the day branch
+  # protection is enabled. The `push: main` case is handled INSIDE the step instead — a push has no
+  # pull request and therefore no title, and the job reports success rather than never reporting.
+  # Everything else fails CLOSED: an unreachable API, a missing PR number, a payload of the wrong
+  # shape and an unset title are all red.
+  #
+  # `PR_TITLE` is passed through the ENVIRONMENT, never interpolated into the `run:` script. A title
+  # is attacker-controlled text; `${{ … }}` inside a shell body would be a command injection.
+  #
+  # `uv run --no-project python3`, which is exactly how the Makefile runs `scripts/coverage_report.py`
+  # and what CONTRIBUTING.md's toolchain rule requires ("use `uv run python3`, never a bare
+  # `python3`"). `--no-project` because the script is standard library only and imports nothing from
+  # this repository, so there is no environment to sync — but the interpreter is still the deliberate
+  # uv-managed one rather than whatever the runner image happens to ship.
+  pr-title:
+    name: pr-title
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Job-level permissions REPLACE the workflow-level `contents: read`, so both are named here.
+    # `pull-requests: read` is what lets `gh api .../pulls/<n>/commits` see a private repository.
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+
+      - name: scripts/pr_title_gate.py
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          set -euo pipefail
+          if [ "${EVENT_NAME}" != "pull_request" ]; then
+            echo "pr-title: ${EVENT_NAME} is not a pull_request event — there is no title to grade."
+            exit 0
+          fi
+          # The REAL commits of the pull request, from the API, never a summary of them. `--slurp`
+          # returns an array of PAGES rather than of commits, and `jq 'add'` is what flattens it;
+          # `set -o pipefail` makes a failure anywhere in this pipe red, and the script itself
+          # refuses a payload that is still nested.
+          gh api "repos/${REPO}/pulls/${PR_NUMBER}/commits" --paginate --slurp \
+            | jq 'add' > "${RUNNER_TEMP}/commits.json"
+          uv run --no-project python3 scripts/pr_title_gate.py --commits "${RUNNER_TEMP}/commits.json"

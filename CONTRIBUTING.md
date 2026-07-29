@@ -10,11 +10,93 @@ Every commit message must follow [Conventional Commits](https://www.conventional
 
 Types in use: `feat`, `fix`, `perf`, `refactor`, `test`, `docs`, `chore`, `ci`, `build`.
 
-This is not a style preference — it is load-bearing. release-plz reads these messages to compute the
-next version number and to write `CHANGELOG.md`. A commit that does not parse contributes nothing to
-the changelog, and a `fix:` mislabelled as `chore:` silently skips a release.
-
 A breaking change is marked with `!` (`feat!: …`) or a `BREAKING CHANGE:` footer.
+
+This is not a style preference — it is load-bearing, and it is load-bearing **on the pull request
+title**, not on the individual commits. ⚠️ This paragraph used to say that release-plz reads *these
+messages* to compute the version. Under this repository's squash merge that is **false**, and it is
+the sentence that made losing a version boundary feel safe. The next section is what actually
+happens; read it before opening a pull request.
+
+Commit-level discipline still matters — the reviewer reads it, and it is what the gate below
+compares your title against — but nothing downstream of the merge button ever parses it.
+
+## What decides the version number
+
+**The pull request TITLE is the release contract.** This repository squash-merges, so the squashed
+commit's *subject* is the pull request title, and conventional-commits parsing reads the subject.
+Your branch's own commit subjects are demoted into the body of that commit, as prose, where nothing
+parses them. release-plz never sees them.
+
+So:
+
+- the PR title must itself be a Conventional Commit — `<type>(<optional scope>)!: <summary>`;
+- a **breaking change must carry `!` in the PR TITLE**. A `!` on a branch commit is not enough;
+- if the two disagree, the title wins, silently, and the release is mispriced.
+
+**The worked example is `033ceeb`, and it is on `main`.** PR #17 was titled `Audit the Rust code
+with /rust-skills, and close what it found` — no type, no `!` — over a branch containing
+`fix!: stop on a closed pipe, and refuse a backslash in \`exclude\``. The marker survived: it is in
+the body of `033ceeb` at **line 77**, where nothing reads it. release-plz saw a non-conventional
+subject and cut **`v0.3.4`**, a patch, for a breaking change; `CHANGELOG.md` files it under
+"Other". Re-measured 2026-07-29 on the live `v0.3.4` tag: the same change under a `fix!:` title
+answers `0.3.4 -> 0.4.0`. The boundary was lost at the merge dialog, not in the code.
+
+Proved in both directions by this repository's own history: #5 `feat!:` → **v0.2.0**, #9 `feat!:` →
+**v0.3.0**, #7 `feat:` → v0.2.1, #15 `ci:` → v0.3.3, **#17 no type → v0.3.4 ❌**.
+
+**A CI job now grades this**, because "remember to title the PR correctly" depends on attention at
+exactly the moment attention is scarce. The `pr-title` job runs `scripts/pr_title_gate.py` against
+the real title from the event payload and the real commits from the API, and fails when either the
+title does not parse or the branch carries a `!` / `BREAKING CHANGE:` the title does not. Its
+failure message names the bump your title would produce and the bump you probably wanted. It fails
+closed: an unreadable title or commit list is red, never a skip.
+
+### The bump table — measured, both halves
+
+Measured on throwaway clones with release-plz 0.3.160, one commit type per run, each with a real
+change to a packaged file. The `0.x` column was first measured 2026-07-27 on a real `v0.1.0` tag and
+**re-measured 2026-07-29 on the live `v0.3.4` tag**; the `1.x` column was measured 2026-07-29 on a
+throwaway clone tagged `v1.0.0`. Neither column is an assumption about semver.
+
+| commit type | while the crate is `0.x` (from `0.3.4`) | after `1.0.0` (from `1.0.0`) |
+|---|---|---|
+| `fix:` | `0.3.5` — patch | `1.0.1` — patch |
+| `feat:` | 🔴 `0.3.5` — **patch** | `1.1.0` — minor |
+| `perf:` / `docs:` / `chore:` / `refactor:` | `0.3.5` — patch | `1.0.1` — patch |
+| `feat!:` / `fix!:` / a `BREAKING CHANGE:` footer | **`0.4.0` — minor** | **`2.0.0` — major** |
+| anything, changing no packaged file | no release at all | no release at all |
+
+Three consequences, each of which surprises somebody:
+
+1. 🔴 **While the crate is `0.x`, `feat:` does NOT give a minor.** Only `!` / `BREAKING CHANGE`
+   moves the middle number. Anyone reasoning from ordinary semver gets this wrong — and the `1.x`
+   column shows the rule changing under them the day `1.0.0` ships.
+2. **There is no `major` today.** On `0.x` the largest bump reachable is a minor. The first `1.0.0`
+   is a deliberate act, not something a commit type triggers, and it belongs to the publication
+   task.
+3. **Even `docs:` and `chore:` produce a release**, as long as the commit changes a packaged file.
+   The type chooses the CHANGELOG *section*, not whether a bump happens. The only thing producing no
+   release is a commit that leaves the packaged content byte-identical — an `--allow-empty` `feat!:`
+   answers `already up to date`.
+
+⚠️ **None of this is a property of release-plz in general — it is a property of `git_only = true`
+in `release-plz.toml`.** The version comes from the git tag, not from a registry, because this crate
+is never published. Without that line "the next version is the current version, forever", measured.
+Read that file's comment before changing anything here.
+
+## `v0.3.4` shipped a breaking change as a patch, and is knowingly left as is
+
+Recorded so it is not rediscovered as a bug. `v0.3.4` should have been `v0.4.0`. The tag, the GitHub
+release and the CHANGELOG entry are live and all say patch.
+
+**It is deliberately not being fixed.** It is not retagged, the release is not deleted, and neither
+`[package] version` in `Cargo.toml` nor the `## [0.3.4]` heading in `CHANGELOG.md` is hand-edited —
+the rule above forbids exactly that, and the rule stands. Nothing is user-facing: the repository is
+private and PyPI returns 404 for this project, so the entire cost is bookkeeping.
+
+**Owner: the `flip-public-and-publish-to-pypi` task**, which chooses the first *published* version
+deliberately. Until then this is a known wart with a named owner, not an open question.
 
 ## Never edit versions or the changelog by hand
 
@@ -71,9 +153,13 @@ make rust.doc         # cargo doc, warnings are errors      -> CI job "cargo-doc
 existed the crate carried five rustdoc diagnostics with every other job green — one of them a link
 to a function that had been renamed away. `RUSTDOCFLAGS="-D warnings"` is what makes them fail.
 
-An eighth job, `coverage`, runs `make cov` — see below. **It is deliberately not a required check**:
-it protects the measuring instrument (that the coverage toolchain still resolves and that the report
-grader still accepts a real run), not the shipped artifact.
+Two more jobs have no `make` target because neither grades the source tree. An **eighth** job,
+`coverage`, runs `make cov` — see below. **It is deliberately not a required check**: it protects
+the measuring instrument (that the coverage toolchain still resolves and that the report grader
+still accepts a real run), not the shipped artifact. A **ninth** job, `pr-title`, grades the pull
+request title — see "What decides the version number" above. It runs on `pull_request` events only
+and reports success on a push to `main`, where there is no title to grade; its guards are unit
+tested by `tests/unit/test_pr_title_gate.py` under `make test`.
 
 **None of them is enforced by branch protection today — not one.** This paragraph used to say that
 `lint`, `type` and `test` were required; that was measured false on 2026-07-29:
@@ -86,6 +172,11 @@ Consequence, and it is the reason this is written down rather than quietly corre
 request with every Rust gate red is still mergeable.** Read the job results yourself before
 merging; do not treat a green merge button as a green build. Registering the required set is part
 of making the repository public, and it is owned by the `flip-public-and-publish-to-pypi` task.
+
+The same is true of the `pr-title` job, and it is the other thing the merge button does not tell
+you: a red `pr-title` is a warning today and becomes a barrier the moment protection is registered.
+Until then, a mispriced release is one ignored red X away — which is precisely how `v0.3.4`
+happened, when there was no X at all.
 
 `make rust.fmt` and `make lint.fix` are the fixing counterparts. `make help` lists everything.
 
