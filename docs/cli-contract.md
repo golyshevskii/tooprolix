@@ -146,9 +146,25 @@ it measured the tree and produced the answer — and a reader that closed the pi
 decided it has what it needs. This is what `ruff` answers to the same pipeline. It is deliberately
 **not** an exception to the guarantee above: nothing went unmeasured, only undelivered.
 
-Only a closed pipe is treated this way. Any other failure to write — a full disk, a refused
-redirect — is still exit **2** with the reason on stderr, because there the answer genuinely did not
-reach its destination.
+Only a closed pipe is treated this way. Any other failure to write is exit **2** with the reason on
+stderr, because there the answer genuinely did not reach its destination. Both cases are measured,
+not asserted (2026-07-29, macOS/APFS, `aarch64-apple-darwin`):
+
+| stdout is | exit | stderr |
+|---|---|---|
+| a filesystem with no space left (a 2 MB image filled to capacity) | **2** | `error: could not write to stdout: No space left on device (os error 28)` |
+| a fd opened read-only, or a fd pointing at a directory | **2** | `error: could not write to stdout: Bad file descriptor (os error 9)` |
+
+Both rows hold for the text format and for `--format json`, and the second holds for `--version`,
+`--rules` and `--help` as well.
+
+⚠️ **The read-only-fd row is unix-only, and the reason is a standard-library behaviour worth
+knowing about.** `std::io::stdout()` silently discards `EBADF`: writing to an unwritable descriptor
+through it returns `Ok(())` while the bytes go nowhere, so this tool used to exit **1** in complete
+silence on an unwritable stdout. It is specific to `EBADF` — a closed pipe and a full disk both
+travel through the same code correctly. `tooprolix` therefore writes through a safely duplicated
+descriptor instead. On a non-unix platform, where that duplication is not available in safe code,
+an `EBADF`-shaped failure remains silent.
 
 ⚠️ **`--format json` piped to a reader that stops early yields a TRUNCATED document**, not a smaller
 valid one. The JSON is a single document larger than any pipe buffer, so it cannot be written

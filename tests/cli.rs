@@ -3379,3 +3379,57 @@ fn a_readable_pipe_still_reports_findings() {
         stdout_of(&output)
     );
 }
+
+/// A write failure that is NOT a closed pipe is reported: exit 2, with the reason on stderr.
+///
+/// The injection is a **read-only fd as stdout** — `File::open` gives a fd opened for reading, and
+/// `Stdio::from` hands it to the child as its fd 1. Writing to it fails with `EBADF`. That is a
+/// real failure and not a synthetic one: `sh -c 'echo hi'`, `head` and `/bin/echo` all report
+/// `Bad file descriptor` and exit 1 on the identical fd.
+///
+/// It is the other half of `a_consumer_that_stops_reading_is_not_an_error`. That test pins the one
+/// write failure that is FORGIVEN; this one pins that forgiveness is narrow. Without it, widening
+/// the guard to "any write failure is a clean stop" is invisible end-to-end — the unit table
+/// `only_a_closed_pipe_is_a_clean_stop` catches it, but nothing proves the wiring reaches a real
+/// process with a real broken fd.
+///
+/// This case reached exit 2 only after `emit` stopped writing through `std::io::stdout()`.
+/// Measured on `4ac17da`: `EBADF` was swallowed by std — `write_all` and `flush` both returned
+/// `Ok(())` while the data went nowhere — so `check` exited **1** and the discovery commands
+/// exited **0**, both in complete silence. See `emit`'s documentation for the mechanism.
+#[cfg(unix)]
+#[test]
+fn a_write_failure_that_is_not_a_closed_pipe_is_reported() {
+    let scratch = Scratch::new("readonly-stdout");
+    scratch.write("fat.py", &long_comment("retry budget"));
+    let sink = scratch.write("sink.txt", "");
+
+    // `check` (findings on stdout) and the three discovery commands all go through `emit`.
+    for arguments in [
+        vec!["check", "."],
+        vec!["check", ".", "--format", "json"],
+        vec!["--version"],
+        vec!["--rules"],
+    ] {
+        let readonly = std::fs::File::open(&sink).expect("the sink is openable for reading");
+        let output = Command::new(env!("CARGO_BIN_EXE_tooprolix"))
+            .args(&arguments)
+            .current_dir(&scratch.root)
+            .stdout(std::process::Stdio::from(readonly))
+            .stderr(std::process::Stdio::piped())
+            .output()
+            .expect("the binary cargo just built is executable");
+        let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
+
+        assert_eq!(
+            output.status.code(),
+            Some(2),
+            "{arguments:?}: an unwritable stdout must be exit 2, got {:?} with stderr {stderr:?}",
+            output.status.code()
+        );
+        assert!(
+            stderr.contains("could not write to stdout"),
+            "{arguments:?}: the failure was not named on stderr: {stderr:?}"
+        );
+    }
+}

@@ -465,11 +465,23 @@ pub(crate) fn status<I: IntoIterator<Item = OsString>>(arguments: I) -> ExitStat
         // were written are correct and the ones that were not are output nobody asked for; a
         // consumer that closed the pipe has already decided it has what it needs.
         //
-        // ⚠️ The `kind` test is the whole guard, and widening it is the way this becomes a
-        // fail-open. Every OTHER write failure — a full disk, an I/O error on a redirect — still
-        // falls through to the loud branch below and exits 2. A handler that treated any
-        // `Error::Output` as a clean stop would turn "the answer never reached the file" into a
-        // green run, which is exactly the class this epic keeps finding.
+        // The `kind` test is the whole guard, and widening it is the way this becomes a
+        // fail-open. Every OTHER write failure falls through to the loud branch below and exits 2,
+        // and both halves of that are measured rather than assumed (2026-07-29, macOS/APFS):
+        //
+        //   * a **full disk** — a 2 MB APFS image filled to capacity — gives exit 2 and
+        //     `error: could not write to stdout: No space left on device (os error 28)`, in both
+        //     the text and the JSON format;
+        //   * an **unwritable stdout** — a fd opened read-only, or one pointing at a directory —
+        //     gives exit 2 and `... Bad file descriptor (os error 9)`, for `check` and for all
+        //     three discovery commands.
+        //
+        // The second of those only became true when `emit` stopped writing through
+        // `std::io::stdout()`, which silently discards `EBADF`; before that this comment promised
+        // an exit 2 that did not happen. See `emit` for the measurement and the mechanism.
+        //
+        // A handler that treated any `Error::Output` as a clean stop would turn "the answer never
+        // reached the file" into a green run, which is exactly the class this epic keeps finding.
         if reader_stopped_reading(&error) {
             return ExitStatus::Success;
         }
@@ -490,30 +502,81 @@ fn reader_stopped_reading(error: &Error) -> bool {
     matches!(error, Error::Output(source) if source.kind() == std::io::ErrorKind::BrokenPipe)
 }
 
-/// Writes to stdout under a single lock, turning any write failure into [`Error::Output`].
+/// Writes to stdout, turning any write failure into [`Error::Output`].
 ///
-/// Every byte this tool puts on stdout goes through here, and that is what makes the broken-pipe
-/// contract in [`status`] hold for **both** output formats and **both** entry points: `src/main.rs`
+/// Every byte this tool puts on stdout goes through here, and that is what makes the write
+/// contract in `status` hold for **both** output formats and **both** entry points: `src/main.rs`
 /// and the console script in `src/lib.rs` differ only in how they spell the exit code, and both
 /// reach stdout through this function.
 ///
-/// It takes a closure rather than a `&str` so that the findings loop can hold the lock once for the
+/// It takes a closure rather than a `&str` so that the findings loop can hold one buffer for the
 /// whole run and stop at the **first** failed write. That matters beyond tidiness: on a closed pipe
 /// the alternative keeps formatting findings nobody is going to read.
+///
+/// # Why this does not write through [`std::io::stdout`]
+///
+/// **Because `std::io::stdout()` silently discards `EBADF`, and that is measured, not inferred.**
+/// On an unwritable stdout — a fd opened read-only, a fd pointing at a directory, or a fd that is
+/// simply closed — `write_all` and `flush` on `Stdout` both return `Ok(())` and the bytes go
+/// nowhere. Measured 2026-07-29 on rustc 1.97.0, aarch64-apple-darwin, one process holding both
+/// handles on the *same* fd 1:
+///
+/// | fd 1 is | raw `File` on that fd | `std::io::stdout()` |
+/// |---|---|---|
+/// | opened read-only | `Err(EBADF, os error 9)` | **`Ok(())`** |
+/// | a directory | `Err(EBADF, os error 9)` | **`Ok(())`** |
+/// | closed | `Err(EBADF, os error 9)` | **`Ok(())`** |
+/// | a closed pipe | `Err(BrokenPipe, os error 32)` | `Err(BrokenPipe, os error 32)` |
+/// | a full disk | `Err(os error 28)` | `Err(os error 28)` |
+///
+/// So the swallowing is specific to `EBADF`: `EPIPE` and `ENOSPC` travel through the identical
+/// path. It is not a buffering artifact either — an 8 KiB `write_all`, a write with no newline,
+/// and an explicit `flush()` afterwards all return `Ok(())`. The behaviour is deliberate in the
+/// standard library, so that a process spawned with its stdio closed does not fail on every write;
+/// the closed-fd row above is exactly that case. Reasonable for a general program, wrong for a
+/// linter whose whole output is its answer: `tooprolix check .` exited **1** in complete silence.
+///
+/// Duplicating the descriptor is what steps around it, and it is done with **safe** code only —
+/// [`std::os::fd::BorrowedFd::try_clone_to_owned`] is safe and returns an `io::Result`, and
+/// `File::from(OwnedFd)` is a safe `From`. No `unsafe`, no `libc`, no new dependency, and the
+/// crate's `unsafe_code = "deny"` stands untouched. The [`std::fs::File`] owns the *duplicate*, so dropping
+/// it closes the dup and never fd 1 itself.
+///
+/// The explicit flush is still required: [`std::io::BufWriter`] discards errors when it flushes in `Drop`,
+/// so a `--format json` document could otherwise meet a broken fd with nowhere to report it.
+///
+/// **Unix only.** [`std::os::fd`] does not exist on Windows, and no Windows target is built or
+/// tested by this repository today, so the fallback below keeps the old behaviour rather than
+/// shipping a Windows path nobody has run. On such a platform an `EBADF`-shaped failure stays
+/// silent, exactly as it did everywhere before this function changed.
 ///
 /// # Errors
 ///
 /// [`Error::Output`], carrying the [`std::io::Error`] unchanged so its `kind` survives to
-/// [`status`], which is the only thing that interprets it.
+/// `status`, which is the only thing that interprets it.
 fn emit(write: impl FnOnce(&mut dyn Write) -> std::io::Result<()>) -> Result<(), Error> {
-    let mut out = std::io::stdout().lock();
-    // The explicit flush is not redundant. Rust's stdout is line-buffered to a terminal but BLOCK
-    // buffered to a pipe or a file, so a `--format json` document can sit entirely in the buffer
-    // and only meet the closed pipe when the lock is dropped — where the failure would be silently
-    // discarded rather than becoming an `Err` this function can return.
-    write(&mut out)
-        .and_then(|()| out.flush())
-        .map_err(Error::Output)
+    #[cfg(unix)]
+    {
+        use std::os::fd::AsFd as _;
+
+        // One `dup` per call, and there are at most a handful of calls in a run — the findings
+        // loop is a single call holding a single buffer, not one per finding.
+        let duplicate = std::io::stdout()
+            .as_fd()
+            .try_clone_to_owned()
+            .map_err(Error::Output)?;
+        let mut out = std::io::BufWriter::new(std::fs::File::from(duplicate));
+        write(&mut out)
+            .and_then(|()| out.flush())
+            .map_err(Error::Output)
+    }
+    #[cfg(not(unix))]
+    {
+        let mut out = std::io::stdout().lock();
+        write(&mut out)
+            .and_then(|()| out.flush())
+            .map_err(Error::Output)
+    }
 }
 
 /// [`run`] with the outcome still typed, for a caller that is not a process.

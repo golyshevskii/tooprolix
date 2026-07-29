@@ -454,11 +454,20 @@ fn read_exclude(value: &toml::Value, path: &Path) -> Result<Vec<String>, Error> 
         // Whitespace was never the only thing that could sit in front of the `!`. A `./` hop is a
         // path component to nobody and is stripped by `normalise_glob`, so `./!vendor` walked past
         // a guard reading position zero and reached `exclude_matcher` as the bare `!vendor` it
-        // exists to refuse — which that function then spells `!!vendor`, a double negation that
-        // excludes NOTHING. Measured on the built binary over a tree with one excluded finding:
-        // `"!vendor"` gave exit 2, `"./!vendor"` and `".//!vendor"` gave **exit 1 with the finding
-        // still reported**. The config looked applied and did nothing, which is precisely the
-        // silent no-op the message below names.
+        // exists to refuse — which that function then spells `!!vendor`.
+        //
+        // What `!!vendor` actually means is worth stating exactly, because the obvious reading is
+        // wrong. It is NOT a double negation that cancels out. `ignore-0.4.31`'s
+        // `Gitignore::add_line` strips a leading `!` with an `if`, not a `while`: the first `!` is
+        // consumed as the whitelist marker and the remainder, `!vendor`, stays as a **literal**
+        // pattern. So the entry becomes "exclude a file whose name is literally `!vendor`" — a
+        // rule that is well-formed, applied, and matches nothing any real tree contains.
+        //
+        // The observable outcome is the same either way, which is why the wrong description
+        // survived a round: measured on the built binary over a tree with one excluded finding,
+        // `"!vendor"` gave exit 2, and `"./!vendor"` and `".//!vendor"` gave **exit 1 with the
+        // finding still reported**. The config looked applied and did nothing, which is precisely
+        // the silent no-op the message below names.
         //
         // Comparing before normalising is a recorded defect class of this project, not a
         // hypothesis; it is the same one `crate::cli` and `discover` both canonicalise against.
