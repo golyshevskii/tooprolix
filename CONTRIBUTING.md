@@ -66,9 +66,9 @@ make rust.lint        # cargo clippy -D warnings            -> CI job "cargo-cli
 make rust.test        # cargo test                          -> CI job "cargo-test"
 ```
 
-A seventh job, `coverage`, runs `make cov.check` — see below. **It is deliberately not a required
-check yet**: it is new, and how noisy a regenerate-and-diff gate is on real pull requests has not
-been observed.
+A seventh job, `coverage`, runs `make cov` — see below. **It is deliberately not a required check**:
+it protects the measuring instrument (that the coverage toolchain still resolves and that the report
+grader still accepts a real run), not the shipped artifact.
 
 **Only three of them are enforced by branch protection today: `lint`, `type` and `test`.**
 `cargo-fmt`, `cargo-clippy` and `cargo-test` run and report, but they are not yet registered as
@@ -98,18 +98,20 @@ invalidated by the Rust source change. Always use:
 make py.build         # uv sync --reinstall-package tooprolix
 ```
 
-## Coverage and the README badges
+## Coverage
 
-The two percentages in the README come from `assets/coverage-rust.svg` and
-`assets/coverage-python.svg`, which are **generated files committed to the repository**. The repo is
-private until the PyPI flip, so a codecov or shields endpoint has nothing it can read.
+Coverage is measured and printed; it is **not** published. There is no badge and no committed
+artifact — the repository is private until the PyPI flip so no badge host can read it, and the
+projects worth comparing against publish none either (ruff, uv, tokio, serde, ripgrep, cargo,
+maturin, polars, httpx, starlette). Revisit at publication.
 
 ```bash
-make rust.cov         # cargo llvm-cov  -> assets/coverage-rust.svg
-make py.cov           # pytest --cov    -> assets/coverage-python.svg
-make cov              # both
-make cov.check        # both, then fail if the committed SVGs are stale  -> CI job "coverage"
+make rust.cov         # cargo llvm-cov -> prints "rust coverage: NN.N%"
+make py.cov           # pytest --cov   -> prints "python coverage: NN.N%"
+make cov              # both                                        -> CI job "coverage"
 ```
+
+Both write their machine-readable report to `target/coverage/` and nothing else.
 
 `make rust.cov` needs one tool that this repository does not pin for you — `cargo llvm-cov` is a
 separate cargo subcommand crate, not a rustup component:
@@ -122,15 +124,16 @@ The `llvm-tools` component it shells out to *is* pinned, in `rust-toolchain.toml
 subcommand you get `error: no such command: llvm-cov`; without the component `cargo llvm-cov` fails
 looking for `llvm-profdata`.
 
-**Edit a badge only by regenerating it.** If `make cov.check` fails, run `make cov` and commit the
-SVGs; do not hand-edit the number, and do not add a `--fail-under` threshold — picking one before
-the code audits would be picking a number to match today's code.
+**`scripts/coverage_report.py` will refuse a run rather than print a flattering number**, and that
+is the part worth keeping in mind when you touch coverage configuration. A percentage is trivially
+raised by measuring less — dropping `branch = true`, orphaning a `.rs` file from the module tree,
+adding a `corpus/` subdirectory coverage.py cannot discover — and none of those leave any other
+trace. The script walks the source tree itself and compares it against what the report claims to
+have measured, so those edits fail the run with a message naming the file. If one fires, fix the
+denominator; do not silence the check.
 
-⚠️ `tests/unit/test_coverage_badge.py` asserts that both committed SVGs exist and that the README
-embeds them, so **`make test` — and therefore `make py.cov` — fails while a badge file is missing**,
-which is a small chicken-and-egg if you delete one. That is deliberate: a guard that skipped the
-check when it could not find the file would be disabled by renaming the file. Recover with
-`git restore assets/coverage-*.svg`, then `make cov`.
+Do not add a `--fail-under` threshold either: picking one before the code audits would be picking a
+number to match today's code.
 
 What the two numbers do **not** include, because a percentage implies it measured everything it
 could:
@@ -139,7 +142,7 @@ could:
   before the crate exists, so `cargo llvm-cov` never instruments it and it appears in no row of the
   report. Its ~190 lines are unmeasured, not covered.
 - **Rust branch coverage is not reported at all** on the pinned stable toolchain — llvm-cov's
-  `Branches` column reads `-`. The Rust badge is **line** coverage; the Python badge folds branches
+  `Branches` column reads `-`. The Rust number is **line** coverage; the Python number folds branches
   in (`branch = true`). They are two different measures, which is why they are never added together
   into a single figure and why neither is described as comparable to the other.
 - **The 6 doctests are not in the Rust number.** `cargo llvm-cov` skips doctests unless

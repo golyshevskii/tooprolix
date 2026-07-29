@@ -235,17 +235,19 @@ jobs:
       - name: make rust.test
         run: make rust.test
 
-  # The drift gate for the two README badges. It regenerates both from a fresh measurement and
-  # fails on `git diff`, which is the only thing that makes committing a generated file honest.
+  # There are no coverage badges and nothing here to diff, so what this job protects is the
+  # INSTRUMENT rather than a number: it is the only place proving that the coverage toolchain still
+  # resolves on Linux — the `llvm-tools` component from rust-toolchain.toml and the pinned
+  # `cargo-llvm-cov` install — and that `scripts/coverage_report.py` still accepts a real report
+  # from both tools. Tasks 9-11 audit against those figures, and a rotted instrument would only be
+  # discovered once an audit was already running.
   #
-  # NOT registered as a required status check yet, deliberately: it is new, and nobody has watched
-  # how often a legitimate pull request moves a percentage by a tenth. Register it once the noise
-  # is known. It still carries no `paths:` and no `if:` — a SKIPPED check does not satisfy a
+  # NOT a required status check, deliberately: it protects a measuring tool, not the shipped
+  # artifact. It still carries no `paths:` and no `if:` — a SKIPPED check does not satisfy a
   # required one, so a path filter added today would wedge the PR on the day it is registered.
   #
   # It re-runs the Rust tests under instrumentation and the Python tests under coverage, so it is
-  # the slowest job here. Splitting it in two would double the toolchain setup to save nothing:
-  # `git diff` has to see both files at once anyway.
+  # the slowest job here.
   #
   # ⚠️ It is NOT a repeat of the whole `cargo-test` job: `cargo llvm-cov` does not run doctests
   # without `--doctests`, which needs a nightly toolchain, so this job instruments 188 of the 194
@@ -295,5 +297,5 @@ jobs:
         with:
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
-      - name: make cov.check
-        run: make cov.check
+      - name: make cov
+        run: make cov

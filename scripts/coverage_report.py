@@ -1,31 +1,37 @@
 """
-Render a coverage percentage as a deterministic SVG badge, committed to `assets/`.
+Read a coverage report, refuse to believe it if it did not measure what it claims, and print the
+percentage.
 
-Why a file in the repository instead of a shields.io or codecov URL: this repository is private
-until the PyPI flip, so a hosted badge endpoint has nothing to read and a gist endpoint would tie
-the README to one person's account. The SVG is generated from the coverage tool's own JSON report,
-committed, and CI regenerates it and fails on `git diff` — the drift gate is the whole design.
+The refusing is the point. A coverage percentage is trivially raised by measuring less, and every
+way of doing that leaves a report which is internally consistent, freshly generated and completely
+plausible — drop `branch = true`, let a source file fall out of discovery, orphan a module from the
+`mod` tree. Nothing downstream can catch any of it, because there is nothing wrong with the number
+itself; the denominator is what moved. So the report is graded before the number is read out of it,
+and the run fails rather than printing a figure that flatters the code.
 
-Three properties this script exists to hold. `tests/unit/test_coverage_badge.py` tests each one as a
-function AND, in `TestTheGuardIsWiredIntoTheEntryPoint`, runs this script the way the Makefile runs
-it — because a guard that is only reachable through a function call can be unwired from `main` with
-every test still passing:
+This is the instrument the three audit tasks measure against, not decoration. There is no badge:
+the repository is private until the PyPI flip, so no badge host can read it, and the projects worth
+comparing against (ruff, uv, tokio, ripgrep, cargo, maturin, polars, httpx, starlette) publish no
+coverage badge either. The number is printed for a human and written to `target/coverage/`.
+
+Three properties, each tested in `tests/unit/test_coverage_report.py` as a function AND — in
+`TestTheGuardIsWiredIntoTheEntryPoint` — by running this script the way the Makefile runs it,
+because a guard reachable only through a function call can be unwired from `main` with every other
+test still passing:
 
   1. **the number is never typed by a human.** `percent_from_report` reads it out of the report the
-     coverage tool wrote, so the badge and the tool cannot disagree by transcription.
-  2. **the output depends on nothing but the number.** No clock, no hostname, no run id, no network.
-     Same percentage in, byte-identical file out — otherwise the CI drift gate would fire on every
-     run and be turned off within a week.
+     coverage tool wrote, so the printed figure and the tool cannot disagree by transcription.
+  2. **the number never overstates.** `format_percent` truncates toward zero, so 99.96% reads
+     `99.9%` and only a genuine 100% reads `100.0%`.
   3. **the report is graded before the number is believed.** `verify_report_measured_the_source_tree`
      refuses a report that measured less than the whole source tree, or measured it with branch
-     coverage off. Those failures all RAISE the percentage, so nothing downstream can catch them.
+     coverage off, and nothing is printed when it does.
 
 Usage (this is the exact invocation in the Makefile's `rust.cov` recipe):
 
-    python3 scripts/coverage_badge.py --report target/coverage/llvm-cov.json --format llvm-cov \
-        --label "rust coverage" --out assets/coverage-rust.svg
+    python3 scripts/coverage_report.py --report target/coverage/llvm-cov.json --format llvm-cov
 
-Run: make rust.cov / make py.cov
+Run: make rust.cov / make py.cov / make cov
 """
 
 from __future__ import annotations
@@ -40,29 +46,16 @@ from typing import Any
 RUST_REPORT_FORMAT = "llvm-cov"
 PYTHON_REPORT_FORMAT = "coverage.py"
 
-# Layout constants. Verdana at font-size 11 is roughly 6.5px per character; 7 is rounded up so a
-# wide string is never clipped by its box, which is the only failure mode that matters here.
-_PX_PER_CHAR = 7
-_BOX_PADDING = 12
-_HEIGHT = 20
-_BASELINE = 14
-
-# The README's existing badge row: `12130f` label box, `f5c2c8` accent, `e4dfda` light text.
-_LABEL_BG = "#12130f"
-_VALUE_BG = "#f5c2c8"
-_LABEL_FG = "#e4dfda"
-_VALUE_FG = "#12130f"
-
-
-def _box_width(text: str) -> int:
-    return _PX_PER_CHAR * len(text) + _BOX_PADDING
+# What each format's percentage is called when printed. Derived from `--format` rather than passed
+# in, so the label cannot end up describing the wrong report.
+_LABELS = {RUST_REPORT_FORMAT: "rust coverage", PYTHON_REPORT_FORMAT: "python coverage"}
 
 
 def format_percent(percent: float) -> str:
     """
     Format a coverage percentage as one decimal, truncated toward zero.
 
-    Truncation rather than round-to-nearest, deliberately: the badge must never claim coverage the
+    Truncation rather than round-to-nearest, deliberately: the figure must never claim coverage the
     run did not measure, so 99.96% reads `99.9%` and only a genuine 100% reads `100.0%`. `Decimal`
     on the number's `repr` rather than integer arithmetic on `percent * 10`, because in IEEE 754
     `83.9 * 10` is `838.9999999999999` and truncating that would lose a tenth the tool did measure.
@@ -71,39 +64,17 @@ def format_percent(percent: float) -> str:
     return f"{truncated}%"
 
 
-def render_badge(label: str, percent: float) -> str:
-    """Render the badge SVG for `percent` under `label`, as a complete document ending in a newline."""
-    value = format_percent(percent)
-    label_width = _box_width(label)
-    value_width = _box_width(value)
-    total = label_width + value_width
-    title = f"{label}: {value}"
-
-    return (
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{total}" height="{_HEIGHT}" role="img" '
-        f'aria-label="{title}">'
-        f"<title>{title}</title>"
-        f'<rect width="{label_width}" height="{_HEIGHT}" fill="{_LABEL_BG}"/>'
-        f'<rect x="{label_width}" width="{value_width}" height="{_HEIGHT}" fill="{_VALUE_BG}"/>'
-        f'<g font-family="Verdana,DejaVu Sans,sans-serif" font-size="11" text-anchor="middle">'
-        f'<text x="{label_width // 2}" y="{_BASELINE}" fill="{_LABEL_FG}">{label}</text>'
-        f'<text x="{label_width + value_width // 2}" y="{_BASELINE}" fill="{_VALUE_FG}">{value}</text>'
-        f"</g>"
-        f"</svg>\n"
-    )
-
-
 def percent_from_report(report: Path, report_format: str) -> float:
     """
     Read the total percentage out of a coverage tool's JSON report.
 
     Both lookups fail with `KeyError` on a report that does not carry the field, rather than
-    defaulting to 0.0: a badge reading `0.0%` is a claim about the code, and a schema change is a
-    fact about the parser. The two must not look the same.
+    defaulting to 0.0: a printed `0.0%` is a claim about the code, and a schema change is a fact
+    about the parser. The two must not look the same.
 
-    ⚠️ The two numbers are NOT the same measure, and the badges are labelled separately for exactly
-    this reason: the Rust figure is line coverage, while coverage.py's `percent_covered` folds
-    branches in (`branch = true`). Do not add them together or describe them as comparable.
+    ⚠️ The two numbers are NOT the same measure, and they are reported separately for exactly this
+    reason: the Rust figure is line coverage, while coverage.py's `percent_covered` folds branches
+    in (`branch = true`). Do not add them together or describe them as comparable.
     """
     data: Any = json.loads(report.read_text(encoding="utf-8"))
 
@@ -194,15 +165,15 @@ def verify_report_measured_the_source_tree(data: Any, report_format: str, repo_r
 
       - `branch = true` removed: 52.37% becomes 53.20% on this repository, measuring statements only;
       - a source file that fell out of discovery: gone from the denominator entirely;
-      - `tests/unit` added to `source`: the badge then climbs whenever someone writes test code,
-        which is the one thing this task's AC1 forbids in writing.
+      - `tests/unit` added to `source`: the figure then climbs whenever someone writes test code,
+        which measures the opposite of what a coverage number is for.
 
-    None of those leave a trace in the badge, so none of them can be caught downstream.
+    None of those leave a trace in the percentage, so none of them can be caught downstream.
     """
     if report_format == PYTHON_REPORT_FORMAT and not data["meta"]["branch_coverage"]:
         raise ValueError(
             "the coverage report says branch coverage was OFF, so this percentage counts statements "
-            "only and is not the measure the badge claims; restore `branch = true` under "
+            "only and is not the measure it is read as; restore `branch = true` under "
             "[tool.coverage.run] in pyproject.toml"
         )
 
@@ -241,22 +212,18 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--report", type=Path, required=True, help="JSON report written by the coverage tool")
     parser.add_argument("--format", required=True, choices=[RUST_REPORT_FORMAT, PYTHON_REPORT_FORMAT])
-    parser.add_argument("--label", required=True, help="badge label, e.g. 'rust coverage'")
-    parser.add_argument("--out", type=Path, required=True, help="SVG file to write")
     args = parser.parse_args()
 
     data: Any = json.loads(args.report.read_text(encoding="utf-8"))
-    # Grade the report BEFORE writing anything. A rejected report leaves the committed badge
-    # untouched, so `make cov.check` then fails on a stale badge rather than blessing a fresh wrong
-    # one — the guard is on the path every `make rust.cov` / `make py.cov` takes, not on a test that
-    # only runs when the report happens to be lying around.
+    # Grade the report BEFORE emitting anything. The printed percentage is the artifact now, so a
+    # rejected report must leave no percentage behind at all — a number on stdout is a number
+    # somebody quotes, and `make cov` exiting non-zero after printing one would still have said it.
+    # This ordering is pinned by `test_a_rejected_report_exits_non_zero_and_prints_nothing`, whose
+    # second assertion exists solely to catch a verify that moved below the print.
     verify_report_measured_the_source_tree(data, args.format, Path(__file__).resolve().parents[1])
 
     percent = percent_from_report(args.report, args.format)
-    args.out.write_text(render_badge(args.label, percent), encoding="utf-8")
-    # The printed number and the number in the SVG come from the same call, so AC1's "prints the
-    # percentage" and AC2's "the SVG matches the target output" cannot drift apart.
-    print(f"{args.label}: {format_percent(percent)}  ->  {args.out}")
+    print(f"{_LABELS[args.format]}: {format_percent(percent)}")
     return 0
 
 

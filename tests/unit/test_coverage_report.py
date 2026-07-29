@@ -1,17 +1,18 @@
 """
-Guards for `scripts/coverage_badge.py`, the generator behind the two README coverage badges.
+Guards for `scripts/coverage_report.py`, which reads a coverage report and refuses to believe it if
+it did not measure what it claims.
 
-The badge is a number a human reads and acts on, so the two ways it can lie are the two things
-tested here:
+The percentage it prints is what tasks 9-11 audit against, so the three ways it can lie are the
+three things tested here:
 
   1. **it can overstate.** The percentage is truncated toward zero at one decimal, never rounded to
-     nearest — 99.96% renders `99.9%`, not `100.0%`. A badge that says 100 on a code base with an
+     nearest — 99.96% reads `99.9%`, not `100.0%`. A figure that says 100 on a code base with an
      uncovered line is the worst outcome, so the rounding rule is pinned by cases that a
      round-half-up implementation gets wrong.
   2. **it can disagree with the tool that measured it.** The percentage is never typed by hand: it
      is read out of the machine-readable report the coverage tool itself wrote. The two extractors
      are tested against report fragments captured verbatim from `cargo llvm-cov --json` and
-     `coverage json` on this repository, so a test cannot pass by agreeing with the generator's own
+     `coverage json` on this repository, so a test cannot pass by agreeing with the script's own
      arithmetic.
   3. **it can be a true number about the wrong denominator.** This is the one that leaves no trace:
      drop `branch = true`, or let a source file fall out of discovery, and the percentage RISES
@@ -21,9 +22,9 @@ tested here:
      self-report defect one level up: it would agree with a report that missed a file sitting right
      beside the ones it names.
 
-The SVG is asserted byte for byte against a literal written out by hand from the layout rules, not
-against `render()`'s own output — the file that ships is the artifact, and a self-comparison would
-grade the generator against itself.
+`TestTheGuardIsWiredIntoTheEntryPoint` is what stops all of the above from being unreachable prose:
+it runs the script the way the Makefile runs it, so a guard deleted from `main` fails a test rather
+than nothing at all.
 
 Run: make test
 """
@@ -37,12 +38,12 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from coverage_badge import (
+from coverage_report import (
     PYTHON_REPORT_FORMAT,
     RUST_REPORT_FORMAT,
+    format_percent,
     measurable_source_files,
     percent_from_report,
-    render_badge,
     verify_report_measured_the_source_tree,
 )
 
@@ -87,7 +88,7 @@ class TestThePercentageIsNeverRoundedUp:
     """
 
     @pytest.mark.parametrize(
-        "measured,rendered",
+        "measured,printed",
         [
             # `cargo llvm-cov` on this repo, 2026-07-29 — 98.07% of lines. Half-up agrees here, so
             # this row alone would not catch a rounding change; the rows below are the guard.
@@ -104,45 +105,8 @@ class TestThePercentageIsNeverRoundedUp:
             (0.0, "0.0%"),
         ],
     )
-    def test_the_rendered_percentage(self, measured: float, rendered: str) -> None:
-        assert f">{rendered}<" in render_badge("python coverage", measured)
-
-
-class TestTheSvgIsByteExact:
-    """
-    The shipped artifact is a file, so it is asserted as a file: one literal document, written by
-    hand from the layout arithmetic. Comparing against `render_badge`'s own output instead would be
-    a shape check wearing a test's name.
-    """
-
-    def test_a_known_percentage_renders_the_expected_document(self) -> None:
-        # Written out by hand from the layout rules: a box is 7px per character plus 12px of
-        # padding, so the label box ("rust coverage", 13 chars) is 7*13+12 = 103, the value box
-        # ("98.0%", 5 chars) is 7*5+12 = 47, and the document is 150 wide. Text is centred at
-        # 103//2 = 51 and 103+47//2 = 126.
-        expected = (
-            '<svg xmlns="http://www.w3.org/2000/svg" width="150" height="20" role="img" '
-            'aria-label="rust coverage: 98.0%">'
-            "<title>rust coverage: 98.0%</title>"
-            '<rect width="103" height="20" fill="#12130f"/>'
-            '<rect x="103" width="47" height="20" fill="#f5c2c8"/>'
-            '<g font-family="Verdana,DejaVu Sans,sans-serif" font-size="11" text-anchor="middle">'
-            '<text x="51" y="14" fill="#e4dfda">rust coverage</text>'
-            '<text x="126" y="14" fill="#12130f">98.0%</text>'
-            "</g>"
-            "</svg>\n"
-        )
-
-        assert render_badge("rust coverage", 98.07) == expected
-
-    def test_the_document_carries_nothing_that_varies_between_runs(self) -> None:
-        # A timestamp, a hostname or a run id in the SVG would make the CI drift gate fire on every
-        # run and train everyone to ignore it.
-        svg = render_badge("python coverage", 50.0)
-
-        assert svg.count("<svg") == 1
-        assert "date" not in svg.lower()
-        assert "generated" not in svg.lower()
+    def test_the_printed_percentage(self, measured: float, printed: str) -> None:
+        assert format_percent(measured) == printed
 
 
 class TestThePercentageComesFromTheCoverageTool:
@@ -235,33 +199,11 @@ class TestThePercentageComesFromTheCoverageTool:
             percent_from_report(report, PYTHON_REPORT_FORMAT)
 
 
-class TestTheCommittedBadgesAreTheOnesTheReadmeShows:
-    """
-    The README carries no percentage of its own — it embeds the SVG by path, so the number lives in
-    exactly one committed place and cannot disagree with itself. What CAN drift is the path: a
-    renamed or deleted SVG leaves the README with a broken image and the CI drift gate with nothing
-    to diff, which `git diff --exit-code` reports as success. These tests are that gate's floor.
-    """
-
-    @pytest.mark.parametrize("name", ["coverage-rust.svg", "coverage-python.svg"])
-    def test_the_badge_file_exists_and_carries_a_percentage(self, name: str) -> None:
-        svg = (REPO_ROOT / "assets" / name).read_text(encoding="utf-8")
-
-        assert svg.startswith("<svg "), f"assets/{name} is not the SVG the generator writes"
-        assert "%</text>" in svg, f"assets/{name} shows no percentage"
-
-    @pytest.mark.parametrize("name", ["coverage-rust.svg", "coverage-python.svg"])
-    def test_the_readme_embeds_it(self, name: str) -> None:
-        readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
-
-        assert f'src="assets/{name}"' in readme, f"README.md does not embed assets/{name}"
-
-
 class TestTheReportIsGradedNotJustRead:
     """
     The percentage is only meaningful if the report behind it measured the tree it claims to.
     Every case here is a report that is internally consistent and carries a perfectly plausible
-    number — the kind that produces a fresh badge, a passing `make cov.check`, and a lie.
+    number — the kind that produces a fresh percentage, a passing `make cov`, and a lie.
 
     The expected file set is WALKED, never listed. A test that named `bench/measure/sample_clusters/
     units` would keep passing on the day someone adds `corpus/pkg/thing.py` that coverage.py never
@@ -387,30 +329,27 @@ class TestTheGuardIsWiredIntoTheEntryPoint:
     """
     Everything above tests the guard as a function. This tests that the production path still CALLS
     it, which nothing else does — the Makefile invokes the script, and a script whose `main` no
-    longer verifies would leave all of those tests passing and `make cov.check` green while writing
-    a badge from a report that measured the wrong thing.
+    longer verifies would leave every one of those tests passing and `make cov` green while printing
+    a percentage from a report that measured the wrong thing.
 
-    These two run the script exactly as the Makefile does, and they assert the ORDERING as well as
-    the outcome: a rejected report must leave `--out` untouched, because the committed badge going
-    stale is what makes `make cov.check` fail afterwards. A guard that ran after the write would
-    exit non-zero and still have blessed a fresh wrong SVG on disk.
+    These two run the script exactly as the Makefile does, and they pin the ORDERING as well as the
+    outcome. **The printed percentage is the artifact**, so "nothing was emitted for a report we
+    refused" is the guarantee that used to read "the badge file was not written": a number on stdout
+    is a number somebody quotes into an audit, and a non-zero exit afterwards does not un-print it.
+    The second assertion of the rejection test exists for exactly that, and for nothing else.
     """
 
-    def run_script(self, report: dict[str, Any], out: Path, tmp_path: Path) -> subprocess.CompletedProcess[str]:
+    def run_script(self, report: dict[str, Any], tmp_path: Path) -> subprocess.CompletedProcess[str]:
         report_path = tmp_path / "report.json"
         report_path.write_text(json.dumps(report), encoding="utf-8")
         return subprocess.run(
             [
                 sys.executable,
-                str(REPO_ROOT / "scripts" / "coverage_badge.py"),
+                str(REPO_ROOT / "scripts" / "coverage_report.py"),
                 "--report",
                 str(report_path),
                 "--format",
                 PYTHON_REPORT_FORMAT,
-                "--label",
-                "python coverage",
-                "--out",
-                str(out),
             ],
             capture_output=True,
             text=True,
@@ -418,24 +357,22 @@ class TestTheGuardIsWiredIntoTheEntryPoint:
             check=False,
         )
 
-    def test_an_honest_report_is_accepted_and_the_badge_is_written(self, tmp_path: Path) -> None:
-        out = tmp_path / "badge.svg"
+    def test_an_honest_report_is_accepted_and_the_percentage_is_printed(self, tmp_path: Path) -> None:
         walked = measurable_source_files(REPO_ROOT, PYTHON_REPORT_FORMAT)
 
-        result = self.run_script(python_report(walked), out, tmp_path)
+        result = self.run_script(python_report(walked), tmp_path)
 
         assert result.returncode == 0, result.stderr
-        assert out.read_text(encoding="utf-8").startswith("<svg ")
+        assert result.stdout.strip() == "python coverage: 52.3%"
 
-    def test_a_rejected_report_exits_non_zero_and_writes_nothing(self, tmp_path: Path) -> None:
-        out = tmp_path / "badge.svg"
+    def test_a_rejected_report_exits_non_zero_and_prints_nothing(self, tmp_path: Path) -> None:
         walked = measurable_source_files(REPO_ROOT, PYTHON_REPORT_FORMAT)
 
-        result = self.run_script(python_report(walked, branch=False), out, tmp_path)
+        result = self.run_script(python_report(walked, branch=False), tmp_path)
 
         assert result.returncode != 0
         assert "branch coverage" in result.stderr
-        assert not out.exists(), "the badge was written from a report the guard rejected"
+        assert result.stdout == "", "a percentage was printed from a report the guard rejected"
 
 
 class TestTheTwoStatementsOfTheExclusionContractHaveTheSameShape:

@@ -12,8 +12,6 @@
 
 <p align="center">
   <a href="https://github.com/golyshevskii/tooprolix/actions/workflows/ci.yml"><img src="https://github.com/golyshevskii/tooprolix/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
-  <img src="assets/coverage-rust.svg" alt="Rust line coverage">
-  <img src="assets/coverage-python.svg" alt="Python coverage of corpus/">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-12130f.svg" alt="MIT license"></a>
   <img src="https://img.shields.io/badge/status-pre--release-f5c2c8.svg?labelColor=12130f" alt="Pre-release">
   <img src="https://img.shields.io/badge/Rust-powered-12130f.svg?logo=rust&logoColor=e4dfda" alt="Powered by Rust">
