@@ -827,7 +827,7 @@ fn parse_format(value: &str) -> Result<Format, Error> {
 /// **Deliberately unsorted.** [`findings`] owns the ordering of the output, and a sorted file list
 /// here would hand it an already-ordered input on most filesystems — which is how a missing sort
 /// survives an end-to-end test. Errors are sorted at render time instead, in
-/// [`render_failures`], so the diagnostics stay reproducible without making the ordering guarantee
+/// [`report_skipped`], so the diagnostics stay reproducible without making the ordering guarantee
 /// depend on the walk.
 ///
 /// # Errors

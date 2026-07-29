@@ -27,7 +27,7 @@
 //! all, and with the feature off `otool -L target/debug/tooprolix` lists only
 //! `/usr/lib/libSystem.B.dylib`, so the standalone binary runs without an interpreter. The wheel
 //! turns the feature on through `[tool.maturin] features` in pyproject.toml, and that is also what
-//! makes [`tooprolix::main`](tooprolix::main) — the `[project.scripts]` entry point — exist.
+//! makes `tooprolix::main` — the `[project.scripts]` entry point — exist.
 //!
 //! The price is that `cargo test` with no feature compiles none of the 5 boundary tests at the
 //! bottom of this file and reports a smaller number in silence. `Makefile`'s `rust.lint` and

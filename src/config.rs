@@ -106,7 +106,7 @@ pub struct Config {
     /// own directory.
     ///
     /// Kept as the strings the file wrote, in file order, rather than as a built matcher: the
-    /// matcher is not comparable, and `Config` is compared. [`exclude_matcher`] turns these into
+    /// matcher is not comparable, and `Config` is compared. `exclude_matcher` turns these into
     /// the one the walk uses, and is the *only* thing that does — so the validation [`load`]
     /// performs and the filtering [`crate::cli`] applies can never be built from different rules.
     pub exclude: Vec<String>,
@@ -447,9 +447,21 @@ fn read_exclude(value: &toml::Value, path: &Path) -> Result<Vec<String>, Error> 
             problem: format!("expected a glob string, found {}", entry.type_str()),
         })?;
 
-        // NORMALISE FIRST, then judge, then keep the normalised form. Every line below compares
-        // against `glob` and never against `raw`, because a guard that reads position zero of an
-        // un-normalised string is a guard one space defeats — which is exactly what happened here.
+        // NORMALISE FIRST, then judge the NORMALISED form, then keep it. The order is the whole
+        // guard, and the previous revision only claimed it: it judged `raw.trim()` and normalised
+        // afterwards, so every check read a string the walk would never see.
+        //
+        // Whitespace was never the only thing that could sit in front of the `!`. A `./` hop is a
+        // path component to nobody and is stripped by `normalise_glob`, so `./!vendor` walked past
+        // a guard reading position zero and reached `exclude_matcher` as the bare `!vendor` it
+        // exists to refuse — which that function then spells `!!vendor`, a double negation that
+        // excludes NOTHING. Measured on the built binary over a tree with one excluded finding:
+        // `"!vendor"` gave exit 2, `"./!vendor"` and `".//!vendor"` gave **exit 1 with the finding
+        // still reported**. The config looked applied and did nothing, which is precisely the
+        // silent no-op the message below names.
+        //
+        // Comparing before normalising is a recorded defect class of this project, not a
+        // hypothesis; it is the same one `crate::cli` and `discover` both canonicalise against.
         let glob = raw.trim();
 
         if glob.is_empty() {
@@ -460,7 +472,12 @@ fn read_exclude(value: &toml::Value, path: &Path) -> Result<Vec<String>, Error> 
                     .to_owned(),
             });
         }
-        if glob.starts_with('!') {
+        let normalised = normalise_glob(glob).map_err(|problem| Error::BadValue {
+            path: path.to_path_buf(),
+            key: "exclude".to_owned(),
+            problem: format!("`{raw}` {problem}"),
+        })?;
+        if normalised.starts_with('!') {
             return Err(Error::BadValue {
                 path: path.to_path_buf(),
                 key: "exclude".to_owned(),
@@ -470,11 +487,7 @@ fn read_exclude(value: &toml::Value, path: &Path) -> Result<Vec<String>, Error> 
                 ),
             });
         }
-        excluded.push(normalise_glob(glob).map_err(|problem| Error::BadValue {
-            path: path.to_path_buf(),
-            key: "exclude".to_owned(),
-            problem: format!("`{raw}` {problem}"),
-        })?);
+        excluded.push(normalised);
     }
 
     Ok(excluded)
@@ -861,6 +874,23 @@ mod tests {
                 "[tool.tooprolix]\nexclude = [\"\\t!vendor\"]\n",
                 "!",
                 "a negated glob behind a tab",
+            ),
+            // The same defect one normalisation further out, and the reason the guard moved below
+            // `normalise_glob`. Whitespace was not the only thing that could sit in front of the
+            // `!`: a `./` hop is stripped by normalisation, so the entry reaches the matcher as the
+            // bare `!vendor` this guard exists to refuse. Measured on the built binary before the
+            // fix, on a tree of one excluded finding: `"!vendor"` was exit 2, and `"./!vendor"` was
+            // **exit 1 with the finding still reported** — the config silently excluded nothing,
+            // which is precisely the no-op the message below describes.
+            (
+                "[tool.tooprolix]\nexclude = [\"./!vendor\"]\n",
+                "!",
+                "a negated glob behind a `./` hop",
+            ),
+            (
+                "[tool.tooprolix]\nexclude = [\".//!vendor\"]\n",
+                "!",
+                "a negated glob behind a separator run",
             ),
             (
                 "[tool.tooprolix]\nexclude = [\"a[\"]\n",
