@@ -1,0 +1,3331 @@
+{
+  "schema_version": "2",
+  "complete": true,
+  "skipped": [],
+  "excluded": [],
+  "findings": [
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp-clients/src/mcp_clients/discord_bot.py",
+      "line": 86,
+      "end_line": 91,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp-clients/src/mcp_clients/discord_bot.py:86-91: TPX003 same explanation in 2 places: 07-klavis/mcp-clients/src/mcp_clients/slack/context.py:53-58 (weakest 07-klavis/mcp-clients/src/mcp_clients/discord_bot.py:86-91 ~ 07-klavis/mcp-clients/src/mcp_clients/slack/context.py:53-58, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp-clients/src/mcp_clients/discord_bot.py",
+          "line": 86,
+          "end_line": 91,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp-clients/src/mcp_clients/slack/context.py",
+          "line": 53,
+          "end_line": 58,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp-clients/src/mcp_clients/discord_bot.py",
+          "line": 86,
+          "end_line": 91,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp-clients/src/mcp_clients/slack/context.py",
+          "line": 53,
+          "end_line": 58,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp-clients/src/mcp_clients/discord_bot.py",
+      "line": 539,
+      "end_line": 548,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp-clients/src/mcp_clients/discord_bot.py:539-548: TPX003 same explanation in 2 places: 07-klavis/mcp-clients/src/mcp_clients/slack_bot.py:419-428 (weakest 07-klavis/mcp-clients/src/mcp_clients/discord_bot.py:539-548 ~ 07-klavis/mcp-clients/src/mcp_clients/slack_bot.py:419-428, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp-clients/src/mcp_clients/discord_bot.py",
+          "line": 539,
+          "end_line": 548,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp-clients/src/mcp_clients/slack_bot.py",
+          "line": 419,
+          "end_line": 428,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp-clients/src/mcp_clients/discord_bot.py",
+          "line": 539,
+          "end_line": 548,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp-clients/src/mcp_clients/slack_bot.py",
+          "line": 419,
+          "end_line": 428,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp-clients/src/mcp_clients/llms/anthropic.py",
+      "line": 40,
+      "end_line": 49,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp-clients/src/mcp_clients/llms/anthropic.py:40-49: TPX003 same explanation in 2 places: 07-klavis/mcp-clients/src/mcp_clients/llms/base.py:308-317 (weakest 07-klavis/mcp-clients/src/mcp_clients/llms/anthropic.py:40-49 ~ 07-klavis/mcp-clients/src/mcp_clients/llms/base.py:308-317, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp-clients/src/mcp_clients/llms/anthropic.py",
+          "line": 40,
+          "end_line": 49,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp-clients/src/mcp_clients/llms/base.py",
+          "line": 308,
+          "end_line": 317,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp-clients/src/mcp_clients/llms/anthropic.py",
+          "line": 40,
+          "end_line": 49,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp-clients/src/mcp_clients/llms/base.py",
+          "line": 308,
+          "end_line": 317,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp-clients/src/mcp_clients/llms/anthropic.py",
+      "line": 191,
+      "end_line": 200,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp-clients/src/mcp_clients/llms/anthropic.py:191-200: TPX003 same explanation in 2 places: 07-klavis/mcp-clients/src/mcp_clients/llms/base.py:324-333 (weakest 07-klavis/mcp-clients/src/mcp_clients/llms/anthropic.py:191-200 ~ 07-klavis/mcp-clients/src/mcp_clients/llms/base.py:324-333, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp-clients/src/mcp_clients/llms/anthropic.py",
+          "line": 191,
+          "end_line": 200,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp-clients/src/mcp_clients/llms/base.py",
+          "line": 324,
+          "end_line": 333,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp-clients/src/mcp_clients/llms/anthropic.py",
+          "line": 191,
+          "end_line": 200,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp-clients/src/mcp_clients/llms/base.py",
+          "line": 324,
+          "end_line": 333,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp-clients/src/mcp_clients/slack/oauth_routes.py",
+      "line": 38,
+      "end_line": 43,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp-clients/src/mcp_clients/slack/oauth_routes.py:38-43: TPX003 same explanation in 2 places: 07-klavis/mcp-clients/src/mcp_clients/slack_bot.py:99-101 (weakest 07-klavis/mcp-clients/src/mcp_clients/slack/oauth_routes.py:38-43 ~ 07-klavis/mcp-clients/src/mcp_clients/slack_bot.py:99-101, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp-clients/src/mcp_clients/slack/oauth_routes.py",
+          "line": 38,
+          "end_line": 43,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp-clients/src/mcp_clients/slack_bot.py",
+          "line": 99,
+          "end_line": 101,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp-clients/src/mcp_clients/slack/oauth_routes.py",
+          "line": 38,
+          "end_line": 43,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp-clients/src/mcp_clients/slack_bot.py",
+          "line": 99,
+          "end_line": 101,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp-clients/src/mcp_clients/sse_client.py",
+      "line": 1,
+      "end_line": 9,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp-clients/src/mcp_clients/sse_client.py:1-9: TPX003 same explanation in 2 places: 07-klavis/mcp-clients/src/mcp_clients/streamable_http_client.py:1-9 (weakest 07-klavis/mcp-clients/src/mcp_clients/sse_client.py:1-9 ~ 07-klavis/mcp-clients/src/mcp_clients/streamable_http_client.py:1-9, similarity 0.750)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp-clients/src/mcp_clients/sse_client.py",
+          "line": 1,
+          "end_line": 9,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp-clients/src/mcp_clients/streamable_http_client.py",
+          "line": 1,
+          "end_line": 9,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp-clients/src/mcp_clients/sse_client.py",
+          "line": 1,
+          "end_line": 9,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp-clients/src/mcp_clients/streamable_http_client.py",
+          "line": 1,
+          "end_line": 9,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.75
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/airtable/tools/__init__.py",
+      "line": 1,
+      "end_line": 2,
+      "prose_kind": "comment",
+      "message": "07-klavis/mcp_servers/airtable/tools/__init__.py:1-2: TPX003 same explanation in 6 places: 07-klavis/mcp_servers/clickup/tools/__init__.py:1-2, 07-klavis/mcp_servers/freshdesk/tools/__init__.py:1-2, 07-klavis/mcp_servers/linear/tools/__init__.py:1-2, 07-klavis/mcp_servers/motion/tools/__init__.py:1-2, 07-klavis/mcp_servers/salesforce/tools/__init__.py:1-2 (weakest 07-klavis/mcp_servers/airtable/tools/__init__.py:1-2 ~ 07-klavis/mcp_servers/clickup/tools/__init__.py:1-2, similarity 0.857)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/airtable/tools/__init__.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "07-klavis/mcp_servers/clickup/tools/__init__.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "07-klavis/mcp_servers/freshdesk/tools/__init__.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "07-klavis/mcp_servers/linear/tools/__init__.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "07-klavis/mcp_servers/motion/tools/__init__.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "07-klavis/mcp_servers/salesforce/tools/__init__.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/airtable/tools/__init__.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/clickup/tools/__init__.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        "similarity": 0.8571428571428571
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/airtable/tools/base.py",
+      "line": 31,
+      "end_line": 34,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/airtable/tools/base.py:31-34: TPX003 same explanation in 15 places: 07-klavis/mcp_servers/asana/tools/base.py:35-41, 07-klavis/mcp_servers/clickup/tools/normalize.py:23-29, 07-klavis/mcp_servers/close/tools/base.py:42-48, 07-klavis/mcp_servers/confluence/normalizers.py:28-35, 07-klavis/mcp_servers/discord/server.py:46-52, 07-klavis/mcp_servers/google_calendar/server.py:43-49, 07-klavis/mcp_servers/hubspot/tools/base.py:30-36, 07-klavis/mcp_servers/linear/server.py:34-40, 07-klavis/mcp_servers/mem0/server.py:53-59, 07-klavis/mcp_servers/motion/tools/normalize.py:17-23 … and 4 more (weakest 07-klavis/mcp_servers/airtable/tools/base.py:31-34 ~ 07-klavis/mcp_servers/asana/tools/base.py:35-41, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/airtable/tools/base.py",
+          "line": 31,
+          "end_line": 34,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/asana/tools/base.py",
+          "line": 35,
+          "end_line": 41,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/clickup/tools/normalize.py",
+          "line": 23,
+          "end_line": 29,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/close/tools/base.py",
+          "line": 42,
+          "end_line": 48,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/confluence/normalizers.py",
+          "line": 28,
+          "end_line": 35,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/discord/server.py",
+          "line": 46,
+          "end_line": 52,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/google_calendar/server.py",
+          "line": 43,
+          "end_line": 49,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/hubspot/tools/base.py",
+          "line": 30,
+          "end_line": 36,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/linear/server.py",
+          "line": 34,
+          "end_line": 40,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/mem0/server.py",
+          "line": 53,
+          "end_line": 59,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/motion/tools/normalize.py",
+          "line": 17,
+          "end_line": 23,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/notion/server.py",
+          "line": 35,
+          "end_line": 41,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/onedrive/server.py",
+          "line": 35,
+          "end_line": 41,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/outlook/server.py",
+          "line": 35,
+          "end_line": 41,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/salesforce/tools/normalization.py",
+          "line": 23,
+          "end_line": 29,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/airtable/tools/base.py",
+          "line": 31,
+          "end_line": 34,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/asana/tools/base.py",
+          "line": 35,
+          "end_line": 41,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/cal_com/tools/base.py",
+      "line": 30,
+      "end_line": 32,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/cal_com/tools/base.py:30-32: TPX003 same explanation in 3 places: 07-klavis/mcp_servers/onedrive/tools/base.py:29-31, 07-klavis/mcp_servers/outlook/tools/base.py:42-44 (weakest 07-klavis/mcp_servers/cal_com/tools/base.py:30-32 ~ 07-klavis/mcp_servers/onedrive/tools/base.py:29-31, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/cal_com/tools/base.py",
+          "line": 30,
+          "end_line": 32,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/onedrive/tools/base.py",
+          "line": 29,
+          "end_line": 31,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/outlook/tools/base.py",
+          "line": 42,
+          "end_line": 44,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/cal_com/tools/base.py",
+          "line": 30,
+          "end_line": 32,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/onedrive/tools/base.py",
+          "line": 29,
+          "end_line": 31,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/confluence/client.py",
+      "line": 648,
+      "end_line": 657,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/confluence/client.py:648-657: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/confluence/client.py:684-693 (weakest 07-klavis/mcp_servers/confluence/client.py:648-657 ~ 07-klavis/mcp_servers/confluence/client.py:684-693, similarity 0.800)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/confluence/client.py",
+          "line": 648,
+          "end_line": 657,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/confluence/client.py",
+          "line": 684,
+          "end_line": 693,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/confluence/client.py",
+          "line": 648,
+          "end_line": 657,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/confluence/client.py",
+          "line": 684,
+          "end_line": 693,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "07-klavis/mcp_servers/gong/tools/calls.py",
+      "line": 71,
+      "end_line": 109,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/gong/tools/calls.py:71-109: TPX002 docstring is 212 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 212,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/google_cloud_toolathlon/src/cloud_logging.py",
+      "line": 193,
+      "end_line": 198,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/google_cloud_toolathlon/src/cloud_logging.py:193-198: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/google_cloud_toolathlon/src/server.py:995-999 (weakest 07-klavis/mcp_servers/google_cloud_toolathlon/src/cloud_logging.py:193-198 ~ 07-klavis/mcp_servers/google_cloud_toolathlon/src/server.py:995-999, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/google_cloud_toolathlon/src/cloud_logging.py",
+          "line": 193,
+          "end_line": 198,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/google_cloud_toolathlon/src/server.py",
+          "line": 995,
+          "end_line": 999,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/google_cloud_toolathlon/src/cloud_logging.py",
+          "line": 193,
+          "end_line": 198,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/google_cloud_toolathlon/src/server.py",
+          "line": 995,
+          "end_line": 999,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/google_cloud_toolathlon/src/cloud_logging.py",
+      "line": 552,
+      "end_line": 557,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/google_cloud_toolathlon/src/cloud_logging.py:552-557: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/google_cloud_toolathlon/src/server.py:1123-1127 (weakest 07-klavis/mcp_servers/google_cloud_toolathlon/src/cloud_logging.py:552-557 ~ 07-klavis/mcp_servers/google_cloud_toolathlon/src/server.py:1123-1127, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/google_cloud_toolathlon/src/cloud_logging.py",
+          "line": 552,
+          "end_line": 557,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/google_cloud_toolathlon/src/server.py",
+          "line": 1123,
+          "end_line": 1127,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/google_cloud_toolathlon/src/cloud_logging.py",
+          "line": 552,
+          "end_line": 557,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/google_cloud_toolathlon/src/server.py",
+          "line": 1123,
+          "end_line": 1127,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/google_cloud_toolathlon/src/cloud_logging.py",
+      "line": 583,
+      "end_line": 591,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/google_cloud_toolathlon/src/cloud_logging.py:583-591: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/google_cloud_toolathlon/src/server.py:1147-1154 (weakest 07-klavis/mcp_servers/google_cloud_toolathlon/src/cloud_logging.py:583-591 ~ 07-klavis/mcp_servers/google_cloud_toolathlon/src/server.py:1147-1154, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/google_cloud_toolathlon/src/cloud_logging.py",
+          "line": 583,
+          "end_line": 591,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/google_cloud_toolathlon/src/server.py",
+          "line": 1147,
+          "end_line": 1154,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/google_cloud_toolathlon/src/cloud_logging.py",
+          "line": 583,
+          "end_line": 591,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/google_cloud_toolathlon/src/server.py",
+          "line": 1147,
+          "end_line": 1154,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/google_meet/tools/meet_api.py",
+      "line": 161,
+      "end_line": 162,
+      "prose_kind": "comment",
+      "message": "07-klavis/mcp_servers/google_meet/tools/meet_api.py:161-162: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/google_meet/tools/meet_api.py:216-217 (weakest 07-klavis/mcp_servers/google_meet/tools/meet_api.py:161-162 ~ 07-klavis/mcp_servers/google_meet/tools/meet_api.py:216-217, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/google_meet/tools/meet_api.py",
+          "line": 161,
+          "end_line": 162,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "07-klavis/mcp_servers/google_meet/tools/meet_api.py",
+          "line": 216,
+          "end_line": 217,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/google_meet/tools/meet_api.py",
+          "line": 161,
+          "end_line": 162,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/google_meet/tools/meet_api.py",
+          "line": 216,
+          "end_line": 217,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/google_sheets/models.py",
+      "line": 147,
+      "end_line": 150,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/google_sheets/models.py:147-150: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/google_sheets/models.py:156-159 (weakest 07-klavis/mcp_servers/google_sheets/models.py:147-150 ~ 07-klavis/mcp_servers/google_sheets/models.py:156-159, similarity 0.824)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/google_sheets/models.py",
+          "line": 147,
+          "end_line": 150,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/google_sheets/models.py",
+          "line": 156,
+          "end_line": 159,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/google_sheets/models.py",
+          "line": 147,
+          "end_line": 150,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/google_sheets/models.py",
+          "line": 156,
+          "end_line": 159,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8235294117647058
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/hacker_news/tools/hackerNews_mcp_tools.py",
+      "line": 21,
+      "end_line": 25,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/hacker_news/tools/hackerNews_mcp_tools.py:21-25: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/hacker_news/tools/helpers.py:11-15 (weakest 07-klavis/mcp_servers/hacker_news/tools/hackerNews_mcp_tools.py:21-25 ~ 07-klavis/mcp_servers/hacker_news/tools/helpers.py:11-15, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/hacker_news/tools/hackerNews_mcp_tools.py",
+          "line": 21,
+          "end_line": 25,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/hacker_news/tools/helpers.py",
+          "line": 11,
+          "end_line": 15,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/hacker_news/tools/hackerNews_mcp_tools.py",
+          "line": 21,
+          "end_line": 25,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/hacker_news/tools/helpers.py",
+          "line": 11,
+          "end_line": 15,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "07-klavis/mcp_servers/hubspot/tools/properties.py",
+      "line": 60,
+      "end_line": 128,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/hubspot/tools/properties.py:60-128: TPX002 docstring is 430 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 430,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/hugging_face/packages/e2e-python/gradio-files.py",
+      "line": 8,
+      "end_line": 9,
+      "prose_kind": "comment",
+      "message": "07-klavis/mcp_servers/hugging_face/packages/e2e-python/gradio-files.py:8-9: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/hugging_face/packages/e2e-python/qwen-test/qwen-test.py:10-11 (weakest 07-klavis/mcp_servers/hugging_face/packages/e2e-python/gradio-files.py:8-9 ~ 07-klavis/mcp_servers/hugging_face/packages/e2e-python/qwen-test/qwen-test.py:10-11, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/hugging_face/packages/e2e-python/gradio-files.py",
+          "line": 8,
+          "end_line": 9,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "07-klavis/mcp_servers/hugging_face/packages/e2e-python/qwen-test/qwen-test.py",
+          "line": 10,
+          "end_line": 11,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/hugging_face/packages/e2e-python/gradio-files.py",
+          "line": 8,
+          "end_line": 9,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/hugging_face/packages/e2e-python/qwen-test/qwen-test.py",
+          "line": 10,
+          "end_line": 11,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/__main__.py",
+      "line": 1,
+      "end_line": 3,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/__main__.py:1-3: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/__main__.py:1-3 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/__main__.py:1-3 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/__main__.py:1-3, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/__main__.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/__main__.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/__main__.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/__main__.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/file_backend.py",
+      "line": 290,
+      "end_line": 293,
+      "prose_kind": "comment",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/file_backend.py:290-293: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/file_backend.py:282-285 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/file_backend.py:290-293 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/file_backend.py:282-285, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/file_backend.py",
+          "line": 290,
+          "end_line": 293,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/file_backend.py",
+          "line": 282,
+          "end_line": 285,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/file_backend.py",
+          "line": 290,
+          "end_line": 293,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/file_backend.py",
+          "line": 282,
+          "end_line": 285,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/file_backend.py",
+      "line": 304,
+      "end_line": 307,
+      "prose_kind": "comment",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/file_backend.py:304-307: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/file_backend.py:296-299 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/file_backend.py:304-307 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/file_backend.py:296-299, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/file_backend.py",
+          "line": 304,
+          "end_line": 307,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/file_backend.py",
+          "line": 296,
+          "end_line": 299,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/file_backend.py",
+          "line": 304,
+          "end_line": 307,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/file_backend.py",
+          "line": 296,
+          "end_line": 299,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+      "line": 161,
+      "end_line": 162,
+      "prose_kind": "comment",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py:161-162: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py:161-162 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py:161-162 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py:161-162, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+          "line": 161,
+          "end_line": 162,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py",
+          "line": 161,
+          "end_line": 162,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+          "line": 161,
+          "end_line": 162,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py",
+          "line": 161,
+          "end_line": 162,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+      "line": 167,
+      "end_line": 168,
+      "prose_kind": "comment",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py:167-168: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py:167-168 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py:167-168 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py:167-168, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+          "line": 167,
+          "end_line": 168,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py",
+          "line": 167,
+          "end_line": 168,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+          "line": 167,
+          "end_line": 168,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py",
+          "line": 167,
+          "end_line": 168,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+      "line": 174,
+      "end_line": 175,
+      "prose_kind": "comment",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py:174-175: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py:174-175 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py:174-175 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py:174-175, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+          "line": 174,
+          "end_line": 175,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py",
+          "line": 174,
+          "end_line": 175,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+          "line": 174,
+          "end_line": 175,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py",
+          "line": 174,
+          "end_line": 175,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+      "line": 253,
+      "end_line": 254,
+      "prose_kind": "comment",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py:253-254: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py:250-251 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py:253-254 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py:250-251, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+          "line": 253,
+          "end_line": 254,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py",
+          "line": 250,
+          "end_line": 251,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+          "line": 253,
+          "end_line": 254,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py",
+          "line": 250,
+          "end_line": 251,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+      "line": 330,
+      "end_line": 331,
+      "prose_kind": "comment",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py:330-331: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py:327-328 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py:330-331 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py:327-328, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+          "line": 330,
+          "end_line": 331,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py",
+          "line": 327,
+          "end_line": 328,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+          "line": 330,
+          "end_line": 331,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py",
+          "line": 327,
+          "end_line": 328,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+      "line": 334,
+      "end_line": 336,
+      "prose_kind": "comment",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py:334-336: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py:331-333 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py:334-336 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py:331-333, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+          "line": 334,
+          "end_line": 336,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py",
+          "line": 331,
+          "end_line": 333,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+          "line": 334,
+          "end_line": 336,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py",
+          "line": 331,
+          "end_line": 333,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+      "line": 338,
+      "end_line": 339,
+      "prose_kind": "comment",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py:338-339: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py:335-336 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py:338-339 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py:335-336, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+          "line": 338,
+          "end_line": 339,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py",
+          "line": 335,
+          "end_line": 336,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+          "line": 338,
+          "end_line": 339,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py",
+          "line": 335,
+          "end_line": 336,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+      "line": 376,
+      "end_line": 380,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py:376-380: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py:373-377 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py:376-380 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py:373-377, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+          "line": 376,
+          "end_line": 380,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py",
+          "line": 373,
+          "end_line": 377,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+          "line": 376,
+          "end_line": 380,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py",
+          "line": 373,
+          "end_line": 377,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+      "line": 399,
+      "end_line": 403,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py:399-403: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py:397-401 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py:399-403 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py:397-401, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+          "line": 399,
+          "end_line": 403,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py",
+          "line": 397,
+          "end_line": 401,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+          "line": 399,
+          "end_line": 403,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py",
+          "line": 397,
+          "end_line": 401,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+      "line": 422,
+      "end_line": 426,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py:422-426: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py:421-425 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py:422-426 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py:421-425, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+          "line": 422,
+          "end_line": 426,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py",
+          "line": 421,
+          "end_line": 425,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+          "line": 422,
+          "end_line": 426,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py",
+          "line": 421,
+          "end_line": 425,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+      "line": 445,
+      "end_line": 449,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py:445-449: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py:445-449 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py:445-449 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py:445-449, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+          "line": 445,
+          "end_line": 449,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py",
+          "line": 445,
+          "end_line": 449,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+          "line": 445,
+          "end_line": 449,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py",
+          "line": 445,
+          "end_line": 449,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+      "line": 479,
+      "end_line": 483,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py:479-483: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py:481-485 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py:479-483 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py:481-485, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+          "line": 479,
+          "end_line": 483,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py",
+          "line": 481,
+          "end_line": 485,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+          "line": 479,
+          "end_line": 483,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py",
+          "line": 481,
+          "end_line": 485,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+      "line": 516,
+      "end_line": 517,
+      "prose_kind": "comment",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py:516-517: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py:519-520 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py:516-517 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py:519-520, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+          "line": 516,
+          "end_line": 517,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py",
+          "line": 519,
+          "end_line": 520,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/imap_backend.py",
+          "line": 516,
+          "end_line": 517,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/imap_backend.py",
+          "line": 519,
+          "end_line": 520,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/smtp_backend.py",
+      "line": 92,
+      "end_line": 96,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/smtp_backend.py:92-96: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/smtp_backend.py:94-98 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/smtp_backend.py:92-96 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/smtp_backend.py:94-98, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/smtp_backend.py",
+          "line": 92,
+          "end_line": 96,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/smtp_backend.py",
+          "line": 94,
+          "end_line": 98,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/backends/smtp_backend.py",
+          "line": 92,
+          "end_line": 96,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/backends/smtp_backend.py",
+          "line": 94,
+          "end_line": 98,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/config/settings.py",
+      "line": 37,
+      "end_line": 38,
+      "prose_kind": "comment",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/config/settings.py:37-38: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/config/settings.py:37-38 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/config/settings.py:37-38 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/config/settings.py:37-38, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/config/settings.py",
+          "line": 37,
+          "end_line": 38,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/config/settings.py",
+          "line": 37,
+          "end_line": 38,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/config/settings.py",
+          "line": 37,
+          "end_line": 38,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/config/settings.py",
+          "line": 37,
+          "end_line": 38,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/services/search_service.py",
+      "line": 37,
+      "end_line": 38,
+      "prose_kind": "comment",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/services/search_service.py:37-38: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/services/search_service.py:37-38 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/services/search_service.py:37-38 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/services/search_service.py:37-38, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/services/search_service.py",
+          "line": 37,
+          "end_line": 38,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/services/search_service.py",
+          "line": 37,
+          "end_line": 38,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/services/search_service.py",
+          "line": 37,
+          "end_line": 38,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/services/search_service.py",
+          "line": 37,
+          "end_line": 38,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/services/search_service.py",
+      "line": 108,
+      "end_line": 109,
+      "prose_kind": "comment",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/services/search_service.py:108-109: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/services/search_service.py:108-109 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/services/search_service.py:108-109 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/services/search_service.py:108-109, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/services/search_service.py",
+          "line": 108,
+          "end_line": 109,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/services/search_service.py",
+          "line": 108,
+          "end_line": 109,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/services/search_service.py",
+          "line": 108,
+          "end_line": 109,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/services/search_service.py",
+          "line": 108,
+          "end_line": 109,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+      "line": 13,
+      "end_line": 19,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py:13-19: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py:18-24 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py:13-19 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py:18-24, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+          "line": 13,
+          "end_line": 19,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py",
+          "line": 18,
+          "end_line": 24,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+          "line": 13,
+          "end_line": 19,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py",
+          "line": 18,
+          "end_line": 24,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+      "line": 47,
+      "end_line": 51,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py:47-51: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py:52-57 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py:47-51 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py:52-57, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+          "line": 47,
+          "end_line": 51,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py",
+          "line": 52,
+          "end_line": 57,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+          "line": 47,
+          "end_line": 51,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py",
+          "line": 52,
+          "end_line": 57,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+      "line": 86,
+      "end_line": 93,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py:86-93: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py:92-99 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py:86-93 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py:92-99, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+          "line": 86,
+          "end_line": 93,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py",
+          "line": 92,
+          "end_line": 99,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+          "line": 86,
+          "end_line": 93,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py",
+          "line": 92,
+          "end_line": 99,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+      "line": 120,
+      "end_line": 130,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py:120-130: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py:126-136 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py:120-130 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py:126-136, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+          "line": 120,
+          "end_line": 130,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py",
+          "line": 126,
+          "end_line": 136,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+          "line": 120,
+          "end_line": 130,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py",
+          "line": 126,
+          "end_line": 136,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+      "line": 154,
+      "end_line": 163,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py:154-163: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py:161-171 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py:154-163 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py:161-171, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+          "line": 154,
+          "end_line": 163,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py",
+          "line": 161,
+          "end_line": 171,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+          "line": 154,
+          "end_line": 163,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py",
+          "line": 161,
+          "end_line": 171,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+      "line": 186,
+      "end_line": 195,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py:186-195: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py:195-205 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py:186-195 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py:195-205, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+          "line": 186,
+          "end_line": 195,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py",
+          "line": 195,
+          "end_line": 205,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+          "line": 186,
+          "end_line": 195,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py",
+          "line": 195,
+          "end_line": 205,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+      "line": 216,
+      "end_line": 220,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py:216-220: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py:227-232 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py:216-220 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py:227-232, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+          "line": 216,
+          "end_line": 220,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py",
+          "line": 227,
+          "end_line": 232,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+          "line": 216,
+          "end_line": 220,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py",
+          "line": 227,
+          "end_line": 232,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+      "line": 234,
+      "end_line": 239,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py:234-239: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py:246-252 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py:234-239 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py:246-252, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+          "line": 234,
+          "end_line": 239,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py",
+          "line": 246,
+          "end_line": 252,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+          "line": 234,
+          "end_line": 239,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py",
+          "line": 246,
+          "end_line": 252,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+      "line": 253,
+      "end_line": 258,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py:253-258: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py:266-272 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py:253-258 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py:266-272, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+          "line": 253,
+          "end_line": 258,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py",
+          "line": 266,
+          "end_line": 272,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+          "line": 253,
+          "end_line": 258,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py",
+          "line": 266,
+          "end_line": 272,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+      "line": 273,
+      "end_line": 278,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py:273-278: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py:287-293 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py:273-278 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py:287-293, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+          "line": 273,
+          "end_line": 278,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py",
+          "line": 287,
+          "end_line": 293,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+          "line": 273,
+          "end_line": 278,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py",
+          "line": 287,
+          "end_line": 293,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+      "line": 284,
+      "end_line": 285,
+      "prose_kind": "comment",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py:284-285: TPX003 same explanation in 4 places: 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py:340-341, 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py:300-301, 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py:358-359 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py:284-285 ~ 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py:340-341, similarity 0.750)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+          "line": 284,
+          "end_line": 285,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+          "line": 340,
+          "end_line": 341,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py",
+          "line": 300,
+          "end_line": 301,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py",
+          "line": 358,
+          "end_line": 359,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+          "line": 284,
+          "end_line": 285,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+          "line": 340,
+          "end_line": 341,
+          "prose_kind": "comment"
+        },
+        "similarity": 0.75
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+      "line": 330,
+      "end_line": 334,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py:330-334: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py:346-351 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py:330-334 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py:346-351, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+          "line": 330,
+          "end_line": 334,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py",
+          "line": 346,
+          "end_line": 351,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/email_tools.py",
+          "line": 330,
+          "end_line": 334,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/email_tools.py",
+          "line": 346,
+          "end_line": 351,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/folder_tools.py",
+      "line": 33,
+      "end_line": 37,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/folder_tools.py:33-37: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/folder_tools.py:38-42 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/folder_tools.py:33-37 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/folder_tools.py:38-42, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/folder_tools.py",
+          "line": 33,
+          "end_line": 37,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/folder_tools.py",
+          "line": 38,
+          "end_line": 42,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/folder_tools.py",
+          "line": 33,
+          "end_line": 37,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/folder_tools.py",
+          "line": 38,
+          "end_line": 42,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/folder_tools.py",
+      "line": 51,
+      "end_line": 55,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/folder_tools.py:51-55: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/folder_tools.py:56-60 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/folder_tools.py:51-55 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/folder_tools.py:56-60, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/folder_tools.py",
+          "line": 51,
+          "end_line": 55,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/folder_tools.py",
+          "line": 56,
+          "end_line": 60,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/folder_tools.py",
+          "line": 51,
+          "end_line": 55,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/folder_tools.py",
+          "line": 56,
+          "end_line": 60,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/folder_tools.py",
+      "line": 69,
+      "end_line": 73,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/folder_tools.py:69-73: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/folder_tools.py:74-78 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/folder_tools.py:69-73 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/folder_tools.py:74-78, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/folder_tools.py",
+          "line": 69,
+          "end_line": 73,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/folder_tools.py",
+          "line": 74,
+          "end_line": 78,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/folder_tools.py",
+          "line": 69,
+          "end_line": 73,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/folder_tools.py",
+          "line": 74,
+          "end_line": 78,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/folder_tools.py",
+      "line": 103,
+      "end_line": 107,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/folder_tools.py:103-107: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/folder_tools.py:109-113 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/folder_tools.py:103-107 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/folder_tools.py:109-113, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/folder_tools.py",
+          "line": 103,
+          "end_line": 107,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/folder_tools.py",
+          "line": 109,
+          "end_line": 113,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/folder_tools.py",
+          "line": 103,
+          "end_line": 107,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/folder_tools.py",
+          "line": 109,
+          "end_line": 113,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py",
+      "line": 66,
+      "end_line": 70,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py:66-70: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/management_tools.py:78-83 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py:66-70 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/management_tools.py:78-83, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py",
+          "line": 66,
+          "end_line": 70,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/management_tools.py",
+          "line": 78,
+          "end_line": 83,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py",
+          "line": 66,
+          "end_line": 70,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/management_tools.py",
+          "line": 78,
+          "end_line": 83,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py",
+      "line": 92,
+      "end_line": 101,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py:92-101: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/management_tools.py:105-114 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py:92-101 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/management_tools.py:105-114, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py",
+          "line": 92,
+          "end_line": 101,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/management_tools.py",
+          "line": 105,
+          "end_line": 114,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py",
+          "line": 92,
+          "end_line": 101,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/management_tools.py",
+          "line": 105,
+          "end_line": 114,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py",
+      "line": 119,
+      "end_line": 124,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py:119-124: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/management_tools.py:132-137 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py:119-124 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/management_tools.py:132-137, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py",
+          "line": 119,
+          "end_line": 124,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/management_tools.py",
+          "line": 132,
+          "end_line": 137,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py",
+          "line": 119,
+          "end_line": 124,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/management_tools.py",
+          "line": 132,
+          "end_line": 137,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py",
+      "line": 149,
+      "end_line": 159,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py:149-159: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/management_tools.py:162-172 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py:149-159 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/management_tools.py:162-172, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py",
+          "line": 149,
+          "end_line": 159,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/management_tools.py",
+          "line": 162,
+          "end_line": 172,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py",
+          "line": 149,
+          "end_line": 159,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/management_tools.py",
+          "line": 162,
+          "end_line": 172,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py",
+      "line": 199,
+      "end_line": 206,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py:199-206: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/management_tools.py:212-219 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py:199-206 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/management_tools.py:212-219, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py",
+          "line": 199,
+          "end_line": 206,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/management_tools.py",
+          "line": 212,
+          "end_line": 219,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py",
+          "line": 199,
+          "end_line": 206,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/management_tools.py",
+          "line": 212,
+          "end_line": 219,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py",
+      "line": 325,
+      "end_line": 327,
+      "prose_kind": "comment",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py:325-327: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/management_tools.py:340-342 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py:325-327 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/management_tools.py:340-342, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py",
+          "line": 325,
+          "end_line": 327,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/management_tools.py",
+          "line": 340,
+          "end_line": 342,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py",
+          "line": 325,
+          "end_line": 327,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/management_tools.py",
+          "line": 340,
+          "end_line": 342,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py",
+      "line": 435,
+      "end_line": 440,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py:435-440: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/management_tools.py:450-455 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py:435-440 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/management_tools.py:450-455, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py",
+          "line": 435,
+          "end_line": 440,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/management_tools.py",
+          "line": 450,
+          "end_line": 455,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/tools/management_tools.py",
+          "line": 435,
+          "end_line": 440,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/tools/management_tools.py",
+          "line": 450,
+          "end_line": 455,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/utils/email_parser.py",
+      "line": 58,
+      "end_line": 62,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/utils/email_parser.py:58-62: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/utils/email_parser.py:58-62 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/utils/email_parser.py:58-62 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/utils/email_parser.py:58-62, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/utils/email_parser.py",
+          "line": 58,
+          "end_line": 62,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/utils/email_parser.py",
+          "line": 58,
+          "end_line": 62,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/utils/email_parser.py",
+          "line": 58,
+          "end_line": 62,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/utils/email_parser.py",
+          "line": 58,
+          "end_line": 62,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/utils/email_parser.py",
+      "line": 138,
+      "end_line": 139,
+      "prose_kind": "comment",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/utils/email_parser.py:138-139: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/utils/email_parser.py:138-139 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/utils/email_parser.py:138-139 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/utils/email_parser.py:138-139, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/utils/email_parser.py",
+          "line": 138,
+          "end_line": 139,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/utils/email_parser.py",
+          "line": 138,
+          "end_line": 139,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/utils/email_parser.py",
+          "line": 138,
+          "end_line": 139,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/utils/email_parser.py",
+          "line": 138,
+          "end_line": 139,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/utils/email_parser.py",
+      "line": 143,
+      "end_line": 144,
+      "prose_kind": "comment",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/utils/email_parser.py:143-144: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/utils/email_parser.py:143-144 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/utils/email_parser.py:143-144 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/utils/email_parser.py:143-144, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/utils/email_parser.py",
+          "line": 143,
+          "end_line": 144,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/utils/email_parser.py",
+          "line": 143,
+          "end_line": 144,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/utils/email_parser.py",
+          "line": 143,
+          "end_line": 144,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/utils/email_parser.py",
+          "line": 143,
+          "end_line": 144,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/utils/validators.py",
+      "line": 12,
+      "end_line": 13,
+      "prose_kind": "comment",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/utils/validators.py:12-13: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/utils/validators.py:12-13 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/utils/validators.py:12-13 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/utils/validators.py:12-13, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/utils/validators.py",
+          "line": 12,
+          "end_line": 13,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/utils/validators.py",
+          "line": 12,
+          "end_line": 13,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/utils/validators.py",
+          "line": 12,
+          "end_line": 13,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/utils/validators.py",
+          "line": 12,
+          "end_line": 13,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/utils/validators.py",
+      "line": 19,
+      "end_line": 21,
+      "prose_kind": "comment",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/utils/validators.py:19-21: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/utils/validators.py:19-21 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/utils/validators.py:19-21 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/utils/validators.py:19-21, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/utils/validators.py",
+          "line": 19,
+          "end_line": 21,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/utils/validators.py",
+          "line": 19,
+          "end_line": 21,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/utils/validators.py",
+          "line": 19,
+          "end_line": 21,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/utils/validators.py",
+          "line": 19,
+          "end_line": 21,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/utils/validators.py",
+      "line": 25,
+      "end_line": 26,
+      "prose_kind": "comment",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/utils/validators.py:25-26: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/utils/validators.py:25-26 (weakest 07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/utils/validators.py:25-26 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/utils/validators.py:25-26, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/utils/validators.py",
+          "line": 25,
+          "end_line": 26,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/utils/validators.py",
+          "line": 25,
+          "end_line": 26,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/emails_mcp/utils/validators.py",
+          "line": 25,
+          "end_line": 26,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/emails_mcp/utils/validators.py",
+          "line": 25,
+          "end_line": 26,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/Poste.io/src/test_connection.py",
+      "line": 2,
+      "end_line": 5,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/Poste.io/src/test_connection.py:2-5: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/poste_email_toolathlon/src/test_connection.py:2-5 (weakest 07-klavis/mcp_servers/local/Poste.io/src/test_connection.py:2-5 ~ 07-klavis/mcp_servers/poste_email_toolathlon/src/test_connection.py:2-5, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/test_connection.py",
+          "line": 2,
+          "end_line": 5,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/test_connection.py",
+          "line": 2,
+          "end_line": 5,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/Poste.io/src/test_connection.py",
+          "line": 2,
+          "end_line": 5,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/poste_email_toolathlon/src/test_connection.py",
+          "line": 2,
+          "end_line": 5,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/excel/src/excel_mcp/data.py",
+      "line": 65,
+      "end_line": 66,
+      "prose_kind": "comment",
+      "message": "07-klavis/mcp_servers/local/excel/src/excel_mcp/data.py:65-66: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/local/excel/src/excel_mcp/data.py:233-234 (weakest 07-klavis/mcp_servers/local/excel/src/excel_mcp/data.py:65-66 ~ 07-klavis/mcp_servers/local/excel/src/excel_mcp/data.py:233-234, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/excel/src/excel_mcp/data.py",
+          "line": 65,
+          "end_line": 66,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "07-klavis/mcp_servers/local/excel/src/excel_mcp/data.py",
+          "line": 233,
+          "end_line": 234,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/excel/src/excel_mcp/data.py",
+          "line": 65,
+          "end_line": 66,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/local/excel/src/excel_mcp/data.py",
+          "line": 233,
+          "end_line": 234,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/powerpoint/setup_mcp.py",
+      "line": 10,
+      "end_line": 15,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/powerpoint/setup_mcp.py:10-15: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/local/word/setup_mcp.py:10-15 (weakest 07-klavis/mcp_servers/local/powerpoint/setup_mcp.py:10-15 ~ 07-klavis/mcp_servers/local/word/setup_mcp.py:10-15, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/powerpoint/setup_mcp.py",
+          "line": 10,
+          "end_line": 15,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/local/word/setup_mcp.py",
+          "line": 10,
+          "end_line": 15,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/powerpoint/setup_mcp.py",
+          "line": 10,
+          "end_line": 15,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/local/word/setup_mcp.py",
+          "line": 10,
+          "end_line": 15,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/powerpoint/setup_mcp.py",
+      "line": 39,
+      "end_line": 50,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/powerpoint/setup_mcp.py:39-50: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/local/word/setup_mcp.py:81-92 (weakest 07-klavis/mcp_servers/local/powerpoint/setup_mcp.py:39-50 ~ 07-klavis/mcp_servers/local/word/setup_mcp.py:81-92, similarity 0.870)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/powerpoint/setup_mcp.py",
+          "line": 39,
+          "end_line": 50,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/local/word/setup_mcp.py",
+          "line": 81,
+          "end_line": 92,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/powerpoint/setup_mcp.py",
+          "line": 39,
+          "end_line": 50,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/local/word/setup_mcp.py",
+          "line": 81,
+          "end_line": 92,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8695652173913043
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/word/word_document_server/core/comments.py",
+      "line": 15,
+      "end_line": 23,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/word/word_document_server/core/comments.py:15-23: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/local/word/word_document_server/tools/comment_tools.py:21-29 (weakest 07-klavis/mcp_servers/local/word/word_document_server/core/comments.py:15-23 ~ 07-klavis/mcp_servers/local/word/word_document_server/tools/comment_tools.py:21-29, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/core/comments.py",
+          "line": 15,
+          "end_line": 23,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/tools/comment_tools.py",
+          "line": 21,
+          "end_line": 29,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/core/comments.py",
+          "line": 15,
+          "end_line": 23,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/tools/comment_tools.py",
+          "line": 21,
+          "end_line": 29,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/word/word_document_server/core/tables.py",
+      "line": 329,
+      "end_line": 340,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/word/word_document_server/core/tables.py:329-340: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/local/word/word_document_server/tools/format_tools.py:450-458 (weakest 07-klavis/mcp_servers/local/word/word_document_server/core/tables.py:329-340 ~ 07-klavis/mcp_servers/local/word/word_document_server/tools/format_tools.py:450-458, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/core/tables.py",
+          "line": 329,
+          "end_line": 340,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/tools/format_tools.py",
+          "line": 450,
+          "end_line": 458,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/core/tables.py",
+          "line": 329,
+          "end_line": 340,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/tools/format_tools.py",
+          "line": 450,
+          "end_line": 458,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/word/word_document_server/core/tables.py",
+      "line": 345,
+      "end_line": 356,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/word/word_document_server/core/tables.py:345-356: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/local/word/word_document_server/tools/format_tools.py:501-509 (weakest 07-klavis/mcp_servers/local/word/word_document_server/core/tables.py:345-356 ~ 07-klavis/mcp_servers/local/word/word_document_server/tools/format_tools.py:501-509, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/core/tables.py",
+          "line": 345,
+          "end_line": 356,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/tools/format_tools.py",
+          "line": 501,
+          "end_line": 509,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/core/tables.py",
+          "line": 345,
+          "end_line": 356,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/tools/format_tools.py",
+          "line": 501,
+          "end_line": 509,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/word/word_document_server/core/tables.py",
+      "line": 437,
+      "end_line": 447,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/word/word_document_server/core/tables.py:437-447: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/local/word/word_document_server/tools/format_tools.py:613-620 (weakest 07-klavis/mcp_servers/local/word/word_document_server/core/tables.py:437-447 ~ 07-klavis/mcp_servers/local/word/word_document_server/tools/format_tools.py:613-620, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/core/tables.py",
+          "line": 437,
+          "end_line": 447,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/tools/format_tools.py",
+          "line": 613,
+          "end_line": 620,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/core/tables.py",
+          "line": 437,
+          "end_line": 447,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/tools/format_tools.py",
+          "line": 613,
+          "end_line": 620,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/word/word_document_server/core/tables.py",
+      "line": 558,
+      "end_line": 568,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/word/word_document_server/core/tables.py:558-568: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/local/word/word_document_server/tools/format_tools.py:827-834 (weakest 07-klavis/mcp_servers/local/word/word_document_server/core/tables.py:558-568 ~ 07-klavis/mcp_servers/local/word/word_document_server/tools/format_tools.py:827-834, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/core/tables.py",
+          "line": 558,
+          "end_line": 568,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/tools/format_tools.py",
+          "line": 827,
+          "end_line": 834,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/core/tables.py",
+          "line": 558,
+          "end_line": 568,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/tools/format_tools.py",
+          "line": 827,
+          "end_line": 834,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/word/word_document_server/main.py",
+      "line": 150,
+      "end_line": 161,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/word/word_document_server/main.py:150-161: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/local/word/word_document_server/tools/content_tools.py:117-128 (weakest 07-klavis/mcp_servers/local/word/word_document_server/main.py:150-161 ~ 07-klavis/mcp_servers/local/word/word_document_server/tools/content_tools.py:117-128, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/main.py",
+          "line": 150,
+          "end_line": 161,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/tools/content_tools.py",
+          "line": 117,
+          "end_line": 128,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/main.py",
+          "line": 150,
+          "end_line": 161,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/tools/content_tools.py",
+          "line": 117,
+          "end_line": 128,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/word/word_document_server/main.py",
+      "line": 168,
+      "end_line": 179,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/word/word_document_server/main.py:168-179: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/local/word/word_document_server/tools/content_tools.py:21-32 (weakest 07-klavis/mcp_servers/local/word/word_document_server/main.py:168-179 ~ 07-klavis/mcp_servers/local/word/word_document_server/tools/content_tools.py:21-32, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/main.py",
+          "line": 168,
+          "end_line": 179,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/tools/content_tools.py",
+          "line": 21,
+          "end_line": 32,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/main.py",
+          "line": 168,
+          "end_line": 179,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/tools/content_tools.py",
+          "line": 21,
+          "end_line": 32,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/word/word_document_server/tools/extended_document_tools.py",
+      "line": 19,
+      "end_line": 24,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/word/word_document_server/tools/extended_document_tools.py:19-24: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/local/word/word_document_server/utils/extended_document_utils.py:9-18 (weakest 07-klavis/mcp_servers/local/word/word_document_server/tools/extended_document_tools.py:19-24 ~ 07-klavis/mcp_servers/local/word/word_document_server/utils/extended_document_utils.py:9-18, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/tools/extended_document_tools.py",
+          "line": 19,
+          "end_line": 24,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/utils/extended_document_utils.py",
+          "line": 9,
+          "end_line": 18,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/tools/extended_document_tools.py",
+          "line": 19,
+          "end_line": 24,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/utils/extended_document_utils.py",
+          "line": 9,
+          "end_line": 18,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/local/word/word_document_server/tools/footnote_tools.py",
+      "line": 245,
+      "end_line": 254,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/local/word/word_document_server/tools/footnote_tools.py:245-254: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/local/word/word_document_server/tools/footnote_tools.py:282-291 (weakest 07-klavis/mcp_servers/local/word/word_document_server/tools/footnote_tools.py:245-254 ~ 07-klavis/mcp_servers/local/word/word_document_server/tools/footnote_tools.py:282-291, similarity 0.786)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/tools/footnote_tools.py",
+          "line": 245,
+          "end_line": 254,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/tools/footnote_tools.py",
+          "line": 282,
+          "end_line": 291,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/tools/footnote_tools.py",
+          "line": 245,
+          "end_line": 254,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/local/word/word_document_server/tools/footnote_tools.py",
+          "line": 282,
+          "end_line": 291,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.7857142857142857
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "07-klavis/mcp_servers/outlook/tools/messages.py",
+      "line": 80,
+      "end_line": 115,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/outlook/tools/messages.py:80-115: TPX002 docstring is 214 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 214,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/postgres/src/postgres_mcp/server.py",
+      "line": 80,
+      "end_line": 81,
+      "prose_kind": "comment",
+      "message": "07-klavis/mcp_servers/postgres/src/postgres_mcp/server.py:80-81: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/slack/server.py:59-60 (weakest 07-klavis/mcp_servers/postgres/src/postgres_mcp/server.py:80-81 ~ 07-klavis/mcp_servers/slack/server.py:59-60, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/postgres/src/postgres_mcp/server.py",
+          "line": 80,
+          "end_line": 81,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "07-klavis/mcp_servers/slack/server.py",
+          "line": 59,
+          "end_line": 60,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/postgres/src/postgres_mcp/server.py",
+          "line": 80,
+          "end_line": 81,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/slack/server.py",
+          "line": 59,
+          "end_line": 60,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/salesforce/tools/accounts.py",
+      "line": 10,
+      "end_line": 13,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/salesforce/tools/accounts.py:10-13: TPX003 same explanation in 4 places: 07-klavis/mcp_servers/salesforce/tools/cases.py:10-13, 07-klavis/mcp_servers/salesforce/tools/contacts.py:10-13, 07-klavis/mcp_servers/salesforce/tools/leads.py:10-13 (weakest 07-klavis/mcp_servers/salesforce/tools/accounts.py:10-13 ~ 07-klavis/mcp_servers/salesforce/tools/cases.py:10-13, similarity 0.840)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/salesforce/tools/accounts.py",
+          "line": 10,
+          "end_line": 13,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/salesforce/tools/cases.py",
+          "line": 10,
+          "end_line": 13,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/salesforce/tools/contacts.py",
+          "line": 10,
+          "end_line": 13,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/salesforce/tools/leads.py",
+          "line": 10,
+          "end_line": 13,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/salesforce/tools/accounts.py",
+          "line": 10,
+          "end_line": 13,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/salesforce/tools/cases.py",
+          "line": 10,
+          "end_line": 13,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.84
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/slack/user_tools/channels.py",
+      "line": 81,
+      "end_line": 89,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/slack/user_tools/channels.py:81-89: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/slack/user_tools/users.py:81-89 (weakest 07-klavis/mcp_servers/slack/user_tools/channels.py:81-89 ~ 07-klavis/mcp_servers/slack/user_tools/users.py:81-89, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/slack/user_tools/channels.py",
+          "line": 81,
+          "end_line": 89,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/slack/user_tools/users.py",
+          "line": 81,
+          "end_line": 89,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/slack/user_tools/channels.py",
+          "line": 81,
+          "end_line": 89,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/slack/user_tools/users.py",
+          "line": 81,
+          "end_line": 89,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/youtube/tools/base.py",
+      "line": 113,
+      "end_line": 125,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/youtube/tools/base.py:113-125: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/youtube/utils.py:109-121 (weakest 07-klavis/mcp_servers/youtube/tools/base.py:113-125 ~ 07-klavis/mcp_servers/youtube/utils.py:109-121, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/youtube/tools/base.py",
+          "line": 113,
+          "end_line": 125,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/youtube/utils.py",
+          "line": 109,
+          "end_line": 121,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/youtube/tools/base.py",
+          "line": 113,
+          "end_line": 125,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/youtube/utils.py",
+          "line": 109,
+          "end_line": 121,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/youtube/tools/base.py",
+      "line": 162,
+      "end_line": 164,
+      "prose_kind": "docstring",
+      "message": "07-klavis/mcp_servers/youtube/tools/base.py:162-164: TPX003 same explanation in 2 places: 07-klavis/mcp_servers/youtube/utils.py:158-160 (weakest 07-klavis/mcp_servers/youtube/tools/base.py:162-164 ~ 07-klavis/mcp_servers/youtube/utils.py:158-160, similarity 1.000)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/youtube/tools/base.py",
+          "line": 162,
+          "end_line": 164,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "07-klavis/mcp_servers/youtube/utils.py",
+          "line": 158,
+          "end_line": 160,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/youtube/tools/base.py",
+          "line": 162,
+          "end_line": 164,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/youtube/utils.py",
+          "line": 158,
+          "end_line": 160,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "07-klavis/mcp_servers/youtube_transcript_toolathlon/src/mcp_youtube_transcript/__init__.py",
+      "line": 1,
+      "end_line": 7,
+      "prose_kind": "comment",
+      "message": "07-klavis/mcp_servers/youtube_transcript_toolathlon/src/mcp_youtube_transcript/__init__.py:1-7: TPX003 same explanation in 3 places: 07-klavis/mcp_servers/youtube_transcript_toolathlon/src/mcp_youtube_transcript/__main__.py:1-7, 07-klavis/mcp_servers/youtube_transcript_toolathlon/src/mcp_youtube_transcript/cli.py:1-7 (weakest 07-klavis/mcp_servers/youtube_transcript_toolathlon/src/mcp_youtube_transcript/__init__.py:1-7 ~ 07-klavis/mcp_servers/youtube_transcript_toolathlon/src/mcp_youtube_transcript/__main__.py:1-7, similarity 0.905)",
+      "locations": [
+        {
+          "path": "07-klavis/mcp_servers/youtube_transcript_toolathlon/src/mcp_youtube_transcript/__init__.py",
+          "line": 1,
+          "end_line": 7,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "07-klavis/mcp_servers/youtube_transcript_toolathlon/src/mcp_youtube_transcript/__main__.py",
+          "line": 1,
+          "end_line": 7,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "07-klavis/mcp_servers/youtube_transcript_toolathlon/src/mcp_youtube_transcript/cli.py",
+          "line": 1,
+          "end_line": 7,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "07-klavis/mcp_servers/youtube_transcript_toolathlon/src/mcp_youtube_transcript/__init__.py",
+          "line": 1,
+          "end_line": 7,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "07-klavis/mcp_servers/youtube_transcript_toolathlon/src/mcp_youtube_transcript/__main__.py",
+          "line": 1,
+          "end_line": 7,
+          "prose_kind": "comment"
+        },
+        "similarity": 0.9047619047619048
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "07-klavis/open-strata/src/strata/utils/field_search.py",
+      "line": 1,
+      "end_line": 81,
+      "prose_kind": "docstring",
+      "message": "07-klavis/open-strata/src/strata/utils/field_search.py:1-81: TPX002 docstring is 486 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 486,
+      "max_volume": 200
+    }
+  ]
+}

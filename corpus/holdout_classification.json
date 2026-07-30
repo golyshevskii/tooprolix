@@ -1,0 +1,1121 @@
+{
+  "detector_tag": "v0.4.0 + contextual operator rule (post review round 1)",
+  "detector_commit": "53585f5a1825851cf0396a4ea260e8332e7f044e",
+  "detector_dirty": false,
+  "binary_sha256": "7538d48ab97e3c4fa22265440d5247e52c4508d21b5c48a398703d8a8bdaac01",
+  "protocol": "EPIC.md Decisions #16; sampling design corpus/PREREGISTRATION.md 5.0 (amendment 2), runs pinned by amendment 3",
+  "blind": false,
+  "runs": [
+    {
+      "name": "01-Raven",
+      "sha256": "d9eafebfbe8382e9a0f7ff45a2d963bd8788f402c7b731e01f683c53bd142d9a"
+    },
+    {
+      "name": "02-Vision-Agents",
+      "sha256": "a9296b289090acc74d55bc0a900b3673bafda8c5ffbd6f7f15ded3357e5206c3"
+    },
+    {
+      "name": "03-graphify",
+      "sha256": "35018b62c4a200a63f70b353eb0408a0d16d4f37404474b468bc0a6b4188b2bf"
+    },
+    {
+      "name": "04-DeepTutor",
+      "sha256": "05df08c1f7f2de1f754ee5a4c1ba5524d81ada18c752d352315441e95ea393a5"
+    },
+    {
+      "name": "05-nanobot",
+      "sha256": "2cb45805065dd41a97f0a205492e2925b45ffb845add0419bcc47ddc056f398e"
+    },
+    {
+      "name": "06-claude-scientific-writer",
+      "sha256": "fcac3c56fd178fc09244cf1b64ce76f9c4dbbd2224c48a48611611947a2b7227"
+    },
+    {
+      "name": "07-klavis",
+      "sha256": "5fcd6d6f0896c9a9c57bb34892658fbf31973fabd0f10eec36c7f25963b3f252"
+    },
+    {
+      "name": "08-MemMachine",
+      "sha256": "0558b62e7b2fb8816bb4f0e9246a4addcd3940d3a77fc1ef265dd15c66ad196b"
+    },
+    {
+      "name": "09-PraisonAI",
+      "sha256": "c6179d101e7012b1bdd7871c1b82d9ef35c2214e963f845d46b7cebce1984a4d"
+    },
+    {
+      "name": "10-skills",
+      "sha256": "6e43319bca285d29c556ec5264edc84b3967720e6725eaa2e247d7b1ee68738e"
+    }
+  ],
+  "records": [
+    {
+      "repo": "01-Raven",
+      "path": "01-Raven/benchmarks/clawbench/stream.py",
+      "line": 154,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "01-Raven/benchmarks/clawbench/stream.py:154-156",
+        "01-Raven/benchmarks/pinchbench/bot_runner/bot_executor.py:198-200",
+        "01-Raven/benchmarks/pinchbench/direct/raven_executor.py:460-462"
+      ],
+      "classification": "TP",
+      "reason": "One three-line rationale for opting benchmark runs out of the per-turn shadow-git checkpoint, copied verbatim into three benchmark runners. Pure narrative, no scaffolding at all.",
+      "proposed_fix": "Hoist the opt-out and its rationale into one shared benchmark helper; all three runners call it.",
+      "shape": "",
+      "attributes": {
+        "tag": "E1",
+        "strict_reading": "TP"
+      }
+    },
+    {
+      "repo": "02-Vision-Agents",
+      "path": "02-Vision-Agents/agents-core/vision_agents/core/agents/agent_launcher.py",
+      "line": 61,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "02-Vision-Agents/agents-core/vision_agents/core/agents/agent_launcher.py:61-67",
+        "02-Vision-Agents/agents-core/vision_agents/core/agents/agents.py:626-632"
+      ],
+      "classification": "TP",
+      "reason": "`AgentSession.on_call_for` and `Agent.on_call_for` document the same quantity, and after the `Returns:` entry is discarded a substantive caveat survives identically — that the value is 0.0 before the agent joins.",
+      "proposed_fix": "`Agent.on_call_for` owns the definition; `AgentSession.on_call_for` cites it.",
+      "shape": "",
+      "attributes": {
+        "tag": "E2",
+        "strict_reading": "TP"
+      }
+    },
+    {
+      "repo": "03-graphify",
+      "path": "03-graphify/graphify/analyze.py",
+      "line": 64,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "03-graphify/graphify/analyze.py:64-70",
+        "03-graphify/worked/mixed-corpus/raw/analyze.py:12-18"
+      ],
+      "classification": "FP",
+      "reason": "`graphify/analyze.py` against `worked/mixed-corpus/raw/analyze.py`. The second path is a deliberately vendored copy of the project's own source, kept as a worked-example corpus for the analyser to run on. Deleting or thinning its prose defeats the fixture, which exists precisely to be a realistic input.",
+      "proposed_fix": "",
+      "shape": "a deliberately vendored copy of the repository's own source, kept as a worked-example fixture",
+      "attributes": {
+        "new_shape": true,
+        "tag": "E3",
+        "strict_reading": "FP"
+      }
+    },
+    {
+      "repo": "04-DeepTutor",
+      "path": "04-DeepTutor/deeptutor/api/routers/space_mcp.py",
+      "line": 144,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "04-DeepTutor/deeptutor/api/routers/space_mcp.py:144-145",
+        "04-DeepTutor/deeptutor/api/routers/space_mcp.py:341-342"
+      ],
+      "classification": "TP",
+      "reason": "Two endpoints in one router repeat the same two-line rationale for doing the URL-validating write off the event loop.",
+      "proposed_fix": "Move the write into one helper carrying the rationale once; both endpoints call it.",
+      "shape": "",
+      "attributes": {
+        "tag": "E4",
+        "strict_reading": "TP"
+      }
+    },
+    {
+      "repo": "05-nanobot",
+      "path": "05-nanobot/nanobot/channels/telegram/tests/test_telegram_channel.py",
+      "line": 744,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "05-nanobot/nanobot/channels/telegram/tests/test_telegram_channel.py:744-745",
+        "05-nanobot/nanobot/channels/telegram/tests/test_telegram_channel.py:769-770"
+      ],
+      "classification": "TP",
+      "reason": "Two adjacent tests in one file repeat the same two-line explanation of what the assertion below them is for.",
+      "proposed_fix": "Extract the shared assertion into one helper that carries the explanation once.",
+      "shape": "",
+      "attributes": {
+        "tag": "E5",
+        "strict_reading": "TP"
+      }
+    },
+    {
+      "repo": "06-claude-scientific-writer",
+      "path": "06-claude-scientific-writer/scripts/bump_version.py",
+      "line": 17,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "06-claude-scientific-writer/scripts/bump_version.py:17-24",
+        "06-claude-scientific-writer/scripts/publish.py:21-28",
+        "06-claude-scientific-writer/scripts/verify_package.py:17-24"
+      ],
+      "classification": "TP",
+      "reason": "`get_project_root()` defined identically in three standalone scripts, docstring and all.",
+      "proposed_fix": "Extract `scripts/_common.py::get_project_root()` and import it in all three scripts.",
+      "shape": "",
+      "attributes": {
+        "boundary": true,
+        "tag": "E6",
+        "strict_reading": "FP"
+      }
+    },
+    {
+      "repo": "07-klavis",
+      "path": "07-klavis/mcp-clients/src/mcp_clients/discord_bot.py",
+      "line": 86,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "07-klavis/mcp-clients/src/mcp_clients/discord_bot.py:86-91",
+        "07-klavis/mcp-clients/src/mcp_clients/slack/context.py:53-58"
+      ],
+      "classification": "TP",
+      "reason": "`DiscordBotContext.get_thread_id` and `SlackBotContext.get_thread_id` both override the same abstract `BotContext`, repeating its docstring verbatim.",
+      "proposed_fix": "`BotContext.get_thread_id` owns it; delete both overrides' copies — `inspect.getdoc` inherits along the MRO.",
+      "shape": "",
+      "attributes": {
+        "boundary": true,
+        "tag": "E7",
+        "strict_reading": "FP"
+      }
+    },
+    {
+      "repo": "08-MemMachine",
+      "path": "08-MemMachine/evaluation/episodic_memory/llm_judge.py",
+      "line": 1,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "08-MemMachine/evaluation/episodic_memory/llm_judge.py:1-2",
+        "08-MemMachine/evaluation/retrieval_agent/llm_judge.py:1-2"
+      ],
+      "classification": "FP",
+      "reason": "Two evaluation modules each open with the same attribution notice naming the upstream Mem0 file they were adapted from. Removing either copy strips that file of its provenance, which is what the notice exists to carry.",
+      "proposed_fix": "",
+      "shape": "an upstream attribution / provenance notice, legitimately repeated once per file",
+      "attributes": {
+        "new_shape": true,
+        "tag": "E8",
+        "strict_reading": "FP"
+      }
+    },
+    {
+      "repo": "09-PraisonAI",
+      "path": "09-PraisonAI/examples/acp/basic_acp_server.py",
+      "line": 2,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "09-PraisonAI/examples/acp/basic_acp_server.py:2-14",
+        "09-PraisonAI/src/praisonai/examples/acp/basic_acp_server.py:2-14"
+      ],
+      "classification": "TP",
+      "reason": "The same example file exists twice in the tree, at `examples/acp/` and at `src/praisonai/examples/acp/`, module docstring included. The overlap is not a shared explanation but a duplicated file.",
+      "proposed_fix": "Keep one tree as the source — the packaged `src/praisonai/examples/` — and have the top-level `examples/` reference it rather than copy it.",
+      "shape": "",
+      "attributes": {
+        "tag": "E9",
+        "strict_reading": "TP"
+      }
+    },
+    {
+      "repo": "10-skills",
+      "path": "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-apply-udf/code/generate_data.py",
+      "line": 1,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-apply-udf/code/generate_data.py:1-2",
+        "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-apply-udf/code/udf_pipeline.py:1-2",
+        "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-csv-etl/code/etl_pipeline.py:1-2",
+        "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-csv-etl/code/generate_data.py:1-2",
+        "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-groupby-agg/code/generate_data.py:1-2",
+        "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-groupby-agg/code/groupby_analysis.py:1-2",
+        "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-multi-join/code/generate_data.py:1-2",
+        "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-multi-join/code/multi_join.py:1-2",
+        "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-null-handling/code/generate_data.py:1-2",
+        "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-null-handling/code/null_pipeline.py:1-2",
+        "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-parquet-io/code/generate_data.py:1-2",
+        "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-parquet-io/code/parquet_pipeline.py:1-2",
+        "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-pivot-melt/code/generate_data.py:1-2",
+        "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-pivot-melt/code/reshape_analysis.py:1-2",
+        "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-string-ops/code/clean_contacts.py:1-2",
+        "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-string-ops/code/generate_data.py:1-2",
+        "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-timeseries-resample/code/generate_data.py:1-2",
+        "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-timeseries-resample/code/timeseries_analysis.py:1-2",
+        "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-window-functions/code/generate_data.py:1-2",
+        "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-window-functions/code/window_analysis.py:1-2",
+        "10-skills/skills/accelerated-computing-cudf/evals/files/negative-deep-learning-training/code/train.py:1-2",
+        "10-skills/skills/accelerated-computing-cudf/evals/files/source-cudf-null-fillna-semantics/code/null_cleanup.py:1-2",
+        "10-skills/skills/cuopt-numerical-optimization-api/assets/python/lp_duals/model.py:1-2",
+        "10-skills/skills/cuopt-numerical-optimization-api/assets/python/mps_solver/model.py:1-2",
+        "10-skills/skills/cuopt-server-api-python/assets/lp_basic/client.py:1-2",
+        "10-skills/skills/cuopt-server-api-python/assets/milp_basic/client.py:1-2",
+        "10-skills/skills/cuopt-server-api-python/assets/pdp_basic/client.py:1-2",
+        "10-skills/skills/cuopt-server-api-python/assets/vrp_basic/client.py:1-2",
+        "10-skills/skills/cuopt-server-api-python/assets/vrp_simple/client.py:1-2",
+        "10-skills/skills/data-designer/scripts/get_person_object_schema.py:1-2",
+        "10-skills/skills/dynamo-interconnect-check/scripts/check_interconnect.py:2-3",
+        "10-skills/skills/dynamo-recipe-runner/scripts/recipe_tool.py:2-3",
+        "10-skills/skills/dynamo-router-starter/scripts/check_router_health.py:2-3",
+        "10-skills/skills/dynamo-troubleshoot/scripts/collect_dynamo_debug_bundle.py:2-3",
+        "10-skills/skills/jetson-customize-pinmux/scripts/_pinmux_common.py:2-3",
+        "10-skills/skills/jetson-customize-pinmux/scripts/_pinmux_dt.py:2-3",
+        "10-skills/skills/jetson-customize-pinmux/scripts/generate_dtsi.py:2-3",
+        "10-skills/skills/jetson-customize-pinmux/scripts/modify_pinmux.py:2-3",
+        "10-skills/skills/jetson-inference-mem-tune/scripts/recommend.py:2-4",
+        "10-skills/skills/jetson-validate-image/scripts/uart_session.py:2-3",
+        "10-skills/skills/nemo-data-designer-plugin/scripts/get_person_object_schema.py:1-2",
+        "10-skills/skills/nemo-relay-migrate-from-flow/scripts/migrate_from_nemo_flow.py:2-4",
+        "10-skills/skills/omniverse-cad-to-simready/references/assemble-package-source/scripts/check_dependencies.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/assemble-package-source/scripts/run.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/content-agents/references/material-agent-client/scripts/check_dependencies.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/content-agents/references/material-agent-client/scripts/run.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/content-agents/references/physics-agent-client/scripts/check_dependencies.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/content-agents/references/physics-agent-client/scripts/run.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/content-agents/references/texture-agent-client/scripts/check_dependencies.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/content-agents/references/texture-agent-client/scripts/run.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/content-agents/scripts/check_dependencies.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/content-agents/scripts/content_agent_check_dependencies.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/content-agents/scripts/content_agent_client.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/content-agents/scripts/content_agent_material_cleanup.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/content-agents/scripts/run.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/convert-to-usd/references/mujoco-usd-converter/scripts/check_dependencies.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/convert-to-usd/references/mujoco-usd-converter/scripts/run.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/convert-to-usd/references/urdf-usd-converter/scripts/check_dependencies.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/convert-to-usd/references/urdf-usd-converter/scripts/run.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/convert-to-usd/references/usd-convert-cad/scripts/check_dependencies.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/convert-to-usd/references/usd-convert-cad/scripts/kit_app_template_cad.py:1-2",
+        "10-skills/skills/omniverse-cad-to-simready/references/convert-to-usd/references/usd-convert-cad/scripts/run.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/convert-to-usd/references/usd-convert-gsplat/scripts/check_dependencies.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/convert-to-usd/references/usd-convert-gsplat/scripts/run.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/convert-to-usd/scripts/check_dependencies.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/convert-to-usd/scripts/run.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/identify-asset-context/scripts/check_dependencies.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/identify-asset-context/scripts/run.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/nv-core-package-sample-validation/scripts/check_dependencies.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/nv-core-package-sample-validation/scripts/run.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/nv-core-package-sample/scripts/check_dependencies.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/nv-core-package-sample/scripts/run.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/omni-asset-validate-geometry/scripts/check_dependencies.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/omni-asset-validate-geometry/scripts/run.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/omni-asset-validate-physics/scripts/check_dependencies.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/omni-asset-validate-physics/scripts/run.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/omni-asset-validate/scripts/check_dependencies.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/omni-asset-validate/scripts/run.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/ovrtx-render-service/scripts/check_dependencies.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/ovrtx-render-service/scripts/run.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/ovrtx-render-service/scripts/stage_prep.py:1-2",
+        "10-skills/skills/omniverse-cad-to-simready/references/ovrtx-render-service/scripts/turntable.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/preflight/scripts/preflight.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/simready-conform-profile/references/FET_000_CORE/scripts/check_dependencies.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/simready-conform-profile/references/FET_000_CORE/scripts/run.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/simready-conform-profile/references/FET_001_MINIMAL/scripts/check_dependencies.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/simready-conform-profile/references/FET_001_MINIMAL/scripts/run.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/simready-conform-profile/references/FET_004_SIMULATE_MULTI_BODY_PHYSICS/scripts/check_dependencies.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/simready-conform-profile/references/FET_004_SIMULATE_MULTI_BODY_PHYSICS/scripts/run.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/simready-conform-profile/references/FET_005_SIMULATE_GRASP_PHYSICS/scripts/author_grasp_line.py:1-2",
+        "10-skills/skills/omniverse-cad-to-simready/references/simready-conform-profile/scripts/check_dependencies.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/simready-conform-profile/scripts/run.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/simready-validate/scripts/check_dependencies.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/simready-validate/scripts/run.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/validate-usd-minimum/scripts/check_dependencies.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/references/validate-usd-minimum/scripts/run.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/shared/preflight_manifest.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/shared/script_utils.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/shared/simready_package.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/shared/simready_package_check_dependencies.py:2-3",
+        "10-skills/skills/omniverse-cad-to-simready/shared/usd_convert_cad_diagnostics.py:2-3",
+        "10-skills/skills/omniverse-usd-performance-tuning/references/optimization-report/scripts/descent_convergence_common.py:2-3",
+        "10-skills/skills/omniverse-usd-performance-tuning/references/optimization-report/scripts/test_validate_report_descent.py:2-3",
+        "10-skills/skills/omniverse-usd-performance-tuning/references/optimization-report/scripts/validate_report.py:2-3",
+        "10-skills/skills/omniverse-usd-performance-tuning/references/report-templates/render_preview.py:2-3",
+        "10-skills/skills/omniverse-usd-performance-tuning/references/usd-optimize-run-operations/scripts/run_batch.py:2-3",
+        "10-skills/skills/omniverse-usd-performance-tuning/references/usd-structure-assessment/references/usd-hierarchy-dedupe-candidates/scripts/instance_candidate_finder.py:1-2",
+        "10-skills/skills/omniverse-usd-performance-tuning/references/usd-structure-assessment/references/usd-hierarchy-dedupe-candidates/scripts/select_frontier.py:2-3",
+        "10-skills/skills/omniverse-usd-performance-tuning/references/usd-structure-assessment/references/usd-mesh-fragmentation-candidates/scripts/mesh_fragmentation_finder.py:1-2",
+        "10-skills/skills/omniverse-usd-performance-tuning/references/usd-validation-runner/scripts/usd_validation_executor.py:1-2",
+        "10-skills/skills/physical-ai-defect-image-generation/scripts/render_defect_spec.py:2-3",
+        "10-skills/skills/physical-ai-video-data-augmentation/scripts/generate_configs.py:2-3",
+        "10-skills/skills/physical-ai-video-data-augmentation/scripts/osmo_barrier.py:2-3",
+        "10-skills/skills/physical-ai-video-data-augmentation/scripts/pre_submit_guard.py:2-3",
+        "10-skills/skills/skill-card-generator/scripts/discover_assets.py:1-2",
+        "10-skills/skills/skill-card-generator/scripts/render_card.py:1-2",
+        "10-skills/skills/skill-card-generator/scripts/validate_submission.py:1-2",
+        "10-skills/skills/tao-finetune-huggingface-model/examples/convnext-tiny-cifar10/infer.py:1-2",
+        "10-skills/skills/tao-finetune-huggingface-model/examples/convnext-tiny-cifar10/prepare_data.py:1-2",
+        "10-skills/skills/tao-finetune-huggingface-model/examples/convnext-tiny-cifar10/run_eval.py:1-2",
+        "10-skills/skills/tao-finetune-huggingface-model/examples/convnext-tiny-cifar10/train.py:1-2",
+        "10-skills/skills/tao-finetune-huggingface-model/examples/detr-resnet50-cppe5/infer.py:1-2",
+        "10-skills/skills/tao-finetune-huggingface-model/examples/detr-resnet50-cppe5/prepare_data.py:1-2",
+        "10-skills/skills/tao-finetune-huggingface-model/examples/detr-resnet50-cppe5/run_eval.py:1-2",
+        "10-skills/skills/tao-finetune-huggingface-model/examples/detr-resnet50-cppe5/train.py:1-2",
+        "10-skills/skills/tao-finetune-huggingface-model/examples/segformer-b0-foodseg103/infer.py:1-2",
+        "10-skills/skills/tao-finetune-huggingface-model/examples/segformer-b0-foodseg103/prepare_data.py:1-2",
+        "10-skills/skills/tao-finetune-huggingface-model/examples/segformer-b0-foodseg103/run_eval.py:1-2",
+        "10-skills/skills/tao-finetune-huggingface-model/examples/segformer-b0-foodseg103/train.py:1-2",
+        "10-skills/skills/tao-finetune-huggingface-model/examples/smolvlm-256m-vqav2/infer.py:1-2",
+        "10-skills/skills/tao-finetune-huggingface-model/examples/smolvlm-256m-vqav2/merge_lora.py:1-2",
+        "10-skills/skills/tao-finetune-huggingface-model/examples/smolvlm-256m-vqav2/prepare_data.py:1-2",
+        "10-skills/skills/tao-finetune-huggingface-model/examples/smolvlm-256m-vqav2/run_eval.py:1-2",
+        "10-skills/skills/tao-finetune-huggingface-model/examples/smolvlm-256m-vqav2/train.py:1-2",
+        "10-skills/skills/tao-generate-video-reasoning-annotations/references/prompts_traffic.py:1-2",
+        "10-skills/skills/tao-generate-video-reasoning-annotations/references/prompts_warehouse.py:1-2",
+        "10-skills/skills/tao-run-deft-aoi/scripts/align_token_usage.py:1-2",
+        "10-skills/skills/tao-run-deft-aoi/scripts/analyze_kpi.py:2-3",
+        "10-skills/skills/tao-run-deft-aoi/scripts/changenet_data_pair_prepare.py:1-2",
+        "10-skills/skills/tao-run-deft-aoi/scripts/init_deft_state.py:1-2",
+        "10-skills/skills/tao-run-deft-aoi/scripts/log_stage.py:1-2",
+        "10-skills/skills/tao-run-deft-aoi/scripts/prepare_inference_spec.py:1-2",
+        "10-skills/skills/tao-run-deft-aoi/scripts/stage_backbone.py:1-2",
+        "10-skills/skills/tao-run-deft-aoi/scripts/validate_training_csv.py:1-2"
+      ],
+      "classification": "FP",
+      "reason": "A 144-member cluster whose whole content is the SPDX licence header. Every file is required to carry it, tooling reads it per file, and removing a copy is affirmatively wrong.",
+      "proposed_fix": "",
+      "shape": "SPDX / licence header — mandatory per-file boilerplate that must not be deduplicated",
+      "attributes": {
+        "new_shape": true,
+        "members": 144,
+        "tag": "E10",
+        "strict_reading": "FP"
+      }
+    },
+    {
+      "repo": "01-Raven",
+      "path": "01-Raven/benchmarks/pinchbench/bot_runner/grading.py",
+      "line": 131,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "01-Raven/benchmarks/pinchbench/bot_runner/grading.py:131-133",
+        "01-Raven/benchmarks/pinchbench/direct/grading.py:131-133"
+      ],
+      "classification": "TP",
+      "reason": "Two grading modules under `pinchbench/` carry the same section banner over the same LLM-judge logic; the modules are near-duplicates of each other.",
+      "proposed_fix": "Hoist `_grade_automated` into one shared grading module; the banner goes with it.",
+      "shape": "",
+      "attributes": {
+        "tag": "E11",
+        "strict_reading": "TP"
+      }
+    },
+    {
+      "repo": "02-Vision-Agents",
+      "path": "02-Vision-Agents/agents-core/vision_agents/core/agents/agents.py",
+      "line": 401,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "02-Vision-Agents/agents-core/vision_agents/core/agents/agents.py:401-407",
+        "02-Vision-Agents/agents-core/vision_agents/core/agents/inference/base.py:45-51",
+        "02-Vision-Agents/agents-core/vision_agents/core/agents/inference/realtime_flow.py:269-277",
+        "02-Vision-Agents/agents-core/vision_agents/core/agents/inference/transcribing_flow.py:244-252"
+      ],
+      "classification": "TP",
+      "reason": "`Agent.say`, `InferenceFlow.say` and its subclass `RealtimeInferenceFlow.say` share a byte-identical summary; `RealtimeInferenceFlow` overrides the abstract base directly.",
+      "proposed_fix": "`InferenceFlow.say` owns the summary; the overrides keep only the `Args:` text that genuinely differs.",
+      "shape": "",
+      "attributes": {
+        "boundary": true,
+        "tag": "E12",
+        "strict_reading": "FP"
+      }
+    },
+    {
+      "repo": "03-graphify",
+      "path": "03-graphify/graphify/analyze.py",
+      "line": 85,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "03-graphify/graphify/analyze.py:85-86",
+        "03-graphify/worked/mixed-corpus/raw/analyze.py:28-29"
+      ],
+      "classification": "FP",
+      "reason": "Same vendored worked-example fixture as E3, a second block inside the copied module.",
+      "proposed_fix": "",
+      "shape": "a deliberately vendored copy of the repository's own source, kept as a worked-example fixture",
+      "attributes": {
+        "tag": "E13",
+        "strict_reading": "FP"
+      }
+    },
+    {
+      "repo": "04-DeepTutor",
+      "path": "04-DeepTutor/deeptutor/api/run_server.py",
+      "line": 14,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "04-DeepTutor/deeptutor/api/run_server.py:14-16",
+        "04-DeepTutor/deeptutor_cli/main.py:143-145"
+      ],
+      "classification": "TP",
+      "reason": "One three-line explanation of the Windows ProactorEventLoop switch, repeated in the API server entry point and in the CLI's `serve`.",
+      "proposed_fix": "Put the event-loop policy switch in one startup helper that both entry points call.",
+      "shape": "",
+      "attributes": {
+        "tag": "E14",
+        "strict_reading": "TP"
+      }
+    },
+    {
+      "repo": "05-nanobot",
+      "path": "05-nanobot/nanobot/cli/gateway_runtime.py",
+      "line": 439,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "05-nanobot/nanobot/cli/gateway_runtime.py:439-440",
+        "05-nanobot/nanobot/command/builtin.py:458-459"
+      ],
+      "classification": "TP",
+      "reason": "Two call sites repeat the same invariant about what grounds an audit record and what ends a history batch.",
+      "proposed_fix": "State the invariant once on the history-batch audit record it describes; both call sites reference it.",
+      "shape": "",
+      "attributes": {
+        "tag": "E15",
+        "strict_reading": "TP"
+      }
+    },
+    {
+      "repo": "06-claude-scientific-writer",
+      "path": "06-claude-scientific-writer/scripts/bump_version.py",
+      "line": 29,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "06-claude-scientific-writer/scripts/bump_version.py:29-46",
+        "06-claude-scientific-writer/scripts/publish.py:33-50"
+      ],
+      "classification": "TP",
+      "reason": "`read_current_version` defined twice across two scripts; the NumPy sections differ only in wording while the function is the same.",
+      "proposed_fix": "Extract it beside `get_project_root` into `scripts/_common.py` and import it.",
+      "shape": "",
+      "attributes": {
+        "boundary": true,
+        "tag": "E16",
+        "strict_reading": "FP"
+      }
+    },
+    {
+      "repo": "07-klavis",
+      "path": "07-klavis/mcp-clients/src/mcp_clients/discord_bot.py",
+      "line": 539,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "07-klavis/mcp-clients/src/mcp_clients/discord_bot.py:539-548",
+        "07-klavis/mcp-clients/src/mcp_clients/slack_bot.py:419-428"
+      ],
+      "classification": "TP",
+      "reason": "`DiscordBot.get_messages_history` and `SlackBot.get_messages_history` both override `BaseBot`, repeating its docstring; only the `Args:` differ by platform.",
+      "proposed_fix": "`BaseBot.get_messages_history` owns the summary and `Returns:`; the overrides keep their platform-specific `Args:`.",
+      "shape": "",
+      "attributes": {
+        "boundary": true,
+        "tag": "E17",
+        "strict_reading": "FP"
+      }
+    },
+    {
+      "repo": "08-MemMachine",
+      "path": "08-MemMachine/evaluation/retrieval_agent/beam/beam_ingest.py",
+      "line": 22,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "08-MemMachine/evaluation/retrieval_agent/beam/beam_ingest.py:22-32",
+        "08-MemMachine/evaluation/retrieval_agent/beam/beam_search.py:96-106"
+      ],
+      "classification": "TP",
+      "reason": "`load_beam_chat_data` is defined twice in one package, and the surviving narrative — that it supports both the nested plan-X format and the flat 10M format — is a behaviour statement, not scaffolding.",
+      "proposed_fix": "One module owns the function; the other imports it.",
+      "shape": "",
+      "attributes": {
+        "tag": "E18",
+        "strict_reading": "TP"
+      }
+    },
+    {
+      "repo": "09-PraisonAI",
+      "path": "09-PraisonAI/examples/acp/basic_acp_server.py",
+      "line": 19,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "09-PraisonAI/examples/acp/basic_acp_server.py:19-20",
+        "09-PraisonAI/src/praisonai/examples/acp/basic_acp_server.py:19-20"
+      ],
+      "classification": "TP",
+      "reason": "Same duplicated example file as E9, an inline comment this time.",
+      "proposed_fix": "Deduplicate the example tree, as in E9.",
+      "shape": "",
+      "attributes": {
+        "tag": "E19",
+        "strict_reading": "TP"
+      }
+    },
+    {
+      "repo": "10-skills",
+      "path": "10-skills/skills/cuopt-numerical-optimization-api/assets/python/least_squares/model.py",
+      "line": 1,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "10-skills/skills/cuopt-numerical-optimization-api/assets/python/least_squares/model.py:1-2",
+        "10-skills/skills/cuopt-numerical-optimization-api/assets/python/lp_basic/model.py:1-2",
+        "10-skills/skills/cuopt-numerical-optimization-api/assets/python/lp_warmstart/model.py:1-2",
+        "10-skills/skills/cuopt-numerical-optimization-api/assets/python/maximization_workaround/model.py:1-2",
+        "10-skills/skills/cuopt-numerical-optimization-api/assets/python/milp_basic/incumbent_callback.py:1-2",
+        "10-skills/skills/cuopt-numerical-optimization-api/assets/python/milp_basic/model.py:1-2",
+        "10-skills/skills/cuopt-numerical-optimization-api/assets/python/milp_production_planning/model.py:1-2",
+        "10-skills/skills/cuopt-numerical-optimization-api/assets/python/portfolio/model.py:1-2",
+        "10-skills/skills/cuopt-routing-api-python/assets/pdp_basic/model.py:1-2",
+        "10-skills/skills/cuopt-routing-api-python/assets/vrp_basic/model.py:1-2",
+        "10-skills/skills/nemo-evaluator-plugin/assets/examples/plugin_sdk_examples.py:1-2",
+        "10-skills/skills/nemo-evaluator-plugin/scripts/generate_example_specs.py:2-3"
+      ],
+      "classification": "FP",
+      "reason": "A 12-member cluster of the SPDX licence header, the 2025-2026 variant.",
+      "proposed_fix": "",
+      "shape": "SPDX / licence header — mandatory per-file boilerplate that must not be deduplicated",
+      "attributes": {
+        "members": 12,
+        "tag": "E20",
+        "strict_reading": "FP"
+      }
+    },
+    {
+      "repo": "01-Raven",
+      "path": "01-Raven/raven/cli/agent_commands.py",
+      "line": 67,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "01-Raven/raven/cli/agent_commands.py:67-68",
+        "01-Raven/raven/cli/tui_commands.py:66-67"
+      ],
+      "classification": "TP",
+      "reason": "`_stdout_isatty()` defined identically in two CLI modules, docstring and all, explaining the same test seam.",
+      "proposed_fix": "One shared CLI helper module owns it; both command modules import it.",
+      "shape": "",
+      "attributes": {
+        "tag": "E21",
+        "strict_reading": "TP"
+      }
+    },
+    {
+      "repo": "02-Vision-Agents",
+      "path": "02-Vision-Agents/agents-core/vision_agents/core/agents/inference/realtime_flow.py",
+      "line": 117,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "02-Vision-Agents/agents-core/vision_agents/core/agents/inference/realtime_flow.py:117-118",
+        "02-Vision-Agents/agents-core/vision_agents/core/agents/inference/transcribing_flow.py:192-193"
+      ],
+      "classification": "TP",
+      "reason": "`RealtimeInferenceFlow.interrupt` and `TranscribingInferenceFlow.interrupt`, siblings under `InferenceFlow`, repeat the same explanation of what `flush()` signals downstream.",
+      "proposed_fix": "State the flush contract once on `InferenceFlow.interrupt`, which both already override.",
+      "shape": "",
+      "attributes": {
+        "tag": "E22",
+        "strict_reading": "TP"
+      }
+    },
+    {
+      "repo": "03-graphify",
+      "path": "03-graphify/graphify/analyze.py",
+      "line": 110,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "03-graphify/graphify/analyze.py:110-114",
+        "03-graphify/worked/mixed-corpus/raw/analyze.py:36-40"
+      ],
+      "classification": "FP",
+      "reason": "Same vendored worked-example fixture as E3 and E13, a third block inside the copied module.",
+      "proposed_fix": "",
+      "shape": "a deliberately vendored copy of the repository's own source, kept as a worked-example fixture",
+      "attributes": {
+        "tag": "E23",
+        "strict_reading": "FP"
+      }
+    },
+    {
+      "repo": "04-DeepTutor",
+      "path": "04-DeepTutor/deeptutor/partners/channels/weixin.py",
+      "line": 1490,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "04-DeepTutor/deeptutor/partners/channels/weixin.py:1490-1491",
+        "04-DeepTutor/deeptutor/partners/channels/weixin.py:1522-1523"
+      ],
+      "classification": "TP",
+      "reason": "`_encrypt_aes_ecb` and `_decrypt_aes_ecb` in one file repeat the same two-line justification for AES-128-ECB being externally mandated.",
+      "proposed_fix": "State it once above the encrypt/decrypt pair rather than on each function.",
+      "shape": "",
+      "attributes": {
+        "tag": "E24",
+        "strict_reading": "TP"
+      }
+    },
+    {
+      "repo": "05-nanobot",
+      "path": "05-nanobot/nanobot/providers/openai_compat_provider.py",
+      "line": 1756,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "05-nanobot/nanobot/providers/openai_compat_provider.py:1756-1758",
+        "05-nanobot/nanobot/providers/openai_compat_provider.py:1851-1853"
+      ],
+      "classification": "TP",
+      "reason": "Two paths in one provider repeat the same three-line explanation of why the Copilot gateway must not fall back to `/chat/completions`.",
+      "proposed_fix": "State it once where the fallback decision is made; both paths reference that.",
+      "shape": "",
+      "attributes": {
+        "tag": "E25",
+        "strict_reading": "TP"
+      }
+    },
+    {
+      "repo": "06-claude-scientific-writer",
+      "path": "06-claude-scientific-writer/skills/citation-management/scripts/format_bibtex.py",
+      "line": 28,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "06-claude-scientific-writer/skills/citation-management/scripts/format_bibtex.py:28-36",
+        "06-claude-scientific-writer/skills/citation-management/scripts/validate_citations.py:44-52"
+      ],
+      "classification": "TP",
+      "reason": "`BibTeXFormatter.parse_bibtex_file` and `CitationValidator.parse_bibtex_file` are the same operation with the same signature and the same docstring, in two unrelated classes. This is duplicated behaviour, not two callables that happen to sound alike.",
+      "proposed_fix": "Extract one `parse_bibtex_file` helper both classes call.",
+      "shape": "",
+      "attributes": {
+        "boundary": true,
+        "tag": "E26",
+        "strict_reading": "FP"
+      }
+    },
+    {
+      "repo": "07-klavis",
+      "path": "07-klavis/mcp-clients/src/mcp_clients/llms/anthropic.py",
+      "line": 40,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "07-klavis/mcp-clients/src/mcp_clients/llms/anthropic.py:40-49",
+        "07-klavis/mcp-clients/src/mcp_clients/llms/base.py:308-317"
+      ],
+      "classification": "TP",
+      "reason": "`Anthropic.create_streaming_generator` repeats the docstring of `BaseLLM.create_streaming_generator`, the abstract base it overrides.",
+      "proposed_fix": "`BaseLLM.create_streaming_generator` owns it; delete the override's copy and let `inspect.getdoc` inherit.",
+      "shape": "",
+      "attributes": {
+        "boundary": true,
+        "tag": "E27",
+        "strict_reading": "FP"
+      }
+    },
+    {
+      "repo": "08-MemMachine",
+      "path": "08-MemMachine/evaluation/retrieval_agent/beam/beam_ingest.py",
+      "line": 37,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "08-MemMachine/evaluation/retrieval_agent/beam/beam_ingest.py:37-38",
+        "08-MemMachine/evaluation/retrieval_agent/beam/beam_search.py:111-112"
+      ],
+      "classification": "TP",
+      "reason": "The format-detection comment inside the same duplicated `load_beam_chat_data` as E18.",
+      "proposed_fix": "Deduplicating the function per E18 removes this copy with it.",
+      "shape": "",
+      "attributes": {
+        "tag": "E28",
+        "strict_reading": "TP"
+      }
+    },
+    {
+      "repo": "09-PraisonAI",
+      "path": "09-PraisonAI/examples/acp/custom_agent_acp.py",
+      "line": 2,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "09-PraisonAI/examples/acp/custom_agent_acp.py:2-9",
+        "09-PraisonAI/src/praisonai/examples/acp/custom_agent_acp.py:2-9"
+      ],
+      "classification": "TP",
+      "reason": "Same duplicated example tree as E9 and E19, this time `custom_agent_acp.py`.",
+      "proposed_fix": "Deduplicate the example tree, as in E9.",
+      "shape": "",
+      "attributes": {
+        "tag": "E29",
+        "strict_reading": "TP"
+      }
+    },
+    {
+      "repo": "10-skills",
+      "path": "10-skills/skills/data-designer/scripts/get_person_object_schema.py",
+      "line": 4,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "10-skills/skills/data-designer/scripts/get_person_object_schema.py:4-12",
+        "10-skills/skills/nemo-data-designer-plugin/scripts/get_person_object_schema.py:4-12"
+      ],
+      "classification": "FP",
+      "reason": "`get_person_object_schema.py` shipped by two different skill bundles. Skills are distributed as self-contained units, so each must carry its own copy; removing one breaks that skill in isolation.",
+      "proposed_fix": "",
+      "shape": "a self-contained distributable bundle (skill/plugin) that must carry its own copy of a helper",
+      "attributes": {
+        "new_shape": true,
+        "tag": "E30",
+        "strict_reading": "FP"
+      }
+    },
+    {
+      "repo": "01-Raven",
+      "path": "01-Raven/raven/agent/context/builder.py",
+      "line": 24,
+      "population": "near",
+      "weakest_similarity": 0.78125,
+      "members": [
+        "01-Raven/raven/agent/context/builder.py:24-26",
+        "01-Raven/raven/context_engine/segments/render.py:25-27"
+      ],
+      "classification": "TP",
+      "reason": "One rationale for the L4 pillar layout, copied between the context builder and the segment renderer; the copies differ only in which collaborator injects the file.",
+      "proposed_fix": "One copy states it and the other cites it.",
+      "shape": "",
+      "attributes": {
+        "tag": "N1",
+        "strict_reading": "TP"
+      }
+    },
+    {
+      "repo": "02-Vision-Agents",
+      "path": "02-Vision-Agents/agents-core/vision_agents/core/runner/http/api.py",
+      "line": 137,
+      "population": "near",
+      "weakest_similarity": 0.7777777777777778,
+      "members": [
+        "02-Vision-Agents/agents-core/vision_agents/core/runner/http/api.py:137-141",
+        "02-Vision-Agents/agents-core/vision_agents/core/runner/http/api.py:158-162"
+      ],
+      "classification": "TP",
+      "reason": "`close_session` and `close_session_beacon` in one module. After the templated summary — which differs exactly by `via sendBeacon` — the mechanism paragraph survives byte-identically.",
+      "proposed_fix": "`close_session_beacon` cites `close_session` for the shared close-flag mechanism.",
+      "shape": "",
+      "attributes": {
+        "tag": "N2",
+        "strict_reading": "TP"
+      }
+    },
+    {
+      "repo": "03-graphify",
+      "path": "03-graphify/graphify/cache.py",
+      "line": 939,
+      "population": "near",
+      "weakest_similarity": 0.7741935483870968,
+      "members": [
+        "03-graphify/graphify/cache.py:939-942",
+        "03-graphify/graphify/cache.py:958-960"
+      ],
+      "classification": "TP",
+      "reason": "`cached_files` and `clear_cache` repeat the same description of the namespaced cache layout, the second an abridged copy of the first.",
+      "proposed_fix": "State the cache layout once on the cache-path helper; both functions cite it.",
+      "shape": "",
+      "attributes": {
+        "tag": "N3",
+        "strict_reading": "TP"
+      }
+    },
+    {
+      "repo": "04-DeepTutor",
+      "path": "04-DeepTutor/deeptutor/agents/chat/agentic_pipeline.py",
+      "line": 100,
+      "population": "near",
+      "weakest_similarity": 0.76,
+      "members": [
+        "04-DeepTutor/deeptutor/agents/chat/agentic_pipeline.py:100-101",
+        "04-DeepTutor/deeptutor/services/config/loader.py:282-283"
+      ],
+      "classification": "TP",
+      "reason": "The exploring-loop budget is explained twice, once at the call site and once at the config loader, in slightly different words but identical substance.",
+      "proposed_fix": "The constant's own definition owns the explanation; both readers cite it.",
+      "shape": "",
+      "attributes": {
+        "tag": "N4",
+        "strict_reading": "TP"
+      }
+    },
+    {
+      "repo": "06-claude-scientific-writer",
+      "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+      "line": 75,
+      "population": "near",
+      "weakest_similarity": 0.7555555555555555,
+      "members": [
+        "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py:75-80",
+        "06-claude-scientific-writer/skills/infographics/scripts/generate_infographic_ai.py:273-278",
+        "06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py:75-80",
+        "06-claude-scientific-writer/skills/literature-review/scripts/generate_schematic_ai.py:75-80",
+        "06-claude-scientific-writer/skills/scientific-schematics/scripts/generate_schematic_ai.py:75-80",
+        "06-claude-scientific-writer/skills/scientific-slides/scripts/generate_schematic_ai.py:75-80"
+      ],
+      "classification": "FP",
+      "reason": "Six generators across three skill bundles share a refinement-policy paragraph, but the bundles are distributed standalone — `ScientificSchematicGenerator` is duplicated into `citation-management` and `latex-posters` for exactly that reason. Same self-containment constraint as E30.",
+      "proposed_fix": "",
+      "shape": "a self-contained distributable bundle (skill/plugin) that must carry its own copy of a helper",
+      "attributes": {
+        "members": 6,
+        "tag": "N5",
+        "strict_reading": "FP"
+      }
+    },
+    {
+      "repo": "07-klavis",
+      "path": "07-klavis/mcp-clients/src/mcp_clients/sse_client.py",
+      "line": 1,
+      "population": "near",
+      "weakest_similarity": 0.75,
+      "members": [
+        "07-klavis/mcp-clients/src/mcp_clients/sse_client.py:1-9",
+        "07-klavis/mcp-clients/src/mcp_clients/streamable_http_client.py:1-9"
+      ],
+      "classification": "FP",
+      "reason": "Two MCP client modules whose docstrings differ by transport in the summary and by filename in the usage block — both callable-specific. What survives the strip is the single filler sentence `It is useful for simple testing of MCP servers`, which asserts nothing either module owns.",
+      "proposed_fix": "",
+      "shape": "templated summary plus a callable-specific example, leaving only a generic filler sentence (the class of annotations.md 1.5)",
+      "attributes": {
+        "tag": "N6",
+        "strict_reading": "FP"
+      }
+    },
+    {
+      "repo": "08-MemMachine",
+      "path": "08-MemMachine/evaluation/episodic_memory/locomo_evaluate.py",
+      "line": 1,
+      "population": "near",
+      "weakest_similarity": 0.8461538461538461,
+      "members": [
+        "08-MemMachine/evaluation/episodic_memory/locomo_evaluate.py:1-2",
+        "08-MemMachine/evaluation/retrieval_agent/evaluate.py:1-2"
+      ],
+      "classification": "FP",
+      "reason": "The same upstream attribution notice as E8, on a different pair of evaluation modules.",
+      "proposed_fix": "",
+      "shape": "an upstream attribution / provenance notice, legitimately repeated once per file",
+      "attributes": {
+        "tag": "N7",
+        "strict_reading": "FP"
+      }
+    },
+    {
+      "repo": "09-PraisonAI",
+      "path": "09-PraisonAI/examples/routing/routellm_multi_agent.py",
+      "line": 1,
+      "population": "near",
+      "weakest_similarity": 0.8717948717948718,
+      "members": [
+        "09-PraisonAI/examples/routing/routellm_multi_agent.py:1-13",
+        "09-PraisonAI/examples/routing/routellm_workflow.py:1-13"
+      ],
+      "classification": "TP",
+      "reason": "Two routing examples in one directory whose summary lines differ but whose nine-line RouteLLM prerequisites block — install, key, and the exact server command — is repeated verbatim.",
+      "proposed_fix": "`examples/routing/README.md` owns the prerequisites; both examples cite it.",
+      "shape": "",
+      "attributes": {
+        "boundary": true,
+        "tag": "N8",
+        "strict_reading": "TP"
+      }
+    },
+    {
+      "repo": "10-skills",
+      "path": "10-skills/skills/aiq-research/scripts/aiq.py",
+      "line": 2,
+      "population": "near",
+      "weakest_similarity": 0.7850467289719626,
+      "members": [
+        "10-skills/skills/aiq-research/scripts/aiq.py:2-15",
+        "10-skills/skills/cupynumeric-hdf5/assets/hdf5_batched_read.py:2-15",
+        "10-skills/skills/cupynumeric-hdf5/assets/hdf5_roundtrip.py:2-15",
+        "10-skills/skills/cupynumeric-migration-readiness/assets/examples/blocks_scaling.py:1-14",
+        "10-skills/skills/cupynumeric-migration-readiness/assets/examples/needs_refactor.py:1-14",
+        "10-skills/skills/cupynumeric-migration-readiness/assets/examples/scales_well.py:1-14",
+        "10-skills/skills/cupynumeric-migration-readiness/evals/files/api_gap_hotpath.py:1-14",
+        "10-skills/skills/cupynumeric-migration-readiness/evals/files/blocks_scaling.py:1-14",
+        "10-skills/skills/cupynumeric-migration-readiness/evals/files/convergence_loop.py:1-14",
+        "10-skills/skills/cupynumeric-migration-readiness/evals/files/cupy_mixed.py:1-14",
+        "10-skills/skills/cupynumeric-migration-readiness/evals/files/dense_linalg.py:1-14",
+        "10-skills/skills/cupynumeric-migration-readiness/evals/files/dense_with_scipy_boundary.py:1-14",
+        "10-skills/skills/cupynumeric-migration-readiness/evals/files/graph_workload.py:1-14",
+        "10-skills/skills/cupynumeric-migration-readiness/evals/files/item_sync.py:1-14",
+        "10-skills/skills/cupynumeric-migration-readiness/evals/files/jacobi_heat.py:1-14",
+        "10-skills/skills/cupynumeric-migration-readiness/evals/files/many_blocks.py:1-14",
+        "10-skills/skills/cupynumeric-migration-readiness/evals/files/monte_carlo_bs.py:1-14",
+        "10-skills/skills/cupynumeric-migration-readiness/evals/files/monte_carlo_good.py:1-14",
+        "10-skills/skills/cupynumeric-migration-readiness/evals/files/needs_refactor.py:1-14",
+        "10-skills/skills/cupynumeric-migration-readiness/evals/files/scales_well.py:1-14",
+        "10-skills/skills/cupynumeric-migration-readiness/evals/files/sequential_recurrence.py:1-14",
+        "10-skills/skills/cupynumeric-migration-readiness/evals/files/sparse_sklearn.py:1-14",
+        "10-skills/skills/cupynumeric-migration-readiness/evals/files/tiny_array.py:1-14",
+        "10-skills/skills/cupynumeric-migration-readiness/evals/files/unlisted_api.py:1-14",
+        "10-skills/skills/cupynumeric-migration-readiness/evals/files/view_mutation.py:1-14",
+        "10-skills/skills/cupynumeric-migration-readiness/scripts/fetch_api_support.py:3-16",
+        "10-skills/skills/cupynumeric-migration-readiness/scripts/tests/test_fetch_api_support.py:1-14",
+        "10-skills/skills/cupynumeric-parallel-data-load/assets/examples/parallel_npy_load.py:1-15",
+        "10-skills/skills/dali-dynamic-mode/evals/files/pipeline_to_convert.py:1-13",
+        "10-skills/skills/deepstream-generate-pipeline/scripts/generate_pipeline.py:3-16",
+        "10-skills/skills/deepstream-generate-pipeline/scripts/lint_data.py:3-16",
+        "10-skills/skills/deepstream-generate-pipeline/scripts/validate_pipeline.py:3-16",
+        "10-skills/skills/deepstream-generate-pipeline/tests/__init__.py:1-14",
+        "10-skills/skills/deepstream-generate-pipeline/tests/test_cli_format.py:3-16",
+        "10-skills/skills/deepstream-generate-pipeline/tests/test_golden.py:3-16",
+        "10-skills/skills/deepstream-generate-pipeline/tests/test_retriever.py:3-16",
+        "10-skills/skills/deepstream-generate-pipeline/tests/test_validator.py:3-16",
+        "10-skills/skills/deepstream-import-vision-model/scripts/model/inspect-onnx.py:3-16",
+        "10-skills/skills/deepstream-import-vision-model/scripts/model/make-static-batch-onnx.py:3-16",
+        "10-skills/skills/deepstream-import-vision-model/scripts/report/generate-benchmark-charts.py:3-16",
+        "10-skills/skills/deepstream-import-vision-model/scripts/report/md-to-html-pdf.py:3-16",
+        "10-skills/skills/deepstream-import-vision-model/scripts/report/render-mermaid-for-pdf.py:3-16",
+        "10-skills/skills/deepstream-profile-pipeline/scripts/capacity_report.py:3-16",
+        "10-skills/skills/deepstream-profile-pipeline/tests/__init__.py:1-14",
+        "10-skills/skills/deepstream-profile-pipeline/tests/test_capacity_report.py:1-14",
+        "10-skills/skills/deepstream-sop/references/ddm_net_reference.py:1-14",
+        "10-skills/skills/deepstream-sop/references/export_ddm_to_tensorrt_reference.py:2-17",
+        "10-skills/skills/deepstream-sop/references/messager_reference.py:1-14",
+        "10-skills/skills/deepstream-sop/references/missing_number_detector_reference.py:1-14",
+        "10-skills/skills/deepstream-sop/references/protos_init_reference.py:1-14",
+        "10-skills/skills/deepstream-sop/references/sop_step_checker_reference.py:1-14",
+        "10-skills/skills/deepstream-sop/references/test_api_endpoints_reference.py:1-14",
+        "10-skills/skills/deepstream-sop/references/triton_model_reference.py:1-14",
+        "10-skills/skills/deepstream-sop/references/utils_reference.py:1-16",
+        "10-skills/skills/deepstream-sop/references/vllm_inference_reference.py:1-16",
+        "10-skills/skills/dicom-metadata-extract/fixtures/generate_sample.py:1-14",
+        "10-skills/skills/dicom-metadata-extract/scripts/extract_metadata.py:2-15",
+        "10-skills/skills/dicom-metadata-extract/tests/test_basic.py:1-14",
+        "10-skills/skills/dicom-series-preflight/fixtures/generate_fixtures.py:2-15",
+        "10-skills/skills/dicom-series-preflight/scripts/preflight_series.py:2-15",
+        "10-skills/skills/dicom-series-preflight/tests/test_preflight_series.py:1-14",
+        "10-skills/skills/dicom-series-to-volume/fixtures/generate_fixtures.py:2-15",
+        "10-skills/skills/dicom-series-to-volume/scripts/series_to_volume.py:2-15",
+        "10-skills/skills/earth2studio-create-datasource/evals/targets/eval_1_target.py:1-15",
+        "10-skills/skills/earth2studio-create-datasource/evals/targets/eval_2_target.py:1-15",
+        "10-skills/skills/earth2studio-create-datasource/evals/targets/eval_3_target.py:1-15",
+        "10-skills/skills/earth2studio-create-datasource/evals/targets/eval_4_target.py:1-15",
+        "10-skills/skills/earth2studio-create-datasource/evals/targets/test/eval_1_test_target.py:1-15",
+        "10-skills/skills/earth2studio-create-datasource/evals/targets/test/eval_2_test_target.py:1-15",
+        "10-skills/skills/earth2studio-create-datasource/evals/targets/test/eval_3_test_target.py:1-15",
+        "10-skills/skills/earth2studio-create-datasource/evals/targets/test/eval_4_test_target.py:1-15",
+        "10-skills/skills/earth2studio-create-datasource/references/implementation-guide.py:1-15",
+        "10-skills/skills/earth2studio-create-datasource/references/testing-guide.py:1-15",
+        "10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_1_target.py:1-15",
+        "10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_2_target.py:1-15",
+        "10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_3_target.py:1-15",
+        "10-skills/skills/earth2studio-create-diagnostic/evals/targets/test/eval_1_test_target.py:1-15",
+        "10-skills/skills/earth2studio-create-diagnostic/evals/targets/test/eval_2_test_target.py:1-15",
+        "10-skills/skills/earth2studio-create-diagnostic/evals/targets/test/eval_3_test_target.py:1-15",
+        "10-skills/skills/earth2studio-create-diagnostic/references/method-templates.py:1-15",
+        "10-skills/skills/earth2studio-create-diagnostic/references/skeleton-template.py:1-15",
+        "10-skills/skills/earth2studio-create-diagnostic/references/testing-guide.py:1-15",
+        "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_1_target.py:1-15",
+        "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_2_target.py:1-15",
+        "10-skills/skills/earth2studio-create-prognostic/evals/targets/test/eval_1_test_target.py:1-15",
+        "10-skills/skills/earth2studio-create-prognostic/evals/targets/test/eval_2_test_target.py:1-15",
+        "10-skills/skills/earth2studio-create-prognostic/references/method-templates.py:1-15",
+        "10-skills/skills/earth2studio-create-prognostic/references/skeleton-template.py:1-15",
+        "10-skills/skills/earth2studio-create-prognostic/references/testing-guide.py:1-15",
+        "10-skills/skills/earth2studio-data-fetch/evals/targets/eval_1_target.py:1-15",
+        "10-skills/skills/earth2studio-data-fetch/evals/targets/eval_4_target.py:1-15",
+        "10-skills/skills/earth2studio-data-fetch/evals/targets/eval_7_target.py:1-15",
+        "10-skills/skills/earth2studio-deterministic-forecast/evals/targets/eval_1_target.py:1-15",
+        "10-skills/skills/earth2studio-deterministic-forecast/evals/targets/eval_2_target.py:1-15",
+        "10-skills/skills/earth2studio-deterministic-forecast/evals/targets/eval_3_target.py:1-15",
+        "10-skills/skills/hsb-flash/scripts/v2.0.0/local_manifest.py:1-14",
+        "10-skills/skills/hsb-flash/scripts/v2.0.0/make_manifest.py:1-14",
+        "10-skills/skills/nemotron-asr-finetune/scripts/main.py:3-16",
+        "10-skills/skills/nemotron-speech/scripts/main.py:3-16",
+        "10-skills/skills/nv-generate-ct-rflow/scripts/_anatomy.py:2-15",
+        "10-skills/skills/nv-generate-ct-rflow/scripts/_summary_card.py:2-15",
+        "10-skills/skills/nv-generate-ct-rflow/scripts/list_anatomies.py:2-15",
+        "10-skills/skills/nv-generate-ct-rflow/scripts/run_ct_from_mask.py:2-15",
+        "10-skills/skills/nv-generate-ct-rflow/scripts/run_ct_image.py:2-15",
+        "10-skills/skills/nv-generate-ct-rflow/scripts/run_ct_mask.py:2-15",
+        "10-skills/skills/nv-generate-ct-rflow/scripts/run_rflow_ct.py:2-15",
+        "10-skills/skills/nv-generate-ct-rflow/scripts/wrapper_utils.py:1-14",
+        "10-skills/skills/nv-generate-ct-rflow/tests/test_run_ct_from_mask.py:1-14",
+        "10-skills/skills/nv-generate-ct-rflow/tests/test_run_ct_image.py:1-14",
+        "10-skills/skills/nv-generate-ct-rflow/tests/test_run_ct_mask.py:1-14",
+        "10-skills/skills/nv-generate-ct-rflow/tests/test_run_rflow_ct.py:1-14",
+        "10-skills/skills/nv-generate-mr-brain-finetune/scripts/run_mr_brain_finetune.py:2-15",
+        "10-skills/skills/nv-generate-mr-brain-finetune/tests/test_run_mr_brain_finetune.py:1-14",
+        "10-skills/skills/nv-generate-mr-brain/scripts/run_mr_brain.py:2-15",
+        "10-skills/skills/nv-generate-mr-brain/tests/test_run_mr_brain.py:1-14",
+        "10-skills/skills/nv-generate-mr/scripts/run_mr.py:2-15",
+        "10-skills/skills/nv-generate-mr/tests/test_run_mr.py:1-14",
+        "10-skills/skills/nv-generate-vae-finetune/scripts/run_vae_finetune.py:2-15",
+        "10-skills/skills/nv-generate-vae-finetune/tests/test_run_vae_finetune.py:1-14",
+        "10-skills/skills/nv-reason-cxr/scripts/run_nv_reason_cxr.py:2-15",
+        "10-skills/skills/nv-reason-cxr/tests/test_nv_reason_cxr.py:1-14",
+        "10-skills/skills/nv-segment-ct-finetune/scripts/run_finetune.py:2-15",
+        "10-skills/skills/nv-segment-ct-finetune/tests/test_run_finetune.py:1-14",
+        "10-skills/skills/nv-segment-ct/fixtures/fetch_spleen_fixture.py:2-15",
+        "10-skills/skills/nv-segment-ct/fixtures/generate_preflight_fixture.py:2-15",
+        "10-skills/skills/nv-segment-ct/scripts/run_vista3d.py:2-15",
+        "10-skills/skills/nv-segment-ct/tests/test_run_vista3d.py:1-14",
+        "10-skills/skills/nv-segment-ctmr/scripts/run_ctmr.py:2-15",
+        "10-skills/skills/nv-segment-ctmr/tests/test_run_ctmr.py:1-14",
+        "10-skills/skills/vss-deploy-detection-tracking-2d/scripts/calibration_manager.py:3-16",
+        "10-skills/skills/vss-manage-alerts/scripts/alert-notify/incident_utils.py:1-14",
+        "10-skills/skills/vss-manage-alerts/scripts/alert-notify/notifier_base.py:1-14",
+        "10-skills/skills/vss-manage-alerts/scripts/alert-notify/open_claw_dashboard_notifier.py:1-14",
+        "10-skills/skills/vss-manage-alerts/scripts/alert-notify/server.py:1-14",
+        "10-skills/skills/vss-manage-alerts/scripts/alert-notify/slack_notifier.py:1-14"
+      ],
+      "classification": "FP",
+      "reason": "A 135-member cluster of the full Apache-2.0 licence header. Mandatory per file, and removing a copy is affirmatively wrong.",
+      "proposed_fix": "",
+      "shape": "SPDX / licence header — mandatory per-file boilerplate that must not be deduplicated",
+      "attributes": {
+        "members": 135,
+        "tag": "N9",
+        "strict_reading": "FP"
+      }
+    },
+    {
+      "repo": "01-Raven",
+      "path": "01-Raven/raven/cli/cron_commands.py",
+      "line": 53,
+      "population": "near",
+      "weakest_similarity": 0.7727272727272727,
+      "members": [
+        "01-Raven/raven/cli/cron_commands.py:53-54",
+        "01-Raven/raven/cli/sentinel_commands.py:54-55"
+      ],
+      "classification": "TP",
+      "reason": "`_suppress_info_logs` and `_sentinel_suppress_info_logs` are the same helper under two names, with the same docstring bar a dropped article.",
+      "proposed_fix": "One shared CLI helper owns it; both command modules import it.",
+      "shape": "",
+      "attributes": {
+        "tag": "N10",
+        "strict_reading": "TP"
+      }
+    }
+  ]
+}

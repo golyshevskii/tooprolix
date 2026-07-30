@@ -1,0 +1,171 @@
+{
+  "_comment": "Machine-readable half of corpus/PREREGISTRATION.md. Read by corpus/classification.py; a classification artifact is graded AGAINST this and can never define it.",
+  "profiles": {
+    "dry_run": {
+      "purpose": "calibration-data rehearsal on the six corpus repos; NOT held-out evidence",
+      "threshold": null,
+      "draws": [
+        {
+          "population": "exact",
+          "per_repo": 20,
+          "limit": 20,
+          "minimum": 20
+        },
+        {
+          "population": "near",
+          "per_repo": 10,
+          "limit": 10,
+          "minimum": 10
+        }
+      ],
+      "runs": {
+        "OpenHands": {
+          "schema_version": "2",
+          "complete": true,
+          "skipped": 0,
+          "excluded": 0,
+          "files_walked": 914
+        },
+        "crewAI": {
+          "schema_version": "2",
+          "complete": true,
+          "skipped": 0,
+          "excluded": 0,
+          "files_walked": 754
+        },
+        "langgraph": {
+          "schema_version": "2",
+          "complete": true,
+          "skipped": 0,
+          "excluded": 0,
+          "files_walked": 445
+        },
+        "openai-agents-python": {
+          "schema_version": "2",
+          "complete": true,
+          "skipped": 0,
+          "excluded": 0,
+          "files_walked": 834
+        },
+        "pydantic": {
+          "schema_version": "2",
+          "complete": true,
+          "skipped": 0,
+          "excluded": 0,
+          "files_walked": 404
+        },
+        "requests": {
+          "schema_version": "2",
+          "complete": true,
+          "skipped": 0,
+          "excluded": 0,
+          "files_walked": 37
+        }
+      },
+      "is_gate": false
+    },
+    "holdout": {
+      "purpose": "the gate; the fixed first 10 entries of the pre-registered pool, none of which the detector had seen. Amendment 2, 2026-07-30, written before any finding was judged",
+      "threshold": 0.4,
+      "draws": [
+        {
+          "population": "exact",
+          "per_repo": 40,
+          "limit": 30,
+          "minimum": 0
+        },
+        {
+          "population": "near",
+          "per_repo": 40,
+          "limit": 10,
+          "minimum": 0
+        }
+      ],
+      "runs": {
+        "01-Raven": {
+          "sha256": "d9eafebfbe8382e9a0f7ff45a2d963bd8788f402c7b731e01f683c53bd142d9a",
+          "schema_version": "2",
+          "complete": true,
+          "skipped": 0,
+          "excluded": 0,
+          "files_walked": 855
+        },
+        "02-Vision-Agents": {
+          "sha256": "a9296b289090acc74d55bc0a900b3673bafda8c5ffbd6f7f15ded3357e5206c3",
+          "schema_version": "2",
+          "complete": true,
+          "skipped": 0,
+          "excluded": 0,
+          "files_walked": 537
+        },
+        "03-graphify": {
+          "sha256": "35018b62c4a200a63f70b353eb0408a0d16d4f37404474b468bc0a6b4188b2bf",
+          "schema_version": "2",
+          "complete": true,
+          "skipped": 0,
+          "excluded": 0,
+          "files_walked": 274
+        },
+        "04-DeepTutor": {
+          "sha256": "05df08c1f7f2de1f754ee5a4c1ba5524d81ada18c752d352315441e95ea393a5",
+          "schema_version": "2",
+          "complete": true,
+          "skipped": 0,
+          "excluded": 0,
+          "files_walked": 1027
+        },
+        "05-nanobot": {
+          "sha256": "2cb45805065dd41a97f0a205492e2925b45ffb845add0419bcc47ddc056f398e",
+          "schema_version": "2",
+          "complete": true,
+          "skipped": 0,
+          "excluded": 0,
+          "files_walked": 617
+        },
+        "06-claude-scientific-writer": {
+          "sha256": "fcac3c56fd178fc09244cf1b64ce76f9c4dbbd2224c48a48611611947a2b7227",
+          "schema_version": "2",
+          "complete": false,
+          "skipped": 1,
+          "excluded": 0,
+          "files_walked": 184
+        },
+        "07-klavis": {
+          "sha256": "5fcd6d6f0896c9a9c57bb34892658fbf31973fabd0f10eec36c7f25963b3f252",
+          "schema_version": "2",
+          "complete": true,
+          "skipped": 0,
+          "excluded": 0,
+          "files_walked": 633
+        },
+        "08-MemMachine": {
+          "sha256": "0558b62e7b2fb8816bb4f0e9246a4addcd3940d3a77fc1ef265dd15c66ad196b",
+          "schema_version": "2",
+          "complete": true,
+          "skipped": 0,
+          "excluded": 0,
+          "files_walked": 475
+        },
+        "09-PraisonAI": {
+          "sha256": "c6179d101e7012b1bdd7871c1b82d9ef35c2214e963f845d46b7cebce1984a4d",
+          "schema_version": "2",
+          "complete": false,
+          "skipped": 5,
+          "excluded": 0,
+          "files_walked": 4255
+        },
+        "10-skills": {
+          "sha256": "6e43319bca285d29c556ec5264edc84b3967720e6725eaa2e247d7b1ee68738e",
+          "schema_version": "2",
+          "complete": true,
+          "skipped": 0,
+          "excluded": 0,
+          "files_walked": 330
+        }
+      },
+      "is_gate": true,
+      "threshold_reading": "main",
+      "repositories": 10
+    }
+  }
+}

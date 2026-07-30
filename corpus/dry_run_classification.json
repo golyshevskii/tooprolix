@@ -1,0 +1,613 @@
+{
+  "detector_tag": "v0.4.0 + contextual operator rule in normalize_comparable",
+  "detector_dirty": true,
+  "binary_sha256": "bf6af69c6eca4d3d641db19373a25a946a620ae1407a76a690c95c67472820e2",
+  "detector_commit": "6242f300ef471cf490ca3e80636d87e2f858d6de",
+  "protocol": "EPIC.md Decisions #16, restated in corpus/annotations.md 1.4, applied in sections 4 and 5",
+  "blind": false,
+  "runs": [
+    {
+      "name": "OpenHands",
+      "sha256": "0822fe7b1f6f3b35de4db55ff086ddb0757b144faffe8901e62a9077c39bcfa8"
+    },
+    {
+      "name": "crewAI",
+      "sha256": "aca754725b6a81ff1305ab1ea4b0c70c0acd4ceeec94423f80ba37c78416936f"
+    },
+    {
+      "name": "langgraph",
+      "sha256": "122df21c5358a91e04eee5668361fec238fdfb4eef4169cb2cfe3a337040849e"
+    },
+    {
+      "name": "openai-agents-python",
+      "sha256": "b58b0cdec9a0b8b7c14000367e97654ea09bf6034bb59f502492c009bb929944"
+    },
+    {
+      "name": "pydantic",
+      "sha256": "1ac991aada04b60e097f19db76faa39cea859373c0320687beb752a739b56ede"
+    },
+    {
+      "name": "requests",
+      "sha256": "ac661901c88ada9f30fde78091cf1e234bcfa5154cca886af96f1330e45148b0"
+    }
+  ],
+  "records": [
+    {
+      "repo": "OpenHands",
+      "path": "OpenHands/enterprise/migrations/env.py",
+      "line": 5,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "OpenHands/enterprise/migrations/env.py:5-6",
+        "OpenHands/openhands/app_server/app_lifespan/alembic/env.py:7-8"
+      ],
+      "classification": "TP",
+      "reason": "Two alembic environment scripts carry the same repository-authored rationale for silencing `alembic.runtime.plugins` before logging is configured. It is not alembic's generated text: it names this deployment's non-JSON-log constraint. Zero scaffolding, so the whole overlap is narrative saying one thing.",
+      "proposed_fix": "Move `logging.getLogger('alembic.runtime.plugins').setLevel(WARNING)` and its rationale into one helper under `openhands/db/` (the enterprise env.py already imports `openhands.db.ssl`) and call it from both env.py files.",
+      "shape": "",
+      "attributes": {
+        "boundary": false
+      }
+    },
+    {
+      "repo": "crewAI",
+      "path": "crewAI/lib/crewai/src/crewai/a2a/extensions/base.py",
+      "line": 179,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "crewAI/lib/crewai/src/crewai/a2a/extensions/base.py:179-183",
+        "crewAI/lib/crewai/src/crewai/a2a/extensions/server.py:208-215"
+      ],
+      "classification": "FP",
+      "reason": "`ExtensionRegistry.register` (a2a/extensions/base.py) and the server-side registry's `register` (a2a/extensions/server.py) are unrelated classes over different types (`A2AExtension` vs `ServerExtension`) with different semantics — only the second rejects a duplicate URI. After the Args/Raises entries are discarded the whole overlap is the summary line `Register an extension.`, and neither class inherits from the other, so no copy can be removed.",
+      "proposed_fix": "",
+      "shape": "templated summary line, identical across unrelated callables (the 1.000 shape of annotations.md §1.5)",
+      "attributes": {
+        "boundary": false
+      }
+    },
+    {
+      "repo": "langgraph",
+      "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py",
+      "line": 86,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py:86-91",
+        "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:91-96",
+        "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py:233-238",
+        "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py:597-602"
+      ],
+      "classification": "TP",
+      "reason": "`setup()` on four Postgres savers, all subclasses of `BasePostgresSaver`. The strip leaves a two-sentence contract — tables are created if absent, migrations run, and it MUST be called by the user before first use — identical in all four. That is an implementation contract, not reference scaffolding. The sync saver even says 'asynchronously', which is the copy showing through.",
+      "proposed_fix": "Hoist the contract onto `BasePostgresSaver.setup` (base.py, already the shared parent) and let the four overrides inherit it via `inspect.getdoc`.",
+      "shape": "",
+      "attributes": {
+        "boundary": false
+      }
+    },
+    {
+      "repo": "openai-agents-python",
+      "path": "openai-agents-python/examples/agent_patterns/human_in_the_loop.py",
+      "line": 20,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "openai-agents-python/examples/agent_patterns/human_in_the_loop.py:20-27",
+        "openai-agents-python/examples/agent_patterns/human_in_the_loop_stream.py:40-47",
+        "openai-agents-python/tests/test_function_tool_decorator.py:219-223"
+      ],
+      "classification": "FP",
+      "reason": "Three independent `get_weather` tool functions — two self-contained example scripts and one decorator test fixture. Once Args and Returns go, the overlap is the stock summary `Get the weather for a given city.` Cross-referencing between standalone examples makes them worse as documentation, and the test fixture shares nothing with either.",
+      "proposed_fix": "",
+      "shape": "templated summary line, identical across unrelated callables (the 1.000 shape of annotations.md §1.5)",
+      "attributes": {
+        "boundary": false
+      }
+    },
+    {
+      "repo": "pydantic",
+      "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
+      "line": 3587,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "pydantic/pydantic-core/python/pydantic_core/core_schema.py:3587-3606",
+        "pydantic/pydantic-core/python/pydantic_core/core_schema.py:3711-3730"
+      ],
+      "classification": "TP",
+      "reason": "`arguments_parameter` / `arguments_v3_parameter`. This is the cluster annotations.md §1.4 judged as its #17: the summary is byte-identical rather than a per-callable template, and only the worked example differs. Kept `yes` for the same reason §1.4 kept it — a canonical owner is nameable — and flagged as the same boundary call.",
+      "proposed_fix": "`arguments_v3_parameter` states the v3 difference and cites `arguments_parameter` for the shared description.",
+      "shape": "",
+      "attributes": {
+        "boundary": true,
+        "same_cluster_as": "annotations.md §1.4 #17"
+      }
+    },
+    {
+      "repo": "requests",
+      "path": "requests/src/requests/adapters.py",
+      "line": 137,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "requests/src/requests/adapters.py:137-150",
+        "requests/src/requests/adapters.py:643-657"
+      ],
+      "classification": "TP",
+      "reason": "`HTTPAdapter.send` repeats `BaseAdapter.send` verbatim — annotations.md §1.4 #6, unchanged. The base class is a concrete owner and `inspect.getdoc` walks the MRO, so deleting the override's copy leaves `help()` complete. Verified in this session: `inspect.getdoc(Sub.m)` returns the base's docstring.",
+      "proposed_fix": "Delete `HTTPAdapter.send`'s docstring; `BaseAdapter.send` owns it and docstring inheritance supplies it.",
+      "shape": "",
+      "attributes": {
+        "boundary": false
+      }
+    },
+    {
+      "repo": "OpenHands",
+      "path": "OpenHands/enterprise/migrations/env.py",
+      "line": 86,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "OpenHands/enterprise/migrations/env.py:86-87",
+        "OpenHands/openhands/app_server/app_lifespan/alembic/env.py:36-37"
+      ],
+      "classification": "FP",
+      "reason": "Alembic's own generated `env.py` boilerplate (`# this is the Alembic Config object...`), emitted twice because the repository runs two independent migration trees — both directories carry the `env.py` + `script.py.mako` + `versions/` + README set that `alembic init` writes. The canonical owner is upstream alembic's template, outside this repository, and any cross-reference is overwritten by the next regeneration while leaving the local statement unexplained.",
+      "proposed_fix": "",
+      "shape": "third-party generated scaffolding duplicated by a code generator, not by an author",
+      "attributes": {
+        "boundary": false,
+        "generator": "alembic init"
+      }
+    },
+    {
+      "repo": "crewAI",
+      "path": "crewAI/lib/crewai/src/crewai/agent/core.py",
+      "line": 1985,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "crewAI/lib/crewai/src/crewai/agent/core.py:1985-1996",
+        "crewAI/lib/crewai/src/crewai/lite_agent.py:778-787"
+      ],
+      "classification": "FP",
+      "reason": "`Agent.akickoff` (agent/core.py) and `LiteAgent.akickoff` (lite_agent.py) live in unrelated hierarchies — `Agent(BaseAgent)` and `LiteAgent(FlowTrackable, BaseModel)` — and each delegates to its own `kickoff_async`. Their Args differ (`from_checkpoint` is Agent-only). After the strip the overlap is the summary `Async version of kickoff. Alias for kickoff_async.` and nothing inherits it.",
+      "proposed_fix": "",
+      "shape": "templated summary line, identical across unrelated callables (the 1.000 shape of annotations.md §1.5)",
+      "attributes": {
+        "boundary": false
+      }
+    },
+    {
+      "repo": "langgraph",
+      "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py",
+      "line": 309,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py:309-310",
+        "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:268-269"
+      ],
+      "classification": "TP",
+      "reason": "A two-line comment explaining the checkpoint/blob split, copied above ~15 lines of duplicated logic in the sync and async Postgres savers, which already share `BasePostgresSaver`. Pure narrative, zero scaffolding, one rationale stated twice.",
+      "proposed_fix": "Move the split into a helper on `BasePostgresSaver` (postgres/base.py) carrying the comment once; both savers call it.",
+      "shape": "",
+      "attributes": {
+        "boundary": false
+      }
+    },
+    {
+      "repo": "openai-agents-python",
+      "path": "openai-agents-python/examples/agent_patterns/human_in_the_loop.py",
+      "line": 41,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "openai-agents-python/examples/agent_patterns/human_in_the_loop.py:41-48",
+        "openai-agents-python/examples/agent_patterns/human_in_the_loop_stream.py:27-34"
+      ],
+      "classification": "FP",
+      "reason": "`get_temperature` in the two `human_in_the_loop` example scripts. Same shape as record 4: the examples are deliberately self-contained and the surviving overlap is the stock summary line.",
+      "proposed_fix": "",
+      "shape": "templated summary line, identical across unrelated callables (the 1.000 shape of annotations.md §1.5)",
+      "attributes": {
+        "boundary": false
+      }
+    },
+    {
+      "repo": "pydantic",
+      "path": "pydantic/pydantic-core/tests/serializers/test_dataclasses.py",
+      "line": 261,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "pydantic/pydantic-core/tests/serializers/test_dataclasses.py:261-266",
+        "pydantic/pydantic-core/tests/serializers/test_model.py:1265-1270",
+        "pydantic/pydantic-core/tests/serializers/test_typed_dict.py:362-367"
+      ],
+      "classification": "TP",
+      "reason": "Three serializer tests in three modules repeat the same three-sentence statement of the by_alias / serialize_by_alias priority rule. That paragraph is not a summary line and not scaffolding: it is the rule under test, asserted identically while the tests differ in subject (dataclass / model / typed dict).",
+      "proposed_fix": "State the priority rule once — in one test module or next to `serialize_by_alias` — and have the other two cite it.",
+      "shape": "",
+      "attributes": {
+        "boundary": true
+      }
+    },
+    {
+      "repo": "requests",
+      "path": "requests/src/requests/cookies.py",
+      "line": 584,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "requests/src/requests/cookies.py:584-591",
+        "requests/src/requests/utils.py:512-517"
+      ],
+      "classification": "TP",
+      "reason": "`utils.add_dict_to_cookiejar` is a one-line wrapper whose body is `return cookiejar_from_dict(cookie_dict, cj)`, and it repeats its callee's summary verbatim. Read as an FP until the body was opened: delegation is what makes a canonical owner nameable here.",
+      "proposed_fix": "`add_dict_to_cookiejar` says it is a thin wrapper and cites `cookies.cookiejar_from_dict`, which owns the description.",
+      "shape": "",
+      "attributes": {
+        "boundary": true,
+        "flipped_during_annotation": "FP -> TP after reading the body"
+      }
+    },
+    {
+      "repo": "OpenHands",
+      "path": "OpenHands/enterprise/migrations/env.py",
+      "line": 90,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "OpenHands/enterprise/migrations/env.py:90-91",
+        "OpenHands/openhands/app_server/app_lifespan/alembic/env.py:40-41"
+      ],
+      "classification": "FP",
+      "reason": "Alembic's generated `# Interpret the config file for Python logging.` boilerplate, same two env.py files and the same reason as record 7.",
+      "proposed_fix": "",
+      "shape": "third-party generated scaffolding duplicated by a code generator, not by an author",
+      "attributes": {
+        "boundary": false,
+        "generator": "alembic init"
+      }
+    },
+    {
+      "repo": "crewAI",
+      "path": "crewAI/lib/crewai/src/crewai/agents/agent_adapters/base_agent_adapter.py",
+      "line": 42,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "crewAI/lib/crewai/src/crewai/agents/agent_adapters/base_agent_adapter.py:42-46",
+        "crewAI/lib/crewai/src/crewai/agents/agent_adapters/openai_agents/openai_adapter.py:244-248"
+      ],
+      "classification": "TP",
+      "reason": "`OpenAIAgentAdapter(BaseAgentAdapter).configure_structured_output` repeats the abstract base's docstring byte for byte. Same structure as record 6, and the same verified mechanism: `inspect.getdoc` inherits along the MRO, so the override's copy can go without `help()` losing anything.",
+      "proposed_fix": "Delete the override's docstring; `BaseAgentAdapter.configure_structured_output` owns it.",
+      "shape": "",
+      "attributes": {
+        "boundary": false
+      }
+    },
+    {
+      "repo": "langgraph",
+      "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py",
+      "line": 406,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py:406-412",
+        "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:367-373",
+        "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py:488-494",
+        "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py:827-833",
+        "langgraph/libs/checkpoint-postgres/langgraph/store/postgres/aio.py:547-553",
+        "langgraph/libs/checkpoint-postgres/langgraph/store/postgres/base.py:939-945",
+        "langgraph/libs/checkpoint-sqlite/langgraph/store/sqlite/base.py:958-962"
+      ],
+      "classification": "TP",
+      "reason": "`_cursor` across seven saver/store classes — the cluster annotations.md §1.4 judged as its #15. The summary is byte-identical rather than a per-callable template and a shared owner is nameable, which is why §1.4 kept it; recorded here with the same boundary flag it carries there.",
+      "proposed_fix": "A shared mixin or base carries `_cursor` and its description once; the seven classes inherit it.",
+      "shape": "",
+      "attributes": {
+        "boundary": true,
+        "same_cluster_as": "annotations.md §1.4 #15"
+      }
+    },
+    {
+      "repo": "openai-agents-python",
+      "path": "openai-agents-python/examples/agent_patterns/human_in_the_loop.py",
+      "line": 66,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "openai-agents-python/examples/agent_patterns/human_in_the_loop.py:66-73",
+        "openai-agents-python/examples/agent_patterns/human_in_the_loop_stream.py:52-59"
+      ],
+      "classification": "FP",
+      "reason": "`confirm` in the two `human_in_the_loop` example scripts. Same shape as records 4 and 10.",
+      "proposed_fix": "",
+      "shape": "templated summary line, identical across unrelated callables (the 1.000 shape of annotations.md §1.5)",
+      "attributes": {
+        "boundary": false
+      }
+    },
+    {
+      "repo": "pydantic",
+      "path": "pydantic/pydantic-core/tests/serializers/test_simple.py",
+      "line": 67,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "pydantic/pydantic-core/tests/serializers/test_simple.py:67-69",
+        "pydantic/pydantic-core/tests/serializers/test_simple.py:92-94"
+      ],
+      "classification": "FP",
+      "reason": "Two adjacent serializer tests whose entire docstring is `See https://github.com/pydantic/pydantic-core/pull/866`. There is no explanation to own — it is a provenance pointer, and each test needs its own. Removing either copy takes that test's provenance with it and leaves nothing behind.",
+      "proposed_fix": "",
+      "shape": "bare external cross-reference (issue/PR URL) used as a docstring, legitimately repeated per callable",
+      "attributes": {
+        "boundary": false,
+        "new_shape": true
+      }
+    },
+    {
+      "repo": "requests",
+      "path": "requests/tests/test_testserver.py",
+      "line": 153,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "requests/tests/test_testserver.py:153-154",
+        "requests/tests/test_testserver.py:164-165"
+      ],
+      "classification": "TP",
+      "reason": "Two adjacent test methods in one class end with the same two-line rationale for why the assertion above them matters — that a server thread which fails to finish hangs the suite until the CI timeout kills it. Pure narrative comment, no scaffolding to discard, and the surviving overlap is one explanation stated twice rather than a summary line.",
+      "proposed_fix": "State it once on the enclosing test class (or once above the first test, with the second citing it); both methods are adjacent members of the same class, so nothing is left unexplained.",
+      "shape": "",
+      "attributes": {
+        "boundary": false,
+        "replaced": "the 1.000 operator-collision cluster the fix moved to 0.750"
+      }
+    },
+    {
+      "repo": "OpenHands",
+      "path": "OpenHands/enterprise/migrations/env.py",
+      "line": 103,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "OpenHands/enterprise/migrations/env.py:103-112",
+        "OpenHands/openhands/app_server/app_lifespan/alembic/env.py:60-70"
+      ],
+      "classification": "FP",
+      "reason": "Alembic's generated `run_migrations_offline` docstring. Unlike records 7 and 13 a substantive paragraph does survive the strip, so the first clause of the rule passes — but the paragraph is upstream alembic's own text in a generated file, the two migration trees are independent, and the next regeneration restores any copy removed.",
+      "proposed_fix": "",
+      "shape": "third-party generated scaffolding duplicated by a code generator, not by an author",
+      "attributes": {
+        "boundary": true,
+        "generator": "alembic init"
+      }
+    },
+    {
+      "repo": "crewAI",
+      "path": "crewAI/lib/crewai/src/crewai/agents/agent_adapters/langgraph/langgraph_tool_adapter.py",
+      "line": 23,
+      "population": "exact",
+      "weakest_similarity": 1.0,
+      "members": [
+        "crewAI/lib/crewai/src/crewai/agents/agent_adapters/langgraph/langgraph_tool_adapter.py:23-27",
+        "crewAI/lib/crewai/src/crewai/agents/agent_adapters/openai_agents/openai_agent_tool_adapter.py:42-46"
+      ],
+      "classification": "TP",
+      "reason": "`LangGraphToolAdapter.__init__` and `OpenAIAgentToolAdapter.__init__` are siblings under `BaseToolAdapter`, and both re-implement what `BaseToolAdapter.__init__` already does while repeating one docstring. Unlike annotations.md §1.4 #16 (sync/async siblings with no shared parent) a real owner exists here, which is the distinction that decides it.",
+      "proposed_fix": "Give `BaseToolAdapter.__init__` the docstring and delete both overrides' copies; `inspect.getdoc` inherits it for either subclass.",
+      "shape": "",
+      "attributes": {
+        "boundary": true
+      }
+    },
+    {
+      "repo": "OpenHands",
+      "path": "OpenHands/enterprise/server/routes/org_profiles.py",
+      "line": 103,
+      "population": "near",
+      "weakest_similarity": 0.8846153846153846,
+      "members": [
+        "OpenHands/enterprise/server/routes/org_profiles.py:103-104",
+        "OpenHands/openhands/app_server/settings/settings_router.py:488-489"
+      ],
+      "classification": "TP",
+      "reason": "annotations.md §1.4 #1, unchanged: one repository-authored rationale about a blank key field, copied between an enterprise route and the app-server settings router. No scaffolding at all.",
+      "proposed_fix": "One copy states the rationale and the other cites it (or it moves to the shared settings helper).",
+      "shape": "",
+      "attributes": {
+        "boundary": false,
+        "same_cluster_as": "annotations.md §1.4 #1"
+      }
+    },
+    {
+      "repo": "crewAI",
+      "path": "crewAI/lib/crewai/src/crewai/a2a/extensions/a2ui/models.py",
+      "line": 258,
+      "population": "near",
+      "weakest_similarity": 0.76,
+      "members": [
+        "crewAI/lib/crewai/src/crewai/a2a/extensions/a2ui/models.py:258-262",
+        "crewAI/lib/crewai/src/crewai/a2a/extensions/a2ui/v0_9.py:812-816"
+      ],
+      "classification": "TP",
+      "reason": "annotations.md §1.4 #2, unchanged: the `json.JSONDecoder.raw_decode` / braces-in-string-literals implementation contract survives the strip identically on two protocol versions.",
+      "proposed_fix": "`v0_9` cites `models` for the shared extraction contract.",
+      "shape": "",
+      "attributes": {
+        "boundary": false,
+        "same_cluster_as": "annotations.md §1.4 #2"
+      }
+    },
+    {
+      "repo": "langgraph",
+      "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py",
+      "line": 120,
+      "population": "near",
+      "weakest_similarity": 0.7692307692307693,
+      "members": [
+        "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py:120-151",
+        "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:127-140",
+        "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:546-559",
+        "langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/__init__.py:303-333",
+        "langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/aio.py:185-198",
+        "langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/aio.py:438-451"
+      ],
+      "classification": "TP",
+      "reason": "annotations.md §1.4 #21, unchanged: `list`/`alist` across four checkpoint backends, with the descending-order contract paragraph surviving the strip in all six members.",
+      "proposed_fix": "`BaseCheckpointSaver.alist` owns the ordering contract; the backends inherit it.",
+      "shape": "",
+      "attributes": {
+        "boundary": false,
+        "same_cluster_as": "annotations.md §1.4 #21"
+      }
+    },
+    {
+      "repo": "openai-agents-python",
+      "path": "openai-agents-python/src/agents/computer.py",
+      "line": 9,
+      "population": "near",
+      "weakest_similarity": 0.8285714285714286,
+      "members": [
+        "openai-agents-python/src/agents/computer.py:9-14",
+        "openai-agents-python/src/agents/computer.py:73-78"
+      ],
+      "classification": "TP",
+      "reason": "annotations.md §1.4 #4, unchanged: `Computer` / `AsyncComputer` in one file share an identical paragraph about subclass runtime and the keyword-only `keys` argument.",
+      "proposed_fix": "`AsyncComputer` says \"async variant of `Computer`\" and cites it.",
+      "shape": "",
+      "attributes": {
+        "boundary": false,
+        "same_cluster_as": "annotations.md §1.4 #4"
+      }
+    },
+    {
+      "repo": "pydantic",
+      "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
+      "line": 1073,
+      "population": "near",
+      "weakest_similarity": 0.75,
+      "members": [
+        "pydantic/pydantic-core/python/pydantic_core/core_schema.py:1073-1074",
+        "pydantic/pydantic-core/python/pydantic_core/core_schema.py:1208-1209"
+      ],
+      "classification": "FP",
+      "reason": "`no_info_wrap_validator_function` / `with_info_wrap_validator_function`. The one clause that differs — 'no `info` argument is passed' against 'an `info` argument is also passed' — is precisely what distinguishes the two constructors, so the shared text is a per-callable template with the distinguishing token in it. Everything else that overlaps is the worked example and the Args table.",
+      "proposed_fix": "",
+      "shape": "templated summary/lead paragraph whose copies differ in the token that names the callable's own behaviour (the 0.800 shape of annotations.md §1.5, at 0.780)",
+      "attributes": {
+        "boundary": false,
+        "not_in_1_4": true
+      }
+    },
+    {
+      "repo": "requests",
+      "path": "requests/src/requests/models.py",
+      "line": 838,
+      "population": "near",
+      "weakest_similarity": 0.8888888888888888,
+      "members": [
+        "requests/src/requests/models.py:838-844",
+        "requests/src/requests/models.py:848-854",
+        "requests/src/requests/models.py:863-869"
+      ],
+      "classification": "TP",
+      "reason": "annotations.md §1.4 #18, unchanged: `Response.__bool__`, `__nonzero__` and `ok` carry the same three substantive sentences with no Args section anywhere.",
+      "proposed_fix": "`ok` owns the explanation; `__bool__` and `__nonzero__` cite it.",
+      "shape": "",
+      "attributes": {
+        "boundary": false,
+        "same_cluster_as": "annotations.md §1.4 #18"
+      }
+    },
+    {
+      "repo": "OpenHands",
+      "path": "OpenHands/enterprise/server/routes/org_profiles.py",
+      "line": 255,
+      "population": "near",
+      "weakest_similarity": 0.8,
+      "members": [
+        "OpenHands/enterprise/server/routes/org_profiles.py:255-256",
+        "OpenHands/openhands/app_server/settings/settings_router.py:583-584"
+      ],
+      "classification": "TP",
+      "reason": "annotations.md §1.4 #7, unchanged: the second copied rationale between the same two files as near record 1.",
+      "proposed_fix": "One copy states it and the other cites it.",
+      "shape": "",
+      "attributes": {
+        "boundary": false,
+        "same_cluster_as": "annotations.md §1.4 #7"
+      }
+    },
+    {
+      "repo": "crewAI",
+      "path": "crewAI/lib/crewai/src/crewai/agent/core.py",
+      "line": 766,
+      "population": "near",
+      "weakest_similarity": 0.8,
+      "members": [
+        "crewAI/lib/crewai/src/crewai/agent/core.py:766-780",
+        "crewAI/lib/crewai/src/crewai/agent/core.py:902-916"
+      ],
+      "classification": "FP",
+      "reason": "annotations.md §1.4 #20 and §1.5's named residual, unchanged: `execute_task` sync/async, where the strip leaves only `...with the agent{ asynchronously}`. Counted in the numerator per EPIC.md Decisions #17 — it is a finding that would be rejected with the prose left in place.",
+      "proposed_fix": "",
+      "shape": "templated summary line whose copies differ by one token (the 0.800 shape of annotations.md §1.5)",
+      "attributes": {
+        "boundary": false,
+        "same_cluster_as": "annotations.md §1.4 #20",
+        "known_residual": true
+      }
+    },
+    {
+      "repo": "langgraph",
+      "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py",
+      "line": 193,
+      "population": "near",
+      "weakest_similarity": 0.7719298245614035,
+      "members": [
+        "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py:193-226",
+        "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:182-194",
+        "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:583-595",
+        "langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/__init__.py:192-225",
+        "langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/aio.py:148-160",
+        "langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/aio.py:347-359"
+      ],
+      "classification": "TP",
+      "reason": "annotations.md §1.4 #3, unchanged: `get_tuple` across six checkpoint backends, with the checkpoint_id-versus-latest behaviour paragraph surviving the strip.",
+      "proposed_fix": "`BaseCheckpointSaver.get_tuple` owns the contract; the backends inherit it.",
+      "shape": "",
+      "attributes": {
+        "boundary": false,
+        "same_cluster_as": "annotations.md §1.4 #3"
+      }
+    },
+    {
+      "repo": "openai-agents-python",
+      "path": "openai-agents-python/src/agents/extensions/memory/async_sqlite_session.py",
+      "line": 22,
+      "population": "near",
+      "weakest_similarity": 0.9714285714285714,
+      "members": [
+        "openai-agents-python/src/agents/extensions/memory/async_sqlite_session.py:22-27",
+        "openai-agents-python/src/agents/memory/sqlite_session.py:18-23"
+      ],
+      "classification": "TP",
+      "reason": "annotations.md §1.4 #10, unchanged: `SQLiteSession` / `AsyncSQLiteSession` class docstrings share three identical substantive sentences and carry no Args at all.",
+      "proposed_fix": "The async class cites the sync one for the shared storage description.",
+      "shape": "",
+      "attributes": {
+        "boundary": false,
+        "same_cluster_as": "annotations.md §1.4 #10"
+      }
+    }
+  ]
+}

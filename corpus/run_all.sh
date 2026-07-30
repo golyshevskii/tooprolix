@@ -127,14 +127,53 @@ done
 # TPX001 and TPX002 are unchanged in every row, which is the check that the change stayed inside
 # the duplicate rule: `narrative` is a second field beside `normalized`, and volume still counts the
 # whole block.
+#
+# ## 2026-07-30 — `close-anti-fp-gate-with-public-reference` made relational operators survive
+#
+# `extract::normalize_comparable` keeps `<`, `>` and `=` as words on the path `TPX003` compares,
+# because erasing them made `with size 0` and `with size > 0` the *same text* at similarity 1.000
+# (`corpus/annotations.md` §4.7, record 18). Two rows move, and only in `TPX003`:
+#
+#   repo                  TPX003 before -> after   near before -> after   exact before -> after
+#   crewAI-full                  127 -> 128               73 -> 74               54 -> 54
+#   pydantic                     121 -> 122               27 -> 28               94 -> 94
+#   requests                       6 -> 6                  2 -> 3                 4 -> 3
+#   (the other four rows are unchanged in every column)
+#
+# Totals over the six `corpus.lock` rows: near **160 -> 162**, exact **457 -> 456**,
+# total **617 -> 618**. One cluster appeared, none disappeared, 16 changed score and none changed
+# membership — 17 of 617 touched.
+#
+# ## 2026-07-30, second round — the operator rule became contextual
+#
+# Review found the class still open: the membership-only set `['<','>','=']` left `value != 0` and
+# `value = 0` at 1.000, and `limit > -1` and `limit > 1` at 1.000, because `!` and `-` were still
+# erased. It also found that keeping `>` unconditionally broke the other direction — an identical
+# paragraph Markdown-quoted `> ` fell from 1.000 to 0.778, within 0.028 of the threshold.
+# `is_operator_here` now decides per occurrence. One row moves: `pydantic` **122 -> 123**
+# (near 28 -> 29). Totals: near **162 -> 163**, exact **456** unchanged, total **618 -> 619**.
+# `TPX001`/`TPX002` still byte-identical on all seven rows, and `corpus/units.py --verify` still
+# reproduces 173 volume findings exactly.
+#
+# 🔴 **The near/exact columns are pinned from this round on.** The total alone hid exactly the kind
+# of movement this epic measures: the previous round moved a cluster from exact to near with the
+# total unchanged, and nothing here would have said so.
+#
+# 🔴 **`TPX001` and `TPX002` are byte-identical on all seven rows, and that is the load-bearing
+# check rather than a footnote.** The first version of this fix applied the operator rule inside
+# `normalize` itself, which is the unit `size_words` counts in — and `OpenHands` `TPX001` went
+# **3 -> 35** and `langgraph` `TPX002` **74 -> 79**, because an operator that survives is an operator
+# the 150/200 limits suddenly count. Splitting the counting form from the comparison form is what
+# holds those columns still, and this table is what would catch them moving again.
+# name | walk root | checkout | exit | .py walked | skipped | TPX001 | TPX002 | TPX003 | near | exact
 readonly EXPECTED=(
-	"OpenHands|OpenHands|OpenHands|1|914|0|3|12|64"
-	"crewAI-full|crewAI|crewAI|1|1269|5|0|21|127"
-	"crewAI|crewAI/lib/crewai|crewAI|1|754|0|0|16|94"
-	"langgraph|langgraph|langgraph|1|445|0|2|74|260"
-	"openai-agents-python|openai-agents-python|openai-agents-python|1|834|0|2|14|72"
-	"pydantic|pydantic|pydantic|1|404|0|1|46|121"
-	"requests|requests|requests|1|37|0|0|3|6"
+	"OpenHands|OpenHands|OpenHands|1|914|0|3|12|64|21|43"
+	"crewAI-full|crewAI|crewAI|1|1269|5|0|21|128|74|54"
+	"crewAI|crewAI/lib/crewai|crewAI|1|754|0|0|16|94|51|43"
+	"langgraph|langgraph|langgraph|1|445|0|2|74|260|47|213"
+	"openai-agents-python|openai-agents-python|openai-agents-python|1|834|0|2|14|72|12|60"
+	"pydantic|pydantic|pydantic|1|404|0|1|46|123|29|94"
+	"requests|requests|requests|1|37|0|0|3|6|3|3"
 )
 
 # The five files `crewAI` ships as `.py` and the parser rejects — Jinja templates. Asserted by name
@@ -192,10 +231,10 @@ echo "corpus.lock: $(awk '!/^#/ && NF' "$REPO_ROOT/corpus/corpus.lock" | wc -l |
 echo
 
 failures=0
-printf '%-28s %6s %8s %8s %8s %8s %8s\n' repo exit files skipped TPX001 TPX002 TPX003
+printf '%-28s %6s %8s %8s %8s %8s %8s %6s %6s\n' repo exit files skipped TPX001 TPX002 TPX003 near exact
 
 for row in "${EXPECTED[@]}"; do
-	IFS='|' read -r name subpath checkout want_exit want_files want_skipped want1 want2 want3 <<<"$row"
+	IFS='|' read -r name subpath checkout want_exit want_files want_skipped want1 want2 want3 want_near want_exact <<<"$row"
 
 	if [[ ! -d "$CORPUS_ROOT/$subpath" ]]; then
 		echo "FAIL $name: $CORPUS_ROOT/$subpath does not exist — the checkout did not materialise" >&2
@@ -215,6 +254,13 @@ for row in "${EXPECTED[@]}"; do
 	got_exit=0
 	(cd "$CORPUS_ROOT" && "$BINARY" check "$subpath" --format json) \
 		>"$RUNS_DIR/$name.json" 2>"$RUNS_DIR/$name.err" || got_exit=$?
+
+	# Recorded next to the JSON, because the JSON itself cannot carry it and it is the ONLY signal
+	# the parent-`.gitignore` trap produces: a truncated walk still reports `complete: true` with an
+	# empty `skipped[]`. `corpus/classification.py` verifies this sidecar against the count pinned in
+	# `corpus/preregistration.json`, so a run that measured a fraction of the tree cannot be
+	# classified as if it had measured all of it.
+	printf '%s\n' "$got_files" >"$RUNS_DIR/$name.files"
 
 	if [[ "$got_files" != "$want_files" ]]; then
 		echo "FAIL $name: the walk saw $got_files .py files, expected $want_files" >&2
@@ -239,23 +285,35 @@ for row in "${EXPECTED[@]}"; do
 	# artifact is what the next task reads, so the artifact is what gets graded. `complete` is read
 	# out of the same document rather than inferred from `skipped`, precisely so the two can be
 	# compared against each other below.
-	read -r got1 got2 got3 got_skipped got_complete <<<"$(jq -r '
+	# The near/exact split is read here and asserted below because the TOTAL alone hides the very
+	# movement this epic measures: `close-anti-fp-gate-with-public-reference` moved a cluster from
+	# exact to near with the total unchanged, and nothing in this file would have noticed.
+	read -r got1 got2 got3 got_skipped got_complete got_near got_exact <<<"$(jq -r '
 		[.findings[].code] as $codes |
+		[.findings[] | select(.code == "TPX003") | .weakest.similarity] as $sims |
 		[ ($codes | map(select(. == "TPX001")) | length),
 		  ($codes | map(select(. == "TPX002")) | length),
 		  ($codes | map(select(. == "TPX003")) | length),
 		  (.skipped | length),
-		  (.complete | tostring) ] | @tsv
-	' "$RUNS_DIR/$name.json" 2>/dev/null || echo "?	?	?	?	?")"
+		  (.complete | tostring),
+		  ($sims | map(select(. < 1.0)) | length),
+		  ($sims | map(select(. >= 1.0)) | length) ] | @tsv
+	' "$RUNS_DIR/$name.json" 2>/dev/null || echo "?	?	?	?	?	?	?")"
 
-	printf '%-28s %6s %8s %8s %8s %8s %8s\n' \
-		"$name" "$got_exit" "$got_files" "$got_skipped" "$got1" "$got2" "$got3"
+	printf '%-28s %6s %8s %8s %8s %8s %8s %6s %6s\n' \
+		"$name" "$got_exit" "$got_files" "$got_skipped" "$got1" "$got2" "$got3" "$got_near" "$got_exact"
 
 	if [[ "$got_exit" != "$want_exit" || "$got_skipped" != "$want_skipped" \
 		|| "$got1" != "$want1" || "$got2" != "$want2" || "$got3" != "$want3" ]]; then
 		echo "FAIL $name: expected exit=$want_exit skipped=$want_skipped TPX001=$want1" \
 			"TPX002=$want2 TPX003=$want3, got exit=$got_exit skipped=$got_skipped" \
 			"TPX001=$got1 TPX002=$got2 TPX003=$got3" >&2
+		failures=$((failures + 1))
+	fi
+
+	if [[ "$got_near" != "$want_near" || "$got_exact" != "$want_exact" ]]; then
+		echo "FAIL $name: expected near=$want_near exact=$want_exact," \
+			"got near=$got_near exact=$got_exact (TPX003 total matched at $got3)" >&2
 		failures=$((failures + 1))
 	fi
 

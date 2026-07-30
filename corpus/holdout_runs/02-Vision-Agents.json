@@ -1,0 +1,1268 @@
+{
+  "schema_version": "2",
+  "complete": true,
+  "skipped": [],
+  "excluded": [],
+  "findings": [
+    {
+      "code": "TPX003",
+      "path": "02-Vision-Agents/agents-core/vision_agents/core/agents/agent_launcher.py",
+      "line": 61,
+      "end_line": 67,
+      "prose_kind": "docstring",
+      "message": "02-Vision-Agents/agents-core/vision_agents/core/agents/agent_launcher.py:61-67: TPX003 same explanation in 2 places: 02-Vision-Agents/agents-core/vision_agents/core/agents/agents.py:626-632 (weakest 02-Vision-Agents/agents-core/vision_agents/core/agents/agent_launcher.py:61-67 ~ 02-Vision-Agents/agents-core/vision_agents/core/agents/agents.py:626-632, similarity 1.000)",
+      "locations": [
+        {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/agents/agent_launcher.py",
+          "line": 61,
+          "end_line": 67,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/agents/agents.py",
+          "line": 626,
+          "end_line": 632,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/agents/agent_launcher.py",
+          "line": 61,
+          "end_line": 67,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/agents/agents.py",
+          "line": 626,
+          "end_line": 632,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "02-Vision-Agents/agents-core/vision_agents/core/agents/agents.py",
+      "line": 146,
+      "end_line": 180,
+      "prose_kind": "docstring",
+      "message": "02-Vision-Agents/agents-core/vision_agents/core/agents/agents.py:146-180: TPX002 docstring is 263 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 263,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "02-Vision-Agents/agents-core/vision_agents/core/agents/agents.py",
+      "line": 401,
+      "end_line": 407,
+      "prose_kind": "docstring",
+      "message": "02-Vision-Agents/agents-core/vision_agents/core/agents/agents.py:401-407: TPX003 same explanation in 4 places: 02-Vision-Agents/agents-core/vision_agents/core/agents/inference/base.py:45-51, 02-Vision-Agents/agents-core/vision_agents/core/agents/inference/realtime_flow.py:269-277, 02-Vision-Agents/agents-core/vision_agents/core/agents/inference/transcribing_flow.py:244-252 (weakest 02-Vision-Agents/agents-core/vision_agents/core/agents/agents.py:401-407 ~ 02-Vision-Agents/agents-core/vision_agents/core/agents/inference/base.py:45-51, similarity 1.000)",
+      "locations": [
+        {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/agents/agents.py",
+          "line": 401,
+          "end_line": 407,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/agents/inference/base.py",
+          "line": 45,
+          "end_line": 51,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/agents/inference/realtime_flow.py",
+          "line": 269,
+          "end_line": 277,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/agents/inference/transcribing_flow.py",
+          "line": 244,
+          "end_line": 252,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/agents/agents.py",
+          "line": 401,
+          "end_line": 407,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/agents/inference/base.py",
+          "line": 45,
+          "end_line": 51,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "02-Vision-Agents/agents-core/vision_agents/core/agents/inference/realtime_flow.py",
+      "line": 117,
+      "end_line": 118,
+      "prose_kind": "comment",
+      "message": "02-Vision-Agents/agents-core/vision_agents/core/agents/inference/realtime_flow.py:117-118: TPX003 same explanation in 2 places: 02-Vision-Agents/agents-core/vision_agents/core/agents/inference/transcribing_flow.py:192-193 (weakest 02-Vision-Agents/agents-core/vision_agents/core/agents/inference/realtime_flow.py:117-118 ~ 02-Vision-Agents/agents-core/vision_agents/core/agents/inference/transcribing_flow.py:192-193, similarity 1.000)",
+      "locations": [
+        {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/agents/inference/realtime_flow.py",
+          "line": 117,
+          "end_line": 118,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/agents/inference/transcribing_flow.py",
+          "line": 192,
+          "end_line": 193,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/agents/inference/realtime_flow.py",
+          "line": 117,
+          "end_line": 118,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/agents/inference/transcribing_flow.py",
+          "line": 192,
+          "end_line": 193,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "02-Vision-Agents/agents-core/vision_agents/core/agents/inference/realtime_flow.py",
+      "line": 241,
+      "end_line": 256,
+      "prose_kind": "docstring",
+      "message": "02-Vision-Agents/agents-core/vision_agents/core/agents/inference/realtime_flow.py:241-256: TPX003 same explanation in 2 places: 02-Vision-Agents/agents-core/vision_agents/core/agents/inference/transcribing_flow.py:202-217 (weakest 02-Vision-Agents/agents-core/vision_agents/core/agents/inference/realtime_flow.py:241-256 ~ 02-Vision-Agents/agents-core/vision_agents/core/agents/inference/transcribing_flow.py:202-217, similarity 1.000)",
+      "locations": [
+        {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/agents/inference/realtime_flow.py",
+          "line": 241,
+          "end_line": 256,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/agents/inference/transcribing_flow.py",
+          "line": 202,
+          "end_line": 217,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/agents/inference/realtime_flow.py",
+          "line": 241,
+          "end_line": 256,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/agents/inference/transcribing_flow.py",
+          "line": 202,
+          "end_line": 217,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "02-Vision-Agents/agents-core/vision_agents/core/edge/types.py",
+      "line": 60,
+      "end_line": 68,
+      "prose_kind": "docstring",
+      "message": "02-Vision-Agents/agents-core/vision_agents/core/edge/types.py:60-68: TPX003 same explanation in 2 places: 02-Vision-Agents/plugins/getstream/vision_agents/plugins/getstream/stream_edge_transport.py:114-116 (weakest 02-Vision-Agents/agents-core/vision_agents/core/edge/types.py:60-68 ~ 02-Vision-Agents/plugins/getstream/vision_agents/plugins/getstream/stream_edge_transport.py:114-116, similarity 1.000)",
+      "locations": [
+        {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/edge/types.py",
+          "line": 60,
+          "end_line": 68,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "02-Vision-Agents/plugins/getstream/vision_agents/plugins/getstream/stream_edge_transport.py",
+          "line": 114,
+          "end_line": 116,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/edge/types.py",
+          "line": 60,
+          "end_line": 68,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "02-Vision-Agents/plugins/getstream/vision_agents/plugins/getstream/stream_edge_transport.py",
+          "line": 114,
+          "end_line": 116,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "02-Vision-Agents/agents-core/vision_agents/core/events/manager.py",
+      "line": 49,
+      "end_line": 112,
+      "prose_kind": "docstring",
+      "message": "02-Vision-Agents/agents-core/vision_agents/core/events/manager.py:49-112: TPX002 docstring is 226 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 226,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "02-Vision-Agents/agents-core/vision_agents/core/llm/function_registry.py",
+      "line": 167,
+      "end_line": 180,
+      "prose_kind": "docstring",
+      "message": "02-Vision-Agents/agents-core/vision_agents/core/llm/function_registry.py:167-180: TPX003 same explanation in 2 places: 02-Vision-Agents/agents-core/vision_agents/core/llm/llm.py:284-293 (weakest 02-Vision-Agents/agents-core/vision_agents/core/llm/function_registry.py:167-180 ~ 02-Vision-Agents/agents-core/vision_agents/core/llm/llm.py:284-293, similarity 1.000)",
+      "locations": [
+        {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/llm/function_registry.py",
+          "line": 167,
+          "end_line": 180,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/llm/llm.py",
+          "line": 284,
+          "end_line": 293,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/llm/function_registry.py",
+          "line": 167,
+          "end_line": 180,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/llm/llm.py",
+          "line": 284,
+          "end_line": 293,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "02-Vision-Agents/agents-core/vision_agents/core/llm/realtime.py",
+      "line": 124,
+      "end_line": 125,
+      "prose_kind": "comment",
+      "message": "02-Vision-Agents/agents-core/vision_agents/core/llm/realtime.py:124-125: TPX003 same explanation in 2 places: 02-Vision-Agents/agents-core/vision_agents/core/tts/tts.py:100-101 (weakest 02-Vision-Agents/agents-core/vision_agents/core/llm/realtime.py:124-125 ~ 02-Vision-Agents/agents-core/vision_agents/core/tts/tts.py:100-101, similarity 1.000)",
+      "locations": [
+        {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/llm/realtime.py",
+          "line": 124,
+          "end_line": 125,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/tts/tts.py",
+          "line": 100,
+          "end_line": 101,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/llm/realtime.py",
+          "line": 124,
+          "end_line": 125,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/tts/tts.py",
+          "line": 100,
+          "end_line": 101,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "02-Vision-Agents/agents-core/vision_agents/core/rag/rag.py",
+      "line": 27,
+      "end_line": 35,
+      "prose_kind": "docstring",
+      "message": "02-Vision-Agents/agents-core/vision_agents/core/rag/rag.py:27-35: TPX003 same explanation in 2 places: 02-Vision-Agents/plugins/turbopuffer/vision_agents/plugins/turbopuffer/turbopuffer_rag.py:151-159 (weakest 02-Vision-Agents/agents-core/vision_agents/core/rag/rag.py:27-35 ~ 02-Vision-Agents/plugins/turbopuffer/vision_agents/plugins/turbopuffer/turbopuffer_rag.py:151-159, similarity 1.000)",
+      "locations": [
+        {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/rag/rag.py",
+          "line": 27,
+          "end_line": 35,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "02-Vision-Agents/plugins/turbopuffer/vision_agents/plugins/turbopuffer/turbopuffer_rag.py",
+          "line": 151,
+          "end_line": 159,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/rag/rag.py",
+          "line": 27,
+          "end_line": 35,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "02-Vision-Agents/plugins/turbopuffer/vision_agents/plugins/turbopuffer/turbopuffer_rag.py",
+          "line": 151,
+          "end_line": 159,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "02-Vision-Agents/agents-core/vision_agents/core/rag/rag.py",
+      "line": 42,
+      "end_line": 52,
+      "prose_kind": "docstring",
+      "message": "02-Vision-Agents/agents-core/vision_agents/core/rag/rag.py:42-52: TPX003 same explanation in 3 places: 02-Vision-Agents/plugins/gemini/vision_agents/plugins/gemini/file_search.py:305-315, 02-Vision-Agents/plugins/turbopuffer/vision_agents/plugins/turbopuffer/turbopuffer_rag.py:213-222 (weakest 02-Vision-Agents/agents-core/vision_agents/core/rag/rag.py:42-52 ~ 02-Vision-Agents/plugins/gemini/vision_agents/plugins/gemini/file_search.py:305-315, similarity 1.000)",
+      "locations": [
+        {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/rag/rag.py",
+          "line": 42,
+          "end_line": 52,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "02-Vision-Agents/plugins/gemini/vision_agents/plugins/gemini/file_search.py",
+          "line": 305,
+          "end_line": 315,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "02-Vision-Agents/plugins/turbopuffer/vision_agents/plugins/turbopuffer/turbopuffer_rag.py",
+          "line": 213,
+          "end_line": 222,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/rag/rag.py",
+          "line": 42,
+          "end_line": 52,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "02-Vision-Agents/plugins/gemini/vision_agents/plugins/gemini/file_search.py",
+          "line": 305,
+          "end_line": 315,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "02-Vision-Agents/agents-core/vision_agents/core/runner/http/api.py",
+      "line": 137,
+      "end_line": 141,
+      "prose_kind": "docstring",
+      "message": "02-Vision-Agents/agents-core/vision_agents/core/runner/http/api.py:137-141: TPX003 same explanation in 2 places: 02-Vision-Agents/agents-core/vision_agents/core/runner/http/api.py:158-162 (weakest 02-Vision-Agents/agents-core/vision_agents/core/runner/http/api.py:137-141 ~ 02-Vision-Agents/agents-core/vision_agents/core/runner/http/api.py:158-162, similarity 0.778)",
+      "locations": [
+        {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/runner/http/api.py",
+          "line": 137,
+          "end_line": 141,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/runner/http/api.py",
+          "line": 158,
+          "end_line": 162,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/runner/http/api.py",
+          "line": 137,
+          "end_line": 141,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/runner/http/api.py",
+          "line": 158,
+          "end_line": 162,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.7777777777777778
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "02-Vision-Agents/agents-core/vision_agents/core/runner/runner.py",
+      "line": 129,
+      "end_line": 130,
+      "prose_kind": "comment",
+      "message": "02-Vision-Agents/agents-core/vision_agents/core/runner/runner.py:129-130: TPX003 same explanation in 2 places: 02-Vision-Agents/agents-core/vision_agents/core/runner/runner.py:214-215 (weakest 02-Vision-Agents/agents-core/vision_agents/core/runner/runner.py:129-130 ~ 02-Vision-Agents/agents-core/vision_agents/core/runner/runner.py:214-215, similarity 1.000)",
+      "locations": [
+        {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/runner/runner.py",
+          "line": 129,
+          "end_line": 130,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/runner/runner.py",
+          "line": 214,
+          "end_line": 215,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/runner/runner.py",
+          "line": 129,
+          "end_line": 130,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/runner/runner.py",
+          "line": 214,
+          "end_line": 215,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "02-Vision-Agents/agents-core/vision_agents/core/runner/runner.py",
+      "line": 196,
+      "end_line": 205,
+      "prose_kind": "docstring",
+      "message": "02-Vision-Agents/agents-core/vision_agents/core/runner/runner.py:196-205: TPX003 same explanation in 2 places: 02-Vision-Agents/agents-core/vision_agents/core/runner/runner.py:389-391 (weakest 02-Vision-Agents/agents-core/vision_agents/core/runner/runner.py:196-205 ~ 02-Vision-Agents/agents-core/vision_agents/core/runner/runner.py:389-391, similarity 1.000)",
+      "locations": [
+        {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/runner/runner.py",
+          "line": 196,
+          "end_line": 205,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/runner/runner.py",
+          "line": 389,
+          "end_line": 391,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/runner/runner.py",
+          "line": 196,
+          "end_line": 205,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/runner/runner.py",
+          "line": 389,
+          "end_line": 391,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "02-Vision-Agents/agents-core/vision_agents/core/vad/silero.py",
+      "line": 55,
+      "end_line": 64,
+      "prose_kind": "docstring",
+      "message": "02-Vision-Agents/agents-core/vision_agents/core/vad/silero.py:55-64: TPX003 same explanation in 2 places: 02-Vision-Agents/agents-core/vision_agents/core/vad/silero.py:76-82 (weakest 02-Vision-Agents/agents-core/vision_agents/core/vad/silero.py:55-64 ~ 02-Vision-Agents/agents-core/vision_agents/core/vad/silero.py:76-82, similarity 0.789)",
+      "locations": [
+        {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/vad/silero.py",
+          "line": 55,
+          "end_line": 64,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/vad/silero.py",
+          "line": 76,
+          "end_line": 82,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/vad/silero.py",
+          "line": 55,
+          "end_line": 64,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "02-Vision-Agents/agents-core/vision_agents/core/vad/silero.py",
+          "line": 76,
+          "end_line": 82,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.7894736842105263
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "02-Vision-Agents/examples/01_simple_agent_example/simple_agent_example.py",
+      "line": 53,
+      "end_line": 55,
+      "prose_kind": "comment",
+      "message": "02-Vision-Agents/examples/01_simple_agent_example/simple_agent_example.py:53-55: TPX003 same explanation in 2 places: 02-Vision-Agents/examples/08_agent_server_example/agent_server_example.py:27-29 (weakest 02-Vision-Agents/examples/01_simple_agent_example/simple_agent_example.py:53-55 ~ 02-Vision-Agents/examples/08_agent_server_example/agent_server_example.py:27-29, similarity 1.000)",
+      "locations": [
+        {
+          "path": "02-Vision-Agents/examples/01_simple_agent_example/simple_agent_example.py",
+          "line": 53,
+          "end_line": 55,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "02-Vision-Agents/examples/08_agent_server_example/agent_server_example.py",
+          "line": 27,
+          "end_line": 29,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "02-Vision-Agents/examples/01_simple_agent_example/simple_agent_example.py",
+          "line": 53,
+          "end_line": 55,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "02-Vision-Agents/examples/08_agent_server_example/agent_server_example.py",
+          "line": 27,
+          "end_line": 29,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "02-Vision-Agents/examples/05_security_camera_example/security_camera_processor.py",
+      "line": 136,
+      "end_line": 162,
+      "prose_kind": "docstring",
+      "message": "02-Vision-Agents/examples/05_security_camera_example/security_camera_processor.py:136-162: TPX002 docstring is 214 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 214,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "02-Vision-Agents/plugins/anthropic/vision_agents/plugins/anthropic/anthropic_llm.py",
+      "line": 78,
+      "end_line": 88,
+      "prose_kind": "docstring",
+      "message": "02-Vision-Agents/plugins/anthropic/vision_agents/plugins/anthropic/anthropic_llm.py:78-88: TPX003 same explanation in 4 places: 02-Vision-Agents/plugins/gemini/vision_agents/plugins/gemini/gemini_llm.py:172-178, 02-Vision-Agents/plugins/openai/vision_agents/plugins/openai/openai_llm.py:83-93, 02-Vision-Agents/plugins/xai/vision_agents/plugins/xai/llm.py:72-82 (weakest 02-Vision-Agents/plugins/anthropic/vision_agents/plugins/anthropic/anthropic_llm.py:78-88 ~ 02-Vision-Agents/plugins/gemini/vision_agents/plugins/gemini/gemini_llm.py:172-178, similarity 1.000)",
+      "locations": [
+        {
+          "path": "02-Vision-Agents/plugins/anthropic/vision_agents/plugins/anthropic/anthropic_llm.py",
+          "line": 78,
+          "end_line": 88,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "02-Vision-Agents/plugins/gemini/vision_agents/plugins/gemini/gemini_llm.py",
+          "line": 172,
+          "end_line": 178,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "02-Vision-Agents/plugins/openai/vision_agents/plugins/openai/openai_llm.py",
+          "line": 83,
+          "end_line": 93,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "02-Vision-Agents/plugins/xai/vision_agents/plugins/xai/llm.py",
+          "line": 72,
+          "end_line": 82,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "02-Vision-Agents/plugins/anthropic/vision_agents/plugins/anthropic/anthropic_llm.py",
+          "line": 78,
+          "end_line": 88,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "02-Vision-Agents/plugins/gemini/vision_agents/plugins/gemini/gemini_llm.py",
+          "line": 172,
+          "end_line": 178,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "02-Vision-Agents/plugins/aws/vision_agents/plugins/aws/aws_llm.py",
+      "line": 117,
+      "end_line": 129,
+      "prose_kind": "docstring",
+      "message": "02-Vision-Agents/plugins/aws/vision_agents/plugins/aws/aws_llm.py:117-129: TPX003 same explanation in 4 places: 02-Vision-Agents/plugins/openai/vision_agents/plugins/openai/chat_completions/chat_completions_llm.py:78-90, 02-Vision-Agents/plugins/openai/vision_agents/plugins/openai/chat_completions/chat_completions_vlm.py:100-112, 02-Vision-Agents/plugins/openrouter/vision_agents/plugins/openrouter/openrouter_llm.py:101-114 (weakest 02-Vision-Agents/plugins/aws/vision_agents/plugins/aws/aws_llm.py:117-129 ~ 02-Vision-Agents/plugins/openrouter/vision_agents/plugins/openrouter/openrouter_llm.py:101-114, similarity 0.833)",
+      "locations": [
+        {
+          "path": "02-Vision-Agents/plugins/aws/vision_agents/plugins/aws/aws_llm.py",
+          "line": 117,
+          "end_line": 129,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "02-Vision-Agents/plugins/openai/vision_agents/plugins/openai/chat_completions/chat_completions_llm.py",
+          "line": 78,
+          "end_line": 90,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "02-Vision-Agents/plugins/openai/vision_agents/plugins/openai/chat_completions/chat_completions_vlm.py",
+          "line": 100,
+          "end_line": 112,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "02-Vision-Agents/plugins/openrouter/vision_agents/plugins/openrouter/openrouter_llm.py",
+          "line": 101,
+          "end_line": 114,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "02-Vision-Agents/plugins/aws/vision_agents/plugins/aws/aws_llm.py",
+          "line": 117,
+          "end_line": 129,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "02-Vision-Agents/plugins/openrouter/vision_agents/plugins/openrouter/openrouter_llm.py",
+          "line": 101,
+          "end_line": 114,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8333333333333334
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "02-Vision-Agents/plugins/aws/vision_agents/plugins/aws/aws_realtime.py",
+      "line": 87,
+      "end_line": 146,
+      "prose_kind": "docstring",
+      "message": "02-Vision-Agents/plugins/aws/vision_agents/plugins/aws/aws_realtime.py:87-146: TPX002 docstring is 343 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 343,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "02-Vision-Agents/plugins/cartesia/vision_agents/plugins/cartesia/tts.py",
+      "line": 85,
+      "end_line": 91,
+      "prose_kind": "docstring",
+      "message": "02-Vision-Agents/plugins/cartesia/vision_agents/plugins/cartesia/tts.py:85-91: TPX003 same explanation in 3 places: 02-Vision-Agents/plugins/elevenlabs/vision_agents/plugins/elevenlabs/tts.py:78-84, 02-Vision-Agents/plugins/fish/vision_agents/plugins/fish/tts.py:112-119 (weakest 02-Vision-Agents/plugins/cartesia/vision_agents/plugins/cartesia/tts.py:85-91 ~ 02-Vision-Agents/plugins/elevenlabs/vision_agents/plugins/elevenlabs/tts.py:78-84, similarity 1.000)",
+      "locations": [
+        {
+          "path": "02-Vision-Agents/plugins/cartesia/vision_agents/plugins/cartesia/tts.py",
+          "line": 85,
+          "end_line": 91,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "02-Vision-Agents/plugins/elevenlabs/vision_agents/plugins/elevenlabs/tts.py",
+          "line": 78,
+          "end_line": 84,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "02-Vision-Agents/plugins/fish/vision_agents/plugins/fish/tts.py",
+          "line": 112,
+          "end_line": 119,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "02-Vision-Agents/plugins/cartesia/vision_agents/plugins/cartesia/tts.py",
+          "line": 85,
+          "end_line": 91,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "02-Vision-Agents/plugins/elevenlabs/vision_agents/plugins/elevenlabs/tts.py",
+          "line": 78,
+          "end_line": 84,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "02-Vision-Agents/plugins/gemini/vision_agents/plugins/gemini/gemini_llm.py",
+      "line": 64,
+      "end_line": 90,
+      "prose_kind": "docstring",
+      "message": "02-Vision-Agents/plugins/gemini/vision_agents/plugins/gemini/gemini_llm.py:64-90: TPX002 docstring is 207 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 207,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "02-Vision-Agents/plugins/gemini/vision_agents/plugins/gemini/gemini_realtime.py",
+      "line": 285,
+      "end_line": 286,
+      "prose_kind": "comment",
+      "message": "02-Vision-Agents/plugins/gemini/vision_agents/plugins/gemini/gemini_realtime.py:285-286: TPX003 same explanation in 2 places: 02-Vision-Agents/plugins/qwen/vision_agents/plugins/qwen/qwen_realtime.py:154-155 (weakest 02-Vision-Agents/plugins/gemini/vision_agents/plugins/gemini/gemini_realtime.py:285-286 ~ 02-Vision-Agents/plugins/qwen/vision_agents/plugins/qwen/qwen_realtime.py:154-155, similarity 1.000)",
+      "locations": [
+        {
+          "path": "02-Vision-Agents/plugins/gemini/vision_agents/plugins/gemini/gemini_realtime.py",
+          "line": 285,
+          "end_line": 286,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "02-Vision-Agents/plugins/qwen/vision_agents/plugins/qwen/qwen_realtime.py",
+          "line": 154,
+          "end_line": 155,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "02-Vision-Agents/plugins/gemini/vision_agents/plugins/gemini/gemini_realtime.py",
+          "line": 285,
+          "end_line": 286,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "02-Vision-Agents/plugins/qwen/vision_agents/plugins/qwen/qwen_realtime.py",
+          "line": 154,
+          "end_line": 155,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "02-Vision-Agents/plugins/gemini/vision_agents/plugins/gemini/gemini_vlm.py",
+      "line": 232,
+      "end_line": 238,
+      "prose_kind": "docstring",
+      "message": "02-Vision-Agents/plugins/gemini/vision_agents/plugins/gemini/gemini_vlm.py:232-238: TPX003 same explanation in 3 places: 02-Vision-Agents/plugins/huggingface/vision_agents/plugins/huggingface/huggingface_vlm.py:188-193, 02-Vision-Agents/plugins/nvidia/vision_agents/plugins/nvidia/nvidia_vlm.py:343-349 (weakest 02-Vision-Agents/plugins/gemini/vision_agents/plugins/gemini/gemini_vlm.py:232-238 ~ 02-Vision-Agents/plugins/huggingface/vision_agents/plugins/huggingface/huggingface_vlm.py:188-193, similarity 1.000)",
+      "locations": [
+        {
+          "path": "02-Vision-Agents/plugins/gemini/vision_agents/plugins/gemini/gemini_vlm.py",
+          "line": 232,
+          "end_line": 238,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "02-Vision-Agents/plugins/huggingface/vision_agents/plugins/huggingface/huggingface_vlm.py",
+          "line": 188,
+          "end_line": 193,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "02-Vision-Agents/plugins/nvidia/vision_agents/plugins/nvidia/nvidia_vlm.py",
+          "line": 343,
+          "end_line": 349,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "02-Vision-Agents/plugins/gemini/vision_agents/plugins/gemini/gemini_vlm.py",
+          "line": 232,
+          "end_line": 238,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "02-Vision-Agents/plugins/huggingface/vision_agents/plugins/huggingface/huggingface_vlm.py",
+          "line": 188,
+          "end_line": 193,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "02-Vision-Agents/plugins/huggingface/vision_agents/plugins/huggingface/annotation.py",
+      "line": 21,
+      "end_line": 34,
+      "prose_kind": "docstring",
+      "message": "02-Vision-Agents/plugins/huggingface/vision_agents/plugins/huggingface/annotation.py:21-34: TPX003 same explanation in 2 places: 02-Vision-Agents/plugins/roboflow/vision_agents/plugins/roboflow/annotation.py:21-34 (weakest 02-Vision-Agents/plugins/huggingface/vision_agents/plugins/huggingface/annotation.py:21-34 ~ 02-Vision-Agents/plugins/roboflow/vision_agents/plugins/roboflow/annotation.py:21-34, similarity 1.000)",
+      "locations": [
+        {
+          "path": "02-Vision-Agents/plugins/huggingface/vision_agents/plugins/huggingface/annotation.py",
+          "line": 21,
+          "end_line": 34,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "02-Vision-Agents/plugins/roboflow/vision_agents/plugins/roboflow/annotation.py",
+          "line": 21,
+          "end_line": 34,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "02-Vision-Agents/plugins/huggingface/vision_agents/plugins/huggingface/annotation.py",
+          "line": 21,
+          "end_line": 34,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "02-Vision-Agents/plugins/roboflow/vision_agents/plugins/roboflow/annotation.py",
+          "line": 21,
+          "end_line": 34,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "02-Vision-Agents/plugins/huggingface/vision_agents/plugins/huggingface/huggingface_vlm.py",
+      "line": 103,
+      "end_line": 110,
+      "prose_kind": "docstring",
+      "message": "02-Vision-Agents/plugins/huggingface/vision_agents/plugins/huggingface/huggingface_vlm.py:103-110: TPX003 same explanation in 2 places: 02-Vision-Agents/plugins/nvidia/vision_agents/plugins/nvidia/nvidia_vlm.py:192-200 (weakest 02-Vision-Agents/plugins/huggingface/vision_agents/plugins/huggingface/huggingface_vlm.py:103-110 ~ 02-Vision-Agents/plugins/nvidia/vision_agents/plugins/nvidia/nvidia_vlm.py:192-200, similarity 1.000)",
+      "locations": [
+        {
+          "path": "02-Vision-Agents/plugins/huggingface/vision_agents/plugins/huggingface/huggingface_vlm.py",
+          "line": 103,
+          "end_line": 110,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "02-Vision-Agents/plugins/nvidia/vision_agents/plugins/nvidia/nvidia_vlm.py",
+          "line": 192,
+          "end_line": 200,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "02-Vision-Agents/plugins/huggingface/vision_agents/plugins/huggingface/huggingface_vlm.py",
+          "line": 103,
+          "end_line": 110,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "02-Vision-Agents/plugins/nvidia/vision_agents/plugins/nvidia/nvidia_vlm.py",
+          "line": 192,
+          "end_line": 200,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "02-Vision-Agents/plugins/huggingface/vision_agents/plugins/huggingface/transformers_llm.py",
+      "line": 322,
+      "end_line": 323,
+      "prose_kind": "comment",
+      "message": "02-Vision-Agents/plugins/huggingface/vision_agents/plugins/huggingface/transformers_llm.py:322-323: TPX003 same explanation in 2 places: 02-Vision-Agents/plugins/huggingface/vision_agents/plugins/huggingface/transformers_vlm.py:283-284 (weakest 02-Vision-Agents/plugins/huggingface/vision_agents/plugins/huggingface/transformers_llm.py:322-323 ~ 02-Vision-Agents/plugins/huggingface/vision_agents/plugins/huggingface/transformers_vlm.py:283-284, similarity 1.000)",
+      "locations": [
+        {
+          "path": "02-Vision-Agents/plugins/huggingface/vision_agents/plugins/huggingface/transformers_llm.py",
+          "line": 322,
+          "end_line": 323,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "02-Vision-Agents/plugins/huggingface/vision_agents/plugins/huggingface/transformers_vlm.py",
+          "line": 283,
+          "end_line": 284,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "02-Vision-Agents/plugins/huggingface/vision_agents/plugins/huggingface/transformers_llm.py",
+          "line": 322,
+          "end_line": 323,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "02-Vision-Agents/plugins/huggingface/vision_agents/plugins/huggingface/transformers_vlm.py",
+          "line": 283,
+          "end_line": 284,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "02-Vision-Agents/plugins/inworld/example/inworld_vlm_example.py",
+      "line": 1,
+      "end_line": 31,
+      "prose_kind": "docstring",
+      "message": "02-Vision-Agents/plugins/inworld/example/inworld_vlm_example.py:1-31: TPX002 docstring is 232 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 232,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "02-Vision-Agents/plugins/inworld/vision_agents/plugins/inworld/llm.py",
+      "line": 136,
+      "end_line": 169,
+      "prose_kind": "docstring",
+      "message": "02-Vision-Agents/plugins/inworld/vision_agents/plugins/inworld/llm.py:136-169: TPX002 docstring is 249 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 249,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "02-Vision-Agents/plugins/lemonslice/vision_agents/plugins/lemonslice/lemonslice_avatar.py",
+      "line": 136,
+      "end_line": 137,
+      "prose_kind": "comment",
+      "message": "02-Vision-Agents/plugins/lemonslice/vision_agents/plugins/lemonslice/lemonslice_avatar.py:136-137: TPX003 same explanation in 2 places: 02-Vision-Agents/plugins/liveavatar/vision_agents/plugins/liveavatar/liveavatar_avatar.py:148-149 (weakest 02-Vision-Agents/plugins/lemonslice/vision_agents/plugins/lemonslice/lemonslice_avatar.py:136-137 ~ 02-Vision-Agents/plugins/liveavatar/vision_agents/plugins/liveavatar/liveavatar_avatar.py:148-149, similarity 1.000)",
+      "locations": [
+        {
+          "path": "02-Vision-Agents/plugins/lemonslice/vision_agents/plugins/lemonslice/lemonslice_avatar.py",
+          "line": 136,
+          "end_line": 137,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "02-Vision-Agents/plugins/liveavatar/vision_agents/plugins/liveavatar/liveavatar_avatar.py",
+          "line": 148,
+          "end_line": 149,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "02-Vision-Agents/plugins/lemonslice/vision_agents/plugins/lemonslice/lemonslice_avatar.py",
+          "line": 136,
+          "end_line": 137,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "02-Vision-Agents/plugins/liveavatar/vision_agents/plugins/liveavatar/liveavatar_avatar.py",
+          "line": 148,
+          "end_line": 149,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "02-Vision-Agents/plugins/moondream/vision_agents/plugins/moondream/detection/moondream_cloud_processor.py",
+      "line": 109,
+      "end_line": 116,
+      "prose_kind": "docstring",
+      "message": "02-Vision-Agents/plugins/moondream/vision_agents/plugins/moondream/detection/moondream_cloud_processor.py:109-116: TPX003 same explanation in 2 places: 02-Vision-Agents/plugins/moondream/vision_agents/plugins/moondream/detection/moondream_local_processor.py:206-213 (weakest 02-Vision-Agents/plugins/moondream/vision_agents/plugins/moondream/detection/moondream_cloud_processor.py:109-116 ~ 02-Vision-Agents/plugins/moondream/vision_agents/plugins/moondream/detection/moondream_local_processor.py:206-213, similarity 1.000)",
+      "locations": [
+        {
+          "path": "02-Vision-Agents/plugins/moondream/vision_agents/plugins/moondream/detection/moondream_cloud_processor.py",
+          "line": 109,
+          "end_line": 116,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "02-Vision-Agents/plugins/moondream/vision_agents/plugins/moondream/detection/moondream_local_processor.py",
+          "line": 206,
+          "end_line": 213,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "02-Vision-Agents/plugins/moondream/vision_agents/plugins/moondream/detection/moondream_cloud_processor.py",
+          "line": 109,
+          "end_line": 116,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "02-Vision-Agents/plugins/moondream/vision_agents/plugins/moondream/detection/moondream_local_processor.py",
+          "line": 206,
+          "end_line": 213,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "02-Vision-Agents/plugins/moondream/vision_agents/plugins/moondream/vlm/moondream_cloud_vlm.py",
+      "line": 102,
+      "end_line": 112,
+      "prose_kind": "docstring",
+      "message": "02-Vision-Agents/plugins/moondream/vision_agents/plugins/moondream/vlm/moondream_cloud_vlm.py:102-112: TPX003 same explanation in 2 places: 02-Vision-Agents/plugins/moondream/vision_agents/plugins/moondream/vlm/moondream_local_vlm.py:211-221 (weakest 02-Vision-Agents/plugins/moondream/vision_agents/plugins/moondream/vlm/moondream_cloud_vlm.py:102-112 ~ 02-Vision-Agents/plugins/moondream/vision_agents/plugins/moondream/vlm/moondream_local_vlm.py:211-221, similarity 1.000)",
+      "locations": [
+        {
+          "path": "02-Vision-Agents/plugins/moondream/vision_agents/plugins/moondream/vlm/moondream_cloud_vlm.py",
+          "line": 102,
+          "end_line": 112,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "02-Vision-Agents/plugins/moondream/vision_agents/plugins/moondream/vlm/moondream_local_vlm.py",
+          "line": 211,
+          "end_line": 221,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "02-Vision-Agents/plugins/moondream/vision_agents/plugins/moondream/vlm/moondream_cloud_vlm.py",
+          "line": 102,
+          "end_line": 112,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "02-Vision-Agents/plugins/moondream/vision_agents/plugins/moondream/vlm/moondream_local_vlm.py",
+          "line": 211,
+          "end_line": 221,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "02-Vision-Agents/plugins/openai/vision_agents/plugins/openai/chat_completions/chat_completions_llm.py",
+      "line": 100,
+      "end_line": 101,
+      "prose_kind": "comment",
+      "message": "02-Vision-Agents/plugins/openai/vision_agents/plugins/openai/chat_completions/chat_completions_llm.py:100-101: TPX003 same explanation in 3 places: 02-Vision-Agents/plugins/openai/vision_agents/plugins/openai/chat_completions/chat_completions_vlm.py:122-123, 02-Vision-Agents/plugins/openrouter/vision_agents/plugins/openrouter/openrouter_llm.py:122-123 (weakest 02-Vision-Agents/plugins/openai/vision_agents/plugins/openai/chat_completions/chat_completions_llm.py:100-101 ~ 02-Vision-Agents/plugins/openai/vision_agents/plugins/openai/chat_completions/chat_completions_vlm.py:122-123, similarity 1.000)",
+      "locations": [
+        {
+          "path": "02-Vision-Agents/plugins/openai/vision_agents/plugins/openai/chat_completions/chat_completions_llm.py",
+          "line": 100,
+          "end_line": 101,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "02-Vision-Agents/plugins/openai/vision_agents/plugins/openai/chat_completions/chat_completions_vlm.py",
+          "line": 122,
+          "end_line": 123,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "02-Vision-Agents/plugins/openrouter/vision_agents/plugins/openrouter/openrouter_llm.py",
+          "line": 122,
+          "end_line": 123,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "02-Vision-Agents/plugins/openai/vision_agents/plugins/openai/chat_completions/chat_completions_llm.py",
+          "line": 100,
+          "end_line": 101,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "02-Vision-Agents/plugins/openai/vision_agents/plugins/openai/chat_completions/chat_completions_vlm.py",
+          "line": 122,
+          "end_line": 123,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "02-Vision-Agents/plugins/openai/vision_agents/plugins/openai/chat_completions/chat_completions_llm.py",
+      "line": 279,
+      "end_line": 281,
+      "prose_kind": "comment",
+      "message": "02-Vision-Agents/plugins/openai/vision_agents/plugins/openai/chat_completions/chat_completions_llm.py:279-281: TPX003 same explanation in 2 places: 02-Vision-Agents/plugins/openai/vision_agents/plugins/openai/chat_completions/chat_completions_vlm.py:291-293 (weakest 02-Vision-Agents/plugins/openai/vision_agents/plugins/openai/chat_completions/chat_completions_llm.py:279-281 ~ 02-Vision-Agents/plugins/openai/vision_agents/plugins/openai/chat_completions/chat_completions_vlm.py:291-293, similarity 1.000)",
+      "locations": [
+        {
+          "path": "02-Vision-Agents/plugins/openai/vision_agents/plugins/openai/chat_completions/chat_completions_llm.py",
+          "line": 279,
+          "end_line": 281,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "02-Vision-Agents/plugins/openai/vision_agents/plugins/openai/chat_completions/chat_completions_vlm.py",
+          "line": 291,
+          "end_line": 293,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "02-Vision-Agents/plugins/openai/vision_agents/plugins/openai/chat_completions/chat_completions_llm.py",
+          "line": 279,
+          "end_line": 281,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "02-Vision-Agents/plugins/openai/vision_agents/plugins/openai/chat_completions/chat_completions_vlm.py",
+          "line": 291,
+          "end_line": 293,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "02-Vision-Agents/plugins/roboflow/vision_agents/plugins/roboflow/roboflow_cloud_processor.py",
+      "line": 27,
+      "end_line": 95,
+      "prose_kind": "docstring",
+      "message": "02-Vision-Agents/plugins/roboflow/vision_agents/plugins/roboflow/roboflow_cloud_processor.py:27-95: TPX002 docstring is 343 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 343,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "02-Vision-Agents/plugins/roboflow/vision_agents/plugins/roboflow/roboflow_local_processor.py",
+      "line": 55,
+      "end_line": 99,
+      "prose_kind": "docstring",
+      "message": "02-Vision-Agents/plugins/roboflow/vision_agents/plugins/roboflow/roboflow_local_processor.py:55-99: TPX002 docstring is 263 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 263,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "02-Vision-Agents/plugins/smart_turn/vision_agents/plugins/smart_turn/smart_turn_detection.py",
+      "line": 164,
+      "end_line": 167,
+      "prose_kind": "docstring",
+      "message": "02-Vision-Agents/plugins/smart_turn/vision_agents/plugins/smart_turn/smart_turn_detection.py:164-167: TPX003 same explanation in 2 places: 02-Vision-Agents/plugins/vogent/vision_agents/plugins/vogent/vogent_turn_detection.py:182-185 (weakest 02-Vision-Agents/plugins/smart_turn/vision_agents/plugins/smart_turn/smart_turn_detection.py:164-167 ~ 02-Vision-Agents/plugins/vogent/vision_agents/plugins/vogent/vogent_turn_detection.py:182-185, similarity 1.000)",
+      "locations": [
+        {
+          "path": "02-Vision-Agents/plugins/smart_turn/vision_agents/plugins/smart_turn/smart_turn_detection.py",
+          "line": 164,
+          "end_line": 167,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "02-Vision-Agents/plugins/vogent/vision_agents/plugins/vogent/vogent_turn_detection.py",
+          "line": 182,
+          "end_line": 185,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "02-Vision-Agents/plugins/smart_turn/vision_agents/plugins/smart_turn/smart_turn_detection.py",
+          "line": 164,
+          "end_line": 167,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "02-Vision-Agents/plugins/vogent/vision_agents/plugins/vogent/vogent_turn_detection.py",
+          "line": 182,
+          "end_line": 185,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "02-Vision-Agents/plugins/smart_turn/vision_agents/plugins/smart_turn/smart_turn_detection.py",
+      "line": 173,
+      "end_line": 176,
+      "prose_kind": "docstring",
+      "message": "02-Vision-Agents/plugins/smart_turn/vision_agents/plugins/smart_turn/smart_turn_detection.py:173-176: TPX003 same explanation in 2 places: 02-Vision-Agents/plugins/vogent/vision_agents/plugins/vogent/vogent_turn_detection.py:190-193 (weakest 02-Vision-Agents/plugins/smart_turn/vision_agents/plugins/smart_turn/smart_turn_detection.py:173-176 ~ 02-Vision-Agents/plugins/vogent/vision_agents/plugins/vogent/vogent_turn_detection.py:190-193, similarity 1.000)",
+      "locations": [
+        {
+          "path": "02-Vision-Agents/plugins/smart_turn/vision_agents/plugins/smart_turn/smart_turn_detection.py",
+          "line": 173,
+          "end_line": 176,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "02-Vision-Agents/plugins/vogent/vision_agents/plugins/vogent/vogent_turn_detection.py",
+          "line": 190,
+          "end_line": 193,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "02-Vision-Agents/plugins/smart_turn/vision_agents/plugins/smart_turn/smart_turn_detection.py",
+          "line": 173,
+          "end_line": 176,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "02-Vision-Agents/plugins/vogent/vision_agents/plugins/vogent/vogent_turn_detection.py",
+          "line": 190,
+          "end_line": 193,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "02-Vision-Agents/plugins/telnyx/vision_agents/plugins/telnyx/call_registry.py",
+      "line": 63,
+      "end_line": 65,
+      "prose_kind": "docstring",
+      "message": "02-Vision-Agents/plugins/telnyx/vision_agents/plugins/telnyx/call_registry.py:63-65: TPX003 same explanation in 2 places: 02-Vision-Agents/plugins/twilio/vision_agents/plugins/twilio/call_registry.py:94-102 (weakest 02-Vision-Agents/plugins/telnyx/vision_agents/plugins/telnyx/call_registry.py:63-65 ~ 02-Vision-Agents/plugins/twilio/vision_agents/plugins/twilio/call_registry.py:94-102, similarity 1.000)",
+      "locations": [
+        {
+          "path": "02-Vision-Agents/plugins/telnyx/vision_agents/plugins/telnyx/call_registry.py",
+          "line": 63,
+          "end_line": 65,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "02-Vision-Agents/plugins/twilio/vision_agents/plugins/twilio/call_registry.py",
+          "line": 94,
+          "end_line": 102,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "02-Vision-Agents/plugins/telnyx/vision_agents/plugins/telnyx/call_registry.py",
+          "line": 63,
+          "end_line": 65,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "02-Vision-Agents/plugins/twilio/vision_agents/plugins/twilio/call_registry.py",
+          "line": 94,
+          "end_line": 102,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    }
+  ]
+}

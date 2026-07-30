@@ -1281,6 +1281,73 @@ preserve_existing_api_key: bool = False
         );
     }
 
+    /// 🔴 **Two logically opposite statements are not one explanation.**
+    ///
+    /// The end-to-end form of the [`crate::extract::normalize`] defect that
+    /// `close-anti-fp-gate-with-public-reference` measured on the pinned corpus
+    /// (`corpus/annotations.md` §4.7, record 18): `requests`' `test_requests.py:2252` and `:2264`
+    /// assert opposite things about a byte stream — `with size 0` against `with size > 0` — and are
+    /// reported as **one** `TPX003` finding at similarity **1.000**, because the normaliser turned
+    /// every non-alphanumeric character into a space and the `>` went with it.
+    ///
+    /// The fixture below uses `>` against `<` rather than the corpus's `0` against `> 0`, because
+    /// that form cannot be argued away as a near-synonym: the two sentences state **opposite**
+    /// bounds. This is the same class as
+    /// [`Self::two_unrelated_callables_sharing_a_one_word_summary_are_not_a_finding`] — the detector
+    /// asserting an identity that does not exist in the source — and, like that one, it was found by
+    /// measurement rather than by reading the grammar.
+    ///
+    /// # What this pins, and what it deliberately does not
+    ///
+    /// 🔴 **It pins that the score is no longer 1.000. It does not pin that nothing is reported.**
+    /// The first draft of this test asserted an empty cluster list and failed after the fix at
+    /// **0.769** — and that failure is the test being wrong, not the code. Two 24-word sentences
+    /// differing in one token *are* near-duplicates by any Jaccard measure, and suppressing them is
+    /// a [`SIMILARITY_THRESHOLD`] question that this task may not touch and that
+    /// `corpus/annotations.md` §1.5 already measured as unreachable: genuine findings sit at 0.760,
+    /// **0.769** and 0.772. The fixture below scores **0.76923…**, which is the *same* score as the
+    /// genuine `list`/`alist` cluster across four checkpoint backends. Any constant that silences
+    /// this silences that.
+    ///
+    /// So the defect being fixed is stated exactly: **the detector claimed an identity**. `1.000`
+    /// comes off the exact path, which has no threshold at all — no user, no configuration and no
+    /// future calibration can reach it. `0.769` comes off the near path, which is governed by a
+    /// constant and is therefore a decision someone can still make. The fix moves this class from
+    /// unreachable to reachable; it does not, and cannot, make it disappear.
+    #[test]
+    fn two_statements_differing_only_by_a_comparison_operator_are_not_an_exact_match() {
+        // Arrange — two lines each, so both clear MIN_BLOCK_LINES; identical but for the operator.
+        let greater = "# Ensure that a byte stream with size > 0 will not set both a Content-Length\n\
+                       # and a Transfer-Encoding header on the outgoing request.\n";
+        let less = "# Ensure that a byte stream with size < 0 will not set both a Content-Length\n\
+                    # and a Transfer-Encoding header on the outgoing request.\n";
+        let blocks = corpus(&[("greater.py", greater), ("less.py", less)]);
+        assert_eq!(blocks.len(), 2, "the fixture must yield one block each");
+        // `narrative`, not `normalized`: the operator survives only in the **comparison** form, and
+        // `narrative` is the field this detector reads. `normalized` is the counting form the volume
+        // limits were calibrated in and still erases the operator — asserting on it here would be
+        // asserting against the wrong contract, and it is what the first draft of this line did.
+        assert_ne!(
+            blocks[0].narrative, blocks[1].narrative,
+            "the operator must survive into the compared form, or nothing below can distinguish them"
+        );
+        assert_eq!(
+            blocks[0].normalized, blocks[1].normalized,
+            "the counting form must be untouched by this fix — 150/200 were measured in it"
+        );
+
+        // Act
+        let report = duplicates(&blocks);
+
+        // Assert — the claim of identity is what must be gone.
+        for cluster in &report.clusters {
+            assert!(
+                cluster.weakest_score < 1.0,
+                "`> 0` and `< 0` are opposite claims and must never score as the same text; got {cluster:?}"
+            );
+        }
+    }
+
     /// A group of `n` identical blocks is **one** finding carrying all `n` addresses, and costs
     /// **zero** pairwise comparisons.
     ///

@@ -2335,7 +2335,7 @@
       "line": 271,
       "end_line": 276,
       "prose_kind": "docstring",
-      "message": "OpenHands/tests/unit/app_server/test_app_conversation_router.py:271-276: TPX003 same explanation in 2 places: OpenHands/tests/unit/app_server/test_app_conversation_router.py:347-352 (weakest OpenHands/tests/unit/app_server/test_app_conversation_router.py:271-276 ~ OpenHands/tests/unit/app_server/test_app_conversation_router.py:347-352, similarity 0.812)",
+      "message": "OpenHands/tests/unit/app_server/test_app_conversation_router.py:271-276: TPX003 same explanation in 2 places: OpenHands/tests/unit/app_server/test_app_conversation_router.py:347-352 (weakest OpenHands/tests/unit/app_server/test_app_conversation_router.py:271-276 ~ OpenHands/tests/unit/app_server/test_app_conversation_router.py:347-352, similarity 0.818)",
       "locations": [
         {
           "path": "OpenHands/tests/unit/app_server/test_app_conversation_router.py",
@@ -2363,7 +2363,7 @@
           "end_line": 352,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8125
+        "similarity": 0.8181818181818182
       }
     },
     {

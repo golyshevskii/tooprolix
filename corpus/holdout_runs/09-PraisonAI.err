@@ -1,0 +1,7 @@
+warning: 5 file(s) skipped:
+  09-PraisonAI/src/praisonai-agents/reproduce_issue_878_simple.py: could not parse Python source: Expected `,`, found name at byte range 5544..5550
+  09-PraisonAI/src/praisonai-agents/test_all_optimizations.py: could not parse Python source: Expected `,`, found name at byte range 6145..6151
+  09-PraisonAI/src/praisonai-agents/test_callback_fix.py: could not parse Python source: missing closing quote in string literal at byte range 85..86
+  09-PraisonAI/src/praisonai-agents/test_issue_877.py: could not parse Python source: Expected `,`, found name at byte range 1008..1015
+  09-PraisonAI/src/praisonai-agents/test_real_streaming.py: could not parse Python source: Expected `,`, found name at byte range 3154..3161
+warning: TPX003 was computed over an incomplete set of files; a missing file makes a different cluster graph, not the same clusters minus a file

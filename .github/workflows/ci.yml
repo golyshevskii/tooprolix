@@ -110,6 +110,24 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # Full history, and ONLY this job needs it. The classification artifacts of the
+          # anti-false-positive gate name the commit each measurement was taken on, and
+          # `corpus/classification.py` resolves that commit with `git cat-file` rather than trusting
+          # the string — AC9's whole point is that a provenance nobody can check is not one. Under
+          # the default shallow checkout that lookup fails on a commit that genuinely exists, and
+          # 20 tests go red for an environment reason:
+          #
+          #   detector_commit '6242f30…' does not resolve to a commit in /home/runner/work/…
+          #
+          # Deliberately NOT fixed by letting the check pass when the repository is shallow. That
+          # would be a guard that fails open, disabled by the checkout depth of whoever runs it,
+          # and this gate has already had two review findings of exactly that shape.
+          #
+          # ⚠️ EVERY job that runs the Python tests needs this, not just this one. `coverage` runs
+          # them too, through `make cov` -> `py.cov`, and it went red for the identical reason after
+          # this job was fixed alone. Found by grepping the workflow for the jobs that actually run
+          # them rather than by assuming; `grep -n 'run: make' .github/workflows/ci.yml` is the check.
+          fetch-depth: 0
 
       - name: Install uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
@@ -325,6 +343,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          # `make cov` runs `py.cov`, which runs the same Python tests as the `test` job, so this
+          # job needs the same full history for the same reason — see the note on `test` above.
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Install uv
