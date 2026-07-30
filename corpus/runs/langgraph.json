@@ -56,10 +56,71 @@
     {
       "code": "TPX003",
       "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py",
+      "line": 120,
+      "end_line": 151,
+      "prose_kind": "docstring",
+      "message": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py:120-151: TPX003 same explanation in 6 places: langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:127-140, langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:546-559, langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/__init__.py:303-333, langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/aio.py:185-198, langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/aio.py:438-451 (weakest langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py:120-151 ~ langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:127-140, similarity 0.769)",
+      "locations": [
+        {
+          "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py",
+          "line": 120,
+          "end_line": 151,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py",
+          "line": 127,
+          "end_line": 140,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py",
+          "line": 546,
+          "end_line": 559,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/__init__.py",
+          "line": 303,
+          "end_line": 333,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/aio.py",
+          "line": 185,
+          "end_line": 198,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/aio.py",
+          "line": 438,
+          "end_line": 451,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py",
+          "line": 120,
+          "end_line": 151,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py",
+          "line": 127,
+          "end_line": 140,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.7692307692307693
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py",
       "line": 193,
       "end_line": 226,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py:193-226: TPX003 same explanation in 2 places: langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/__init__.py:192-225 (weakest langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py:193-226 ~ langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/__init__.py:192-225, similarity 0.829)",
+      "message": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py:193-226: TPX003 same explanation in 6 places: langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:182-194, langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:583-595, langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/__init__.py:192-225, langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/aio.py:148-160, langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/aio.py:347-359 (weakest langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:583-595 ~ langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/__init__.py:192-225, similarity 0.772)",
       "locations": [
         {
           "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py",
@@ -68,17 +129,41 @@
           "prose_kind": "docstring"
         },
         {
+          "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py",
+          "line": 182,
+          "end_line": 194,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py",
+          "line": 583,
+          "end_line": 595,
+          "prose_kind": "docstring"
+        },
+        {
           "path": "langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/__init__.py",
           "line": 192,
           "end_line": 225,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/aio.py",
+          "line": 148,
+          "end_line": 160,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/aio.py",
+          "line": 347,
+          "end_line": 359,
           "prose_kind": "docstring"
         }
       ],
       "weakest": {
         "first": {
-          "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py",
-          "line": 193,
-          "end_line": 226,
+          "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py",
+          "line": 583,
+          "end_line": 595,
           "prose_kind": "docstring"
         },
         "second": {
@@ -87,7 +172,7 @@
           "end_line": 225,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8288288288288288
+        "similarity": 0.7719298245614035
       }
     },
     {
@@ -96,18 +181,12 @@
       "line": 270,
       "end_line": 294,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py:270-294: TPX003 same explanation in 3 places: langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py:381-406, langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/__init__.py:394-417 (weakest langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py:270-294 ~ langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/__init__.py:394-417, similarity 0.750)",
+      "message": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py:270-294: TPX003 same explanation in 2 places: langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/__init__.py:394-417 (weakest langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py:270-294 ~ langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/__init__.py:394-417, similarity 0.857)",
       "locations": [
         {
           "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py",
           "line": 270,
           "end_line": 294,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py",
-          "line": 381,
-          "end_line": 406,
           "prose_kind": "docstring"
         },
         {
@@ -130,7 +209,7 @@
           "end_line": 417,
           "prose_kind": "docstring"
         },
-        "similarity": 0.75
+        "similarity": 0.8571428571428571
       }
     },
     {
@@ -176,7 +255,7 @@
       "line": 354,
       "end_line": 362,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py:354-362: TPX003 same explanation in 2 places: langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py:459-467 (weakest langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py:354-362 ~ langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py:459-467, similarity 1.000)",
+      "message": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py:354-362: TPX003 same explanation in 8 places: langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:314-322, langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:644-653, langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py:459-467, langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py:797-805, langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py:955-964, langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/__init__.py:452-461, langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/aio.py:568-577 (weakest langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:314-322 ~ langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:644-653, similarity 0.750)",
       "locations": [
         {
           "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py",
@@ -185,26 +264,62 @@
           "prose_kind": "docstring"
         },
         {
+          "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py",
+          "line": 314,
+          "end_line": 322,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py",
+          "line": 644,
+          "end_line": 653,
+          "prose_kind": "docstring"
+        },
+        {
           "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py",
           "line": 459,
           "end_line": 467,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py",
+          "line": 797,
+          "end_line": 805,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py",
+          "line": 955,
+          "end_line": 964,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/__init__.py",
+          "line": 452,
+          "end_line": 461,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/aio.py",
+          "line": 568,
+          "end_line": 577,
           "prose_kind": "docstring"
         }
       ],
       "weakest": {
         "first": {
-          "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py",
-          "line": 354,
-          "end_line": 362,
+          "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py",
+          "line": 314,
+          "end_line": 322,
           "prose_kind": "docstring"
         },
         "second": {
-          "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py",
-          "line": 459,
-          "end_line": 467,
+          "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py",
+          "line": 644,
+          "end_line": 653,
           "prose_kind": "docstring"
         },
-        "similarity": 1.0
+        "similarity": 0.75
       }
     },
     {
@@ -213,7 +328,7 @@
       "line": 406,
       "end_line": 412,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py:406-412: TPX003 same explanation in 6 places: langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:367-373, langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py:488-494, langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py:827-833, langgraph/libs/checkpoint-postgres/langgraph/store/postgres/aio.py:547-553, langgraph/libs/checkpoint-postgres/langgraph/store/postgres/base.py:939-945 (weakest langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py:406-412 ~ langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:367-373, similarity 0.882)",
+      "message": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py:406-412: TPX003 same explanation in 7 places: langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:367-373, langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py:488-494, langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py:827-833, langgraph/libs/checkpoint-postgres/langgraph/store/postgres/aio.py:547-553, langgraph/libs/checkpoint-postgres/langgraph/store/postgres/base.py:939-945, langgraph/libs/checkpoint-sqlite/langgraph/store/sqlite/base.py:958-962 (weakest langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py:406-412 ~ langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:367-373, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py",
@@ -250,6 +365,12 @@
           "line": 939,
           "end_line": 945,
           "prose_kind": "docstring"
+        },
+        {
+          "path": "langgraph/libs/checkpoint-sqlite/langgraph/store/sqlite/base.py",
+          "line": 958,
+          "end_line": 962,
+          "prose_kind": "docstring"
         }
       ],
       "weakest": {
@@ -265,7 +386,7 @@
           "end_line": 373,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8823529411764706
+        "similarity": 1.0
       }
     },
     {
@@ -430,59 +551,10 @@
     {
       "code": "TPX003",
       "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py",
-      "line": 127,
-      "end_line": 140,
-      "prose_kind": "docstring",
-      "message": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:127-140: TPX003 same explanation in 4 places: langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:546-559, langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/aio.py:185-198, langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/aio.py:438-451 (weakest langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:546-559 ~ langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/aio.py:438-451, similarity 0.800)",
-      "locations": [
-        {
-          "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py",
-          "line": 127,
-          "end_line": 140,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py",
-          "line": 546,
-          "end_line": 559,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/aio.py",
-          "line": 185,
-          "end_line": 198,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/aio.py",
-          "line": 438,
-          "end_line": 451,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py",
-          "line": 546,
-          "end_line": 559,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/aio.py",
-          "line": 438,
-          "end_line": 451,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.8
-      }
-    },
-    {
-      "code": "TPX003",
-      "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py",
       "line": 239,
       "end_line": 252,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:239-252: TPX003 same explanation in 4 places: langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:619-632, langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/aio.py:228-241, langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/aio.py:516-529 (weakest langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:239-252 ~ langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/aio.py:228-241, similarity 0.841)",
+      "message": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:239-252: TPX003 same explanation in 4 places: langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:619-632, langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/aio.py:228-241, langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/aio.py:516-529 (weakest langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:619-632 ~ langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/aio.py:228-241, similarity 0.786)",
       "locations": [
         {
           "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py",
@@ -512,8 +584,8 @@
       "weakest": {
         "first": {
           "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py",
-          "line": 239,
-          "end_line": 252,
+          "line": 619,
+          "end_line": 632,
           "prose_kind": "docstring"
         },
         "second": {
@@ -522,68 +594,7 @@
           "end_line": 241,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8405797101449275
-      }
-    },
-    {
-      "code": "TPX003",
-      "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py",
-      "line": 314,
-      "end_line": 322,
-      "prose_kind": "docstring",
-      "message": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:314-322: TPX003 same explanation in 6 places: langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:644-653, langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py:797-805, langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py:955-964, langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/__init__.py:452-461, langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/aio.py:568-577 (weakest langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:314-322 ~ langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:644-653, similarity 0.792)",
-      "locations": [
-        {
-          "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py",
-          "line": 314,
-          "end_line": 322,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py",
-          "line": 644,
-          "end_line": 653,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py",
-          "line": 797,
-          "end_line": 805,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py",
-          "line": 955,
-          "end_line": 964,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/__init__.py",
-          "line": 452,
-          "end_line": 461,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/aio.py",
-          "line": 568,
-          "end_line": 577,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py",
-          "line": 314,
-          "end_line": 322,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py",
-          "line": 644,
-          "end_line": 653,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.7924528301886793
+        "similarity": 0.7857142857142857
       }
     },
     {
@@ -746,11 +757,17 @@
     {
       "code": "TPX003",
       "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py",
-      "line": 674,
-      "end_line": 684,
+      "line": 306,
+      "end_line": 337,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py:674-684: TPX003 same explanation in 2 places: langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py:895-905 (weakest langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py:674-684 ~ langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py:895-905, similarity 0.900)",
+      "message": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py:306-337: TPX003 same explanation in 3 places: langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py:674-684, langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py:895-905 (weakest langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py:306-337 ~ langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py:895-905, similarity 0.800)",
       "locations": [
+        {
+          "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py",
+          "line": 306,
+          "end_line": 337,
+          "prose_kind": "docstring"
+        },
         {
           "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py",
           "line": 674,
@@ -767,8 +784,8 @@
       "weakest": {
         "first": {
           "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py",
-          "line": 674,
-          "end_line": 684,
+          "line": 306,
+          "end_line": 337,
           "prose_kind": "docstring"
         },
         "second": {
@@ -777,7 +794,7 @@
           "end_line": 905,
           "prose_kind": "docstring"
         },
-        "similarity": 0.9
+        "similarity": 0.8
       }
     },
     {
@@ -786,7 +803,7 @@
       "line": 730,
       "end_line": 744,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py:730-744: TPX003 same explanation in 2 places: langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py:929-943 (weakest langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py:730-744 ~ langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py:929-943, similarity 0.935)",
+      "message": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py:730-744: TPX003 same explanation in 2 places: langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py:929-943 (weakest langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py:730-744 ~ langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py:929-943, similarity 0.872)",
       "locations": [
         {
           "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py",
@@ -814,7 +831,7 @@
           "end_line": 943,
           "prose_kind": "docstring"
         },
-        "similarity": 0.935064935064935
+        "similarity": 0.8717948717948718
       }
     },
     {
@@ -870,7 +887,7 @@
       "line": 296,
       "end_line": 300,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/checkpoint-postgres/langgraph/store/postgres/aio.py:296-300: TPX003 same explanation in 4 places: langgraph/libs/checkpoint-postgres/langgraph/store/postgres/base.py:831-835, langgraph/libs/checkpoint-sqlite/langgraph/store/sqlite/aio.py:240-244, langgraph/libs/checkpoint-sqlite/langgraph/store/sqlite/base.py:1047-1051 (weakest langgraph/libs/checkpoint-postgres/langgraph/store/postgres/aio.py:296-300 ~ langgraph/libs/checkpoint-postgres/langgraph/store/postgres/base.py:831-835, similarity 1.000)",
+      "message": "langgraph/libs/checkpoint-postgres/langgraph/store/postgres/aio.py:296-300: TPX003 same explanation in 8 places: langgraph/libs/checkpoint-postgres/langgraph/store/postgres/aio.py:314-318, langgraph/libs/checkpoint-postgres/langgraph/store/postgres/base.py:831-835, langgraph/libs/checkpoint-postgres/langgraph/store/postgres/base.py:849-853, langgraph/libs/checkpoint-sqlite/langgraph/store/sqlite/aio.py:240-244, langgraph/libs/checkpoint-sqlite/langgraph/store/sqlite/aio.py:258-262, langgraph/libs/checkpoint-sqlite/langgraph/store/sqlite/base.py:1047-1051, langgraph/libs/checkpoint-sqlite/langgraph/store/sqlite/base.py:1065-1069 (weakest langgraph/libs/checkpoint-postgres/langgraph/store/postgres/aio.py:296-300 ~ langgraph/libs/checkpoint-postgres/langgraph/store/postgres/aio.py:314-318, similarity 0.833)",
       "locations": [
         {
           "path": "langgraph/libs/checkpoint-postgres/langgraph/store/postgres/aio.py",
@@ -879,9 +896,21 @@
           "prose_kind": "docstring"
         },
         {
+          "path": "langgraph/libs/checkpoint-postgres/langgraph/store/postgres/aio.py",
+          "line": 314,
+          "end_line": 318,
+          "prose_kind": "docstring"
+        },
+        {
           "path": "langgraph/libs/checkpoint-postgres/langgraph/store/postgres/base.py",
           "line": 831,
           "end_line": 835,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "langgraph/libs/checkpoint-postgres/langgraph/store/postgres/base.py",
+          "line": 849,
+          "end_line": 853,
           "prose_kind": "docstring"
         },
         {
@@ -891,9 +920,21 @@
           "prose_kind": "docstring"
         },
         {
+          "path": "langgraph/libs/checkpoint-sqlite/langgraph/store/sqlite/aio.py",
+          "line": 258,
+          "end_line": 262,
+          "prose_kind": "docstring"
+        },
+        {
           "path": "langgraph/libs/checkpoint-sqlite/langgraph/store/sqlite/base.py",
           "line": 1047,
           "end_line": 1051,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "langgraph/libs/checkpoint-sqlite/langgraph/store/sqlite/base.py",
+          "line": 1065,
+          "end_line": 1069,
           "prose_kind": "docstring"
         }
       ],
@@ -905,49 +946,12 @@
           "prose_kind": "docstring"
         },
         "second": {
-          "path": "langgraph/libs/checkpoint-postgres/langgraph/store/postgres/base.py",
-          "line": 831,
-          "end_line": 835,
-          "prose_kind": "docstring"
-        },
-        "similarity": 1.0
-      }
-    },
-    {
-      "code": "TPX003",
-      "path": "langgraph/libs/checkpoint-postgres/langgraph/store/postgres/aio.py",
-      "line": 314,
-      "end_line": 318,
-      "prose_kind": "docstring",
-      "message": "langgraph/libs/checkpoint-postgres/langgraph/store/postgres/aio.py:314-318: TPX003 same explanation in 2 places: langgraph/libs/checkpoint-sqlite/langgraph/store/sqlite/aio.py:258-262 (weakest langgraph/libs/checkpoint-postgres/langgraph/store/postgres/aio.py:314-318 ~ langgraph/libs/checkpoint-sqlite/langgraph/store/sqlite/aio.py:258-262, similarity 1.000)",
-      "locations": [
-        {
           "path": "langgraph/libs/checkpoint-postgres/langgraph/store/postgres/aio.py",
           "line": 314,
           "end_line": 318,
           "prose_kind": "docstring"
         },
-        {
-          "path": "langgraph/libs/checkpoint-sqlite/langgraph/store/sqlite/aio.py",
-          "line": 258,
-          "end_line": 262,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "langgraph/libs/checkpoint-postgres/langgraph/store/postgres/aio.py",
-          "line": 314,
-          "end_line": 318,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "langgraph/libs/checkpoint-sqlite/langgraph/store/sqlite/aio.py",
-          "line": 258,
-          "end_line": 262,
-          "prose_kind": "docstring"
-        },
-        "similarity": 1.0
+        "similarity": 0.8333333333333334
       }
     },
     {
@@ -1082,43 +1086,6 @@
       "message": "langgraph/libs/checkpoint-postgres/langgraph/store/postgres/base.py:664-739: TPX002 docstring is 327 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 327,
       "max_volume": 200
-    },
-    {
-      "code": "TPX003",
-      "path": "langgraph/libs/checkpoint-postgres/langgraph/store/postgres/base.py",
-      "line": 849,
-      "end_line": 853,
-      "prose_kind": "docstring",
-      "message": "langgraph/libs/checkpoint-postgres/langgraph/store/postgres/base.py:849-853: TPX003 same explanation in 2 places: langgraph/libs/checkpoint-sqlite/langgraph/store/sqlite/base.py:1065-1069 (weakest langgraph/libs/checkpoint-postgres/langgraph/store/postgres/base.py:849-853 ~ langgraph/libs/checkpoint-sqlite/langgraph/store/sqlite/base.py:1065-1069, similarity 1.000)",
-      "locations": [
-        {
-          "path": "langgraph/libs/checkpoint-postgres/langgraph/store/postgres/base.py",
-          "line": 849,
-          "end_line": 853,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "langgraph/libs/checkpoint-sqlite/langgraph/store/sqlite/base.py",
-          "line": 1065,
-          "end_line": 1069,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "langgraph/libs/checkpoint-postgres/langgraph/store/postgres/base.py",
-          "line": 849,
-          "end_line": 853,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "langgraph/libs/checkpoint-sqlite/langgraph/store/sqlite/base.py",
-          "line": 1065,
-          "end_line": 1069,
-          "prose_kind": "docstring"
-        },
-        "similarity": 1.0
-      }
     },
     {
       "code": "TPX003",
@@ -1465,6 +1432,43 @@
     },
     {
       "code": "TPX003",
+      "path": "langgraph/libs/checkpoint-sqlite/langgraph/store/sqlite/aio.py",
+      "line": 353,
+      "end_line": 360,
+      "prose_kind": "docstring",
+      "message": "langgraph/libs/checkpoint-sqlite/langgraph/store/sqlite/aio.py:353-360: TPX003 same explanation in 2 places: langgraph/libs/checkpoint-sqlite/langgraph/store/sqlite/base.py:1154-1161 (weakest langgraph/libs/checkpoint-sqlite/langgraph/store/sqlite/aio.py:353-360 ~ langgraph/libs/checkpoint-sqlite/langgraph/store/sqlite/base.py:1154-1161, similarity 0.750)",
+      "locations": [
+        {
+          "path": "langgraph/libs/checkpoint-sqlite/langgraph/store/sqlite/aio.py",
+          "line": 353,
+          "end_line": 360,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "langgraph/libs/checkpoint-sqlite/langgraph/store/sqlite/base.py",
+          "line": 1154,
+          "end_line": 1161,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "langgraph/libs/checkpoint-sqlite/langgraph/store/sqlite/aio.py",
+          "line": 353,
+          "end_line": 360,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "langgraph/libs/checkpoint-sqlite/langgraph/store/sqlite/base.py",
+          "line": 1154,
+          "end_line": 1161,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.75
+      }
+    },
+    {
+      "code": "TPX003",
       "path": "langgraph/libs/checkpoint-sqlite/langgraph/store/sqlite/base.py",
       "line": 223,
       "end_line": 229,
@@ -1669,7 +1673,7 @@
       "line": 228,
       "end_line": 235,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:228-235: TPX003 same explanation in 2 places: langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:418-425 (weakest langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:228-235 ~ langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:418-425, similarity 0.957)",
+      "message": "langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:228-235: TPX003 same explanation in 2 places: langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:418-425 (weakest langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:228-235 ~ langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:418-425, similarity 0.833)",
       "locations": [
         {
           "path": "langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py",
@@ -1697,7 +1701,7 @@
           "end_line": 425,
           "prose_kind": "docstring"
         },
-        "similarity": 0.9565217391304348
+        "similarity": 0.8333333333333334
       }
     },
     {
@@ -1706,7 +1710,7 @@
       "line": 240,
       "end_line": 250,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:240-250: TPX003 same explanation in 2 places: langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:430-440 (weakest langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:240-250 ~ langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:430-440, similarity 0.971)",
+      "message": "langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:240-250: TPX003 same explanation in 2 places: langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:430-440 (weakest langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:240-250 ~ langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:430-440, similarity 0.857)",
       "locations": [
         {
           "path": "langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py",
@@ -1734,7 +1738,7 @@
           "end_line": 440,
           "prose_kind": "docstring"
         },
-        "similarity": 0.9714285714285714
+        "similarity": 0.8571428571428571
       }
     },
     {
@@ -1743,7 +1747,7 @@
       "line": 261,
       "end_line": 274,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:261-274: TPX003 same explanation in 2 places: langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:451-464 (weakest langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:261-274 ~ langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:451-464, similarity 0.778)",
+      "message": "langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:261-274: TPX003 same explanation in 2 places: langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:451-464 (weakest langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:261-274 ~ langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:451-464, similarity 0.833)",
       "locations": [
         {
           "path": "langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py",
@@ -1771,7 +1775,7 @@
           "end_line": 464,
           "prose_kind": "docstring"
         },
-        "similarity": 0.7777777777777778
+        "similarity": 0.8333333333333334
       }
     },
     {
@@ -1780,7 +1784,7 @@
       "line": 284,
       "end_line": 297,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:284-297: TPX003 same explanation in 2 places: langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:475-488 (weakest langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:284-297 ~ langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:475-488, similarity 0.980)",
+      "message": "langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:284-297: TPX003 same explanation in 2 places: langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:475-488 (weakest langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:284-297 ~ langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:475-488, similarity 0.857)",
       "locations": [
         {
           "path": "langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py",
@@ -1808,7 +1812,7 @@
           "end_line": 488,
           "prose_kind": "docstring"
         },
-        "similarity": 0.98
+        "similarity": 0.8571428571428571
       }
     },
     {
@@ -1817,7 +1821,7 @@
       "line": 307,
       "end_line": 317,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:307-317: TPX003 same explanation in 2 places: langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:498-508 (weakest langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:307-317 ~ langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:498-508, similarity 0.977)",
+      "message": "langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:307-317: TPX003 same explanation in 2 places: langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:498-508 (weakest langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:307-317 ~ langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:498-508, similarity 0.833)",
       "locations": [
         {
           "path": "langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py",
@@ -1845,7 +1849,7 @@
           "end_line": 508,
           "prose_kind": "docstring"
         },
-        "similarity": 0.9772727272727273
+        "similarity": 0.8333333333333334
       }
     },
     {
@@ -1894,61 +1898,6 @@
       "message": "langgraph/libs/checkpoint/langgraph/checkpoint/base/__init__.py:380-414: TPX002 docstring is 213 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 213,
       "max_volume": 200
-    },
-    {
-      "code": "TPX003",
-      "path": "langgraph/libs/checkpoint/langgraph/checkpoint/memory/__init__.py",
-      "line": 237,
-      "end_line": 249,
-      "prose_kind": "docstring",
-      "message": "langgraph/libs/checkpoint/langgraph/checkpoint/memory/__init__.py:237-249: TPX003 same explanation in 5 places: langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:182-194, langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:583-595, langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/aio.py:148-160, langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/aio.py:347-359 (weakest langgraph/libs/checkpoint/langgraph/checkpoint/memory/__init__.py:237-249 ~ langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py:583-595, similarity 0.750)",
-      "locations": [
-        {
-          "path": "langgraph/libs/checkpoint/langgraph/checkpoint/memory/__init__.py",
-          "line": 237,
-          "end_line": 249,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py",
-          "line": 182,
-          "end_line": 194,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py",
-          "line": 583,
-          "end_line": 595,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/aio.py",
-          "line": 148,
-          "end_line": 160,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "langgraph/libs/checkpoint-sqlite/langgraph/checkpoint/sqlite/aio.py",
-          "line": 347,
-          "end_line": 359,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "langgraph/libs/checkpoint/langgraph/checkpoint/memory/__init__.py",
-          "line": 237,
-          "end_line": 249,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "langgraph/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py",
-          "line": 583,
-          "end_line": 595,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.75
-      }
     },
     {
       "code": "TPX003",
@@ -2069,47 +2018,10 @@
     {
       "code": "TPX003",
       "path": "langgraph/libs/checkpoint/langgraph/store/base/__init__.py",
-      "line": 734,
-      "end_line": 742,
-      "prose_kind": "docstring",
-      "message": "langgraph/libs/checkpoint/langgraph/store/base/__init__.py:734-742: TPX003 same explanation in 2 places: langgraph/libs/checkpoint/langgraph/store/base/__init__.py:746-754 (weakest langgraph/libs/checkpoint/langgraph/store/base/__init__.py:734-742 ~ langgraph/libs/checkpoint/langgraph/store/base/__init__.py:746-754, similarity 0.854)",
-      "locations": [
-        {
-          "path": "langgraph/libs/checkpoint/langgraph/store/base/__init__.py",
-          "line": 734,
-          "end_line": 742,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "langgraph/libs/checkpoint/langgraph/store/base/__init__.py",
-          "line": 746,
-          "end_line": 754,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "langgraph/libs/checkpoint/langgraph/store/base/__init__.py",
-          "line": 734,
-          "end_line": 742,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "langgraph/libs/checkpoint/langgraph/store/base/__init__.py",
-          "line": 746,
-          "end_line": 754,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.8536585365853658
-      }
-    },
-    {
-      "code": "TPX003",
-      "path": "langgraph/libs/checkpoint/langgraph/store/base/__init__.py",
       "line": 790,
       "end_line": 842,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/checkpoint/langgraph/store/base/__init__.py:790-842: TPX003 same explanation in 2 places: langgraph/libs/checkpoint/langgraph/store/base/__init__.py:1040-1093 (weakest langgraph/libs/checkpoint/langgraph/store/base/__init__.py:790-842 ~ langgraph/libs/checkpoint/langgraph/store/base/__init__.py:1040-1093, similarity 0.791)",
+      "message": "langgraph/libs/checkpoint/langgraph/store/base/__init__.py:790-842: TPX003 same explanation in 2 places: langgraph/libs/checkpoint/langgraph/store/base/__init__.py:1040-1093 (weakest langgraph/libs/checkpoint/langgraph/store/base/__init__.py:790-842 ~ langgraph/libs/checkpoint/langgraph/store/base/__init__.py:1040-1093, similarity 0.968)",
       "locations": [
         {
           "path": "langgraph/libs/checkpoint/langgraph/store/base/__init__.py",
@@ -2137,7 +2049,7 @@
           "end_line": 1093,
           "prose_kind": "docstring"
         },
-        "similarity": 0.7914438502673797
+        "similarity": 0.967741935483871
       }
     },
     {
@@ -2156,7 +2068,7 @@
       "line": 865,
       "end_line": 918,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/checkpoint/langgraph/store/base/__init__.py:865-918: TPX003 same explanation in 2 places: langgraph/libs/checkpoint/langgraph/store/base/__init__.py:1118-1179 (weakest langgraph/libs/checkpoint/langgraph/store/base/__init__.py:865-918 ~ langgraph/libs/checkpoint/langgraph/store/base/__init__.py:1118-1179, similarity 0.896)",
+      "message": "langgraph/libs/checkpoint/langgraph/store/base/__init__.py:865-918: TPX003 same explanation in 2 places: langgraph/libs/checkpoint/langgraph/store/base/__init__.py:1118-1179 (weakest langgraph/libs/checkpoint/langgraph/store/base/__init__.py:865-918 ~ langgraph/libs/checkpoint/langgraph/store/base/__init__.py:1118-1179, similarity 0.923)",
       "locations": [
         {
           "path": "langgraph/libs/checkpoint/langgraph/store/base/__init__.py",
@@ -2184,44 +2096,7 @@
           "end_line": 1179,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8958333333333334
-      }
-    },
-    {
-      "code": "TPX003",
-      "path": "langgraph/libs/checkpoint/langgraph/store/base/__init__.py",
-      "line": 938,
-      "end_line": 943,
-      "prose_kind": "docstring",
-      "message": "langgraph/libs/checkpoint/langgraph/store/base/__init__.py:938-943: TPX003 same explanation in 2 places: langgraph/libs/checkpoint/langgraph/store/base/__init__.py:1199-1204 (weakest langgraph/libs/checkpoint/langgraph/store/base/__init__.py:938-943 ~ langgraph/libs/checkpoint/langgraph/store/base/__init__.py:1199-1204, similarity 0.933)",
-      "locations": [
-        {
-          "path": "langgraph/libs/checkpoint/langgraph/store/base/__init__.py",
-          "line": 938,
-          "end_line": 943,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "langgraph/libs/checkpoint/langgraph/store/base/__init__.py",
-          "line": 1199,
-          "end_line": 1204,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "langgraph/libs/checkpoint/langgraph/store/base/__init__.py",
-          "line": 938,
-          "end_line": 943,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "langgraph/libs/checkpoint/langgraph/store/base/__init__.py",
-          "line": 1199,
-          "end_line": 1204,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.9333333333333333
+        "similarity": 0.9230769230769231
       }
     },
     {
@@ -2243,43 +2118,6 @@
       "message": "langgraph/libs/checkpoint/langgraph/store/base/embed.py:110-149: TPX002 docstring is 213 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 213,
       "max_volume": 200
-    },
-    {
-      "code": "TPX003",
-      "path": "langgraph/libs/checkpoint/langgraph/store/base/embed.py",
-      "line": 183,
-      "end_line": 194,
-      "prose_kind": "docstring",
-      "message": "langgraph/libs/checkpoint/langgraph/store/base/embed.py:183-194: TPX003 same explanation in 2 places: langgraph/libs/checkpoint/langgraph/store/base/embed.py:215-226 (weakest langgraph/libs/checkpoint/langgraph/store/base/embed.py:183-194 ~ langgraph/libs/checkpoint/langgraph/store/base/embed.py:215-226, similarity 0.829)",
-      "locations": [
-        {
-          "path": "langgraph/libs/checkpoint/langgraph/store/base/embed.py",
-          "line": 183,
-          "end_line": 194,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "langgraph/libs/checkpoint/langgraph/store/base/embed.py",
-          "line": 215,
-          "end_line": 226,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "langgraph/libs/checkpoint/langgraph/store/base/embed.py",
-          "line": 183,
-          "end_line": 194,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "langgraph/libs/checkpoint/langgraph/store/base/embed.py",
-          "line": 215,
-          "end_line": 226,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.8292682926829268
-      }
     },
     {
       "code": "TPX002",
@@ -3019,12 +2857,18 @@
       "line": 70,
       "end_line": 74,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/langgraph/_internal/_runnable.py:70-74: TPX003 same explanation in 2 places: langgraph/libs/langgraph/langgraph/_internal/_runnable.py:109-113 (weakest langgraph/libs/langgraph/langgraph/_internal/_runnable.py:70-74 ~ langgraph/libs/langgraph/langgraph/_internal/_runnable.py:109-113, similarity 1.000)",
+      "message": "langgraph/libs/langgraph/langgraph/_internal/_runnable.py:70-74: TPX003 same explanation in 3 places: langgraph/libs/langgraph/langgraph/_internal/_runnable.py:84-88, langgraph/libs/langgraph/langgraph/_internal/_runnable.py:109-113 (weakest langgraph/libs/langgraph/langgraph/_internal/_runnable.py:70-74 ~ langgraph/libs/langgraph/langgraph/_internal/_runnable.py:84-88, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/langgraph/langgraph/_internal/_runnable.py",
           "line": 70,
           "end_line": 74,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "langgraph/libs/langgraph/langgraph/_internal/_runnable.py",
+          "line": 84,
+          "end_line": 88,
           "prose_kind": "docstring"
         },
         {
@@ -3043,8 +2887,8 @@
         },
         "second": {
           "path": "langgraph/libs/langgraph/langgraph/_internal/_runnable.py",
-          "line": 109,
-          "end_line": 113,
+          "line": 84,
+          "end_line": 88,
           "prose_kind": "docstring"
         },
         "similarity": 1.0
@@ -3408,55 +3252,6 @@
       "message": "langgraph/libs/langgraph/langgraph/graph/state.py:389-440: TPX002 docstring is 259 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 259,
       "max_volume": 200
-    },
-    {
-      "code": "TPX003",
-      "path": "langgraph/libs/langgraph/langgraph/graph/state.py",
-      "line": 389,
-      "end_line": 440,
-      "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/langgraph/graph/state.py:389-440: TPX003 same explanation in 4 places: langgraph/libs/langgraph/langgraph/graph/state.py:458-513, langgraph/libs/langgraph/langgraph/graph/state.py:532-582, langgraph/libs/langgraph/langgraph/graph/state.py:601-659 (weakest langgraph/libs/langgraph/langgraph/graph/state.py:458-513 ~ langgraph/libs/langgraph/langgraph/graph/state.py:601-659, similarity 0.754)",
-      "locations": [
-        {
-          "path": "langgraph/libs/langgraph/langgraph/graph/state.py",
-          "line": 389,
-          "end_line": 440,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "langgraph/libs/langgraph/langgraph/graph/state.py",
-          "line": 458,
-          "end_line": 513,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "langgraph/libs/langgraph/langgraph/graph/state.py",
-          "line": 532,
-          "end_line": 582,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "langgraph/libs/langgraph/langgraph/graph/state.py",
-          "line": 601,
-          "end_line": 659,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "langgraph/libs/langgraph/langgraph/graph/state.py",
-          "line": 458,
-          "end_line": 513,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "langgraph/libs/langgraph/langgraph/graph/state.py",
-          "line": 601,
-          "end_line": 659,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.7535714285714286
-      }
     },
     {
       "code": "TPX002",
@@ -4079,7 +3874,7 @@
       "line": 1595,
       "end_line": 1609,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/langgraph/pregel/main.py:1595-1609: TPX003 same explanation in 2 places: langgraph/libs/langgraph/langgraph/pregel/main.py:2061-2075 (weakest langgraph/libs/langgraph/langgraph/pregel/main.py:1595-1609 ~ langgraph/libs/langgraph/langgraph/pregel/main.py:2061-2075, similarity 0.988)",
+      "message": "langgraph/libs/langgraph/langgraph/pregel/main.py:1595-1609: TPX003 same explanation in 2 places: langgraph/libs/langgraph/langgraph/pregel/main.py:2061-2075 (weakest langgraph/libs/langgraph/langgraph/pregel/main.py:1595-1609 ~ langgraph/libs/langgraph/langgraph/pregel/main.py:2061-2075, similarity 0.923)",
       "locations": [
         {
           "path": "langgraph/libs/langgraph/langgraph/pregel/main.py",
@@ -4107,7 +3902,7 @@
           "end_line": 2075,
           "prose_kind": "docstring"
         },
-        "similarity": 0.9876543209876543
+        "similarity": 0.9230769230769231
       }
     },
     {
@@ -4311,7 +4106,7 @@
       "line": 2673,
       "end_line": 2724,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/langgraph/pregel/main.py:2673-2724: TPX003 same explanation in 2 places: langgraph/libs/langgraph/langgraph/pregel/main.py:3081-3132 (weakest langgraph/libs/langgraph/langgraph/pregel/main.py:2673-2724 ~ langgraph/libs/langgraph/langgraph/pregel/main.py:3081-3132, similarity 0.998)",
+      "message": "langgraph/libs/langgraph/langgraph/pregel/main.py:2673-2724: TPX003 same explanation in 2 places: langgraph/libs/langgraph/langgraph/pregel/main.py:3081-3132 (weakest langgraph/libs/langgraph/langgraph/pregel/main.py:2673-2724 ~ langgraph/libs/langgraph/langgraph/pregel/main.py:3081-3132, similarity 0.833)",
       "locations": [
         {
           "path": "langgraph/libs/langgraph/langgraph/pregel/main.py",
@@ -4339,7 +4134,7 @@
           "end_line": 3132,
           "prose_kind": "docstring"
         },
-        "similarity": 0.9975845410628019
+        "similarity": 0.8333333333333334
       }
     },
     {
@@ -4489,7 +4284,7 @@
       "line": 3852,
       "end_line": 3882,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/langgraph/pregel/main.py:3852-3882: TPX003 same explanation in 2 places: langgraph/libs/langgraph/langgraph/pregel/main.py:4029-4059 (weakest langgraph/libs/langgraph/langgraph/pregel/main.py:3852-3882 ~ langgraph/libs/langgraph/langgraph/pregel/main.py:4029-4059, similarity 0.995)",
+      "message": "langgraph/libs/langgraph/langgraph/pregel/main.py:3852-3882: TPX003 same explanation in 2 places: langgraph/libs/langgraph/langgraph/pregel/main.py:4029-4059 (weakest langgraph/libs/langgraph/langgraph/pregel/main.py:3852-3882 ~ langgraph/libs/langgraph/langgraph/pregel/main.py:4029-4059, similarity 0.875)",
       "locations": [
         {
           "path": "langgraph/libs/langgraph/langgraph/pregel/main.py",
@@ -4517,7 +4312,7 @@
           "end_line": 4059,
           "prose_kind": "docstring"
         },
-        "similarity": 0.9951690821256038
+        "similarity": 0.875
       }
     },
     {
@@ -4607,6 +4402,43 @@
     {
       "code": "TPX003",
       "path": "langgraph/libs/langgraph/langgraph/pregel/remote.py",
+      "line": 518,
+      "end_line": 531,
+      "prose_kind": "docstring",
+      "message": "langgraph/libs/langgraph/langgraph/pregel/remote.py:518-531: TPX003 same explanation in 2 places: langgraph/libs/langgraph/langgraph/pregel/remote.py:557-572 (weakest langgraph/libs/langgraph/langgraph/pregel/remote.py:518-531 ~ langgraph/libs/langgraph/langgraph/pregel/remote.py:557-572, similarity 1.000)",
+      "locations": [
+        {
+          "path": "langgraph/libs/langgraph/langgraph/pregel/remote.py",
+          "line": 518,
+          "end_line": 531,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "langgraph/libs/langgraph/langgraph/pregel/remote.py",
+          "line": 557,
+          "end_line": 572,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "langgraph/libs/langgraph/langgraph/pregel/remote.py",
+          "line": 518,
+          "end_line": 531,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "langgraph/libs/langgraph/langgraph/pregel/remote.py",
+          "line": 557,
+          "end_line": 572,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "langgraph/libs/langgraph/langgraph/pregel/remote.py",
       "line": 611,
       "end_line": 623,
       "prose_kind": "docstring",
@@ -4684,7 +4516,7 @@
       "line": 1175,
       "end_line": 1189,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/langgraph/langgraph/pregel/remote.py:1175-1189: TPX003 same explanation in 2 places: langgraph/libs/langgraph/langgraph/pregel/remote.py:1257-1271 (weakest langgraph/libs/langgraph/langgraph/pregel/remote.py:1175-1189 ~ langgraph/libs/langgraph/langgraph/pregel/remote.py:1257-1271, similarity 0.922)",
+      "message": "langgraph/libs/langgraph/langgraph/pregel/remote.py:1175-1189: TPX003 same explanation in 4 places: langgraph/libs/langgraph/langgraph/pregel/remote.py:1257-1271, langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:706-794, langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:701-791 (weakest langgraph/libs/langgraph/langgraph/pregel/remote.py:1175-1189 ~ langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:706-794, similarity 0.769)",
       "locations": [
         {
           "path": "langgraph/libs/langgraph/langgraph/pregel/remote.py",
@@ -4697,6 +4529,18 @@
           "line": 1257,
           "end_line": 1271,
           "prose_kind": "docstring"
+        },
+        {
+          "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py",
+          "line": 706,
+          "end_line": 794,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py",
+          "line": 701,
+          "end_line": 791,
+          "prose_kind": "docstring"
         }
       ],
       "weakest": {
@@ -4707,12 +4551,12 @@
           "prose_kind": "docstring"
         },
         "second": {
-          "path": "langgraph/libs/langgraph/langgraph/pregel/remote.py",
-          "line": 1257,
-          "end_line": 1271,
+          "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py",
+          "line": 706,
+          "end_line": 794,
           "prose_kind": "docstring"
         },
-        "similarity": 0.922077922077922
+        "similarity": 0.7692307692307693
       }
     },
     {
@@ -7834,43 +7678,6 @@
     {
       "code": "TPX003",
       "path": "langgraph/libs/prebuilt/langgraph/prebuilt/tool_node.py",
-      "line": 928,
-      "end_line": 940,
-      "prose_kind": "docstring",
-      "message": "langgraph/libs/prebuilt/langgraph/prebuilt/tool_node.py:928-940: TPX003 same explanation in 2 places: langgraph/libs/prebuilt/langgraph/prebuilt/tool_node.py:1075-1087 (weakest langgraph/libs/prebuilt/langgraph/prebuilt/tool_node.py:928-940 ~ langgraph/libs/prebuilt/langgraph/prebuilt/tool_node.py:1075-1087, similarity 0.872)",
-      "locations": [
-        {
-          "path": "langgraph/libs/prebuilt/langgraph/prebuilt/tool_node.py",
-          "line": 928,
-          "end_line": 940,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "langgraph/libs/prebuilt/langgraph/prebuilt/tool_node.py",
-          "line": 1075,
-          "end_line": 1087,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "langgraph/libs/prebuilt/langgraph/prebuilt/tool_node.py",
-          "line": 928,
-          "end_line": 940,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "langgraph/libs/prebuilt/langgraph/prebuilt/tool_node.py",
-          "line": 1075,
-          "end_line": 1087,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.8717948717948718
-      }
-    },
-    {
-      "code": "TPX003",
-      "path": "langgraph/libs/prebuilt/langgraph/prebuilt/tool_node.py",
       "line": 973,
       "end_line": 981,
       "prose_kind": "comment",
@@ -8133,43 +7940,6 @@
     },
     {
       "code": "TPX003",
-      "path": "langgraph/libs/prebuilt/tests/test_tool_node_validation_error_filtering.py",
-      "line": 383,
-      "end_line": 388,
-      "prose_kind": "docstring",
-      "message": "langgraph/libs/prebuilt/tests/test_tool_node_validation_error_filtering.py:383-388: TPX003 same explanation in 2 places: langgraph/libs/prebuilt/tests/test_tool_node_validation_error_filtering.py:437-442 (weakest langgraph/libs/prebuilt/tests/test_tool_node_validation_error_filtering.py:383-388 ~ langgraph/libs/prebuilt/tests/test_tool_node_validation_error_filtering.py:437-442, similarity 0.923)",
-      "locations": [
-        {
-          "path": "langgraph/libs/prebuilt/tests/test_tool_node_validation_error_filtering.py",
-          "line": 383,
-          "end_line": 388,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "langgraph/libs/prebuilt/tests/test_tool_node_validation_error_filtering.py",
-          "line": 437,
-          "end_line": 442,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "langgraph/libs/prebuilt/tests/test_tool_node_validation_error_filtering.py",
-          "line": 383,
-          "end_line": 388,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "langgraph/libs/prebuilt/tests/test_tool_node_validation_error_filtering.py",
-          "line": 437,
-          "end_line": 442,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.9230769230769231
-      }
-    },
-    {
-      "code": "TPX003",
       "path": "langgraph/libs/sdk-py/integration/scripts/test_update_state.py",
       "line": 95,
       "end_line": 96,
@@ -8208,10 +7978,84 @@
     {
       "code": "TPX003",
       "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py",
+      "line": 30,
+      "end_line": 41,
+      "prose_kind": "docstring",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:30-41: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:30-40 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:30-41 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:30-40, similarity 0.792)",
+      "locations": [
+        {
+          "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py",
+          "line": 30,
+          "end_line": 41,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py",
+          "line": 30,
+          "end_line": 40,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py",
+          "line": 30,
+          "end_line": 41,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py",
+          "line": 30,
+          "end_line": 40,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.7916666666666666
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py",
+      "line": 53,
+      "end_line": 86,
+      "prose_kind": "docstring",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:53-86: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:52-85 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:53-86 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:52-85, similarity 1.000)",
+      "locations": [
+        {
+          "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py",
+          "line": 53,
+          "end_line": 86,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py",
+          "line": 52,
+          "end_line": 85,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py",
+          "line": 53,
+          "end_line": 86,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py",
+          "line": 52,
+          "end_line": 85,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py",
       "line": 101,
       "end_line": 142,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:101-142: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:100-137 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:101-142 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:100-137, similarity 0.855)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:101-142: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:100-137 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:101-142 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:100-137, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py",
@@ -8239,7 +8083,7 @@
           "end_line": 137,
           "prose_kind": "docstring"
         },
-        "similarity": 0.855072463768116
+        "similarity": 1.0
       }
     },
     {
@@ -8248,7 +8092,7 @@
       "line": 160,
       "end_line": 269,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:160-269: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:154-275 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:160-269 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:154-275, similarity 0.892)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:160-269: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:154-275 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:160-269 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:154-275, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py",
@@ -8276,7 +8120,44 @@
           "end_line": 275,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8918918918918919
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py",
+      "line": 285,
+      "end_line": 297,
+      "prose_kind": "docstring",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:285-297: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:291-301 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:285-297 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:291-301, similarity 1.000)",
+      "locations": [
+        {
+          "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py",
+          "line": 285,
+          "end_line": 297,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py",
+          "line": 291,
+          "end_line": 301,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py",
+          "line": 285,
+          "end_line": 297,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py",
+          "line": 291,
+          "end_line": 301,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
       }
     },
     {
@@ -8295,7 +8176,7 @@
       "line": 328,
       "end_line": 363,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:328-363: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:332-367 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:328-363 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:332-367, similarity 0.872)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:328-363: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:332-367 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:328-363 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:332-367, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py",
@@ -8323,7 +8204,7 @@
           "end_line": 367,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8720379146919431
+        "similarity": 1.0
       }
     },
     {
@@ -8332,7 +8213,7 @@
       "line": 398,
       "end_line": 431,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:398-431: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:402-433 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:398-431 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:402-433, similarity 0.884)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:398-431: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:402-433 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:398-431 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:402-433, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py",
@@ -8360,7 +8241,7 @@
           "end_line": 433,
           "prose_kind": "docstring"
         },
-        "similarity": 0.884393063583815
+        "similarity": 1.0
       }
     },
     {
@@ -8369,7 +8250,7 @@
       "line": 460,
       "end_line": 482,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:460-482: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:462-484 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:460-482 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:462-484, similarity 0.865)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:460-482: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:462-484 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:460-482 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:462-484, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py",
@@ -8397,7 +8278,7 @@
           "end_line": 484,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8648648648648649
+        "similarity": 1.0
       }
     },
     {
@@ -8416,7 +8297,7 @@
       "line": 543,
       "end_line": 582,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:543-582: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:545-583 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:543-582 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:545-583, similarity 0.889)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:543-582: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:545-583 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:543-582 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:545-583, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py",
@@ -8444,7 +8325,7 @@
           "end_line": 583,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8894009216589862
+        "similarity": 1.0
       }
     },
     {
@@ -8490,7 +8371,7 @@
       "line": 666,
       "end_line": 687,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:666-687: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:665-686 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:666-687 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:665-686, similarity 0.750)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:666-687: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:665-686 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:666-687 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:665-686, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py",
@@ -8518,7 +8399,7 @@
           "end_line": 686,
           "prose_kind": "docstring"
         },
-        "similarity": 0.75
+        "similarity": 1.0
       }
     },
     {
@@ -8527,7 +8408,7 @@
       "line": 710,
       "end_line": 731,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:710-731: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:709-729 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:710-731 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:709-729, similarity 0.761)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:710-731: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:709-729 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py:710-731 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/assistants.py:709-729, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/assistants.py",
@@ -8555,7 +8436,7 @@
           "end_line": 729,
           "prose_kind": "docstring"
         },
-        "similarity": 0.7611940298507462
+        "similarity": 1.0
       }
     },
     {
@@ -8584,7 +8465,7 @@
       "line": 87,
       "end_line": 142,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py:87-142: TPX003 same explanation in 4 places: langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py:204-260, langgraph/libs/sdk-py/langgraph_sdk/_sync/cron.py:81-133, langgraph/libs/sdk-py/langgraph_sdk/_sync/cron.py:194-250 (weakest langgraph/libs/sdk-py/langgraph_sdk/_sync/cron.py:81-133 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/cron.py:194-250, similarity 0.796)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py:87-142: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/cron.py:81-133 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py:87-142 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/cron.py:81-133, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py",
@@ -8593,38 +8474,26 @@
           "prose_kind": "docstring"
         },
         {
-          "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py",
-          "line": 204,
-          "end_line": 260,
-          "prose_kind": "docstring"
-        },
-        {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_sync/cron.py",
           "line": 81,
           "end_line": 133,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "langgraph/libs/sdk-py/langgraph_sdk/_sync/cron.py",
-          "line": 194,
-          "end_line": 250,
           "prose_kind": "docstring"
         }
       ],
       "weakest": {
         "first": {
+          "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py",
+          "line": 87,
+          "end_line": 142,
+          "prose_kind": "docstring"
+        },
+        "second": {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_sync/cron.py",
           "line": 81,
           "end_line": 133,
           "prose_kind": "docstring"
         },
-        "second": {
-          "path": "langgraph/libs/sdk-py/langgraph_sdk/_sync/cron.py",
-          "line": 194,
-          "end_line": 250,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.7962962962962963
+        "similarity": 1.0
       }
     },
     {
@@ -8640,10 +8509,47 @@
     {
       "code": "TPX003",
       "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py",
+      "line": 204,
+      "end_line": 260,
+      "prose_kind": "docstring",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py:204-260: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/cron.py:194-250 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py:204-260 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/cron.py:194-250, similarity 1.000)",
+      "locations": [
+        {
+          "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py",
+          "line": 204,
+          "end_line": 260,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "langgraph/libs/sdk-py/langgraph_sdk/_sync/cron.py",
+          "line": 194,
+          "end_line": 250,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py",
+          "line": 204,
+          "end_line": 260,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "langgraph/libs/sdk-py/langgraph_sdk/_sync/cron.py",
+          "line": 194,
+          "end_line": 250,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py",
       "line": 302,
       "end_line": 321,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py:302-321: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/cron.py:291-310 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py:302-321 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/cron.py:291-310, similarity 0.769)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py:302-321: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/cron.py:291-310 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py:302-321 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/cron.py:291-310, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py",
@@ -8671,7 +8577,7 @@
           "end_line": 310,
           "prose_kind": "docstring"
         },
-        "similarity": 0.7692307692307693
+        "similarity": 1.0
       }
     },
     {
@@ -8690,7 +8596,7 @@
       "line": 349,
       "end_line": 391,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py:349-391: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/cron.py:338-380 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py:349-391 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/cron.py:338-380, similarity 0.943)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py:349-391: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/cron.py:338-380 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py:349-391 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/cron.py:338-380, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py",
@@ -8718,7 +8624,7 @@
           "end_line": 380,
           "prose_kind": "docstring"
         },
-        "similarity": 0.942652329749104
+        "similarity": 1.0
       }
     },
     {
@@ -8774,7 +8680,7 @@
       "line": 436,
       "end_line": 490,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py:436-490: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/cron.py:425-477 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py:436-490 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/cron.py:425-477, similarity 0.803)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py:436-490: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/cron.py:425-477 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py:436-490 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/cron.py:425-477, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/cron.py",
@@ -8802,7 +8708,7 @@
           "end_line": 477,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8031914893617021
+        "similarity": 1.0
       }
     },
     {
@@ -8895,7 +8801,7 @@
       "line": 227,
       "end_line": 305,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:227-305: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:227-301 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:227-305 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:227-301, similarity 0.930)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:227-305: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:227-301 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:227-305 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:227-301, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py",
@@ -8923,7 +8829,7 @@
           "end_line": 301,
           "prose_kind": "docstring"
         },
-        "similarity": 0.9300699300699301
+        "similarity": 1.0
       }
     },
     {
@@ -8942,7 +8848,7 @@
       "line": 448,
       "end_line": 560,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:448-560: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:443-555 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:448-560 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:443-555, similarity 0.935)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:448-560: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:443-555 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:448-560 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:443-555, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py",
@@ -8970,7 +8876,7 @@
           "end_line": 555,
           "prose_kind": "docstring"
         },
-        "similarity": 0.9352226720647774
+        "similarity": 1.0
       }
     },
     {
@@ -8986,52 +8892,64 @@
     {
       "code": "TPX003",
       "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py",
-      "line": 706,
-      "end_line": 794,
+      "line": 865,
+      "end_line": 889,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:706-794: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:701-791 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:706-794 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:701-791, similarity 0.904)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:865-889: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:853-876 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:865-889 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:853-876, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py",
-          "line": 706,
-          "end_line": 794,
+          "line": 865,
+          "end_line": 889,
           "prose_kind": "docstring"
         },
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py",
-          "line": 701,
-          "end_line": 791,
+          "line": 853,
+          "end_line": 876,
           "prose_kind": "docstring"
         }
       ],
       "weakest": {
         "first": {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py",
-          "line": 706,
-          "end_line": 794,
+          "line": 865,
+          "end_line": 889,
           "prose_kind": "docstring"
         },
         "second": {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py",
-          "line": 701,
-          "end_line": 791,
+          "line": 853,
+          "end_line": 876,
           "prose_kind": "docstring"
         },
-        "similarity": 0.9043659043659044
+        "similarity": 1.0
       }
     },
     {
       "code": "TPX003",
       "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py",
-      "line": 953,
-      "end_line": 979,
+      "line": 914,
+      "end_line": 935,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:953-979: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:935-961 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:953-979 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:935-961, similarity 0.884)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:914-935: TPX003 same explanation in 4 places: langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:953-979, langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:898-917, langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:935-961 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:914-935 ~ langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:953-979, similarity 1.000)",
       "locations": [
+        {
+          "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py",
+          "line": 914,
+          "end_line": 935,
+          "prose_kind": "docstring"
+        },
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py",
           "line": 953,
           "end_line": 979,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py",
+          "line": 898,
+          "end_line": 917,
           "prose_kind": "docstring"
         },
         {
@@ -9044,17 +8962,17 @@
       "weakest": {
         "first": {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py",
+          "line": 914,
+          "end_line": 935,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py",
           "line": 953,
           "end_line": 979,
           "prose_kind": "docstring"
         },
-        "second": {
-          "path": "langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py",
-          "line": 935,
-          "end_line": 961,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.8837209302325582
+        "similarity": 1.0
       }
     },
     {
@@ -9063,7 +8981,7 @@
       "line": 1011,
       "end_line": 1042,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:1011-1042: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:993-1024 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:1011-1042 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:993-1024, similarity 0.896)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:1011-1042: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:993-1024 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:1011-1042 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:993-1024, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py",
@@ -9091,7 +9009,7 @@
           "end_line": 1024,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8962962962962963
+        "similarity": 1.0
       }
     },
     {
@@ -9100,7 +9018,7 @@
       "line": 1068,
       "end_line": 1089,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:1068-1089: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:1050-1071 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:1068-1089 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:1050-1071, similarity 0.841)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:1068-1089: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:1050-1071 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:1068-1089 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:1050-1071, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py",
@@ -9128,7 +9046,7 @@
           "end_line": 1071,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8405797101449275
+        "similarity": 1.0
       }
     },
     {
@@ -9137,7 +9055,7 @@
       "line": 1108,
       "end_line": 1138,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:1108-1138: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:1090-1119 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:1108-1138 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:1090-1119, similarity 0.787)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:1108-1138: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:1090-1119 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:1108-1138 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:1090-1119, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py",
@@ -9165,7 +9083,7 @@
           "end_line": 1119,
           "prose_kind": "docstring"
         },
-        "similarity": 0.7875
+        "similarity": 1.0
       }
     },
     {
@@ -9174,7 +9092,7 @@
       "line": 1164,
       "end_line": 1185,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:1164-1185: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:1145-1166 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:1164-1185 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:1145-1166, similarity 0.828)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:1164-1185: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:1145-1166 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py:1164-1185 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/runs.py:1145-1166, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py",
@@ -9202,7 +9120,7 @@
           "end_line": 1166,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8275862068965517
+        "similarity": 1.0
       }
     },
     {
@@ -9211,7 +9129,7 @@
       "line": 46,
       "end_line": 70,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/store.py:46-70: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/store.py:46-70 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/store.py:46-70 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/store.py:46-70, similarity 0.892)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/store.py:46-70: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/store.py:46-70 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/store.py:46-70 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/store.py:46-70, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/store.py",
@@ -9239,7 +9157,44 @@
           "end_line": 70,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8918918918918919
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/store.py",
+      "line": 97,
+      "end_line": 131,
+      "prose_kind": "docstring",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/store.py:97-131: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/store.py:97-130 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/store.py:97-131 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/store.py:97-130, similarity 1.000)",
+      "locations": [
+        {
+          "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/store.py",
+          "line": 97,
+          "end_line": 131,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "langgraph/libs/sdk-py/langgraph_sdk/_sync/store.py",
+          "line": 97,
+          "end_line": 130,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/store.py",
+          "line": 97,
+          "end_line": 131,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "langgraph/libs/sdk-py/langgraph_sdk/_sync/store.py",
+          "line": 97,
+          "end_line": 130,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
       }
     },
     {
@@ -9248,7 +9203,7 @@
       "line": 152,
       "end_line": 172,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/store.py:152-172: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/store.py:152-172 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/store.py:152-172 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/store.py:152-172, similarity 0.803)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/store.py:152-172: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/store.py:152-172 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/store.py:152-172 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/store.py:152-172, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/store.py",
@@ -9276,7 +9231,7 @@
           "end_line": 172,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8032786885245902
+        "similarity": 1.0
       }
     },
     {
@@ -9285,7 +9240,7 @@
       "line": 192,
       "end_line": 239,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/store.py:192-239: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/store.py:192-238 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/store.py:192-239 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/store.py:192-238, similarity 0.911)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/store.py:192-239: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/store.py:192-238 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/store.py:192-239 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/store.py:192-238, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/store.py",
@@ -9313,7 +9268,7 @@
           "end_line": 238,
           "prose_kind": "docstring"
         },
-        "similarity": 0.910828025477707
+        "similarity": 1.0
       }
     },
     {
@@ -9322,7 +9277,7 @@
       "line": 266,
       "end_line": 300,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/store.py:266-300: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/store.py:265-300 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/store.py:266-300 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/store.py:265-300, similarity 0.790)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/store.py:266-300: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/store.py:265-300 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/store.py:266-300 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/store.py:265-300, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/store.py",
@@ -9350,7 +9305,7 @@
           "end_line": 300,
           "prose_kind": "docstring"
         },
-        "similarity": 0.7899159663865546
+        "similarity": 1.0
       }
     },
     {
@@ -9433,7 +9388,7 @@
       "line": 217,
       "end_line": 229,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/stream.py:217-229: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/stream.py:240-251 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/stream.py:217-229 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/stream.py:240-251, similarity 0.779)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/stream.py:217-229: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/stream.py:240-251 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/stream.py:217-229 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/stream.py:240-251, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/stream.py",
@@ -9461,7 +9416,7 @@
           "end_line": 251,
           "prose_kind": "docstring"
         },
-        "similarity": 0.7794117647058824
+        "similarity": 1.0
       }
     },
     {
@@ -9923,43 +9878,6 @@
     {
       "code": "TPX003",
       "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/stream.py",
-      "line": 992,
-      "end_line": 997,
-      "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/stream.py:992-997: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/stream.py:494-499 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/stream.py:992-997 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/stream.py:494-499, similarity 0.893)",
-      "locations": [
-        {
-          "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/stream.py",
-          "line": 992,
-          "end_line": 997,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "langgraph/libs/sdk-py/langgraph_sdk/_sync/stream.py",
-          "line": 494,
-          "end_line": 499,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/stream.py",
-          "line": 992,
-          "end_line": 997,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "langgraph/libs/sdk-py/langgraph_sdk/_sync/stream.py",
-          "line": 494,
-          "end_line": 499,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.8928571428571429
-      }
-    },
-    {
-      "code": "TPX003",
-      "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/stream.py",
       "line": 1076,
       "end_line": 1080,
       "prose_kind": "comment",
@@ -10117,7 +10035,7 @@
       "line": 1419,
       "end_line": 1436,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/stream.py:1419-1436: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/stream.py:1286-1303 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/stream.py:1419-1436 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/stream.py:1286-1303, similarity 0.906)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/stream.py:1419-1436: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/stream.py:1286-1303 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/stream.py:1419-1436 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/stream.py:1286-1303, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/stream.py",
@@ -10145,7 +10063,7 @@
           "end_line": 1303,
           "prose_kind": "docstring"
         },
-        "similarity": 0.9056603773584906
+        "similarity": 1.0
       }
     },
     {
@@ -10265,7 +10183,7 @@
       "line": 56,
       "end_line": 89,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:56-89: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:55-87 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:56-89 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:55-87, similarity 0.889)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:56-89: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:55-87 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:56-89 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:55-87, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py",
@@ -10293,7 +10211,7 @@
           "end_line": 87,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8888888888888888
+        "similarity": 1.0
       }
     },
     {
@@ -10302,7 +10220,7 @@
       "line": 113,
       "end_line": 143,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:113-143: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:111-141 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:113-143 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:111-141, similarity 0.906)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:113-143: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:111-141 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:113-143 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:111-141, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py",
@@ -10330,7 +10248,7 @@
           "end_line": 141,
           "prose_kind": "docstring"
         },
-        "similarity": 0.9064327485380117
+        "similarity": 1.0
       }
     },
     {
@@ -10339,7 +10257,7 @@
       "line": 224,
       "end_line": 249,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:224-249: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:220-245 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:224-249 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:220-245, similarity 0.912)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:224-249: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:220-245 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:224-249 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:220-245, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py",
@@ -10367,7 +10285,7 @@
           "end_line": 245,
           "prose_kind": "docstring"
         },
-        "similarity": 0.911504424778761
+        "similarity": 1.0
       }
     },
     {
@@ -10376,7 +10294,7 @@
       "line": 273,
       "end_line": 292,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:273-292: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:269-287 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:273-292 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:269-287, similarity 0.812)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:273-292: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:269-287 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:273-292 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:269-287, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py",
@@ -10404,7 +10322,7 @@
           "end_line": 287,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8125
+        "similarity": 1.0
       }
     },
     {
@@ -10413,7 +10331,7 @@
       "line": 313,
       "end_line": 350,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:313-350: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:308-344 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:313-350 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:308-344, similarity 0.942)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:313-350: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:308-344 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:313-350 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:308-344, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py",
@@ -10441,7 +10359,7 @@
           "end_line": 344,
           "prose_kind": "docstring"
         },
-        "similarity": 0.9418604651162791
+        "similarity": 1.0
       }
     },
     {
@@ -10487,7 +10405,7 @@
       "line": 417,
       "end_line": 436,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:417-436: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:408-427 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:417-436 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:408-427, similarity 0.811)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:417-436: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:408-427 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:417-436 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:408-427, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py",
@@ -10515,7 +10433,7 @@
           "end_line": 427,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8113207547169812
+        "similarity": 1.0
       }
     },
     {
@@ -10524,7 +10442,7 @@
       "line": 452,
       "end_line": 475,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:452-475: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:443-466 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:452-475 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:443-466, similarity 0.890)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:452-475: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:443-466 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:452-475 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:443-466, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py",
@@ -10552,7 +10470,7 @@
           "end_line": 466,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8901098901098901
+        "similarity": 1.0
       }
     },
     {
@@ -10571,7 +10489,7 @@
       "line": 495,
       "end_line": 594,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:495-594: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:486-584 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:495-594 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:486-584, similarity 0.903)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:495-594: TPX003 same explanation in 4 places: langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:632-670, langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:486-584, langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:622-657 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:495-594 ~ langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:632-670, similarity 0.750)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py",
@@ -10580,9 +10498,21 @@
           "prose_kind": "docstring"
         },
         {
+          "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py",
+          "line": 632,
+          "end_line": 670,
+          "prose_kind": "docstring"
+        },
+        {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py",
           "line": 486,
           "end_line": 584,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py",
+          "line": 622,
+          "end_line": 657,
           "prose_kind": "docstring"
         }
       ],
@@ -10594,49 +10524,49 @@
           "prose_kind": "docstring"
         },
         "second": {
-          "path": "langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py",
-          "line": 486,
-          "end_line": 584,
+          "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py",
+          "line": 632,
+          "end_line": 670,
           "prose_kind": "docstring"
         },
-        "similarity": 0.9029535864978903
+        "similarity": 0.75
       }
     },
     {
       "code": "TPX003",
       "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py",
-      "line": 632,
-      "end_line": 670,
+      "line": 698,
+      "end_line": 722,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:632-670: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:622-657 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:632-670 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:622-657, similarity 0.762)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:698-722: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:685-710 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:698-722 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:685-710, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py",
-          "line": 632,
-          "end_line": 670,
+          "line": 698,
+          "end_line": 722,
           "prose_kind": "docstring"
         },
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py",
-          "line": 622,
-          "end_line": 657,
+          "line": 685,
+          "end_line": 710,
           "prose_kind": "docstring"
         }
       ],
       "weakest": {
         "first": {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py",
-          "line": 632,
-          "end_line": 670,
+          "line": 698,
+          "end_line": 722,
           "prose_kind": "docstring"
         },
         "second": {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py",
-          "line": 622,
-          "end_line": 657,
+          "line": 685,
+          "end_line": 710,
           "prose_kind": "docstring"
         },
-        "similarity": 0.7619047619047619
+        "similarity": 1.0
       }
     },
     {
@@ -10645,7 +10575,7 @@
       "line": 794,
       "end_line": 816,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:794-816: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:771-794 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:794-816 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:771-794, similarity 0.896)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:794-816: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:771-794 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py:794-816 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/threads.py:771-794, similarity 1.000)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/threads.py",
@@ -10673,7 +10603,7 @@
           "end_line": 794,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8961038961038961
+        "similarity": 1.0
       }
     },
     {

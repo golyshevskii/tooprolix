@@ -235,8 +235,22 @@ pub struct ProseBlock {
     pub line_end: usize,
     /// The prose verbatim, as it appears in the file, markers and all.
     pub raw: String,
-    /// [`normalize`]d form of [`Self::raw`] — the string the detectors compare.
+    /// [`normalize`]d form of [`Self::raw`] — the whole block, and the unit
+    /// [`MIN_BLOCK_WORDS`] and the volume rules are measured in.
     pub normalized: String,
+    /// [`narrative`] form of [`Self::raw`] — the block **without** its API-reference scaffolding,
+    /// and the string `TPX003` compares.
+    ///
+    /// Equal to [`Self::normalized`] for every block that carries no `Args:`, `:param:`, fenced
+    /// example or doctest — which is every comment run, and most docstrings. Where the two differ,
+    /// the difference is exactly the text a duplicate finding could not have asked anyone to
+    /// delete.
+    ///
+    /// **Empty is a meaningful value**: a docstring that is nothing but a parameter table has no
+    /// explanation left to have been said twice, and [`crate::detect::duplicate::duplicates`] leaves
+    /// such a block out of the rule entirely. It still counts in full towards `TPX001`/`TPX002`,
+    /// which measure volume rather than repetition.
+    pub narrative: String,
 }
 
 impl ProseBlock {
@@ -309,6 +323,393 @@ pub fn normalize(text: &str) -> String {
         }
     }
     folded.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
+/// Google-style section headers, matched against a line's trimmed text **exactly**.
+///
+/// Closed and measured: every one of the six occurs in the six pinned checkouts (`Args:` 2 795,
+/// `Returns:` 2 261, `Raises:` 487, `Attributes:` 261, `Yields:` 39, `Keyword Args:` 31 — counted
+/// 2026-07-30 over `corpus/checkouts/**/*.py`). Headers that also occur and are deliberately **not**
+/// here — `Example:` 196, `Note:` 70, `Examples:` 40, `Notes:` 38 — are prose sections: what they
+/// contain is the callable's own explanation, and only the fenced blocks and doctests *inside* them
+/// are scaffolding, which [`narrative`] removes on their own grammar.
+///
+/// Documented aliases with **zero** corpus occurrences (`Arguments:`, `Keyword Arguments:`) are
+/// absent on purpose. Every omission here fails safe — an unrecognised header stays narrative, so
+/// the block keeps more text and the finding survives.
+const GOOGLE_SECTIONS: [&str; 6] = [
+    "Args:",
+    "Attributes:",
+    "Keyword Args:",
+    "Raises:",
+    "Returns:",
+    "Yields:",
+];
+
+/// `NumPy`-style section names, matched against the line **above a row of dashes**.
+///
+/// The underline is what makes this a grammar rather than a guess, and it is required: a bare
+/// `Returns` line with no dashes under it is narrative. Measured on the corpus, `NumPy` docstrings are
+/// nearly absent — **three** underlined section headers in all six checkouts (`crewAI` 1,
+/// `openai-agents-python` 2) — so this branch exists for the styles the rule promises to handle, not
+/// because the corpus leans on it.
+const NUMPY_SECTIONS: [&str; 6] = [
+    "Attributes",
+    "Keyword Arguments",
+    "Parameters",
+    "Raises",
+    "Returns",
+    "Yields",
+];
+
+/// reST / Sphinx info-field names, matched against the text between the first two colons.
+///
+/// The colon form is the whole test, which is what keeps the *inline* roles out: `:class:`,
+/// `:func:`, `:meth:`, `:exc:`, `:mod:` and `:data:` all start lines in this corpus (29, 12, 5, 3,
+/// 2, 1 occurrences) and none of them is a field entry — they are cross-references written inside a
+/// sentence, i.e. narrative. They are absent from this list for that reason and not by oversight.
+///
+/// Measured field entries in the corpus: `:param:` 292, `:rtype:` 62, `:return:` 35, `:returns:` 7,
+/// `:type:` 7, `:raises:` 5 — counted over the 3 913 `.py` files of the six checkouts at their
+/// `corpus/corpus.lock` pins, by the rule `sphinx_field` actually applies. The rest of the list is
+/// the remainder of the documented info-field set, and each is inert until a checkout uses it.
+///
+/// The first two figures were **293** and **8** before the review, counted with a regex that had not
+/// yet learned to tell a field from a role. The one line each lost is a role, so the correction and
+/// the fix in `sphinx_field` are the same discovery counted twice.
+const SPHINX_FIELDS: [&str; 20] = [
+    "arg",
+    "argument",
+    "cvar",
+    "except",
+    "exception",
+    "ivar",
+    "key",
+    "keyword",
+    "param",
+    "parameter",
+    "raise",
+    "raises",
+    "return",
+    "returns",
+    "rtype",
+    "type",
+    "var",
+    "vartype",
+    "yield",
+    "yields",
+];
+
+/// The [`SPHINX_FIELDS`] entries that take **no** argument, so `:name:` is their only legal form.
+///
+/// ⚠️ **Testing the name alone was a measured fail-open hole.** `sphinx_field` reads the first word
+/// between the colons, which is right for `:param buffer:` and wrong for everything here:
+/// `:return policy:` is not the `return` field, it is an *unlisted* field named `return policy`, and
+/// accepting it discarded the sentence after it. Measured on the real binary — a pair sharing that
+/// line scored 0.800 as prose and vanished once the field marker was added.
+///
+/// The split is docutils' own field-name grammar, not a guess: the argument-taking members name what
+/// they document (`:param x:`, `:type x:`, `:raises E:`), and these six document the callable's
+/// single return or its type, so there is nothing for an argument to name. An unrecognised shape
+/// stays narrative, which is the direction this whole module fails in.
+const SPHINX_FIELDS_WITHOUT_ARGUMENT: [&str; 6] =
+    ["return", "returns", "rtype", "vartype", "yield", "yields"];
+
+/// The block with its API-reference scaffolding removed, [`normalize`]d — what `TPX003` compares.
+///
+/// # Why a block is compared on less than it says
+///
+/// A duplicate-prose finding says "this explanation is written twice, delete or merge one copy".
+/// For a parameter table that advice cannot be taken: `help(post)` and `help(put)` each need their
+/// own, and merging them can only make the reference worse. Measured on the annotated sample
+/// (`corpus/annotations.md` §1.2–1.3), the templated `requests.post`/`put`/`patch` cluster scores
+/// **0.898** while a cluster annotated as genuine goes down to **0.750** — the two classes overlap,
+/// so no threshold separates them and the feature has to change instead.
+///
+/// # The grammar, which is closed and fails towards keeping findings
+///
+/// Removed, and nothing else is:
+///
+/// * **Google** — a line that is exactly one of `GOOGLE_SECTIONS`, plus every following line that
+///   is blank or indented deeper than the header;
+/// * **NumPy-style** — a line in `NUMPY_SECTIONS` underlined by a row of three or more dashes at the
+///   same indentation, plus its body up to the next underlined header or the next line indented less
+///   than the header;
+/// * **Sphinx / reST** — a line beginning `:name:` or `:name arg:` where `name` is in
+///   `SPHINX_FIELDS`, plus its deeper-indented continuation lines;
+/// * **examples** — a fenced block (an opening ```` ``` ```` through its closing fence) and a
+///   doctest run (a `>>>` line and the `>>>`/`...` lines that continue it).
+///
+/// **Anything the grammar does not recognise stays narrative.** That is the direction the whole
+/// function is biased in: an unknown section, an unterminated fence, a header spelled with a typo —
+/// each leaves *more* text in the comparison, which can only keep a finding, never invent one. The
+/// opposite bias would silence findings through a parser bug, with nothing in the output to say so.
+///
+/// A doctest's **output** lines are narrative, deliberately: `>>>` marks input and there is no
+/// marker for output, so classifying it would be a guess.
+///
+/// A comment run is narrative in full. The grammar is written for docstring bodies, and `# Args:`
+/// does not match `Args:` — which is why the two-line rationale copied between two `OpenHands` files
+/// (cluster #1, 0.885) is untouched by any of this.
+///
+/// # Known ceiling
+///
+/// A `NumPy` section is ended by the next *underlined* header, so a trailing paragraph written at the
+/// section's own indentation with no underline of its own is read as part of the section and
+/// removed. That is a malformed `NumPy` docstring, and with three underlined headers in the whole
+/// corpus the case is unmeasurable here; it is written down rather than left to be discovered.
+///
+/// # Examples
+///
+/// ```
+/// use tooprolix::extract::narrative;
+///
+/// let docstring = "\"\"\"Sends a POST request.\n\n    :param url: URL for the new request.\n    :rtype: requests.Response\n    \"\"\"";
+/// assert_eq!(narrative(docstring), "sends a post request");
+/// ```
+#[must_use]
+pub fn narrative(text: &str) -> String {
+    let lines: Vec<&str> = text.lines().collect();
+    let mut kept = String::with_capacity(text.len());
+    let mut position = 0;
+    // Indexed rather than iterated: every branch below decides how many lines to *skip*, and two of
+    // them look one line ahead (the NumPy underline, the fence's partner). A cursor states that
+    // directly; `perf-iter-over-index` is about walking a slice, which this is not.
+    while position < lines.len() {
+        // The doctest is handled here rather than in `scaffolding_at` because it is the one
+        // construct with BOTH halves: its input run is scaffolding and its output is narrative, and
+        // the output must be copied out **without** being offered to the section grammar. Handing it
+        // back was a measured fail-open hole — a doctest printing a line that reads `Args:` turned
+        // the explanation under it into a parameter table and suppressed a real finding.
+        if let Some((input_end, output_end)) = doctest_run(&lines, position) {
+            for line in &lines[input_end..output_end] {
+                kept.push_str(line);
+                kept.push('\n');
+            }
+            position = output_end;
+            continue;
+        }
+        if let Some(after) = scaffolding_at(&lines, position) {
+            debug_assert!(
+                after > position,
+                "a section must consume at least its header"
+            );
+            position = after;
+            continue;
+        }
+        kept.push_str(lines[position]);
+        kept.push('\n');
+        position += 1;
+    }
+    normalize(&kept)
+}
+
+/// The doctest starting at `start`, as `(end of the input run, end of its output)`.
+///
+/// Both boundaries are `doctest`'s own, not invented here: a `>>>` line opens the example, `...`
+/// continues it, and the expected output that follows runs until a blank line or the next `>>>`
+/// (`doctest` — "How are Docstring Examples Recognized?").
+///
+/// The two halves are returned separately because they are treated differently — the input is
+/// discarded, the output is kept as narrative. `>>>` marks input and nothing marks output, so
+/// classifying the output as part of the example would be a guess, and a guess here silences
+/// findings.
+///
+/// The prompt test is [`is_prompt`], not a bare `starts_with`: see its rustdoc for the sentence
+/// `doctest` refuses to parse and this function used to eat.
+fn doctest_run(lines: &[&str], start: usize) -> Option<(usize, usize)> {
+    if !is_prompt(lines[start].trim(), ">>>") {
+        return None;
+    }
+    let mut input_end = start + 1;
+    while let Some(line) = lines.get(input_end) {
+        let text = line.trim();
+        if !(is_prompt(text, ">>>") || is_prompt(text, "...")) {
+            break;
+        }
+        input_end += 1;
+    }
+    let mut output_end = input_end;
+    while let Some(line) = lines.get(output_end) {
+        let text = line.trim();
+        if text.is_empty() || text.starts_with(">>>") {
+            break;
+        }
+        output_end += 1;
+    }
+    Some((input_end, output_end))
+}
+
+/// Whether `trimmed` opens with `marker` used as a `doctest` prompt rather than as ordinary text.
+///
+/// The marker must be followed by **whitespace or the end of the line**, which is `doctest`'s own
+/// rule and not a tightening invented here: `DocTestParser` raises a `ValueError` reading
+/// "lacks blank after" the prompt when a line runs text straight into it, so such a line is
+/// definitionally not an example.
+///
+/// ⚠️ **`starts_with` alone was a measured fail-open hole.** A sentence beginning `>>>The caller
+/// keeps ownership…` was discarded as example input, and a pair sharing it went from a finding to
+/// silence — the tool deleting prose that Python itself refuses to read as a prompt.
+fn is_prompt(trimmed: &str, marker: &str) -> bool {
+    trimmed
+        .strip_prefix(marker)
+        .is_some_and(|rest| rest.is_empty() || rest.starts_with(char::is_whitespace))
+}
+
+/// Indentation width of a line — the depth the section grammars compare.
+///
+/// A tab advances to the next multiple of **eight**, which is not a choice made here: it is what
+/// `str.expandtabs()` and the `CPython` tokenizer do, so it is the width the Python source itself is
+/// written against.
+///
+/// ⚠️ **Counting characters instead was a measured defect, in the fail-closed direction.** A `\t`
+/// read as one column, so a tab-indented `Args:` entry measured *shallower* than its own four-space
+/// header, the section ended at its first line and the table stayed in the comparison — the
+/// update/delete docstring pair scored 0.933 with a tab-indented entry against 0.800 with the
+/// byte-identical eight-space one. The rule silently did not apply to tab-indented code.
+///
+/// ⚠️ **A form feed RESETS the column, and getting that wrong re-armed suppression in a new shape.**
+/// The tab fix above counted `\f` as one more column, so `\t\f` measured **9** against a four-space
+/// header and a genuine paragraph was absorbed into the section body — a finding that scored 0.800
+/// under the previous character-counting code and vanished under the fix. `CPython`'s tokenizer
+/// treats a form feed as a column reset, and so does this: the two rules come from the same place,
+/// and taking one without the other is what created the regression.
+fn indent_of(line: &str) -> usize {
+    let mut width = 0;
+    for character in line.chars() {
+        match character {
+            '\x0c' => width = 0,
+            '\t' => width += 8 - width % 8,
+            _ if character.is_whitespace() => width += 1,
+            _ => break,
+        }
+    }
+    width
+}
+
+/// The index just past the scaffolding section starting at `start`, or `None` when nothing does.
+///
+/// `None` is the fail-safe answer and every branch returns it rather than guessing: the caller then
+/// keeps the line as narrative.
+fn scaffolding_at(lines: &[&str], start: usize) -> Option<usize> {
+    let line = lines[start];
+    let trimmed = line.trim();
+
+    if trimmed.starts_with("```") {
+        // An *unterminated* fence is not a fence. Swallowing to the end of the block on a stray
+        // backtick run is exactly the "parser silently ate the prose" failure this function refuses.
+        let close = lines[start + 1..]
+            .iter()
+            .position(|following| following.trim().starts_with("```"))?;
+        return Some(start + 1 + close + 1);
+    }
+
+    // Doctests are NOT here — see `doctest_run`, which [`narrative`] calls first. They are the one
+    // construct whose tail has to be kept rather than skipped, and this function can only skip.
+
+    if GOOGLE_SECTIONS.contains(&trimmed) {
+        return Some(indented_body(lines, start + 1, indent_of(line)));
+    }
+
+    if let Some(name) = underlined_header(lines, start) {
+        // An underlined header we do not know — `Notes`, `See Also` — is narrative, and so is
+        // everything under it. Returning `None` here is what keeps that true.
+        return NUMPY_SECTIONS
+            .contains(&name)
+            .then(|| numpy_body(lines, start + 2, indent_of(line)));
+    }
+
+    if sphinx_field(trimmed).is_some() {
+        return Some(indented_body(lines, start + 1, indent_of(line)));
+    }
+
+    None
+}
+
+/// The index just past a block of lines that are blank or indented deeper than `header_indent`.
+fn indented_body(lines: &[&str], from: usize, header_indent: usize) -> usize {
+    let mut position = from;
+    while let Some(line) = lines.get(position) {
+        if !line.trim().is_empty() && indent_of(line) <= header_indent {
+            break;
+        }
+        position += 1;
+    }
+    position
+}
+
+/// The index just past a `NumPy` section body, which sits at the section header's own indentation.
+///
+/// Ended by the next underlined header — known or not — or by a line indented less than the header.
+/// See the "Known ceiling" section of [`narrative`].
+fn numpy_body(lines: &[&str], from: usize, header_indent: usize) -> usize {
+    let mut position = from;
+    while let Some(line) = lines.get(position) {
+        if !line.trim().is_empty() && indent_of(line) < header_indent {
+            break;
+        }
+        if underlined_header(lines, position).is_some() {
+            break;
+        }
+        position += 1;
+    }
+    position
+}
+
+/// The header name at `start`, if the line below it is a row of dashes **as long as the name** at
+/// the same indentation.
+///
+/// The dashes are the grammar: without them `Returns` is an English word, and this function is the
+/// only thing that stops the `NumPy` branch from eating one.
+///
+/// ⚠️ **The length must match, and accepting any run of three or more was a measured fail-open
+/// hole.** `numpydoc` underlines a section with exactly as many dashes as the name has characters,
+/// and `pydocstyle` D409 checks that; a mismatched row is a malformed docstring, not a section.
+/// Under the loose test, `Parameters` over three dashes was read as a section and swallowed the
+/// explanation below it — measured as a real cross-file finding disappearing, with the tool printing
+/// `All checks passed!`.
+fn underlined_header<'a>(lines: &[&'a str], start: usize) -> Option<&'a str> {
+    let header = lines[start];
+    let name = header.trim();
+    if name.is_empty() {
+        return None;
+    }
+    let underline = lines.get(start + 1)?;
+    let dashes = underline.trim();
+    (dashes.chars().count() == name.chars().count()
+        && dashes.bytes().all(|byte| byte == b'-')
+        && indent_of(underline) == indent_of(header))
+    .then_some(name)
+}
+
+/// The reST info-field name a line opens with, if it opens with one.
+///
+/// `:param url: …` and `:rtype: …` are entries; `` :class:`Request` `` is a cross-reference inside a
+/// sentence and returns `None`, because `class` is not in [`SPHINX_FIELDS`].
+///
+/// ⚠️ **The closed list is not enough on its own, and assuming it was is a measured fail-open
+/// hole.** Six of the names here are *also* interpreted-text roles — `` :return:`the buffer` ``
+/// reads as the field `return` under a name test alone, and the whole sentence after it was
+/// swallowed as a field body. Measured: a shared explanation written that way scored 0.760 as plain
+/// prose and vanished entirely once the role was added.
+///
+/// The discriminator is docutils' own: a field marker is `:name:` followed by **whitespace or the
+/// end of the line**, while a role's backtick follows the closing colon immediately. That is a
+/// grammar rather than a heuristic, and it declines in the safe direction — an ambiguous line stays
+/// narrative.
+fn sphinx_field(trimmed: &str) -> Option<&str> {
+    let (inside, after) = trimmed.strip_prefix(':')?.split_once(':')?;
+    if !(after.is_empty() || after.starts_with(char::is_whitespace)) {
+        return None;
+    }
+    let mut words = inside.split_whitespace();
+    let name = words.next()?;
+    // A field that takes no argument has to BE its name — see `SPHINX_FIELDS_WITHOUT_ARGUMENT`.
+    // Without this, `:return policy:` is read as the `return` field and its sentence is discarded.
+    if words.next().is_some() && SPHINX_FIELDS_WITHOUT_ARGUMENT.contains(&name) {
+        return None;
+    }
+    SPHINX_FIELDS.contains(&name).then_some(name)
 }
 
 /// Whether [`extract`] reads prose from `path` — decided by the extension, and by nothing else.
@@ -605,6 +1006,7 @@ fn block(
         line_start: index.line_index(range.start()).get(),
         line_end: index.line_index(range.end()).get(),
         normalized: normalize(&raw),
+        narrative: narrative(&raw),
         raw,
     }
 }
@@ -615,7 +1017,9 @@ mod tests {
 
     use insta::assert_debug_snapshot;
 
-    use super::{MIN_BLOCK_LINES, MIN_BLOCK_WORDS, ProseBlock, ProseKind, extract, normalize};
+    use super::{
+        MIN_BLOCK_LINES, MIN_BLOCK_WORDS, ProseBlock, ProseKind, extract, narrative, normalize,
+    };
 
     const SAMPLE_PY: &str = include_str!("../tests/fixtures/extract/sample.py");
 
@@ -632,6 +1036,16 @@ mod tests {
         let extracted = blocks("tests/fixtures/extract/sample.py", SAMPLE_PY);
 
         assert_debug_snapshot!(extracted);
+        // The snapshot is the artifact, and this is the one thing a reader could mistake in it:
+        // `narrative` equals `normalized` for six of the seven blocks because those six carry no
+        // scaffolding, not because the two fields are the same field. Exactly one block — the last
+        // — has an `Args:`/`Returns:` table, and asserting the split here keeps the fixture from
+        // drifting back into a corpus where the distinction is invisible.
+        let split = extracted
+            .iter()
+            .filter(|block| block.narrative != block.normalized)
+            .count();
+        assert_eq!(split, 1, "got {extracted:?}");
     }
 
     /// AC2 — the same sentence written with different line breaks and indentation must normalise to
@@ -888,6 +1302,7 @@ mod tests {
             line_end: 2,
             raw: String::new(),
             normalized: String::new(),
+            narrative: String::new(),
         };
 
         assert_eq!(block.size_lines(), 1);
@@ -1081,5 +1496,326 @@ mod tests {
                 "{path}: got {error}"
             );
         }
+    }
+
+    /// AC1, Google — a section header from the closed list takes its indented body with it.
+    ///
+    /// Bytes shaped like `crewAI/lib/crewai/src/crewai/agent/core.py:766-780`, cluster #20 of
+    /// `corpus/annotations.md` §1.2: three sections, one of them `Raises:` with several entries, and
+    /// a summary line that has to come back untouched.
+    #[test]
+    fn a_google_section_takes_its_indented_body_with_it() {
+        // Arrange
+        let docstring = "\"\"\"Execute a task with the agent.\n\n\
+                         Args:\n\
+                         \x20   task: Task to execute.\n\
+                         \x20   context: Context to execute the task in.\n\n\
+                         Returns:\n\
+                         \x20   Output of the agent\n\n\
+                         Raises:\n\
+                         \x20   TimeoutError: If execution exceeds the maximum execution time.\n\
+                         \x20   ValueError: If the max execution time is not a positive integer.\n\
+                         \"\"\"";
+
+        // Act
+        let kept = narrative(docstring);
+
+        // Assert
+        assert_eq!(kept, "execute a task with the agent");
+        assert!(
+            normalize(docstring).contains("timeouterror"),
+            "the fixture must carry the sections the assertion says are gone"
+        );
+    }
+
+    /// AC1, Sphinx/reST — a `:field:` entry takes its deeper-indented continuation lines with it,
+    /// and an inline cross-reference role is **not** a field entry.
+    ///
+    /// Bytes from `requests/src/requests/api.py:123-132`, cluster #12 at 0.898. The `:class:` line
+    /// is the distinction that matters: `:class:` opens a sentence, `:param:` opens a table row, and
+    /// only the closed list in [`SPHINX_FIELDS`] separates them.
+    #[test]
+    fn a_sphinx_field_takes_its_continuation_lines_but_a_role_is_narrative() {
+        // Arrange
+        let docstring = "r\"\"\"Sends a POST request.\n\n\
+                         :param url: URL for the new :class:`Request` object.\n\
+                         :param data: (optional) Dictionary, list of tuples, bytes, or file-like\n\
+                         \x20   object to send in the body of the :class:`Request`.\n\
+                         :return: :class:`Response <Response>` object\n\
+                         :rtype: requests.Response\n\
+                         \"\"\"";
+        let role_only = ":class:`Response` is returned whenever the server answers at all.";
+
+        // Act & Assert
+        assert_eq!(narrative(docstring), "r sends a post request");
+        assert_eq!(narrative(role_only), normalize(role_only));
+    }
+
+    /// AC1, `NumPy` — a section is recognised by its row of dashes, and by nothing else.
+    ///
+    /// The second half is the whole point: strip the underline and `Returns` is an English word in a
+    /// sentence, so the same text must come back whole. Measured, `NumPy` is nearly absent from the
+    /// corpus (three underlined headers in six checkouts), so this branch is defended by this test
+    /// and not by the corpus.
+    #[test]
+    fn a_numpy_section_is_recognised_by_its_underline_and_only_by_it() {
+        // Arrange
+        let underlined = "\"\"\"Summarise the run.\n\n\
+                          Parameters\n\
+                          ----------\n\
+                          config : Mapping\n\
+                          \x20   The configuration to summarise.\n\n\
+                          Notes\n\
+                          -----\n\
+                          The summary is advisory only.\n\
+                          \"\"\"";
+        let unmarked = "\"\"\"Summarise the run.\n\n\
+                        Parameters\n\
+                        config : Mapping\n\
+                        \"\"\"";
+
+        // Act & Assert — `Notes` is not in the closed list, so it and its body stay narrative.
+        assert_eq!(
+            narrative(underlined),
+            "summarise the run notes the summary is advisory only"
+        );
+        assert_eq!(narrative(unmarked), normalize(unmarked));
+    }
+
+    /// AC1, examples — a fenced block and a doctest run are scaffolding; a doctest's output is not.
+    ///
+    /// Bytes shaped like `pydantic-core/python/pydantic_core/core_schema.py:726-748` (cluster #11)
+    /// and `langgraph/.../postgres/__init__.py:193-226` (cluster #3). Output lines stay because
+    /// `>>>` marks input and nothing marks output — classifying it would be a guess, and a guess in
+    /// this function silences findings.
+    #[test]
+    fn a_fenced_block_and_a_doctest_are_not_narrative_but_the_output_is() {
+        // Arrange
+        let fenced = "\"\"\"Returns a schema that matches a float value.\n\n\
+                      ```py\n\
+                      schema = core_schema.float_schema(le=0.8)\n\
+                      ```\n\
+                      \"\"\"";
+        // The `...` line is a PS2 continuation and is load-bearing in this fixture: the review
+        // found that deleting the `...` arm of the doctest branch reddened NOTHING, because the
+        // only line here that looked like one — `CheckpointTuple(...)` — starts with a `C`. A guard
+        // no test can fail is not a guard.
+        let doctest = "\"\"\"Get a checkpoint tuple from the database.\n\n\
+                       Examples:\n\
+                       \x20   >>> config = {\n\
+                       \x20   ...     \"thread_id\": \"1\",\n\
+                       \x20   ... }\n\
+                       \x20   >>> print(checkpoint_tuple)\n\
+                       \x20   CheckpointTuple(...)\n\
+                       \"\"\"";
+
+        // 🔴 The regression the review measured: doctest output was handed back to the section
+        // grammar, so an example that PRINTS something reading `Args:` turned the explanation under
+        // it into a parameter table and the finding disappeared. This case cannot live in the
+        // "narrative unchanged" table next door, because the `>>>` line itself is scaffolding and is
+        // correctly removed — so the expectation is written out.
+        let printing_a_section_header = "\"\"\"Do the thing.\n\n\
+                                         >>> print_contract()\n\
+                                         Args:\n\
+                                         \x20   the caller keeps ownership of the buffer.\n\
+                                         \"\"\"";
+
+        // Act & Assert
+        assert_eq!(
+            narrative(fenced),
+            "returns a schema that matches a float value"
+        );
+        assert_eq!(
+            narrative(doctest),
+            "get a checkpoint tuple from the database examples checkpointtuple"
+        );
+        assert_eq!(
+            narrative(printing_a_section_header),
+            "do the thing args the caller keeps ownership of the buffer",
+            "the output of a doctest was re-parsed as a section"
+        );
+    }
+
+    /// 🔴 **The invariant, stated once for every shape that could break it: a construct the grammar
+    /// does not recognise — or recognises as malformed — leaves the narrative unchanged.**
+    ///
+    /// This is a *class* test and it is deliberately table-driven. The first review round of
+    /// `exclude-reference-scaffolding-from-tpx003` found **three separate fail-open holes** in one
+    /// pass, each one a different branch swallowing genuine prose and silently suppressing a real
+    /// finding. Three instances of one class means the class needs a guard, not three patches, and
+    /// the rows below are that guard: every new branch of [`narrative`] adds its malformed shape
+    /// here.
+    ///
+    /// The direction is the whole point. Keeping too much text can only preserve a finding; dropping
+    /// too much deletes one, and deletes it invisibly — nothing in the tool's output says "a parser
+    /// ate this". Every row is a case where the parser must decline.
+    #[test]
+    fn a_malformed_or_unrecognised_construct_leaves_the_narrative_unchanged() {
+        // Arrange — (what it is, the fixture). Rows 1-3 were green before the review; rows 4-6 are
+        // the three holes it found, each one measured as a suppressed finding on the real binary.
+        let cases = [
+            (
+                "a section header outside the closed list",
+                "\"\"\"Do the thing.\n\n\
+                 Note:\n\
+                 \x20   The caller keeps ownership of the buffer.\n\
+                 \"\"\"",
+            ),
+            (
+                "a header that is nearly, but not, one from the list",
+                "\"\"\"Do the thing.\n\n\
+                 Arguments:\n\
+                 \x20   buffer: the caller keeps ownership.\n\
+                 \"\"\"",
+            ),
+            (
+                "a fence that is never closed",
+                "\"\"\"Do the thing.\n\n\
+                 ```py\n\
+                 never_closed = True\n\
+                 \"\"\"",
+            ),
+            (
+                "a NumPy underline shorter than its header",
+                "\"\"\"Do the thing.\n\n\
+                 Parameters\n\
+                 ---\n\
+                 The caller keeps ownership of the buffer, which is the whole contract here.\n\
+                 \"\"\"",
+            ),
+            (
+                "a NumPy underline longer than its header",
+                "\"\"\"Do the thing.\n\n\
+                 Returns\n\
+                 ------------\n\
+                 The caller keeps ownership of the buffer, which is the whole contract here.\n\
+                 \"\"\"",
+            ),
+            (
+                "a reST role on one line, which is a cross-reference and not a field entry",
+                "\"\"\"Do the thing.\n\n\
+                 :return:`the buffer` is handed back with ownership, which is the whole contract.\n\
+                 \"\"\"",
+            ),
+            // Rows 7-9 come from the SECOND review round, on the commit that fixed rows 4-6. Each
+            // was measured as a suppressed finding on the real binary, and row 8 was a regression
+            // that the row-6 fix introduced — which is why this table grows instead of being
+            // replaced: the shapes that are already closed have to stay closed.
+            (
+                "a `>>>` with no blank after it, which `doctest` itself rejects",
+                "\"\"\"Do the thing.\n\n\
+                 >>>The caller keeps ownership of the buffer, which is the whole contract here.\n\
+                 \"\"\"",
+            ),
+            (
+                "a field name carrying an argument the reST field does not take",
+                "\"\"\"Do the thing.\n\n\
+                 :return policy: the caller keeps ownership of the buffer, the whole contract here.\n\
+                 \"\"\"",
+            ),
+        ];
+
+        // Act — every row, not the first failing one. A table that stops at row four hides rows
+        // five to seven, and this class was found three instances at a time.
+        let swallowed: Vec<&str> = cases
+            .into_iter()
+            .filter(|(_, text)| narrative(text) != normalize(text))
+            .map(|(what, _)| what)
+            .collect();
+
+        // Assert
+        assert!(
+            swallowed.is_empty(),
+            "the parser swallowed narrative on {} of {} shapes: {swallowed:#?}",
+            swallowed.len(),
+            cases.len()
+        );
+    }
+
+    /// A form feed ends the section body rather than deepening it, so the prose after it survives.
+    ///
+    /// 🔴 **This is the regression the tab fix introduced, and it is why it has its own test.** It
+    /// cannot join the "narrative unchanged" table next door: the fixture carries a *real* `Args:`
+    /// section, which is correctly discarded, so the invariant there does not apply and the
+    /// expectation has to be written out.
+    ///
+    /// Measured on the real binary across three revisions of this function: character-counting gave
+    /// the `\t\x0c` line width 2, below the four-space header, and the paragraph survived (0.800);
+    /// counting a tab as eight *and a form feed as one more* gave it 9, above the header, and the
+    /// paragraph was swallowed into the parameter table (silence); resetting the column at the form
+    /// feed, as `CPython`'s tokenizer does, restores it.
+    #[test]
+    fn a_form_feed_resets_the_column_so_the_paragraph_after_it_is_narrative() {
+        // Arrange — a genuine `Args:` section, then a paragraph indented with a tab and a form feed.
+        let text = "\"\"\"Do the thing.\n\n\
+                    \x20   Args:\n\
+                    \x20       buffer: a knob\n\n\
+                    \t\x0cThe caller keeps ownership of the buffer, which is the whole contract.\n\
+                    \"\"\"";
+
+        // Act
+        let narrative = narrative(text);
+
+        // Assert — the table goes, the paragraph stays.
+        assert!(
+            !narrative.contains("knob"),
+            "the parameter table survived: {narrative}"
+        );
+        assert!(
+            narrative.contains("the caller keeps ownership of the buffer"),
+            "the form-feed paragraph was swallowed into the section body: {narrative}"
+        );
+    }
+
+    /// A tab-indented section body is scaffolding, exactly like a space-indented one.
+    ///
+    /// Found in the same review round and it is the *other* direction — a fail-**closed** hole. A
+    /// tab counted as one character of indentation, so a `\t`-indented entry measured **shallower**
+    /// than its own four-space `Args:` header, the section ended at its first line, and the table
+    /// stayed in the comparison. Measured on the real binary: the update/delete docstring pair
+    /// scored **0.933** with a tab-indented entry against **0.800** with the byte-identical
+    /// eight-space one — i.e. the rule silently did not apply to tab-indented code.
+    ///
+    /// The fix is Python's own rule, not an invention: a tab advances to the next multiple of eight,
+    /// which is what `str.expandtabs()` and the `CPython` tokenizer do.
+    #[test]
+    fn a_tab_indented_section_body_is_scaffolding_like_a_space_indented_one() {
+        // Arrange — the same docstring twice, differing only in how the entry is indented.
+        let tabbed = "\"\"\"Update a webhook entry based on project_id or group_id.\n\n\
+                      \x20   Args:\n\
+                      \twebhook: object containing the updated fields and either project_id\n\
+                      \tor group_id as the identifier.\n\
+                      \x20   \"\"\"";
+        let spaced = "\"\"\"Update a webhook entry based on project_id or group_id.\n\n\
+                      \x20   Args:\n\
+                      \x20       webhook: object containing the updated fields and either project_id\n\
+                      \x20       or group_id as the identifier.\n\
+                      \x20   \"\"\"";
+
+        // Act & Assert
+        let expected = "update a webhook entry based on project id or group id";
+        assert_eq!(narrative(spaced), expected, "the control must strip");
+        assert_eq!(
+            narrative(tabbed),
+            expected,
+            "the tab-indented entry survived"
+        );
+    }
+
+    /// A comment run is narrative in full — which is why cluster #1 is untouched.
+    ///
+    /// The grammar is written for docstring bodies and matches a line's trimmed text, so `# Args:`
+    /// is not `Args:`. Stated as a test because it is load-bearing: comment runs are where the
+    /// annotated sample's clearest genuine findings live, and none of them may move.
+    #[test]
+    fn a_comment_run_is_narrative_in_full() {
+        // Arrange — every marker the grammar knows, behind a `#`.
+        let run = "# Args:\n\
+                   #     the retry budget here is deliberately small\n\
+                   # :param timeout: and that matters, because the upstream\n\
+                   # >>> service rate limits us on every fourth call\n";
+
+        // Act & Assert
+        assert_eq!(narrative(run), normalize(run));
     }
 }

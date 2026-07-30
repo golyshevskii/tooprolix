@@ -29,6 +29,60 @@ one-line prose never produces a finding: measured on the reference corpus, the o
 of exact duplicate pairs are one-line blocks like `"""Initialize the class."""`, and counting them
 would bury every real result.
 
+### What `TPX003` compares: narrative prose, not the reference scaffolding
+
+`TPX003` does not compare the whole block. It compares the **narrative** — the block with its
+API-reference scaffolding discarded first — because a finding says *"this explanation is written
+twice, delete or merge one copy"*, and for a parameter table that advice cannot be taken. `help(post)`
+and `help(put)` each need their own table, so merging them can only make the reference worse.
+
+Measured on a hand-annotated sample (`corpus/annotations.md` §1.2–1.3): the templated
+`requests.post`/`put`/`patch` docstrings, which repeat byte for byte apart from the HTTP verb, score
+**0.898**, while a cluster annotated as a genuine finding goes down to **0.750**. The two classes
+overlap, so no similarity threshold separates them — which is why the rule compares less rather than
+demanding more.
+
+Discarded, and nothing else is:
+
+| Style | What is discarded |
+| --- | --- |
+| Google | a line that is exactly `Args:`, `Attributes:`, `Keyword Args:`, `Raises:`, `Returns:` or `Yields:`, plus the blank and deeper-indented lines under it |
+| Sphinx / reST | a line opening `:param …:`, `:type …:`, `:return:`, `:returns:`, `:rtype:`, `:raise…:`, `:key…:`, `:var…:`, `:except…:` or `:yield…:`, plus its deeper-indented continuation lines. The closing colon must be followed by whitespace or the end of the line, and the six names that take no argument (`:return:`, `:returns:`, `:rtype:`, `:vartype:`, `:yield:`, `:yields:`) must stand alone — `` :return:`x` `` is a role and `:return policy:` is an unlisted field, and both stay narrative |
+| NumPy | `Parameters`, `Returns`, `Raises`, `Yields`, `Attributes` or `Keyword Arguments` **underlined by a row of dashes exactly as long as the name** at the same indentation, plus its body up to the next underlined header. A mismatched underline is a malformed docstring, not a section, and the whole thing stays narrative |
+| Examples | a fenced ` ``` ` block through its closing fence, and a `>>>` doctest run together with the `>>>`/`...` lines that continue it. A prompt must be followed by whitespace or end the line — `>>>text` is what `doctest` itself refuses to parse, so it stays narrative. The example's **output** is narrative and is kept |
+
+Everything else stays narrative, on purpose and in this direction on purpose:
+
+- a section header outside those lists — `Example:`, `Note:`, `Notes:`, `See Also` — is prose about
+  the callable, and so is its body;
+- an *inline* reST role such as ``:class:`Response` `` opening a line is a cross-reference inside a
+  sentence, not a field entry;
+- a `Returns` line with no dashes under it is an English word, not a NumPy section;
+- an unterminated fence is not a fence;
+- a comment run is narrative in full — the grammar reads a line's trimmed text, and `# Args:` is not
+  `Args:`.
+
+Every one of those is a case the parser does **not** recognise, and each one keeps more text in the
+comparison. That bias is deliberate: an unrecognised construct can then only preserve a finding,
+never invent one. The opposite bias would delete findings through a parser bug with nothing in the
+output to say so.
+
+A block whose narrative is shorter than **three words** — a docstring that is nothing but a parameter
+table, or one left with a bare `Send.` — takes no part in `TPX003` at all: once the table is
+discarded there is not enough explanation left to have been said twice. Three is the shingle width,
+so it is also the point below which the two comparison paths could not agree: a shorter text produces
+no shingle at all. Such a block still counts in full towards `TPX001` and `TPX002`, which measure
+volume rather than repetition.
+
+⚠️ **What this floor does not do.** Two unrelated callables whose narratives are the *same* templated
+summary of three words or more are still reported as one finding. That is the templated-summary
+class described in `corpus/annotations.md` §1.5, and §1.5 records the measurement showing it cannot
+be separated by raising the similarity threshold either — a genuine finding sits at the same score.
+Closing it needs a rule about templated summary lines, which is a judgement rather than a grammar.
+
+The grammar lives in one function, `extract::narrative`, and its unit tests carry one case per style
+plus the fail-safe cases above.
+
 ### Reserved rules
 
 `TPX004` is reserved rather than disabled: evaluation on the reference corpus could not find a

@@ -107,14 +107,34 @@ done
 # `crewAI` appears twice because it is one checkout measured at two roots, so the table has seven
 # rows over the six checkouts `corpus/corpus.lock` pins.
 # name | walk root | checkout | exit | .py walked | skipped | TPX001 | TPX002 | TPX003
+#
+# 🔴 The TPX003 column moved with `exclude-reference-scaffolding-from-tpx003` and the old numbers
+# are kept here so the change is legible rather than merely applied. TPX003 now compares the
+# NARRATIVE remainder of a block, so a docstring that repeats only its parameter table is no longer
+# a finding, and two docstrings whose summaries match once their tables are gone become an *exact*
+# cluster instead of a near one. Measured 2026-07-30 with the checkouts outside
+# `/Users/vgolyshevskii/dwh`:
+#
+#   repo                  TPX003 before -> after   near before -> after   exact before -> after
+#   OpenHands                     65 -> 64                28 -> 21               37 -> 43
+#   crewAI-full                  118 -> 127               81 -> 73               37 -> 54
+#   crewAI                        90 -> 94                58 -> 51               32 -> 43
+#   langgraph                    264 -> 260               88 -> 47              176 -> 213
+#   openai-agents-python          70 -> 72                13 -> 12               57 -> 60
+#   pydantic                     120 -> 121               31 -> 27               89 -> 94
+#   requests                       8 -> 6                  6 -> 2                 2 -> 4
+#
+# TPX001 and TPX002 are unchanged in every row, which is the check that the change stayed inside
+# the duplicate rule: `narrative` is a second field beside `normalized`, and volume still counts the
+# whole block.
 readonly EXPECTED=(
-	"OpenHands|OpenHands|OpenHands|1|914|0|3|12|65"
-	"crewAI-full|crewAI|crewAI|1|1269|5|0|21|118"
-	"crewAI|crewAI/lib/crewai|crewAI|1|754|0|0|16|90"
-	"langgraph|langgraph|langgraph|1|445|0|2|74|264"
-	"openai-agents-python|openai-agents-python|openai-agents-python|1|834|0|2|14|70"
-	"pydantic|pydantic|pydantic|1|404|0|1|46|120"
-	"requests|requests|requests|1|37|0|0|3|8"
+	"OpenHands|OpenHands|OpenHands|1|914|0|3|12|64"
+	"crewAI-full|crewAI|crewAI|1|1269|5|0|21|127"
+	"crewAI|crewAI/lib/crewai|crewAI|1|754|0|0|16|94"
+	"langgraph|langgraph|langgraph|1|445|0|2|74|260"
+	"openai-agents-python|openai-agents-python|openai-agents-python|1|834|0|2|14|72"
+	"pydantic|pydantic|pydantic|1|404|0|1|46|121"
+	"requests|requests|requests|1|37|0|0|3|6"
 )
 
 # The five files `crewAI` ships as `.py` and the parser rejects — Jinja templates. Asserted by name
