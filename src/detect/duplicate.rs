@@ -197,12 +197,18 @@ type Shingle<'a> = [&'a str; SHINGLE_K];
 /// the hot path — so the cost model the advice is about does not apply.
 ///
 /// **Measured, on the case that owns the wall-clock budget** (2 000 files whose prose header
-/// differs in one token, `tests/adversarial_bench.rs`): the detect stage went from **5.97 s to
-/// 2.33 s**, a 2.57x improvement, and the whole run from 7.81 s to 4.22 s — from over the
-/// `< 5 s / 100 000 lines` budget to inside it. On the six pinned corpus checkouts, where the
-/// candidate index already removes ~97% of the pairs, the same change measures **neutral**
-/// (0.87x–1.11x, i.e. inside the noise): the pairs it makes cheaper are pairs those repositories
-/// barely score. Output is byte-identical on all six, which is the gate this change had to pass.
+/// differs in one token, 100 000 lines — `tests/adversarial_bench.rs`, whose module documentation
+/// carries the full table these figures are read off): the detect stage went from **6.12–6.25 s to
+/// 2.46–2.71 s** and the whole run from **6.26–6.38 s to 2.59–2.87 s**, taking it from *over* the
+/// `< 5 s / 100 000 lines` budget to inside it. Ranges rather than points because the same machine
+/// reproduces a median only to about 6%.
+///
+/// On the six pinned corpus checkouts, where the candidate index already removes ~97% of the
+/// pairs, the same change measures **neutral** end-to-end (**0.96x–1.12x**, five runs each): the
+/// pairs it makes cheaper are pairs those repositories barely score. Output is byte-identical on
+/// all six — 823 findings, 1 008 216 bytes, `diff` clean — which is the gate this change had to
+/// pass, and `comparisons` is unchanged at every size, which is how "the same pairs are still
+/// scored" is known rather than hoped.
 ///
 /// Sorting is `O(w log w)` **once per block** against `C(n, 2)` scorings, so it is bought back
 /// immediately. A hash of the gram was rejected: it would make the comparison cheaper still and

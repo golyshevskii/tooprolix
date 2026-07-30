@@ -31,9 +31,9 @@
 //!
 //! | files | lines | comparisons | budget | before | after | detect before | detect after |
 //! |---|---|---|---|---|---|---|---|
-//! | 500 | 25 000 | 124 750 | 1.250 s | 0.428 s | **0.202–0.207 s** | 0.379 s | 0.158–0.165 s |
-//! | 1 000 | 50 000 | 499 500 | 2.500 s | 1.599 s | **0.701–0.723 s** | 1.529 s | 0.628–0.647 s |
-//! | 2 000 | 100 000 | 1 999 000 | 5.000 s | **6.262 s** 🔴 | **2.59–2.74 s** ✅ | 6.119 s | 2.46–2.60 s |
+//! | 500 | 25 000 | 124 750 | 1.250 s | 0.43–0.44 s | **0.20–0.22 s** | 0.38–0.39 s | 0.16–0.17 s |
+//! | 1 000 | 50 000 | 499 500 | 2.500 s | 1.60–1.64 s | **0.70–0.73 s** | 1.53–1.57 s | 0.63–0.65 s |
+//! | 2 000 | 100 000 | 1 999 000 | 5.000 s | **6.26–6.38 s** 🔴 | **2.59–2.87 s** ✅ | 6.12–6.25 s | 2.46–2.71 s |
 //!
 //! Input fingerprints, in the same order: `3b0e8cb73922afcf`, `81dfc75f559dd74b`,
 //! `02cd5bba8850271f`, pinned as constants by
@@ -43,14 +43,31 @@
 //! **unchanged** across the two columns, which is what makes this a speed-up rather than a recall
 //! change.
 //!
-//! # Which stage owns the time, named by the instrument rather than by prose
+//! # Which stage owns the time, and the limit of what this instrument can say
 //!
-//! `detect` is split against a control input of the same shape that shares **no** shingle
-//! (`disjoint_source`), so the pair-dependent work is measured by difference. At 2 000 files,
-//! before the change: total 6.262 s, of which `detect` 6.119 s (97.7%), of which **scoring
-//! 6.078 s** — that is 97.1% of the entire run spent on `C(n, 2)` Jaccard evaluations. Extraction
-//! is 0.143 s, about 2%. After the change scoring is 2.37–2.57 s, a **2.4–2.6x** improvement, and
-//! it is still the dominant stage. There is nowhere else to look, and this split is what says so.
+//! Two stages are separated directly, because they are separate calls: **extraction** (read, parse,
+//! extract) and **detection** (`duplicates`). At 2 000 files, before the change, that is 0.164 s
+//! against 6.145 s — detection is **about 97%** of the run and extraction under 3%. That much is a
+//! measurement, not an inference.
+//!
+//! Inside detection, what the instrument supports is the `ns/pair` column: `detect` divided by
+//! `comparisons`. Before the change it reads **3 141 / 3 138 / 3 074 ns** at 500 / 1 000 / 2 000
+//! files; after it, **1 332 / 1 302 / 1 297 ns**. Across every run the two bands are
+//! **3 040–3 140 ns** and **1 230–1 350 ns**. The cost per pair is *flat across a sixteenfold
+//! change in the pair count*, and that is the whole claim: a stage whose cost did not depend on the
+//! number of pairs would make this column fall as `n` grew, because the fixed work would be spread
+//! over quadratically more pairs. It does not fall, so detection is pair-dominated, and the change
+//! recorded in `src/detect/duplicate.rs` moved exactly that per-pair cost — by **2.3x–2.5x**.
+//!
+//! **What it deliberately does not say is a percentage for scoring alone.** An earlier revision
+//! subtracted a control input that shared no shingle and attributed the difference to scoring. That
+//! is unsound and the number it produced (97.1%) has been withdrawn: at 2 000 files the two inputs
+//! carry the same 156 000 gram references but the adversarial tree creates only ~2 077 distinct
+//! index keys against the control's 156 000, so the control does radically different `HashMap` and
+//! allocation work. Subtracting it removes work the real input never performs. Separating candidate
+//! *enumeration* from *scoring* from the union-find needs a method this file does not have — they
+//! are all quadratic here and all inside one call — so they are reported together as the
+//! pair-dependent cost, which is what `ns/pair` measures and all it measures.
 //!
 //! # Deriving the break-even, from this table and nothing else
 //!
@@ -62,8 +79,8 @@
 //! break-even lines/file = median_seconds / 5.0 * 100_000 / files
 //! ```
 //!
-//! At 2 000 files that is `6.262 / 5 * 100000 / 2000` = **62.6 lines/file before** the change
-//! (62.3–63.6 across runs) and `2.59 / 5 * 100000 / 2000` = **25.9–27.4 lines/file after** it.
+//! At 2 000 files that is `6.26 / 5 * 100000 / 2000` = **62.6–63.8 lines/file before** the change
+//! and `2.59 / 5 * 100000 / 2000` = **25.9–28.7 lines/file after** it.
 //! Ranges, not points, and taken across *independent* runs rather than within one: the same
 //! machine reproduces a median to about 6%, which is the honest precision of any number here.
 //! Below that density a tree of near-identical headers misses the budget; above it, it does not.
@@ -242,47 +259,6 @@ fn adversarial_source(index: usize) -> String {
     write!(source, "# Reviewed by team {index}\n\n").expect("writing into a String cannot fail");
     // `LINES_PER_FILE - HEADER_LINES - 1` code lines, in two-line functions, so the file is
     // exactly LINES_PER_FILE lines long and the count is arithmetic rather than eyeballed.
-    let code_lines = LINES_PER_FILE - HEADER_LINES - 1;
-    for step in 0..code_lines / 2 {
-        write!(
-            source,
-            "def step_{step}(value: int) -> int:\n    return value + {step}\n"
-        )
-        .expect("writing into a String cannot fail");
-    }
-    source
-}
-
-/// The same shape as [`adversarial_source`] — same line count, same word count, same structure —
-/// but sharing **no** shingle with any other file.
-///
-/// This is the control that turns one opaque `detect` number into a stage split, and it is why AC1
-/// can name where the time goes rather than assert it. Every word of the header carries the file's
-/// own index, so no gram is ever in two blocks' sets: the inverted index yields zero candidate
-/// pairs, no Jaccard is computed and no edge is connected. What a run on this input therefore costs
-/// is exactly the stages that do **not** depend on pairs — shingling every block, building the
-/// index, and the final clustering pass.
-///
-/// So `detect(adversarial) - detect(disjoint)` is the pair-dependent half — candidate enumeration
-/// plus scoring plus union-find — measured by difference against a real input rather than by
-/// instrumenting production code with timers, which is the alternative this avoids.
-fn disjoint_source(index: usize) -> String {
-    let mut source = String::with_capacity(LINES_PER_FILE * 80);
-    source.push_str("# Rationale");
-    // 79 more words, each unique to this file, so the 80-word count matches `adversarial_source`
-    // exactly and only the SHARING differs between the two inputs.
-    for word in 0..79 {
-        write!(source, " u{index}w{word}").expect("writing into a String cannot fail");
-        // Wrap onto a new comment line every 12 words, so the header spans HEADER_LINES lines.
-        if word % 12 == 11 {
-            source.push_str("\n#");
-        }
-    }
-    source.push('\n');
-    while source.lines().count() < HEADER_LINES {
-        source.push_str("# filler\n");
-    }
-    source.push('\n');
     let code_lines = LINES_PER_FILE - HEADER_LINES - 1;
     for step in 0..code_lines / 2 {
         write!(
@@ -530,7 +506,7 @@ fn a_run_exactly_on_the_budget_has_not_met_it() {
 #[ignore = "wall-clock instrument: needs --release and writes 2000 files"]
 fn adversarial_headers_stay_within_the_line_rate_budget() {
     println!(
-        "{:>6} {:>8} {:>7} {:>11} {:>8} {:>9} {:>9} {:>9} {:>9} {:>9} {:>9} {:>18}",
+        "{:>6} {:>8} {:>7} {:>11} {:>8} {:>9} {:>9} {:>9} {:>9} {:>9} {:>9} {:>12}",
         "files",
         "lines",
         "blocks",
@@ -542,7 +518,7 @@ fn adversarial_headers_stay_within_the_line_rate_budget() {
         "max",
         "extract",
         "detect",
-        "of which scoring",
+        "ns/pair",
     );
     let mut failures: Vec<String> = Vec::new();
 
@@ -556,12 +532,6 @@ fn adversarial_headers_stay_within_the_line_rate_budget() {
             "what reached the disk differs from what `manifest_of` pins in the always-run test"
         );
 
-        // The stage control: same shape, same word count, zero shared shingles. See
-        // `disjoint_source` — the difference between the two `detect` times is the pair-dependent
-        // work, which is the number AC1 needs and a single total cannot give.
-        let control_directory = scratch(&format!("control-{files}"));
-        generate(&control_directory, files, disjoint_source);
-
         // Act — one discarded warm-up so the page cache is warm for every timed run, exactly as
         // `corpus/bench.py` does, then RUNS timed runs.
         let mut passes: Vec<Pass> = Vec::with_capacity(RUNS);
@@ -572,17 +542,9 @@ fn adversarial_headers_stay_within_the_line_rate_budget() {
         passes.sort_unstable_by_key(|pass| pass.total());
         let middle = passes[RUNS / 2];
 
-        measure(&control_directory);
-        let control = measure(&control_directory);
-        assert_eq!(
-            control.comparisons, 0,
-            "the control must share no shingle, or it is not measuring the pair-free stages"
-        );
-        let scoring = middle.detecting.saturating_sub(control.detecting);
-
         let budget = manifest.budget();
         println!(
-            "{files:>6} {:>8} {:>7} {:>11} {:>8} {:>8.3}s {:>8.3}s {:>8.3}s {:>8.3}s {:>8.3}s {:>8.3}s {:>17.3}s  fp={:016x}",
+            "{files:>6} {:>8} {:>7} {:>11} {:>8} {:>8.3}s {:>8.3}s {:>8.3}s {:>8.3}s {:>8.3}s {:>8.3}s {:>12}  fp={:016x}",
             manifest.lines,
             middle.blocks,
             middle.comparisons,
@@ -593,7 +555,7 @@ fn adversarial_headers_stay_within_the_line_rate_budget() {
             passes[RUNS - 1].total().as_secs_f64(),
             middle.extracting.as_secs_f64(),
             middle.detecting.as_secs_f64(),
-            scoring.as_secs_f64(),
+            middle.detecting.as_nanos() / middle.comparisons as u128,
             manifest.fingerprint,
         );
 
@@ -620,7 +582,6 @@ fn adversarial_headers_stay_within_the_line_rate_budget() {
             "one shared header is one finding, at every size"
         );
         fs::remove_dir_all(&directory).expect("the scratch tree is removable");
-        fs::remove_dir_all(&control_directory).expect("the scratch tree is removable");
     }
 
     assert!(

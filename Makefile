@@ -250,7 +250,7 @@ py.build: ## Rebuild and reinstall the Rust extension into .venv
 #     out loud rather than absorbed: a rising `ignored` is a finding by this epic's own verification
 #     policy. It is ignored because it is a wall-clock instrument — it needs `--release` to mean
 #     anything (a debug build measures the profile, not the algorithm) and it writes 2 000 files
-#     twice over. It PASSES: 2.59-2.74 s against a 5.000 s budget at 100 000 lines. It did not before
+#     twice over. It PASSES: 2.59-2.87 s against a 5.000 s budget at 100 000 lines. It did not before
 #     the `shingles` change in the same commit, which is the measurement that motivated that change.
 #     Its two non-ignored halves, `the_generated_headers_are_adversarial_by_construction` and
 #     `the_timed_trees_are_the_ones_the_recorded_numbers_were_measured_on`, DO run in CI, so neither
