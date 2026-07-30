@@ -68,6 +68,50 @@ class MalformedFinding(RuntimeError):
     """A `TPX003` finding the sampler cannot interpret, which it refuses to skip."""
 
 
+class MalformedRun(RuntimeError):
+    """A run document the sampler cannot interpret, which it refuses to read findings out of."""
+
+
+#: Every top-level key a run document may carry. Closed on purpose — see [`validate_run`].
+RUN_KEYS: frozenset[str] = frozenset({"schema_version", "complete", "skipped", "excluded", "findings"})
+
+
+def validate_run(name: str, report: Mapping[str, Any]) -> None:
+    """
+    Refuse a run document that is not shaped like one, naming the file.
+
+    🔴 **The container, not one more key.** A previous round made a missing `weakest` fatal, and the
+    document around it was left unvalidated — so renaming the top-level `findings` to `findings_v2`
+    dropped the sampled population from **586 to 501** and made `07-klavis` vanish entirely, with no
+    error, no warning and no exit code. Hardening the key that was exploited leaves its container
+    open, and that is the shape this epic keeps rediscovering.
+
+    Unknown top-level keys are refused rather than ignored: a document carrying `findings_v2`
+    alongside nothing else is exactly the forgery this guards, and silently tolerating unknown keys
+    is what let it through.
+
+    # Raises
+    `MalformedRun`, naming `name` and the offending key.
+    """
+    for key, kind in (
+        ("schema_version", str),
+        ("complete", bool),
+        ("skipped", list),
+        ("excluded", list),
+        ("findings", list),
+    ):
+        if key not in report:
+            raise MalformedRun(f"{name}: run document has no `{key}` — a renamed key is not a missing rule")
+        if not isinstance(report[key], kind):
+            raise MalformedRun(f"{name}: `{key}` is {type(report[key]).__name__}, expected {kind.__name__}")
+    unknown = sorted(set(report) - RUN_KEYS)
+    if unknown:
+        raise MalformedRun(
+            f"{name}: unknown top-level key(s) {', '.join(unknown)}. A document the sampler cannot "
+            "fully account for is one it must not read findings out of."
+        )
+
+
 @dataclass(frozen=True, order=True)
 class Member:
     """One block inside a cluster, at the address the CLI reported."""
@@ -205,6 +249,7 @@ def load_runs(runs_dir: Path, population: Population = "near") -> dict[str, list
         if repo in EXCLUDED_RUNS or path.stat().st_size == 0:
             continue
         report = json.loads(path.read_text(encoding="utf-8"))
+        validate_run(repo, report)
         pool = tpx003_clusters(repo, report, population)
         if pool:
             pools[repo] = pool

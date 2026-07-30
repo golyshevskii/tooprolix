@@ -89,13 +89,24 @@ class GateFailed(RuntimeError):
 
 @dataclass(frozen=True)
 class RunExpectation:
-    """What the pre-registration says a run must look like before anything may be read out of it."""
+    """
+    What the pre-registration says a run must look like before anything may be read out of it.
+
+    🔴 **`sha256` is the authoritative one and it is checked against the file on disk.** It used to
+    be pinned here and never loaded, while `verify` compared the file against
+    `artifact.runs[].sha256` — another field of the very artifact being graded. Measured: rewrite a
+    run, update the artifact's own hash to match, and the forged population verified clean with
+    exit 0 while the pre-registered pin said something else entirely. That is this epic's defect #6
+    at its eighth layer, inside the fix that closed the seventh. The pushed pre-registration is the
+    authority; an artifact field may never be the sole source of any check.
+    """
 
     schema_version: str
     complete: bool
     skipped: int
     excluded: int
     files_walked: int
+    sha256: str | None = None
 
 
 @dataclass(frozen=True)
@@ -414,6 +425,7 @@ def load_preregistration(path: Path) -> Preregistration:
                     skipped=int(expected["skipped"]),
                     excluded=int(expected["excluded"]),
                     files_walked=int(expected["files_walked"]),
+                    sha256=None if expected.get("sha256") is None else str(expected["sha256"]),
                 )
                 for run_name, expected in body.get("runs", {}).items()
             },
@@ -590,12 +602,28 @@ def verify(
         path = runs_dir / f"{run.name}.json"
         _require(path.exists(), f"{run.name}: {path} is missing; the artifact classifies a run that is not here")
         actual = digest(path)
-        _require(
-            actual == run.sha256,
-            f"{run.name}: {path} hashes {actual}, the artifact pins {run.sha256}. The classification "
-            "describes a different set of findings from the one on disk.",
-        )
-        _check_run_health(run.name, path, profile.runs.get(run.name), profile.run_requirements, runs_dir)
+        pinned = profile.runs.get(run.name)
+        authority = pinned.sha256 if pinned is not None and pinned.sha256 is not None else None
+        if authority is not None:
+            # The pre-registration first, because it was pushed before the run existed. The
+            # artifact's own field is then required to agree with it rather than to stand in for it.
+            _require(
+                actual == authority,
+                f"{run.name}: {path} hashes {actual}, the PRE-REGISTRATION pins {authority}. "
+                "The run on disk is not the run this measurement was registered against.",
+            )
+            _require(
+                run.sha256 == authority,
+                f"{run.name}: the artifact claims {run.sha256} but the pre-registration pins "
+                f"{authority}. An artifact may not restate a pinned fact differently.",
+            )
+        else:
+            _require(
+                actual == run.sha256,
+                f"{run.name}: {path} hashes {actual}, the artifact pins {run.sha256}. The "
+                "classification describes a different set of findings from the one on disk.",
+            )
+        _check_run_health(run.name, path, pinned, profile.run_requirements, runs_dir)
 
     expected = _expected(profile, runs_dir)
     by_address = {record.address: record for record in artifact.records}

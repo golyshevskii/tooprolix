@@ -511,3 +511,214 @@ class TestTheScanSizeIsFixedBeforeTheData:
             classification.verify(
                 classification.load(ARTIFACT), RUNS, classification.load_preregistration(path).profile("probe")
             )
+
+
+HOLDOUT = CORPUS / "holdout_classification.json"
+HOLDOUT_RUNS = CORPUS / "holdout_runs"
+
+
+def holdout_profile() -> classification.Profile:
+    """Return the pre-registered gate profile, named by the caller exactly as `verify` requires."""
+    return classification.load_preregistration(PREREGISTRATION).profile("holdout")
+
+
+class TestTheGateResultIsPinned:
+    """
+    Review round 2, finding F5 — every number §7 of `corpus/annotations.md` publishes.
+
+    Until this class existed, every artifact test targeted the *dry run*: relabelling one holdout
+    row moved the gate from 0.275 to 0.300 while `make test` stayed green and `annotations.md` went
+    on printing 0.275. A number that no test pins is this epic's defect #5, and the gate's own
+    number is the last place it should have survived.
+    """
+
+    def test_the_holdout_artifact_verifies_against_its_pre_registered_runs(self) -> None:
+        classification.verify(classification.load(HOLDOUT), HOLDOUT_RUNS, holdout_profile())
+
+    def test_it_covers_forty_clusters_split_thirty_exact_and_ten_near(self) -> None:
+        artifact = classification.load(HOLDOUT)
+
+        exact = [record for record in artifact.records if record.population == "exact"]
+        near = [record for record in artifact.records if record.population == "near"]
+
+        assert (len(artifact.records), len(exact), len(near)) == (40, 30, 10)
+
+    def test_the_classes_are_twenty_nine_true_and_eleven_false(self) -> None:
+        artifact = classification.load(HOLDOUT)
+
+        false_positives = artifact.false_positive_count("all")
+
+        assert (len(artifact.records) - false_positives, false_positives) == (29, 11)
+
+    @pytest.mark.parametrize(
+        ("population", "false_positives", "total"), [("exact", 7, 30), ("near", 4, 10), ("all", 11, 40)]
+    )
+    def test_the_published_rates(self, population: str, false_positives: int, total: int) -> None:
+        artifact = classification.load(HOLDOUT)
+
+        assert artifact.false_positive_count(population) == false_positives
+        assert artifact.denominator(population) == total
+
+    def test_the_gate_passes_against_the_pre_registered_threshold(self) -> None:
+        """0.275 against 0.400. The whole task reduces to this line staying true."""
+        artifact = classification.load(HOLDOUT)
+        profile = holdout_profile()
+
+        passed, explanation = classification.gate(artifact, profile)
+
+        assert profile.threshold == 0.40
+        assert artifact.false_positive_rate("all") == pytest.approx(0.275)
+        assert passed, explanation
+
+    def test_the_strict_reading_is_eighteen_of_forty_and_would_be_red(self) -> None:
+        """
+        The band, pinned as deliberately as the gate — because it is the uncomfortable half.
+
+        `annotations.md` §7.5 states that the strict reading is 0.450 and would fail the 0.400
+        threshold. That sentence is the most load-bearing disclosure in the report, so it gets a
+        test: if a relabel quietly moved the strict count, the disclosure would go stale silently.
+        """
+        artifact = classification.load(HOLDOUT)
+
+        strict = sum(1 for record in artifact.records if record.attributes["strict_reading"] == "FP")
+
+        threshold = holdout_profile().threshold
+        assert threshold is not None, "the gate profile must carry a number"
+        assert strict == 18
+        assert strict / len(artifact.records) == pytest.approx(0.450)
+        assert strict / len(artifact.records) > threshold, "the band's red half"
+
+    def test_every_record_carries_a_strict_reading_of_one_of_the_two_classes(self) -> None:
+        """Refuse a missing or third-valued `strict_reading`, which would shrink the band silently."""
+        artifact = classification.load(HOLDOUT)
+
+        readings = {record.attributes.get("strict_reading") for record in artifact.records}
+
+        assert readings
+        assert readings <= {"TP", "FP"}
+
+    def test_the_baseline_is_the_eleven_false_positives(self) -> None:
+        artifact = classification.load(HOLDOUT)
+
+        assert len(classification.baseline_from(artifact)) == 11
+
+
+class TestTheHoldoutPopulationIsPinned:
+    """
+    Review round 2, F4's postcondition. The operator fix moved **zero** clusters across all ten
+    holdout runs — measured, 10/10 run files byte-identical — so the gate still measures what ships.
+
+    That fact is what keeps AC9 true, and a fact that matters is a fact that gets a test. If a future
+    normaliser change alters the population, regenerating these runs reddens this class instead of
+    quietly invalidating the published 0.275.
+    """
+
+    @pytest.mark.parametrize(
+        ("run", "near", "exact"),
+        [
+            ("01-Raven", 4, 8),
+            ("02-Vision-Agents", 3, 27),
+            ("03-graphify", 3, 20),
+            ("04-DeepTutor", 3, 6),
+            ("05-nanobot", 0, 3),
+            ("06-claude-scientific-writer", 1, 31),
+            ("07-klavis", 9, 76),
+            ("08-MemMachine", 6, 24),
+            ("09-PraisonAI", 53, 288),
+            ("10-skills", 5, 16),
+        ],
+    )
+    def test_each_run_emits_the_population_the_gate_was_drawn_from(self, run: str, near: int, exact: int) -> None:
+        report = json.loads((HOLDOUT_RUNS / f"{run}.json").read_text(encoding="utf-8"))
+
+        similarities = [f["weakest"]["similarity"] for f in report["findings"] if f["code"] == "TPX003"]
+
+        assert (sum(1 for s in similarities if s < 1.0), sum(1 for s in similarities if s >= 1.0)) == (near, exact)
+
+    def test_the_ten_runs_total_five_hundred_and_eighty_six_clusters(self) -> None:
+        pools = sample_clusters.load_runs(HOLDOUT_RUNS, "all")
+
+        assert sum(len(pool) for pool in pools.values()) == 586
+        assert len(pools) == 10
+
+
+class TestThePreRegistrationIsTheAuthorityForRunBytes:
+    """
+    Review round 2, finding F1 — defect #6 at its eighth layer, inside the fix that closed the
+    seventh.
+
+    `preregistration.json` pinned each run's SHA-256 and `RunExpectation` never loaded it, so
+    `verify` compared the file on disk against `artifact.runs[].sha256` — another field of the
+    artifact being graded. Measured: rewrite a run, update the artifact's own hash to match, and the
+    forged population verified clean at exit 0 while the pre-registered pin said something else.
+    """
+
+    def _runs_copy(self, tmp_path: Path) -> Path:
+        runs = tmp_path / "holdout_runs"
+        runs.mkdir()
+        for source in HOLDOUT_RUNS.iterdir():
+            (runs / source.name).write_bytes(source.read_bytes())
+        return runs
+
+    def test_a_rewritten_run_is_fatal_even_when_the_artifact_agrees_with_it(self, tmp_path: Path) -> None:
+        """The exploit verbatim: forge run and artifact consistently; only the pushed pin can tell."""
+        runs = self._runs_copy(tmp_path)
+        target = runs / "03-graphify.json"
+        target.write_text(json.dumps(json.loads(target.read_text(encoding="utf-8")), indent=4), encoding="utf-8")
+        payload = json.loads(HOLDOUT.read_text(encoding="utf-8"))
+        for run in payload["runs"]:
+            if run["name"] == "03-graphify":
+                run["sha256"] = classification.digest(target)
+
+        with pytest.raises(classification.ClassificationError, match="PRE-REGISTRATION pins"):
+            classification.verify(classification.load(_write(tmp_path, payload)), runs, holdout_profile())
+
+    def test_an_artifact_that_restates_a_pinned_hash_differently_is_fatal(self, tmp_path: Path) -> None:
+        """The runs are untouched; only the artifact's echo of the pin is wrong, and that is fatal."""
+        payload = json.loads(HOLDOUT.read_text(encoding="utf-8"))
+        for run in payload["runs"]:
+            if run["name"] == "03-graphify":
+                run["sha256"] = "0" * 64
+
+        with pytest.raises(classification.ClassificationError, match="may not restate a pinned fact"):
+            classification.verify(classification.load(_write(tmp_path, payload)), HOLDOUT_RUNS, holdout_profile())
+
+
+class TestTheRunDocumentIsValidatedNotJustOneOfItsKeys:
+    """
+    Review round 2, finding F2 — hardening the key that was exploited left its container open.
+
+    A previous round made a missing `weakest` fatal. The document around it stayed unvalidated, so
+    renaming the top-level `findings` to `findings_v2` in one run dropped the sampled population
+    from **586 to 501** and made `07-klavis` disappear with no error, no warning and no exit code.
+    """
+
+    def _mangled(self, tmp_path: Path, mutate) -> Path:
+        runs = tmp_path / "runs"
+        runs.mkdir()
+        for source in HOLDOUT_RUNS.glob("*.json"):
+            (runs / source.name).write_bytes(source.read_bytes())
+        target = runs / "07-klavis.json"
+        document = json.loads(target.read_text(encoding="utf-8"))
+        mutate(document)
+        target.write_text(json.dumps(document), encoding="utf-8")
+        return runs
+
+    def test_a_renamed_findings_key_is_fatal_rather_than_a_smaller_population(self, tmp_path: Path) -> None:
+        runs = self._mangled(tmp_path, lambda d: d.__setitem__("findings_v2", d.pop("findings")))
+
+        with pytest.raises(sample_clusters.MalformedRun, match="07-klavis"):
+            sample_clusters.load_runs(runs, "all")
+
+    def test_an_unknown_top_level_key_is_refused(self, tmp_path: Path) -> None:
+        """Tolerating unknown keys is what let the rename through; the key set is closed."""
+        runs = self._mangled(tmp_path, lambda d: d.__setitem__("findings_v2", []))
+
+        with pytest.raises(sample_clusters.MalformedRun, match="unknown top-level key"):
+            sample_clusters.load_runs(runs, "all")
+
+    def test_a_findings_key_of_the_wrong_type_is_refused(self, tmp_path: Path) -> None:
+        runs = self._mangled(tmp_path, lambda d: d.__setitem__("findings", {"code": "TPX003"}))
+
+        with pytest.raises(sample_clusters.MalformedRun, match="expected list"):
+            sample_clusters.load_runs(runs, "all")

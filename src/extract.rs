@@ -377,16 +377,41 @@ const OPERATOR_TOKENS: [char; 5] = ['<', '>', '=', '!', '-'];
 /// Whether this occurrence of `character` is a relational operator rather than prose punctuation.
 ///
 /// Context, not membership: see [`OPERATOR_TOKENS`] for why every clause here is necessary and what
-/// broke without it. `previous` and `next` are the raw neighbouring characters, and `alnum_on_line`
-/// is whether any alphanumeric has already appeared on the current line.
+/// broke without it. `previous` and `next` are the raw neighbouring characters, `alnum_on_line` is
+/// whether any alphanumeric has already appeared on the current line, and `line_has_alnum` is
+/// whether the line contains one **anywhere**.
+///
+/// # 🔴 A rule line carries no operators at all, and this is a recall fix
+///
+/// `<` and `=` were unconditional while `>`, `!` and `-` were contextual, and that asymmetry was a
+/// **recall regression this task introduced**. A reST or Markdown heading underline is a line of
+/// nothing but punctuation, so `# =====` turned into content tokens and diluted the block that
+/// carried it. Measured on the released binary, one copy of a paragraph preceded by an underline and
+/// one without:
+///
+/// | underline | result |
+/// |---|---|
+/// | `# =====` | **`All checks passed!`** — the genuine match was destroyed |
+/// | `# -----` | 1.000 |
+///
+/// `-` behaved correctly only by accident: its digit clause already rejected a run of dashes. The
+/// asymmetry was the tell. The fix is one rule rather than five: **a line with no alphanumeric
+/// character anywhere is decoration**, so nothing on it is an operator. `size = 0` keeps its `=`
+/// because the line has words; `# =====` keeps nothing because it has none.
 fn is_operator_here(
     character: char,
     previous: Option<char>,
     next: Option<char>,
     alnum_on_line: bool,
+    line_has_alnum: bool,
 ) -> bool {
+    // A separator, a heading underline, a box-drawing rule: punctuation-only lines are typography,
+    // and typography that survives normalisation is typography that dilutes every block beside it.
+    if !line_has_alnum {
+        return false;
+    }
     match character {
-        // Unambiguous: neither is prose punctuation in any position.
+        // Unambiguous *within a line that has words*: neither is prose punctuation there.
         '<' | '=' => true,
         // `>` opens a Markdown blockquote and a `doctest` prompt when nothing alphanumeric precedes
         // it on the line. Mid-line it is a comparison. Without this, quoting a paragraph rewrote it.
@@ -462,36 +487,39 @@ pub(crate) fn normalize_comparable(text: &str) -> String {
 /// miss. The flag is never passed at a call site — both callers are the named wrappers above.
 fn fold(text: &str, keep_operators: bool) -> String {
     let mut folded = String::with_capacity(text.len());
-    // Peekable rather than a collected `Vec<char>`: [`is_operator_here`] needs one character of
-    // look-behind and one of look-ahead, and this runs once per prose block on every walked file.
-    let mut characters = text.chars().peekable();
-    let mut previous: Option<char> = None;
-    // Whether an alphanumeric has appeared on the current line, which is how `>` as Markdown quoting
-    // is told from `>` as a comparison. Reset on the newline itself, before the next line is read.
-    let mut alnum_on_line = false;
-    while let Some(character) = characters.next() {
-        if character == '\n' {
-            alnum_on_line = false;
+    // Line by line, because two of the operator rules are line-scoped: `>` needs to know what
+    // precedes it on its line, and every operator needs to know whether the line has words at all.
+    // The line break itself folds to a space exactly as any other non-alphanumeric would.
+    for line in text.lines() {
+        let line_has_alnum = line.chars().any(char::is_alphanumeric);
+        // Peekable rather than a collected `Vec<char>`: one character of look-behind and one of
+        // look-ahead is all `is_operator_here` needs, and this runs once per prose block per file.
+        let mut characters = line.chars().peekable();
+        let mut previous: Option<char> = None;
+        let mut alnum_on_line = false;
+        while let Some(character) = characters.next() {
+            if character.is_alphanumeric() {
+                alnum_on_line = true;
+                folded.extend(character.to_lowercase());
+            } else if keep_operators
+                && OPERATOR_TOKENS.contains(&character)
+                && is_operator_here(
+                    character,
+                    previous,
+                    characters.peek().copied(),
+                    alnum_on_line,
+                    line_has_alnum,
+                )
+            {
+                folded.push(' ');
+                folded.push(character);
+                folded.push(' ');
+            } else {
+                folded.push(' ');
+            }
+            previous = Some(character);
         }
-        if character.is_alphanumeric() {
-            alnum_on_line = true;
-            folded.extend(character.to_lowercase());
-        } else if keep_operators
-            && OPERATOR_TOKENS.contains(&character)
-            && is_operator_here(
-                character,
-                previous,
-                characters.peek().copied(),
-                alnum_on_line,
-            )
-        {
-            folded.push(' ');
-            folded.push(character);
-            folded.push(' ');
-        } else {
-            folded.push(' ');
-        }
-        previous = Some(character);
+        folded.push(' ');
     }
     folded.split_whitespace().collect::<Vec<_>>().join(" ")
 }
@@ -1291,6 +1319,13 @@ mod tests {
                 "the request is rejected when the declared limit > -1 and no body follows",
                 "the request is rejected when the declared limit > 1 and no body follows",
             ),
+            // The other direction of the underline fix: suppressing operators on a wordless line
+            // must not suppress them on a line that merely *starts* with punctuation.
+            (
+                "a comparison on a line that opens with a comment marker",
+                "# the request is rejected when the declared size > 0 and no body follows",
+                "# the request is rejected when the declared size 0 and no body follows",
+            ),
         ];
 
         // Act — every row, not the first failing one, for the reason the sibling table gives.
@@ -1353,6 +1388,27 @@ mod tests {
                 "a hyphen binding a word to a digit, which is a name and not a signed number",
                 "the payload is decoded as utf-8 before the adapter inspects it",
                 "the payload is decoded as utf 8 before the adapter inspects it",
+            ),
+            // 🔴 The recall regression this task introduced and then fixed. `<` and `=` were kept
+            // unconditionally while `>`, `!` and `-` were contextual, so a heading underline became
+            // content tokens. Measured on the released binary: with `# =====` the two blocks below
+            // stopped matching altogether — `All checks passed!` — while the identical construct
+            // with `# -----` still scored 1.000, because the dash rule already rejected a run of
+            // dashes. Every underline style gets a row; the class is "a line with no words on it".
+            (
+                "a reST heading underline, which is typography and not a comparison",
+                "# Setup\n# =====\n# The caller keeps ownership of the buffer for the whole call.",
+                "# Setup\n# The caller keeps ownership of the buffer for the whole call.",
+            ),
+            (
+                "an angle-bracket rule, the same shape one character over",
+                "# Setup\n# <<<<<\n# The caller keeps ownership of the buffer for the whole call.",
+                "# Setup\n# The caller keeps ownership of the buffer for the whole call.",
+            ),
+            (
+                "a Markdown horizontal rule, which behaved correctly only by accident",
+                "# Setup\n# -----\n# The caller keeps ownership of the buffer for the whole call.",
+                "# Setup\n# The caller keeps ownership of the buffer for the whole call.",
             ),
         ];
 

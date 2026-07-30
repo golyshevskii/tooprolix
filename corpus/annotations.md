@@ -931,3 +931,83 @@ be produced before the labels exist. **11 entries**, matching the numerator exac
 the one Decisions #17 requires and it is enforced by the shape of the code, not by prose: the
 unsuppressed runs were saved and hashed first, every drawn finding then received exactly one class,
 and only then was the baseline derived.
+
+---
+
+## 8. Review round 2 — the mechanism that binds the number (2026-07-30)
+
+**The number did not move.** §7's 0.275 stands unchanged, verified against the same ten runs. What
+this round repaired is the machinery that ties that number to the committed runs, plus one recall
+regression this task had introduced into shipping code.
+
+### 8.1 F1 — the pre-registered hash was pinned and never read
+
+`preregistration.json` pinned each run's SHA-256; `RunExpectation` never loaded the field, and
+`verify` compared the file on disk against `artifact.runs[].sha256` — **another field of the artifact
+being graded**. Measured:
+
+```
+preregistration pin (external, authoritative): 35018b62c4a200a6
+file on disk now hashes                      : 93a1f55e7f1439b8
+-> PASS: FP share 0.275 ... exit 0            (FORGED RUN ACCEPTED)
+```
+
+Defect #6 at its eighth layer, and it was inside the fix that closed the seventh. The pre-registered
+pin is now the authority: the file on disk is compared against it, and the artifact's own echo of it
+must agree rather than substitute for it. Both halves are separately mutation-proved.
+
+### 8.2 F2 — the child key was hardened and the container left open
+
+Round 1 made a missing `weakest` fatal. The document around it stayed unvalidated:
+
+```
+rename top-level "findings" -> "findings_v2" in one run
+-> population 586 -> 501; 07-klavis vanishes entirely, no error, no warning
+```
+
+`validate_run` now checks the document: `schema_version`, `complete`, `skipped`, `excluded` and
+`findings` present and of the right type, and the top-level key set **closed** — an unknown key is
+refused rather than ignored, because tolerating one is what let the rename through.
+
+### 8.3 F4 — a recall regression this task introduced, now fixed
+
+`<` and `=` were preserved unconditionally while `>`, `!` and `-` were contextual. A reST or Markdown
+heading underline is a line of pure punctuation, so it became content tokens and **destroyed** the
+match it sat beside:
+
+| underline | before | after |
+|---|---|---|
+| `# =====` | **`All checks passed!`** — genuine match killed | **1.0000** |
+| `# <<<<<` | `All checks passed!` | **1.0000** |
+| `# -----` | 1.0000 | 1.0000 |
+
+`-` survived only by accident — its digit clause already rejected a run of dashes — and that
+asymmetry was the tell. The fix is one rule rather than five: **a line containing no alphanumeric
+character anywhere carries no operators**, because it is typography. `size = 0` keeps its `=`; a
+divider keeps nothing.
+
+🔴 **The consequence was measured before the cause was accepted.** The ten holdout runs were produced
+by the pre-fix binary, so a detector change would have broken AC9. Re-run of **all ten** holdout
+repositories and the full corpus after the fix:
+
+| | before | after | changed |
+|---|---|---|---|
+| holdout `TPX003` clusters | 586 | **586** | **0** |
+| holdout run files byte-identical | — | **10 / 10** | — |
+| corpus run files byte-identical | — | **7 / 7** | — |
+| corpus totals | 619 (163 near / 456 exact) | unchanged | **0** |
+| `units.py --verify` | 173 | **173** | — |
+
+**Zero clusters moved anywhere, so §7's measurement stands untouched and still describes the binary
+that ships.** That fact is now pinned by `TestTheHoldoutPopulationIsPinned`, which asserts the
+per-repository near/exact split of all ten runs and the 586 total, so it cannot silently stop being
+true.
+
+### 8.4 F5 — the gate's own numbers were asserted by nothing
+
+Every artifact test targeted the *dry run*. Relabelling one holdout row moved the gate from 0.275 to
+0.300 while `make test` stayed green and this file went on printing 0.275. Now pinned: the 40 rows,
+the 30 / 10 split, the 29 / 11 classes, the three published rates, the gate passing against 0.400,
+the baseline's 11 entries, and — deliberately, because it is the uncomfortable half — the strict
+reading at **18 / 40 = 0.450 and its being above the threshold**. Mutation-proved by relabelling E6:
+five named tests redden.
