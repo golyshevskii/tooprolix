@@ -13,12 +13,33 @@ as a finding) and #17 (what the gate measures).
 
 ## 0. Open decisions — this file is not pre-registered until these are closed
 
-### 0.1 The threshold
+### 0.1 ✅ CLOSED — the threshold is 0.40, judged on the main reading
 
-> **`<<THRESHOLD — set by the user before this file is pushed>>`**
+> **THRESHOLD = `0.40`**
 
-The gate is **green** iff the primary rate of §5 is **≤ THRESHOLD**, and **red** otherwise. One
-number, one comparison, no second criterion.
+**Decided by the owner, 2026-07-30, before the detector had seen the holdout.** The commit that
+carries this number is on `origin` ahead of any clone or scan of a pool repository, and that order —
+not this sentence — is the evidence.
+
+The gate is **green** iff the primary rate of §5 is **≤ 0.40**, and **red** otherwise. One number,
+one comparison, no second criterion.
+
+**The primary rate is the FP share under the MAIN reading** — boundary clusters (a summary line that
+is byte-identical rather than a per-callable template) count as findings when a canonical owner can
+be named. The **strict** reading, which counts every such cluster as a false positive, is reported
+beside it as a band and is **not** the number compared to the threshold. This matches how
+`annotations.md` §1.4 and §1.5 already report, so the holdout figure is comparable with them.
+
+**Why 0.40 and not a rounder, safer number.** The calibration dry run on the fixed detector measured
+0.367 combined under the main reading. 0.40 sits just above it, so the outcome is not predetermined
+in either direction: at n=40 the holdout's own interval is about ±0.15 and it can genuinely land on
+either side. A threshold of 0.60 would have passed under both readings' point estimates, which is
+not a gate; a threshold of 0.30 would have pre-registered a near-certain failure, which is not a
+test. **A roughly even chance of red is the property being bought here, and it is deliberate.**
+
+If it comes back red, §7's stopping rule applies without amendment: report the numbers and stop.
+Publication waits for a task that closes the templated-summary class — which supplied 7 of the 12
+false positives the dry run saw — and not for a revised threshold.
 
 Everything the dry runs of `corpus/annotations.md` §4 and §5 measured is input to this choice and is stated
 there with their intervals — including the fact that the exact half of the population had never been

@@ -66,7 +66,7 @@
     },
     "holdout": {
       "purpose": "the gate; one repository from the pre-registered pool, never seen by the detector",
-      "threshold": "<<THRESHOLD - set by the user before the holdout is run>>",
+      "threshold": 0.4,
       "draws": [
         {
           "population": "exact",
@@ -82,7 +82,8 @@
         }
       ],
       "runs": {},
-      "is_gate": true
+      "is_gate": true,
+      "threshold_reading": "main"
     }
   }
 }
