@@ -48,3 +48,16 @@ if True:
         A docstring inside an `if` block, reachable only through a full
         statement walk rather than a scan of the module body.
         """
+
+
+def documented(payload, timeout):
+    """A docstring whose reference scaffolding is not part of what TPX003 compares.
+
+    Args:
+        payload: the body to send, already encoded by the caller and long
+            enough to matter to the word count.
+        timeout: how long to wait for the server, in seconds.
+
+    Returns:
+        Whatever the server answered with.
+    """

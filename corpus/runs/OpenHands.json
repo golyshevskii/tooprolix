@@ -526,6 +526,43 @@
       }
     },
     {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/server/routes/orgs.py",
+      "line": 601,
+      "end_line": 616,
+      "prose_kind": "docstring",
+      "message": "OpenHands/enterprise/server/routes/orgs.py:601-616: TPX003 same explanation in 2 places: OpenHands/enterprise/server/services/org_member_service.py:32-47 (weakest OpenHands/enterprise/server/routes/orgs.py:601-616 ~ OpenHands/enterprise/server/services/org_member_service.py:32-47, similarity 0.806)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/server/routes/orgs.py",
+          "line": 601,
+          "end_line": 616,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/enterprise/server/services/org_member_service.py",
+          "line": 32,
+          "end_line": 47,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/server/routes/orgs.py",
+          "line": 601,
+          "end_line": 616,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/enterprise/server/services/org_member_service.py",
+          "line": 32,
+          "end_line": 47,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8064516129032258
+      }
+    },
+    {
       "code": "TPX002",
       "path": "OpenHands/enterprise/server/routes/user_provisioning.py",
       "line": 1,
@@ -617,6 +654,43 @@
           "prose_kind": "docstring"
         },
         "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/enterprise/server/services/org_app_settings_service.py",
+      "line": 89,
+      "end_line": 104,
+      "prose_kind": "docstring",
+      "message": "OpenHands/enterprise/server/services/org_app_settings_service.py:89-104: TPX003 same explanation in 2 places: OpenHands/enterprise/server/services/user_app_settings_service.py:64-79 (weakest OpenHands/enterprise/server/services/org_app_settings_service.py:89-104 ~ OpenHands/enterprise/server/services/user_app_settings_service.py:64-79, similarity 0.871)",
+      "locations": [
+        {
+          "path": "OpenHands/enterprise/server/services/org_app_settings_service.py",
+          "line": 89,
+          "end_line": 104,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/enterprise/server/services/user_app_settings_service.py",
+          "line": 64,
+          "end_line": 79,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/enterprise/server/services/org_app_settings_service.py",
+          "line": 89,
+          "end_line": 104,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/enterprise/server/services/user_app_settings_service.py",
+          "line": 64,
+          "end_line": 79,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8709677419354839
       }
     },
     {
@@ -783,7 +857,7 @@
       "line": 79,
       "end_line": 87,
       "prose_kind": "docstring",
-      "message": "OpenHands/enterprise/storage/gitlab_webhook_store.py:79-87: TPX003 same explanation in 2 places: OpenHands/enterprise/storage/gitlab_webhook_store.py:103-111 (weakest OpenHands/enterprise/storage/gitlab_webhook_store.py:79-87 ~ OpenHands/enterprise/storage/gitlab_webhook_store.py:103-111, similarity 0.808)",
+      "message": "OpenHands/enterprise/storage/gitlab_webhook_store.py:79-87: TPX003 same explanation in 2 places: OpenHands/enterprise/storage/gitlab_webhook_store.py:103-111 (weakest OpenHands/enterprise/storage/gitlab_webhook_store.py:79-87 ~ OpenHands/enterprise/storage/gitlab_webhook_store.py:103-111, similarity 0.800)",
       "locations": [
         {
           "path": "OpenHands/enterprise/storage/gitlab_webhook_store.py",
@@ -811,7 +885,7 @@
           "end_line": 111,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8076923076923077
+        "similarity": 0.8
       }
     },
     {
@@ -857,7 +931,7 @@
       "line": 659,
       "end_line": 669,
       "prose_kind": "docstring",
-      "message": "OpenHands/enterprise/storage/org_service.py:659-669: TPX003 same explanation in 2 places: OpenHands/enterprise/storage/org_store.py:283-292 (weakest OpenHands/enterprise/storage/org_service.py:659-669 ~ OpenHands/enterprise/storage/org_store.py:283-292, similarity 0.776)",
+      "message": "OpenHands/enterprise/storage/org_service.py:659-669: TPX003 same explanation in 2 places: OpenHands/enterprise/storage/org_store.py:283-292 (weakest OpenHands/enterprise/storage/org_service.py:659-669 ~ OpenHands/enterprise/storage/org_store.py:283-292, similarity 1.000)",
       "locations": [
         {
           "path": "OpenHands/enterprise/storage/org_service.py",
@@ -885,7 +959,7 @@
           "end_line": 292,
           "prose_kind": "docstring"
         },
-        "similarity": 0.7755102040816326
+        "similarity": 1.0
       }
     },
     {
@@ -920,48 +994,11 @@
     },
     {
       "code": "TPX003",
-      "path": "OpenHands/enterprise/storage/saas_secrets_store.py",
-      "line": 133,
-      "end_line": 144,
-      "prose_kind": "docstring",
-      "message": "OpenHands/enterprise/storage/saas_secrets_store.py:133-144: TPX003 same explanation in 2 places: OpenHands/enterprise/storage/saas_settings_store.py:761-771 (weakest OpenHands/enterprise/storage/saas_secrets_store.py:133-144 ~ OpenHands/enterprise/storage/saas_settings_store.py:761-771, similarity 0.785)",
-      "locations": [
-        {
-          "path": "OpenHands/enterprise/storage/saas_secrets_store.py",
-          "line": 133,
-          "end_line": 144,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "OpenHands/enterprise/storage/saas_settings_store.py",
-          "line": 761,
-          "end_line": 771,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "OpenHands/enterprise/storage/saas_secrets_store.py",
-          "line": 133,
-          "end_line": 144,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "OpenHands/enterprise/storage/saas_settings_store.py",
-          "line": 761,
-          "end_line": 771,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.7846153846153846
-      }
-    },
-    {
-      "code": "TPX003",
       "path": "OpenHands/enterprise/tests/unit/server/routes/test_jira_dc_integration_routes.py",
       "line": 35,
       "end_line": 47,
       "prose_kind": "docstring",
-      "message": "OpenHands/enterprise/tests/unit/server/routes/test_jira_dc_integration_routes.py:35-47: TPX003 same explanation in 2 places: OpenHands/enterprise/tests/unit/server/routes/test_jira_integration_routes.py:30-42 (weakest OpenHands/enterprise/tests/unit/server/routes/test_jira_dc_integration_routes.py:35-47 ~ OpenHands/enterprise/tests/unit/server/routes/test_jira_integration_routes.py:30-42, similarity 0.900)",
+      "message": "OpenHands/enterprise/tests/unit/server/routes/test_jira_dc_integration_routes.py:35-47: TPX003 same explanation in 2 places: OpenHands/enterprise/tests/unit/server/routes/test_jira_integration_routes.py:30-42 (weakest OpenHands/enterprise/tests/unit/server/routes/test_jira_dc_integration_routes.py:35-47 ~ OpenHands/enterprise/tests/unit/server/routes/test_jira_integration_routes.py:30-42, similarity 1.000)",
       "locations": [
         {
           "path": "OpenHands/enterprise/tests/unit/server/routes/test_jira_dc_integration_routes.py",
@@ -989,7 +1026,7 @@
           "end_line": 42,
           "prose_kind": "docstring"
         },
-        "similarity": 0.9
+        "similarity": 1.0
       }
     },
     {
@@ -1747,6 +1784,98 @@
     },
     {
       "code": "TPX003",
+      "path": "OpenHands/openhands/app_server/integrations/azure_devops/service/prs.py",
+      "line": 256,
+      "end_line": 264,
+      "prose_kind": "docstring",
+      "message": "OpenHands/openhands/app_server/integrations/azure_devops/service/prs.py:256-264: TPX003 same explanation in 5 places: OpenHands/openhands/app_server/integrations/bitbucket/service/prs.py:54-62, OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/prs.py:86-94, OpenHands/openhands/app_server/integrations/github/service/prs.py:69-77, OpenHands/openhands/app_server/integrations/service_types.py:312-320 (weakest OpenHands/openhands/app_server/integrations/azure_devops/service/prs.py:256-264 ~ OpenHands/openhands/app_server/integrations/service_types.py:312-320, similarity 0.750)",
+      "locations": [
+        {
+          "path": "OpenHands/openhands/app_server/integrations/azure_devops/service/prs.py",
+          "line": 256,
+          "end_line": 264,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/prs.py",
+          "line": 54,
+          "end_line": 62,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/prs.py",
+          "line": 86,
+          "end_line": 94,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/integrations/github/service/prs.py",
+          "line": 69,
+          "end_line": 77,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/integrations/service_types.py",
+          "line": 312,
+          "end_line": 320,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/openhands/app_server/integrations/azure_devops/service/prs.py",
+          "line": 256,
+          "end_line": 264,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/integrations/service_types.py",
+          "line": 312,
+          "end_line": 320,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.75
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/openhands/app_server/integrations/azure_devops/service/prs.py",
+      "line": 275,
+      "end_line": 283,
+      "prose_kind": "docstring",
+      "message": "OpenHands/openhands/app_server/integrations/azure_devops/service/prs.py:275-283: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/integrations/service_types.py:324-332 (weakest OpenHands/openhands/app_server/integrations/azure_devops/service/prs.py:275-283 ~ OpenHands/openhands/app_server/integrations/service_types.py:324-332, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/openhands/app_server/integrations/azure_devops/service/prs.py",
+          "line": 275,
+          "end_line": 283,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/integrations/service_types.py",
+          "line": 324,
+          "end_line": 332,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/openhands/app_server/integrations/azure_devops/service/prs.py",
+          "line": 275,
+          "end_line": 283,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/integrations/service_types.py",
+          "line": 324,
+          "end_line": 332,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
       "path": "OpenHands/openhands/app_server/integrations/bitbucket/bitbucket_service.py",
       "line": 27,
       "end_line": 36,
@@ -1788,7 +1917,7 @@
       "line": 40,
       "end_line": 50,
       "prose_kind": "docstring",
-      "message": "OpenHands/openhands/app_server/integrations/bitbucket/service/base.py:40-50: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/base.py:46-56 (weakest OpenHands/openhands/app_server/integrations/bitbucket/service/base.py:40-50 ~ OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/base.py:46-56, similarity 0.793)",
+      "message": "OpenHands/openhands/app_server/integrations/bitbucket/service/base.py:40-50: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/base.py:46-56 (weakest OpenHands/openhands/app_server/integrations/bitbucket/service/base.py:40-50 ~ OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/base.py:46-56, similarity 1.000)",
       "locations": [
         {
           "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/base.py",
@@ -1816,81 +1945,7 @@
           "end_line": 56,
           "prose_kind": "docstring"
         },
-        "similarity": 0.7931034482758621
-      }
-    },
-    {
-      "code": "TPX003",
-      "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/base.py",
-      "line": 99,
-      "end_line": 109,
-      "prose_kind": "docstring",
-      "message": "OpenHands/openhands/app_server/integrations/bitbucket/service/base.py:99-109: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/base.py:108-118 (weakest OpenHands/openhands/app_server/integrations/bitbucket/service/base.py:99-109 ~ OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/base.py:108-118, similarity 0.829)",
-      "locations": [
-        {
-          "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/base.py",
-          "line": 99,
-          "end_line": 109,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/base.py",
-          "line": 108,
-          "end_line": 118,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/base.py",
-          "line": 99,
-          "end_line": 109,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/base.py",
-          "line": 108,
-          "end_line": 118,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.8285714285714286
-      }
-    },
-    {
-      "code": "TPX003",
-      "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/base.py",
-      "line": 136,
-      "end_line": 145,
-      "prose_kind": "docstring",
-      "message": "OpenHands/openhands/app_server/integrations/bitbucket/service/base.py:136-145: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/base.py:156-165 (weakest OpenHands/openhands/app_server/integrations/bitbucket/service/base.py:136-145 ~ OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/base.py:156-165, similarity 0.842)",
-      "locations": [
-        {
-          "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/base.py",
-          "line": 136,
-          "end_line": 145,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/base.py",
-          "line": 156,
-          "end_line": 165,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/base.py",
-          "line": 136,
-          "end_line": 145,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/base.py",
-          "line": 156,
-          "end_line": 165,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.8421052631578947
+        "similarity": 1.0
       }
     },
     {
@@ -1932,168 +1987,39 @@
     },
     {
       "code": "TPX003",
-      "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/prs.py",
-      "line": 20,
-      "end_line": 32,
+      "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/base.py",
+      "line": 239,
+      "end_line": 246,
       "prose_kind": "docstring",
-      "message": "OpenHands/openhands/app_server/integrations/bitbucket/service/prs.py:20-32: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/prs.py:24-36 (weakest OpenHands/openhands/app_server/integrations/bitbucket/service/prs.py:20-32 ~ OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/prs.py:24-36, similarity 0.806)",
+      "message": "OpenHands/openhands/app_server/integrations/bitbucket/service/base.py:239-246: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/base.py:361-368 (weakest OpenHands/openhands/app_server/integrations/bitbucket/service/base.py:239-246 ~ OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/base.py:361-368, similarity 1.000)",
       "locations": [
         {
-          "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/prs.py",
-          "line": 20,
-          "end_line": 32,
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/base.py",
+          "line": 239,
+          "end_line": 246,
           "prose_kind": "docstring"
         },
         {
-          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/prs.py",
-          "line": 24,
-          "end_line": 36,
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/base.py",
+          "line": 361,
+          "end_line": 368,
           "prose_kind": "docstring"
         }
       ],
       "weakest": {
         "first": {
-          "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/prs.py",
-          "line": 20,
-          "end_line": 32,
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/base.py",
+          "line": 239,
+          "end_line": 246,
           "prose_kind": "docstring"
         },
         "second": {
-          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/prs.py",
-          "line": 24,
-          "end_line": 36,
+          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/base.py",
+          "line": 361,
+          "end_line": 368,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8064516129032258
-      }
-    },
-    {
-      "code": "TPX003",
-      "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/prs.py",
-      "line": 54,
-      "end_line": 62,
-      "prose_kind": "docstring",
-      "message": "OpenHands/openhands/app_server/integrations/bitbucket/service/prs.py:54-62: TPX003 same explanation in 3 places: OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/prs.py:86-94, OpenHands/openhands/app_server/integrations/github/service/prs.py:69-77 (weakest OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/prs.py:86-94 ~ OpenHands/openhands/app_server/integrations/github/service/prs.py:69-77, similarity 0.758)",
-      "locations": [
-        {
-          "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/prs.py",
-          "line": 54,
-          "end_line": 62,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/prs.py",
-          "line": 86,
-          "end_line": 94,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "OpenHands/openhands/app_server/integrations/github/service/prs.py",
-          "line": 69,
-          "end_line": 77,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/prs.py",
-          "line": 86,
-          "end_line": 94,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "OpenHands/openhands/app_server/integrations/github/service/prs.py",
-          "line": 69,
-          "end_line": 77,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.7575757575757576
-      }
-    },
-    {
-      "code": "TPX003",
-      "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/prs.py",
-      "line": 69,
-      "end_line": 77,
-      "prose_kind": "docstring",
-      "message": "OpenHands/openhands/app_server/integrations/bitbucket/service/prs.py:69-77: TPX003 same explanation in 4 places: OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/prs.py:104-112, OpenHands/openhands/app_server/integrations/github/service/prs.py:84-92, OpenHands/openhands/app_server/integrations/service_types.py:324-332 (weakest OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/prs.py:104-112 ~ OpenHands/openhands/app_server/integrations/service_types.py:324-332, similarity 0.756)",
-      "locations": [
-        {
-          "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/prs.py",
-          "line": 69,
-          "end_line": 77,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/prs.py",
-          "line": 104,
-          "end_line": 112,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "OpenHands/openhands/app_server/integrations/github/service/prs.py",
-          "line": 84,
-          "end_line": 92,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "OpenHands/openhands/app_server/integrations/service_types.py",
-          "line": 324,
-          "end_line": 332,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/prs.py",
-          "line": 104,
-          "end_line": 112,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "OpenHands/openhands/app_server/integrations/service_types.py",
-          "line": 324,
-          "end_line": 332,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.7560975609756098
-      }
-    },
-    {
-      "code": "TPX003",
-      "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/repos.py",
-      "line": 118,
-      "end_line": 128,
-      "prose_kind": "docstring",
-      "message": "OpenHands/openhands/app_server/integrations/bitbucket/service/repos.py:118-128: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/repos.py:128-138 (weakest OpenHands/openhands/app_server/integrations/bitbucket/service/repos.py:118-128 ~ OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/repos.py:128-138, similarity 0.789)",
-      "locations": [
-        {
-          "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/repos.py",
-          "line": 118,
-          "end_line": 128,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/repos.py",
-          "line": 128,
-          "end_line": 138,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "OpenHands/openhands/app_server/integrations/bitbucket/service/repos.py",
-          "line": 118,
-          "end_line": 128,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "OpenHands/openhands/app_server/integrations/bitbucket_data_center/service/repos.py",
-          "line": 128,
-          "end_line": 138,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.7894736842105263
+        "similarity": 1.0
       }
     },
     {
@@ -2212,6 +2138,43 @@
           "path": "OpenHands/openhands/app_server/integrations/gitlab/service/base.py",
           "line": 17,
           "end_line": 19,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "OpenHands/openhands/app_server/integrations/provider.py",
+      "line": 516,
+      "end_line": 527,
+      "prose_kind": "docstring",
+      "message": "OpenHands/openhands/app_server/integrations/provider.py:516-527: TPX003 same explanation in 2 places: OpenHands/openhands/app_server/user/user_context.py:60-66 (weakest OpenHands/openhands/app_server/integrations/provider.py:516-527 ~ OpenHands/openhands/app_server/user/user_context.py:60-66, similarity 1.000)",
+      "locations": [
+        {
+          "path": "OpenHands/openhands/app_server/integrations/provider.py",
+          "line": 516,
+          "end_line": 527,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "OpenHands/openhands/app_server/user/user_context.py",
+          "line": 60,
+          "end_line": 66,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "OpenHands/openhands/app_server/integrations/provider.py",
+          "line": 516,
+          "end_line": 527,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "OpenHands/openhands/app_server/user/user_context.py",
+          "line": 60,
+          "end_line": 66,
           "prose_kind": "docstring"
         },
         "similarity": 1.0

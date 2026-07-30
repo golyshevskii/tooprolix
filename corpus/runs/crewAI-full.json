@@ -27,6 +27,80 @@
   "findings": [
     {
       "code": "TPX003",
+      "path": "crewAI/lib/cli/src/crewai_cli/cli.py",
+      "line": 275,
+      "end_line": 280,
+      "prose_kind": "docstring",
+      "message": "crewAI/lib/cli/src/crewai_cli/cli.py:275-280: TPX003 same explanation in 2 places: crewAI/lib/cli/src/crewai_cli/replay_from_task.py:10-16 (weakest crewAI/lib/cli/src/crewai_cli/cli.py:275-280 ~ crewAI/lib/cli/src/crewai_cli/replay_from_task.py:10-16, similarity 1.000)",
+      "locations": [
+        {
+          "path": "crewAI/lib/cli/src/crewai_cli/cli.py",
+          "line": 275,
+          "end_line": 280,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/cli/src/crewai_cli/replay_from_task.py",
+          "line": 10,
+          "end_line": 16,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "crewAI/lib/cli/src/crewai_cli/cli.py",
+          "line": 275,
+          "end_line": 280,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "crewAI/lib/cli/src/crewai_cli/replay_from_task.py",
+          "line": 10,
+          "end_line": 16,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "crewAI/lib/cli/src/crewai_cli/deploy/main.py",
+      "line": 583,
+      "end_line": 588,
+      "prose_kind": "docstring",
+      "message": "crewAI/lib/cli/src/crewai_cli/deploy/main.py:583-588: TPX003 same explanation in 2 places: crewAI/lib/crewai-tools/src/crewai_tools/tools/invoke_crewai_automation_tool/invoke_crewai_automation_tool.py:136-143 (weakest crewAI/lib/cli/src/crewai_cli/deploy/main.py:583-588 ~ crewAI/lib/crewai-tools/src/crewai_tools/tools/invoke_crewai_automation_tool/invoke_crewai_automation_tool.py:136-143, similarity 0.800)",
+      "locations": [
+        {
+          "path": "crewAI/lib/cli/src/crewai_cli/deploy/main.py",
+          "line": 583,
+          "end_line": 588,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai-tools/src/crewai_tools/tools/invoke_crewai_automation_tool/invoke_crewai_automation_tool.py",
+          "line": 136,
+          "end_line": 143,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "crewAI/lib/cli/src/crewai_cli/deploy/main.py",
+          "line": 583,
+          "end_line": 588,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "crewAI/lib/crewai-tools/src/crewai_tools/tools/invoke_crewai_automation_tool/invoke_crewai_automation_tool.py",
+          "line": 136,
+          "end_line": 143,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8
+      }
+    },
+    {
+      "code": "TPX003",
       "path": "crewAI/lib/cli/src/crewai_cli/run_crew.py",
       "line": 362,
       "end_line": 364,
@@ -142,7 +216,7 @@
       "line": 25,
       "end_line": 34,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py:25-34: TPX003 same explanation in 2 places: crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py:190-199 (weakest crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py:25-34 ~ crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py:190-199, similarity 0.969)",
+      "message": "crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py:25-34: TPX003 same explanation in 2 places: crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py:190-199 (weakest crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py:25-34 ~ crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py:190-199, similarity 0.833)",
       "locations": [
         {
           "path": "crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py",
@@ -170,7 +244,7 @@
           "end_line": 199,
           "prose_kind": "docstring"
         },
-        "similarity": 0.96875
+        "similarity": 0.8333333333333334
       }
     },
     {
@@ -179,7 +253,7 @@
       "line": 52,
       "end_line": 61,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py:52-61: TPX003 same explanation in 2 places: crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py:218-228 (weakest crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py:52-61 ~ crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py:218-228, similarity 0.768)",
+      "message": "crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py:52-61: TPX003 same explanation in 2 places: crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py:218-228 (weakest crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py:52-61 ~ crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py:218-228, similarity 0.900)",
       "locations": [
         {
           "path": "crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py",
@@ -207,7 +281,167 @@
           "end_line": 228,
           "prose_kind": "docstring"
         },
-        "similarity": 0.7678571428571429
+        "similarity": 0.9
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py",
+      "line": 95,
+      "end_line": 104,
+      "prose_kind": "docstring",
+      "message": "crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py:95-104: TPX003 same explanation in 2 places: crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py:276-285 (weakest crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py:95-104 ~ crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py:276-285, similarity 0.833)",
+      "locations": [
+        {
+          "path": "crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py",
+          "line": 95,
+          "end_line": 104,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py",
+          "line": 276,
+          "end_line": 285,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py",
+          "line": 95,
+          "end_line": 104,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py",
+          "line": 276,
+          "end_line": 285,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8333333333333334
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py",
+      "line": 135,
+      "end_line": 145,
+      "prose_kind": "docstring",
+      "message": "crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py:135-145: TPX003 same explanation in 2 places: crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py:325-335 (weakest crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py:135-145 ~ crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py:325-335, similarity 0.857)",
+      "locations": [
+        {
+          "path": "crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py",
+          "line": 135,
+          "end_line": 145,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py",
+          "line": 325,
+          "end_line": 335,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py",
+          "line": 135,
+          "end_line": 145,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "crewAI/lib/crewai-files/src/crewai_files/cache/cleanup.py",
+          "line": 325,
+          "end_line": 335,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8571428571428571
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "crewAI/lib/crewai-files/src/crewai_files/cache/upload_cache.py",
+      "line": 384,
+      "end_line": 391,
+      "prose_kind": "docstring",
+      "message": "crewAI/lib/crewai-files/src/crewai_files/cache/upload_cache.py:384-391: TPX003 same explanation in 2 places: crewAI/lib/crewai-files/src/crewai_files/resolution/resolver.py:634-641 (weakest crewAI/lib/crewai-files/src/crewai_files/cache/upload_cache.py:384-391 ~ crewAI/lib/crewai-files/src/crewai_files/resolution/resolver.py:634-641, similarity 1.000)",
+      "locations": [
+        {
+          "path": "crewAI/lib/crewai-files/src/crewai_files/cache/upload_cache.py",
+          "line": 384,
+          "end_line": 391,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai-files/src/crewai_files/resolution/resolver.py",
+          "line": 634,
+          "end_line": 641,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "crewAI/lib/crewai-files/src/crewai_files/cache/upload_cache.py",
+          "line": 384,
+          "end_line": 391,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "crewAI/lib/crewai-files/src/crewai_files/resolution/resolver.py",
+          "line": 634,
+          "end_line": 641,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "crewAI/lib/crewai-files/src/crewai_files/processing/exceptions.py",
+      "line": 8,
+      "end_line": 13,
+      "prose_kind": "docstring",
+      "message": "crewAI/lib/crewai-files/src/crewai_files/processing/exceptions.py:8-13: TPX003 same explanation in 4 places: crewAI/lib/crewai-files/src/crewai_files/processing/exceptions.py:32-39, crewAI/lib/crewai-files/src/crewai_files/processing/exceptions.py:54-60, crewAI/lib/crewai-files/src/crewai_files/processing/exceptions.py:74-80 (weakest crewAI/lib/crewai-files/src/crewai_files/processing/exceptions.py:8-13 ~ crewAI/lib/crewai-files/src/crewai_files/processing/exceptions.py:32-39, similarity 1.000)",
+      "locations": [
+        {
+          "path": "crewAI/lib/crewai-files/src/crewai_files/processing/exceptions.py",
+          "line": 8,
+          "end_line": 13,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai-files/src/crewai_files/processing/exceptions.py",
+          "line": 32,
+          "end_line": 39,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai-files/src/crewai_files/processing/exceptions.py",
+          "line": 54,
+          "end_line": 60,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai-files/src/crewai_files/processing/exceptions.py",
+          "line": 74,
+          "end_line": 80,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "crewAI/lib/crewai-files/src/crewai_files/processing/exceptions.py",
+          "line": 8,
+          "end_line": 13,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "crewAI/lib/crewai-files/src/crewai_files/processing/exceptions.py",
+          "line": 32,
+          "end_line": 39,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
       }
     },
     {
@@ -216,7 +450,7 @@
       "line": 165,
       "end_line": 173,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai-files/src/crewai_files/resolution/resolver.py:165-173: TPX003 same explanation in 2 places: crewAI/lib/crewai-files/src/crewai_files/resolution/resolver.py:430-438 (weakest crewAI/lib/crewai-files/src/crewai_files/resolution/resolver.py:165-173 ~ crewAI/lib/crewai-files/src/crewai_files/resolution/resolver.py:430-438, similarity 0.967)",
+      "message": "crewAI/lib/crewai-files/src/crewai_files/resolution/resolver.py:165-173: TPX003 same explanation in 2 places: crewAI/lib/crewai-files/src/crewai_files/resolution/resolver.py:430-438 (weakest crewAI/lib/crewai-files/src/crewai_files/resolution/resolver.py:165-173 ~ crewAI/lib/crewai-files/src/crewai_files/resolution/resolver.py:430-438, similarity 0.889)",
       "locations": [
         {
           "path": "crewAI/lib/crewai-files/src/crewai_files/resolution/resolver.py",
@@ -244,7 +478,7 @@
           "end_line": 438,
           "prose_kind": "docstring"
         },
-        "similarity": 0.9666666666666667
+        "similarity": 0.8888888888888888
       }
     },
     {
@@ -253,7 +487,7 @@
       "line": 285,
       "end_line": 294,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai-files/src/crewai_files/resolution/resolver.py:285-294: TPX003 same explanation in 2 places: crewAI/lib/crewai-files/src/crewai_files/resolution/resolver.py:500-509 (weakest crewAI/lib/crewai-files/src/crewai_files/resolution/resolver.py:285-294 ~ crewAI/lib/crewai-files/src/crewai_files/resolution/resolver.py:500-509, similarity 0.962)",
+      "message": "crewAI/lib/crewai-files/src/crewai_files/resolution/resolver.py:285-294: TPX003 same explanation in 2 places: crewAI/lib/crewai-files/src/crewai_files/resolution/resolver.py:500-509 (weakest crewAI/lib/crewai-files/src/crewai_files/resolution/resolver.py:285-294 ~ crewAI/lib/crewai-files/src/crewai_files/resolution/resolver.py:500-509, similarity 0.800)",
       "locations": [
         {
           "path": "crewAI/lib/crewai-files/src/crewai_files/resolution/resolver.py",
@@ -281,7 +515,7 @@
           "end_line": 509,
           "prose_kind": "docstring"
         },
-        "similarity": 0.9615384615384616
+        "similarity": 0.8
       }
     },
     {
@@ -290,7 +524,7 @@
       "line": 343,
       "end_line": 353,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai-files/src/crewai_files/resolution/resolver.py:343-353: TPX003 same explanation in 2 places: crewAI/lib/crewai-files/src/crewai_files/resolution/resolver.py:560-570 (weakest crewAI/lib/crewai-files/src/crewai_files/resolution/resolver.py:343-353 ~ crewAI/lib/crewai-files/src/crewai_files/resolution/resolver.py:560-570, similarity 0.971)",
+      "message": "crewAI/lib/crewai-files/src/crewai_files/resolution/resolver.py:343-353: TPX003 same explanation in 2 places: crewAI/lib/crewai-files/src/crewai_files/resolution/resolver.py:560-570 (weakest crewAI/lib/crewai-files/src/crewai_files/resolution/resolver.py:343-353 ~ crewAI/lib/crewai-files/src/crewai_files/resolution/resolver.py:560-570, similarity 0.750)",
       "locations": [
         {
           "path": "crewAI/lib/crewai-files/src/crewai_files/resolution/resolver.py",
@@ -318,44 +552,7 @@
           "end_line": 570,
           "prose_kind": "docstring"
         },
-        "similarity": 0.9705882352941176
-      }
-    },
-    {
-      "code": "TPX003",
-      "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/anthropic.py",
-      "line": 77,
-      "end_line": 89,
-      "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai-files/src/crewai_files/uploaders/anthropic.py:77-89: TPX003 same explanation in 2 places: crewAI/lib/crewai-files/src/crewai_files/uploaders/anthropic.py:185-197 (weakest crewAI/lib/crewai-files/src/crewai_files/uploaders/anthropic.py:77-89 ~ crewAI/lib/crewai-files/src/crewai_files/uploaders/anthropic.py:185-197, similarity 0.812)",
-      "locations": [
-        {
-          "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/anthropic.py",
-          "line": 77,
-          "end_line": 89,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/anthropic.py",
-          "line": 185,
-          "end_line": 197,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/anthropic.py",
-          "line": 77,
-          "end_line": 89,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/anthropic.py",
-          "line": 185,
-          "end_line": 197,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.8125
+        "similarity": 0.75
       }
     },
     {
@@ -364,7 +561,7 @@
       "line": 119,
       "end_line": 126,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai-files/src/crewai_files/uploaders/anthropic.py:119-126: TPX003 same explanation in 4 places: crewAI/lib/crewai-files/src/crewai_files/uploaders/anthropic.py:227-234, crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:403-410, crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:680-687 (weakest crewAI/lib/crewai-files/src/crewai_files/uploaders/anthropic.py:227-234 ~ crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:680-687, similarity 0.750)",
+      "message": "crewAI/lib/crewai-files/src/crewai_files/uploaders/anthropic.py:119-126: TPX003 same explanation in 2 places: crewAI/lib/crewai-files/src/crewai_files/uploaders/anthropic.py:227-234 (weakest crewAI/lib/crewai-files/src/crewai_files/uploaders/anthropic.py:119-126 ~ crewAI/lib/crewai-files/src/crewai_files/uploaders/anthropic.py:227-234, similarity 0.800)",
       "locations": [
         {
           "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/anthropic.py",
@@ -377,34 +574,22 @@
           "line": 227,
           "end_line": 234,
           "prose_kind": "docstring"
-        },
-        {
-          "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py",
-          "line": 403,
-          "end_line": 410,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py",
-          "line": 680,
-          "end_line": 687,
-          "prose_kind": "docstring"
         }
       ],
       "weakest": {
         "first": {
           "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/anthropic.py",
+          "line": 119,
+          "end_line": 126,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/anthropic.py",
           "line": 227,
           "end_line": 234,
           "prose_kind": "docstring"
         },
-        "second": {
-          "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py",
-          "line": 680,
-          "end_line": 687,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.75
+        "similarity": 0.8
       }
     },
     {
@@ -413,12 +598,24 @@
       "line": 137,
       "end_line": 144,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai-files/src/crewai_files/uploaders/anthropic.py:137-144: TPX003 same explanation in 3 places: crewAI/lib/crewai-files/src/crewai_files/uploaders/gemini.py:327-334, crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:421-428 (weakest crewAI/lib/crewai-files/src/crewai_files/uploaders/anthropic.py:137-144 ~ crewAI/lib/crewai-files/src/crewai_files/uploaders/gemini.py:327-334, similarity 0.783)",
+      "message": "crewAI/lib/crewai-files/src/crewai_files/uploaders/anthropic.py:137-144: TPX003 same explanation in 5 places: crewAI/lib/crewai-files/src/crewai_files/uploaders/base.py:102-109, crewAI/lib/crewai-files/src/crewai_files/uploaders/bedrock.py:330-337, crewAI/lib/crewai-files/src/crewai_files/uploaders/gemini.py:327-334, crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:421-428 (weakest crewAI/lib/crewai-files/src/crewai_files/uploaders/anthropic.py:137-144 ~ crewAI/lib/crewai-files/src/crewai_files/uploaders/base.py:102-109, similarity 1.000)",
       "locations": [
         {
           "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/anthropic.py",
           "line": 137,
           "end_line": 144,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/base.py",
+          "line": 102,
+          "end_line": 109,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/bedrock.py",
+          "line": 330,
+          "end_line": 337,
           "prose_kind": "docstring"
         },
         {
@@ -442,12 +639,12 @@
           "prose_kind": "docstring"
         },
         "second": {
-          "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/gemini.py",
-          "line": 327,
-          "end_line": 334,
+          "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/base.py",
+          "line": 102,
+          "end_line": 109,
           "prose_kind": "docstring"
         },
-        "similarity": 0.782608695652174
+        "similarity": 1.0
       }
     },
     {
@@ -539,10 +736,47 @@
     {
       "code": "TPX003",
       "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/bedrock.py",
+      "line": 68,
+      "end_line": 75,
+      "prose_kind": "docstring",
+      "message": "crewAI/lib/crewai-files/src/crewai_files/uploaders/bedrock.py:68-75: TPX003 same explanation in 2 places: crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:47-54 (weakest crewAI/lib/crewai-files/src/crewai_files/uploaders/bedrock.py:68-75 ~ crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:47-54, similarity 1.000)",
+      "locations": [
+        {
+          "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/bedrock.py",
+          "line": 68,
+          "end_line": 75,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py",
+          "line": 47,
+          "end_line": 54,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/bedrock.py",
+          "line": 68,
+          "end_line": 75,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py",
+          "line": 47,
+          "end_line": 54,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/bedrock.py",
       "line": 237,
       "end_line": 252,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai-files/src/crewai_files/uploaders/bedrock.py:237-252: TPX003 same explanation in 2 places: crewAI/lib/crewai-files/src/crewai_files/uploaders/bedrock.py:382-397 (weakest crewAI/lib/crewai-files/src/crewai_files/uploaders/bedrock.py:237-252 ~ crewAI/lib/crewai-files/src/crewai_files/uploaders/bedrock.py:382-397, similarity 0.984)",
+      "message": "crewAI/lib/crewai-files/src/crewai_files/uploaders/bedrock.py:237-252: TPX003 same explanation in 2 places: crewAI/lib/crewai-files/src/crewai_files/uploaders/bedrock.py:382-397 (weakest crewAI/lib/crewai-files/src/crewai_files/uploaders/bedrock.py:237-252 ~ crewAI/lib/crewai-files/src/crewai_files/uploaders/bedrock.py:382-397, similarity 0.964)",
       "locations": [
         {
           "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/bedrock.py",
@@ -570,7 +804,7 @@
           "end_line": 397,
           "prose_kind": "docstring"
         },
-        "similarity": 0.984375
+        "similarity": 0.9642857142857143
       }
     },
     {
@@ -579,7 +813,7 @@
       "line": 310,
       "end_line": 317,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai-files/src/crewai_files/uploaders/bedrock.py:310-317: TPX003 same explanation in 2 places: crewAI/lib/crewai-files/src/crewai_files/uploaders/bedrock.py:459-466 (weakest crewAI/lib/crewai-files/src/crewai_files/uploaders/bedrock.py:310-317 ~ crewAI/lib/crewai-files/src/crewai_files/uploaders/bedrock.py:459-466, similarity 0.952)",
+      "message": "crewAI/lib/crewai-files/src/crewai_files/uploaders/bedrock.py:310-317: TPX003 same explanation in 2 places: crewAI/lib/crewai-files/src/crewai_files/uploaders/bedrock.py:459-466 (weakest crewAI/lib/crewai-files/src/crewai_files/uploaders/bedrock.py:310-317 ~ crewAI/lib/crewai-files/src/crewai_files/uploaders/bedrock.py:459-466, similarity 0.800)",
       "locations": [
         {
           "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/bedrock.py",
@@ -607,44 +841,7 @@
           "end_line": 466,
           "prose_kind": "docstring"
         },
-        "similarity": 0.9523809523809523
-      }
-    },
-    {
-      "code": "TPX003",
-      "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/gemini.py",
-      "line": 131,
-      "end_line": 146,
-      "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai-files/src/crewai_files/uploaders/gemini.py:131-146: TPX003 same explanation in 2 places: crewAI/lib/crewai-files/src/crewai_files/uploaders/gemini.py:212-227 (weakest crewAI/lib/crewai-files/src/crewai_files/uploaders/gemini.py:131-146 ~ crewAI/lib/crewai-files/src/crewai_files/uploaders/gemini.py:212-227, similarity 0.866)",
-      "locations": [
-        {
-          "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/gemini.py",
-          "line": 131,
-          "end_line": 146,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/gemini.py",
-          "line": 212,
-          "end_line": 227,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/gemini.py",
-          "line": 131,
-          "end_line": 146,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/gemini.py",
-          "line": 212,
-          "end_line": 227,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.8656716417910447
+        "similarity": 0.8
       }
     },
     {
@@ -653,7 +850,7 @@
       "line": 291,
       "end_line": 298,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai-files/src/crewai_files/uploaders/gemini.py:291-298: TPX003 same explanation in 2 places: crewAI/lib/crewai-files/src/crewai_files/uploaders/gemini.py:309-316 (weakest crewAI/lib/crewai-files/src/crewai_files/uploaders/gemini.py:291-298 ~ crewAI/lib/crewai-files/src/crewai_files/uploaders/gemini.py:309-316, similarity 0.955)",
+      "message": "crewAI/lib/crewai-files/src/crewai_files/uploaders/gemini.py:291-298: TPX003 same explanation in 2 places: crewAI/lib/crewai-files/src/crewai_files/uploaders/gemini.py:309-316 (weakest crewAI/lib/crewai-files/src/crewai_files/uploaders/gemini.py:291-298 ~ crewAI/lib/crewai-files/src/crewai_files/uploaders/gemini.py:309-316, similarity 0.800)",
       "locations": [
         {
           "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/gemini.py",
@@ -681,7 +878,7 @@
           "end_line": 316,
           "prose_kind": "docstring"
         },
-        "similarity": 0.9545454545454546
+        "similarity": 0.8
       }
     },
     {
@@ -690,7 +887,7 @@
       "line": 377,
       "end_line": 387,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai-files/src/crewai_files/uploaders/gemini.py:377-387: TPX003 same explanation in 2 places: crewAI/lib/crewai-files/src/crewai_files/uploaders/gemini.py:415-425 (weakest crewAI/lib/crewai-files/src/crewai_files/uploaders/gemini.py:377-387 ~ crewAI/lib/crewai-files/src/crewai_files/uploaders/gemini.py:415-425, similarity 0.977)",
+      "message": "crewAI/lib/crewai-files/src/crewai_files/uploaders/gemini.py:377-387: TPX003 same explanation in 2 places: crewAI/lib/crewai-files/src/crewai_files/uploaders/gemini.py:415-425 (weakest crewAI/lib/crewai-files/src/crewai_files/uploaders/gemini.py:377-387 ~ crewAI/lib/crewai-files/src/crewai_files/uploaders/gemini.py:415-425, similarity 0.947)",
       "locations": [
         {
           "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/gemini.py",
@@ -718,44 +915,44 @@
           "end_line": 425,
           "prose_kind": "docstring"
         },
-        "similarity": 0.9767441860465116
+        "similarity": 0.9473684210526315
       }
     },
     {
       "code": "TPX003",
       "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py",
-      "line": 193,
-      "end_line": 208,
+      "line": 64,
+      "end_line": 72,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:193-208: TPX003 same explanation in 2 places: crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:471-486 (weakest crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:193-208 ~ crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:471-486, similarity 0.873)",
+      "message": "crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:64-72: TPX003 same explanation in 2 places: crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:85-94 (weakest crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:64-72 ~ crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:85-94, similarity 0.800)",
       "locations": [
         {
           "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py",
-          "line": 193,
-          "end_line": 208,
+          "line": 64,
+          "end_line": 72,
           "prose_kind": "docstring"
         },
         {
           "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py",
-          "line": 471,
-          "end_line": 486,
+          "line": 85,
+          "end_line": 94,
           "prose_kind": "docstring"
         }
       ],
       "weakest": {
         "first": {
           "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py",
-          "line": 193,
-          "end_line": 208,
+          "line": 64,
+          "end_line": 72,
           "prose_kind": "docstring"
         },
         "second": {
           "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py",
-          "line": 471,
-          "end_line": 486,
+          "line": 85,
+          "end_line": 94,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8732394366197183
+        "similarity": 0.8
       }
     },
     {
@@ -764,7 +961,7 @@
       "line": 232,
       "end_line": 241,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:232-241: TPX003 same explanation in 2 places: crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:510-519 (weakest crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:232-241 ~ crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:510-519, similarity 0.970)",
+      "message": "crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:232-241: TPX003 same explanation in 2 places: crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:510-519 (weakest crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:232-241 ~ crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:510-519, similarity 0.889)",
       "locations": [
         {
           "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py",
@@ -792,7 +989,7 @@
           "end_line": 519,
           "prose_kind": "docstring"
         },
-        "similarity": 0.9696969696969697
+        "similarity": 0.8888888888888888
       }
     },
     {
@@ -801,7 +998,7 @@
       "line": 340,
       "end_line": 352,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:340-352: TPX003 same explanation in 2 places: crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:617-629 (weakest crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:340-352 ~ crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:617-629, similarity 0.981)",
+      "message": "crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:340-352: TPX003 same explanation in 2 places: crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:617-629 (weakest crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:340-352 ~ crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:617-629, similarity 0.960)",
       "locations": [
         {
           "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py",
@@ -829,44 +1026,81 @@
           "end_line": 629,
           "prose_kind": "docstring"
         },
-        "similarity": 0.9807692307692307
+        "similarity": 0.96
       }
     },
     {
       "code": "TPX003",
-      "path": "crewAI/lib/crewai-tools/src/crewai_tools/adapters/crewai_rag_adapter.py",
-      "line": 116,
-      "end_line": 138,
+      "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py",
+      "line": 403,
+      "end_line": 410,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai-tools/src/crewai_tools/adapters/crewai_rag_adapter.py:116-138: TPX003 same explanation in 2 places: crewAI/lib/crewai-tools/src/crewai_tools/tools/rag/rag_tool.py:253-277 (weakest crewAI/lib/crewai-tools/src/crewai_tools/adapters/crewai_rag_adapter.py:116-138 ~ crewAI/lib/crewai-tools/src/crewai_tools/tools/rag/rag_tool.py:253-277, similarity 0.769)",
+      "message": "crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:403-410: TPX003 same explanation in 2 places: crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:680-687 (weakest crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:403-410 ~ crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py:680-687, similarity 0.800)",
       "locations": [
         {
-          "path": "crewAI/lib/crewai-tools/src/crewai_tools/adapters/crewai_rag_adapter.py",
-          "line": 116,
-          "end_line": 138,
+          "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py",
+          "line": 403,
+          "end_line": 410,
           "prose_kind": "docstring"
         },
         {
-          "path": "crewAI/lib/crewai-tools/src/crewai_tools/tools/rag/rag_tool.py",
-          "line": 253,
-          "end_line": 277,
+          "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py",
+          "line": 680,
+          "end_line": 687,
           "prose_kind": "docstring"
         }
       ],
       "weakest": {
         "first": {
-          "path": "crewAI/lib/crewai-tools/src/crewai_tools/adapters/crewai_rag_adapter.py",
-          "line": 116,
-          "end_line": 138,
+          "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py",
+          "line": 403,
+          "end_line": 410,
           "prose_kind": "docstring"
         },
         "second": {
-          "path": "crewAI/lib/crewai-tools/src/crewai_tools/tools/rag/rag_tool.py",
-          "line": 253,
-          "end_line": 277,
+          "path": "crewAI/lib/crewai-files/src/crewai_files/uploaders/openai.py",
+          "line": 680,
+          "end_line": 687,
           "prose_kind": "docstring"
         },
-        "similarity": 0.768595041322314
+        "similarity": 0.8
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "crewAI/lib/crewai-tools/src/crewai_tools/aws/bedrock/browser/browser_toolkit.py",
+      "line": 505,
+      "end_line": 509,
+      "prose_kind": "docstring",
+      "message": "crewAI/lib/crewai-tools/src/crewai_tools/aws/bedrock/browser/browser_toolkit.py:505-509: TPX003 same explanation in 2 places: crewAI/lib/crewai-tools/src/crewai_tools/aws/bedrock/code_interpreter/code_interpreter_toolkit.py:496-500 (weakest crewAI/lib/crewai-tools/src/crewai_tools/aws/bedrock/browser/browser_toolkit.py:505-509 ~ crewAI/lib/crewai-tools/src/crewai_tools/aws/bedrock/code_interpreter/code_interpreter_toolkit.py:496-500, similarity 1.000)",
+      "locations": [
+        {
+          "path": "crewAI/lib/crewai-tools/src/crewai_tools/aws/bedrock/browser/browser_toolkit.py",
+          "line": 505,
+          "end_line": 509,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai-tools/src/crewai_tools/aws/bedrock/code_interpreter/code_interpreter_toolkit.py",
+          "line": 496,
+          "end_line": 500,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "crewAI/lib/crewai-tools/src/crewai_tools/aws/bedrock/browser/browser_toolkit.py",
+          "line": 505,
+          "end_line": 509,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "crewAI/lib/crewai-tools/src/crewai_tools/aws/bedrock/code_interpreter/code_interpreter_toolkit.py",
+          "line": 496,
+          "end_line": 500,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
       }
     },
     {
@@ -907,6 +1141,43 @@
       }
     },
     {
+      "code": "TPX003",
+      "path": "crewAI/lib/crewai-tools/src/crewai_tools/aws/bedrock/browser/utils.py",
+      "line": 12,
+      "end_line": 19,
+      "prose_kind": "docstring",
+      "message": "crewAI/lib/crewai-tools/src/crewai_tools/aws/bedrock/browser/utils.py:12-19: TPX003 same explanation in 2 places: crewAI/lib/crewai-tools/src/crewai_tools/aws/bedrock/browser/utils.py:30-37 (weakest crewAI/lib/crewai-tools/src/crewai_tools/aws/bedrock/browser/utils.py:12-19 ~ crewAI/lib/crewai-tools/src/crewai_tools/aws/bedrock/browser/utils.py:30-37, similarity 0.833)",
+      "locations": [
+        {
+          "path": "crewAI/lib/crewai-tools/src/crewai_tools/aws/bedrock/browser/utils.py",
+          "line": 12,
+          "end_line": 19,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai-tools/src/crewai_tools/aws/bedrock/browser/utils.py",
+          "line": 30,
+          "end_line": 37,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "crewAI/lib/crewai-tools/src/crewai_tools/aws/bedrock/browser/utils.py",
+          "line": 12,
+          "end_line": 19,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "crewAI/lib/crewai-tools/src/crewai_tools/aws/bedrock/browser/utils.py",
+          "line": 30,
+          "end_line": 37,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8333333333333334
+      }
+    },
+    {
       "code": "TPX002",
       "path": "crewAI/lib/crewai-tools/src/crewai_tools/aws/bedrock/code_interpreter/code_interpreter_toolkit.py",
       "line": 443,
@@ -915,43 +1186,6 @@
       "message": "crewAI/lib/crewai-tools/src/crewai_tools/aws/bedrock/code_interpreter/code_interpreter_toolkit.py:443-493: TPX002 docstring is 241 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 241,
       "max_volume": 200
-    },
-    {
-      "code": "TPX003",
-      "path": "crewAI/lib/crewai-tools/src/crewai_tools/rag/loaders/mysql_loader.py",
-      "line": 17,
-      "end_line": 25,
-      "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai-tools/src/crewai_tools/rag/loaders/mysql_loader.py:17-25: TPX003 same explanation in 2 places: crewAI/lib/crewai-tools/src/crewai_tools/rag/loaders/postgres_loader.py:17-25 (weakest crewAI/lib/crewai-tools/src/crewai_tools/rag/loaders/mysql_loader.py:17-25 ~ crewAI/lib/crewai-tools/src/crewai_tools/rag/loaders/postgres_loader.py:17-25, similarity 0.793)",
-      "locations": [
-        {
-          "path": "crewAI/lib/crewai-tools/src/crewai_tools/rag/loaders/mysql_loader.py",
-          "line": 17,
-          "end_line": 25,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "crewAI/lib/crewai-tools/src/crewai_tools/rag/loaders/postgres_loader.py",
-          "line": 17,
-          "end_line": 25,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "crewAI/lib/crewai-tools/src/crewai_tools/rag/loaders/mysql_loader.py",
-          "line": 17,
-          "end_line": 25,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "crewAI/lib/crewai-tools/src/crewai_tools/rag/loaders/postgres_loader.py",
-          "line": 17,
-          "end_line": 25,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.7931034482758621
-      }
     },
     {
       "code": "TPX003",
@@ -1012,48 +1246,11 @@
     },
     {
       "code": "TPX003",
-      "path": "crewAI/lib/crewai-tools/src/crewai_tools/tools/tavily_extractor_tool/tavily_extractor_tool.py",
-      "line": 130,
-      "end_line": 137,
-      "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai-tools/src/crewai_tools/tools/tavily_extractor_tool/tavily_extractor_tool.py:130-137: TPX003 same explanation in 2 places: crewAI/lib/crewai-tools/src/crewai_tools/tools/tavily_extractor_tool/tavily_extractor_tool.py:157-164 (weakest crewAI/lib/crewai-tools/src/crewai_tools/tools/tavily_extractor_tool/tavily_extractor_tool.py:130-137 ~ crewAI/lib/crewai-tools/src/crewai_tools/tools/tavily_extractor_tool/tavily_extractor_tool.py:157-164, similarity 0.917)",
-      "locations": [
-        {
-          "path": "crewAI/lib/crewai-tools/src/crewai_tools/tools/tavily_extractor_tool/tavily_extractor_tool.py",
-          "line": 130,
-          "end_line": 137,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "crewAI/lib/crewai-tools/src/crewai_tools/tools/tavily_extractor_tool/tavily_extractor_tool.py",
-          "line": 157,
-          "end_line": 164,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "crewAI/lib/crewai-tools/src/crewai_tools/tools/tavily_extractor_tool/tavily_extractor_tool.py",
-          "line": 130,
-          "end_line": 137,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "crewAI/lib/crewai-tools/src/crewai_tools/tools/tavily_extractor_tool/tavily_extractor_tool.py",
-          "line": 157,
-          "end_line": 164,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.9166666666666666
-      }
-    },
-    {
-      "code": "TPX003",
       "path": "crewAI/lib/crewai-tools/src/crewai_tools/tools/tavily_search_tool/tavily_search_tool.py",
       "line": 158,
       "end_line": 166,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai-tools/src/crewai_tools/tools/tavily_search_tool/tavily_search_tool.py:158-166: TPX003 same explanation in 2 places: crewAI/lib/crewai-tools/src/crewai_tools/tools/tavily_search_tool/tavily_search_tool.py:210-218 (weakest crewAI/lib/crewai-tools/src/crewai_tools/tools/tavily_search_tool/tavily_search_tool.py:158-166 ~ crewAI/lib/crewai-tools/src/crewai_tools/tools/tavily_search_tool/tavily_search_tool.py:210-218, similarity 0.944)",
+      "message": "crewAI/lib/crewai-tools/src/crewai_tools/tools/tavily_search_tool/tavily_search_tool.py:158-166: TPX003 same explanation in 2 places: crewAI/lib/crewai-tools/src/crewai_tools/tools/tavily_search_tool/tavily_search_tool.py:210-218 (weakest crewAI/lib/crewai-tools/src/crewai_tools/tools/tavily_search_tool/tavily_search_tool.py:158-166 ~ crewAI/lib/crewai-tools/src/crewai_tools/tools/tavily_search_tool/tavily_search_tool.py:210-218, similarity 0.895)",
       "locations": [
         {
           "path": "crewAI/lib/crewai-tools/src/crewai_tools/tools/tavily_search_tool/tavily_search_tool.py",
@@ -1081,7 +1278,7 @@
           "end_line": 218,
           "prose_kind": "docstring"
         },
-        "similarity": 0.9444444444444444
+        "similarity": 0.8947368421052632
       }
     },
     {
@@ -1132,6 +1329,43 @@
       }
     },
     {
+      "code": "TPX003",
+      "path": "crewAI/lib/crewai/src/crewai/a2a/extensions/base.py",
+      "line": 179,
+      "end_line": 183,
+      "prose_kind": "docstring",
+      "message": "crewAI/lib/crewai/src/crewai/a2a/extensions/base.py:179-183: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/a2a/extensions/server.py:208-215 (weakest crewAI/lib/crewai/src/crewai/a2a/extensions/base.py:179-183 ~ crewAI/lib/crewai/src/crewai/a2a/extensions/server.py:208-215, similarity 1.000)",
+      "locations": [
+        {
+          "path": "crewAI/lib/crewai/src/crewai/a2a/extensions/base.py",
+          "line": 179,
+          "end_line": 183,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai/src/crewai/a2a/extensions/server.py",
+          "line": 208,
+          "end_line": 215,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "crewAI/lib/crewai/src/crewai/a2a/extensions/base.py",
+          "line": 179,
+          "end_line": 183,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "crewAI/lib/crewai/src/crewai/a2a/extensions/server.py",
+          "line": 208,
+          "end_line": 215,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
       "code": "TPX002",
       "path": "crewAI/lib/crewai/src/crewai/a2a/utils/delegation.py",
       "line": 161,
@@ -1150,43 +1384,6 @@
       "message": "crewAI/lib/crewai/src/crewai/a2a/utils/delegation.py:265-298: TPX002 docstring is 223 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 223,
       "max_volume": 200
-    },
-    {
-      "code": "TPX003",
-      "path": "crewAI/lib/crewai/src/crewai/a2a/wrapper.py",
-      "line": 403,
-      "end_line": 417,
-      "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/a2a/wrapper.py:403-417: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/a2a/wrapper.py:524-538 (weakest crewAI/lib/crewai/src/crewai/a2a/wrapper.py:403-417 ~ crewAI/lib/crewai/src/crewai/a2a/wrapper.py:524-538, similarity 0.776)",
-      "locations": [
-        {
-          "path": "crewAI/lib/crewai/src/crewai/a2a/wrapper.py",
-          "line": 403,
-          "end_line": 417,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "crewAI/lib/crewai/src/crewai/a2a/wrapper.py",
-          "line": 524,
-          "end_line": 538,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "crewAI/lib/crewai/src/crewai/a2a/wrapper.py",
-          "line": 403,
-          "end_line": 417,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "crewAI/lib/crewai/src/crewai/a2a/wrapper.py",
-          "line": 524,
-          "end_line": 538,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.7761194029850746
-      }
     },
     {
       "code": "TPX002",
@@ -1211,47 +1408,10 @@
     {
       "code": "TPX003",
       "path": "crewAI/lib/crewai/src/crewai/agent/core.py",
-      "line": 700,
-      "end_line": 710,
-      "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/agent/core.py:700-710: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/agent/core.py:721-731 (weakest crewAI/lib/crewai/src/crewai/agent/core.py:700-710 ~ crewAI/lib/crewai/src/crewai/agent/core.py:721-731, similarity 0.806)",
-      "locations": [
-        {
-          "path": "crewAI/lib/crewai/src/crewai/agent/core.py",
-          "line": 700,
-          "end_line": 710,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "crewAI/lib/crewai/src/crewai/agent/core.py",
-          "line": 721,
-          "end_line": 731,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "crewAI/lib/crewai/src/crewai/agent/core.py",
-          "line": 700,
-          "end_line": 710,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "crewAI/lib/crewai/src/crewai/agent/core.py",
-          "line": 721,
-          "end_line": 731,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.8064516129032258
-      }
-    },
-    {
-      "code": "TPX003",
-      "path": "crewAI/lib/crewai/src/crewai/agent/core.py",
       "line": 766,
       "end_line": 780,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/agent/core.py:766-780: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/agent/core.py:902-916 (weakest crewAI/lib/crewai/src/crewai/agent/core.py:766-780 ~ crewAI/lib/crewai/src/crewai/agent/core.py:902-916, similarity 0.917)",
+      "message": "crewAI/lib/crewai/src/crewai/agent/core.py:766-780: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/agent/core.py:902-916 (weakest crewAI/lib/crewai/src/crewai/agent/core.py:766-780 ~ crewAI/lib/crewai/src/crewai/agent/core.py:902-916, similarity 0.800)",
       "locations": [
         {
           "path": "crewAI/lib/crewai/src/crewai/agent/core.py",
@@ -1279,7 +1439,7 @@
           "end_line": 916,
           "prose_kind": "docstring"
         },
-        "similarity": 0.9166666666666666
+        "similarity": 0.8
       }
     },
     {
@@ -1288,7 +1448,7 @@
       "line": 832,
       "end_line": 845,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/agent/core.py:832-845: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/agent/core.py:963-976 (weakest crewAI/lib/crewai/src/crewai/agent/core.py:832-845 ~ crewAI/lib/crewai/src/crewai/agent/core.py:963-976, similarity 0.896)",
+      "message": "crewAI/lib/crewai/src/crewai/agent/core.py:832-845: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/agent/core.py:963-976 (weakest crewAI/lib/crewai/src/crewai/agent/core.py:832-845 ~ crewAI/lib/crewai/src/crewai/agent/core.py:963-976, similarity 0.800)",
       "locations": [
         {
           "path": "crewAI/lib/crewai/src/crewai/agent/core.py",
@@ -1316,7 +1476,7 @@
           "end_line": 976,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8958333333333334
+        "similarity": 0.8
       }
     },
     {
@@ -1325,7 +1485,7 @@
       "line": 867,
       "end_line": 875,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/agent/core.py:867-875: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/agent/core.py:989-997 (weakest crewAI/lib/crewai/src/crewai/agent/core.py:867-875 ~ crewAI/lib/crewai/src/crewai/agent/core.py:989-997, similarity 0.821)",
+      "message": "crewAI/lib/crewai/src/crewai/agent/core.py:867-875: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/agent/core.py:989-997 (weakest crewAI/lib/crewai/src/crewai/agent/core.py:867-875 ~ crewAI/lib/crewai/src/crewai/agent/core.py:989-997, similarity 0.800)",
       "locations": [
         {
           "path": "crewAI/lib/crewai/src/crewai/agent/core.py",
@@ -1353,7 +1513,44 @@
           "end_line": 997,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8214285714285714
+        "similarity": 0.8
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "crewAI/lib/crewai/src/crewai/agent/core.py",
+      "line": 1985,
+      "end_line": 1996,
+      "prose_kind": "docstring",
+      "message": "crewAI/lib/crewai/src/crewai/agent/core.py:1985-1996: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/lite_agent.py:778-787 (weakest crewAI/lib/crewai/src/crewai/agent/core.py:1985-1996 ~ crewAI/lib/crewai/src/crewai/lite_agent.py:778-787, similarity 1.000)",
+      "locations": [
+        {
+          "path": "crewAI/lib/crewai/src/crewai/agent/core.py",
+          "line": 1985,
+          "end_line": 1996,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai/src/crewai/lite_agent.py",
+          "line": 778,
+          "end_line": 787,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "crewAI/lib/crewai/src/crewai/agent/core.py",
+          "line": 1985,
+          "end_line": 1996,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "crewAI/lib/crewai/src/crewai/lite_agent.py",
+          "line": 778,
+          "end_line": 787,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
       }
     },
     {
@@ -1405,43 +1602,6 @@
     },
     {
       "code": "TPX003",
-      "path": "crewAI/lib/crewai/src/crewai/agents/agent_adapters/langgraph/langgraph_adapter.py",
-      "line": 281,
-      "end_line": 290,
-      "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/agents/agent_adapters/langgraph/langgraph_adapter.py:281-290: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/agents/agent_adapters/openai_agents/openai_adapter.py:230-239 (weakest crewAI/lib/crewai/src/crewai/agents/agent_adapters/langgraph/langgraph_adapter.py:281-290 ~ crewAI/lib/crewai/src/crewai/agents/agent_adapters/openai_agents/openai_adapter.py:230-239, similarity 0.812)",
-      "locations": [
-        {
-          "path": "crewAI/lib/crewai/src/crewai/agents/agent_adapters/langgraph/langgraph_adapter.py",
-          "line": 281,
-          "end_line": 290,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "crewAI/lib/crewai/src/crewai/agents/agent_adapters/openai_agents/openai_adapter.py",
-          "line": 230,
-          "end_line": 239,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "crewAI/lib/crewai/src/crewai/agents/agent_adapters/langgraph/langgraph_adapter.py",
-          "line": 281,
-          "end_line": 290,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "crewAI/lib/crewai/src/crewai/agents/agent_adapters/openai_agents/openai_adapter.py",
-          "line": 230,
-          "end_line": 239,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.8125
-      }
-    },
-    {
-      "code": "TPX003",
       "path": "crewAI/lib/crewai/src/crewai/agents/agent_adapters/langgraph/langgraph_tool_adapter.py",
       "line": 23,
       "end_line": 27,
@@ -1478,6 +1638,43 @@
       }
     },
     {
+      "code": "TPX003",
+      "path": "crewAI/lib/crewai/src/crewai/agents/agent_adapters/langgraph/structured_output_converter.py",
+      "line": 23,
+      "end_line": 27,
+      "prose_kind": "docstring",
+      "message": "crewAI/lib/crewai/src/crewai/agents/agent_adapters/langgraph/structured_output_converter.py:23-27: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/agents/agent_adapters/openai_agents/structured_output_converter.py:25-29 (weakest crewAI/lib/crewai/src/crewai/agents/agent_adapters/langgraph/structured_output_converter.py:23-27 ~ crewAI/lib/crewai/src/crewai/agents/agent_adapters/openai_agents/structured_output_converter.py:25-29, similarity 1.000)",
+      "locations": [
+        {
+          "path": "crewAI/lib/crewai/src/crewai/agents/agent_adapters/langgraph/structured_output_converter.py",
+          "line": 23,
+          "end_line": 27,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai/src/crewai/agents/agent_adapters/openai_agents/structured_output_converter.py",
+          "line": 25,
+          "end_line": 29,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "crewAI/lib/crewai/src/crewai/agents/agent_adapters/langgraph/structured_output_converter.py",
+          "line": 23,
+          "end_line": 27,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "crewAI/lib/crewai/src/crewai/agents/agent_adapters/openai_agents/structured_output_converter.py",
+          "line": 25,
+          "end_line": 29,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
       "code": "TPX002",
       "path": "crewAI/lib/crewai/src/crewai/agents/agent_builder/base_agent.py",
       "line": 201,
@@ -1490,10 +1687,47 @@
     {
       "code": "TPX003",
       "path": "crewAI/lib/crewai/src/crewai/agents/crew_agent_executor.py",
+      "line": 159,
+      "end_line": 163,
+      "prose_kind": "docstring",
+      "message": "crewAI/lib/crewai/src/crewai/agents/crew_agent_executor.py:159-163: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/experimental/agent_executor.py:273-277 (weakest crewAI/lib/crewai/src/crewai/agents/crew_agent_executor.py:159-163 ~ crewAI/lib/crewai/src/crewai/experimental/agent_executor.py:273-277, similarity 1.000)",
+      "locations": [
+        {
+          "path": "crewAI/lib/crewai/src/crewai/agents/crew_agent_executor.py",
+          "line": 159,
+          "end_line": 163,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai/src/crewai/experimental/agent_executor.py",
+          "line": 273,
+          "end_line": 277,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "crewAI/lib/crewai/src/crewai/agents/crew_agent_executor.py",
+          "line": 159,
+          "end_line": 163,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "crewAI/lib/crewai/src/crewai/experimental/agent_executor.py",
+          "line": 273,
+          "end_line": 277,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "crewAI/lib/crewai/src/crewai/agents/crew_agent_executor.py",
       "line": 250,
       "end_line": 258,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/agents/crew_agent_executor.py:250-258: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/agents/crew_agent_executor.py:281-289 (weakest crewAI/lib/crewai/src/crewai/agents/crew_agent_executor.py:250-258 ~ crewAI/lib/crewai/src/crewai/agents/crew_agent_executor.py:281-289, similarity 0.980)",
+      "message": "crewAI/lib/crewai/src/crewai/agents/crew_agent_executor.py:250-258: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/agents/crew_agent_executor.py:281-289 (weakest crewAI/lib/crewai/src/crewai/agents/crew_agent_executor.py:250-258 ~ crewAI/lib/crewai/src/crewai/agents/crew_agent_executor.py:281-289, similarity 0.975)",
       "locations": [
         {
           "path": "crewAI/lib/crewai/src/crewai/agents/crew_agent_executor.py",
@@ -1521,7 +1755,7 @@
           "end_line": 289,
           "prose_kind": "docstring"
         },
-        "similarity": 0.9795918367346939
+        "similarity": 0.975
       }
     },
     {
@@ -1530,7 +1764,7 @@
       "line": 310,
       "end_line": 317,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/agents/crew_agent_executor.py:310-317: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/agents/crew_agent_executor.py:1128-1135 (weakest crewAI/lib/crewai/src/crewai/agents/crew_agent_executor.py:310-317 ~ crewAI/lib/crewai/src/crewai/agents/crew_agent_executor.py:1128-1135, similarity 0.853)",
+      "message": "crewAI/lib/crewai/src/crewai/agents/crew_agent_executor.py:310-317: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/agents/crew_agent_executor.py:1128-1135 (weakest crewAI/lib/crewai/src/crewai/agents/crew_agent_executor.py:310-317 ~ crewAI/lib/crewai/src/crewai/agents/crew_agent_executor.py:1128-1135, similarity 0.821)",
       "locations": [
         {
           "path": "crewAI/lib/crewai/src/crewai/agents/crew_agent_executor.py",
@@ -1558,7 +1792,7 @@
           "end_line": 1135,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8529411764705882
+        "similarity": 0.8214285714285714
       }
     },
     {
@@ -1567,7 +1801,7 @@
       "line": 1436,
       "end_line": 1444,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/agents/crew_agent_executor.py:1436-1444: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/experimental/agent_executor.py:2906-2914 (weakest crewAI/lib/crewai/src/crewai/agents/crew_agent_executor.py:1436-1444 ~ crewAI/lib/crewai/src/crewai/experimental/agent_executor.py:2906-2914, similarity 0.815)",
+      "message": "crewAI/lib/crewai/src/crewai/agents/crew_agent_executor.py:1436-1444: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/experimental/agent_executor.py:2906-2914 (weakest crewAI/lib/crewai/src/crewai/agents/crew_agent_executor.py:1436-1444 ~ crewAI/lib/crewai/src/crewai/experimental/agent_executor.py:2906-2914, similarity 0.800)",
       "locations": [
         {
           "path": "crewAI/lib/crewai/src/crewai/agents/crew_agent_executor.py",
@@ -1595,7 +1829,7 @@
           "end_line": 2914,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8148148148148148
+        "similarity": 0.8
       }
     },
     {
@@ -1764,11 +1998,48 @@
     },
     {
       "code": "TPX003",
+      "path": "crewAI/lib/crewai/src/crewai/events/event_bus.py",
+      "line": 373,
+      "end_line": 378,
+      "prose_kind": "docstring",
+      "message": "crewAI/lib/crewai/src/crewai/events/event_bus.py:373-378: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/events/event_bus.py:802-807 (weakest crewAI/lib/crewai/src/crewai/events/event_bus.py:373-378 ~ crewAI/lib/crewai/src/crewai/events/event_bus.py:802-807, similarity 0.750)",
+      "locations": [
+        {
+          "path": "crewAI/lib/crewai/src/crewai/events/event_bus.py",
+          "line": 373,
+          "end_line": 378,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai/src/crewai/events/event_bus.py",
+          "line": 802,
+          "end_line": 807,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "crewAI/lib/crewai/src/crewai/events/event_bus.py",
+          "line": 373,
+          "end_line": 378,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "crewAI/lib/crewai/src/crewai/events/event_bus.py",
+          "line": 802,
+          "end_line": 807,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.75
+      }
+    },
+    {
+      "code": "TPX003",
       "path": "crewAI/lib/crewai/src/crewai/events/types/a2a_events.py",
       "line": 568,
       "end_line": 574,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/events/types/a2a_events.py:568-574: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/events/types/a2a_events.py:600-606 (weakest crewAI/lib/crewai/src/crewai/events/types/a2a_events.py:568-574 ~ crewAI/lib/crewai/src/crewai/events/types/a2a_events.py:600-606, similarity 0.800)",
+      "message": "crewAI/lib/crewai/src/crewai/events/types/a2a_events.py:568-574: TPX003 same explanation in 3 places: crewAI/lib/crewai/src/crewai/events/types/a2a_events.py:583-590, crewAI/lib/crewai/src/crewai/events/types/a2a_events.py:615-622 (weakest crewAI/lib/crewai/src/crewai/events/types/a2a_events.py:568-574 ~ crewAI/lib/crewai/src/crewai/events/types/a2a_events.py:583-590, similarity 0.750)",
       "locations": [
         {
           "path": "crewAI/lib/crewai/src/crewai/events/types/a2a_events.py",
@@ -1778,8 +2049,14 @@
         },
         {
           "path": "crewAI/lib/crewai/src/crewai/events/types/a2a_events.py",
-          "line": 600,
-          "end_line": 606,
+          "line": 583,
+          "end_line": 590,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai/src/crewai/events/types/a2a_events.py",
+          "line": 615,
+          "end_line": 622,
           "prose_kind": "docstring"
         }
       ],
@@ -1792,11 +2069,48 @@
         },
         "second": {
           "path": "crewAI/lib/crewai/src/crewai/events/types/a2a_events.py",
-          "line": 600,
-          "end_line": 606,
+          "line": 583,
+          "end_line": 590,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8
+        "similarity": 0.75
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "crewAI/lib/crewai/src/crewai/events/types/a2a_events.py",
+      "line": 632,
+      "end_line": 637,
+      "prose_kind": "docstring",
+      "message": "crewAI/lib/crewai/src/crewai/events/types/a2a_events.py:632-637: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/events/types/a2a_events.py:645-652 (weakest crewAI/lib/crewai/src/crewai/events/types/a2a_events.py:632-637 ~ crewAI/lib/crewai/src/crewai/events/types/a2a_events.py:645-652, similarity 0.778)",
+      "locations": [
+        {
+          "path": "crewAI/lib/crewai/src/crewai/events/types/a2a_events.py",
+          "line": 632,
+          "end_line": 637,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai/src/crewai/events/types/a2a_events.py",
+          "line": 645,
+          "end_line": 652,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "crewAI/lib/crewai/src/crewai/events/types/a2a_events.py",
+          "line": 632,
+          "end_line": 637,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "crewAI/lib/crewai/src/crewai/events/types/a2a_events.py",
+          "line": 645,
+          "end_line": 652,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.7777777777777778
       }
     },
     {
@@ -1815,12 +2129,18 @@
       "line": 91,
       "end_line": 99,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/flow/flow_wrappers.py:91-99: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/project/wrappers.py:208-216 (weakest crewAI/lib/crewai/src/crewai/flow/flow_wrappers.py:91-99 ~ crewAI/lib/crewai/src/crewai/project/wrappers.py:208-216, similarity 1.000)",
+      "message": "crewAI/lib/crewai/src/crewai/flow/flow_wrappers.py:91-99: TPX003 same explanation in 3 places: crewAI/lib/crewai/src/crewai/hooks/wrappers.py:54-59, crewAI/lib/crewai/src/crewai/project/wrappers.py:208-216 (weakest crewAI/lib/crewai/src/crewai/flow/flow_wrappers.py:91-99 ~ crewAI/lib/crewai/src/crewai/hooks/wrappers.py:54-59, similarity 1.000)",
       "locations": [
         {
           "path": "crewAI/lib/crewai/src/crewai/flow/flow_wrappers.py",
           "line": 91,
           "end_line": 99,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai/src/crewai/hooks/wrappers.py",
+          "line": 54,
+          "end_line": 59,
           "prose_kind": "docstring"
         },
         {
@@ -1838,9 +2158,9 @@
           "prose_kind": "docstring"
         },
         "second": {
-          "path": "crewAI/lib/crewai/src/crewai/project/wrappers.py",
-          "line": 208,
-          "end_line": 216,
+          "path": "crewAI/lib/crewai/src/crewai/hooks/wrappers.py",
+          "line": 54,
+          "end_line": 59,
           "prose_kind": "docstring"
         },
         "similarity": 1.0
@@ -1995,82 +2315,76 @@
     },
     {
       "code": "TPX003",
-      "path": "crewAI/lib/crewai/src/crewai/hooks/wrappers.py",
-      "line": 63,
-      "end_line": 71,
+      "path": "crewAI/lib/crewai/src/crewai/hooks/llm_hooks.py",
+      "line": 194,
+      "end_line": 223,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/hooks/wrappers.py:63-71: TPX003 same explanation in 3 places: crewAI/lib/crewai/src/crewai/project/wrappers.py:176-184, crewAI/lib/crewai/src/crewai/project/wrappers.py:300-308 (weakest crewAI/lib/crewai/src/crewai/hooks/wrappers.py:63-71 ~ crewAI/lib/crewai/src/crewai/project/wrappers.py:176-184, similarity 0.857)",
+      "message": "crewAI/lib/crewai/src/crewai/hooks/llm_hooks.py:194-223: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/hooks/llm_hooks.py:230-251 (weakest crewAI/lib/crewai/src/crewai/hooks/llm_hooks.py:194-223 ~ crewAI/lib/crewai/src/crewai/hooks/llm_hooks.py:230-251, similarity 0.829)",
       "locations": [
         {
-          "path": "crewAI/lib/crewai/src/crewai/hooks/wrappers.py",
-          "line": 63,
-          "end_line": 71,
+          "path": "crewAI/lib/crewai/src/crewai/hooks/llm_hooks.py",
+          "line": 194,
+          "end_line": 223,
           "prose_kind": "docstring"
         },
         {
-          "path": "crewAI/lib/crewai/src/crewai/project/wrappers.py",
-          "line": 176,
-          "end_line": 184,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "crewAI/lib/crewai/src/crewai/project/wrappers.py",
-          "line": 300,
-          "end_line": 308,
+          "path": "crewAI/lib/crewai/src/crewai/hooks/llm_hooks.py",
+          "line": 230,
+          "end_line": 251,
           "prose_kind": "docstring"
         }
       ],
       "weakest": {
         "first": {
-          "path": "crewAI/lib/crewai/src/crewai/hooks/wrappers.py",
-          "line": 63,
-          "end_line": 71,
+          "path": "crewAI/lib/crewai/src/crewai/hooks/llm_hooks.py",
+          "line": 194,
+          "end_line": 223,
           "prose_kind": "docstring"
         },
         "second": {
-          "path": "crewAI/lib/crewai/src/crewai/project/wrappers.py",
-          "line": 176,
-          "end_line": 184,
+          "path": "crewAI/lib/crewai/src/crewai/hooks/llm_hooks.py",
+          "line": 230,
+          "end_line": 251,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8571428571428571
+        "similarity": 0.8285714285714286
       }
     },
     {
       "code": "TPX003",
-      "path": "crewAI/lib/crewai/src/crewai/knowledge/source/base_knowledge_source.py",
-      "line": 51,
-      "end_line": 57,
+      "path": "crewAI/lib/crewai/src/crewai/hooks/tool_hooks.py",
+      "line": 210,
+      "end_line": 240,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/knowledge/source/base_knowledge_source.py:51-57: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/knowledge/source/base_knowledge_source.py:68-74 (weakest crewAI/lib/crewai/src/crewai/knowledge/source/base_knowledge_source.py:51-57 ~ crewAI/lib/crewai/src/crewai/knowledge/source/base_knowledge_source.py:68-74, similarity 0.808)",
+      "message": "crewAI/lib/crewai/src/crewai/hooks/tool_hooks.py:210-240: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/hooks/tool_hooks.py:247-271 (weakest crewAI/lib/crewai/src/crewai/hooks/tool_hooks.py:210-240 ~ crewAI/lib/crewai/src/crewai/hooks/tool_hooks.py:247-271, similarity 0.838)",
       "locations": [
         {
-          "path": "crewAI/lib/crewai/src/crewai/knowledge/source/base_knowledge_source.py",
-          "line": 51,
-          "end_line": 57,
+          "path": "crewAI/lib/crewai/src/crewai/hooks/tool_hooks.py",
+          "line": 210,
+          "end_line": 240,
           "prose_kind": "docstring"
         },
         {
-          "path": "crewAI/lib/crewai/src/crewai/knowledge/source/base_knowledge_source.py",
-          "line": 68,
-          "end_line": 74,
+          "path": "crewAI/lib/crewai/src/crewai/hooks/tool_hooks.py",
+          "line": 247,
+          "end_line": 271,
           "prose_kind": "docstring"
         }
       ],
       "weakest": {
         "first": {
-          "path": "crewAI/lib/crewai/src/crewai/knowledge/source/base_knowledge_source.py",
-          "line": 51,
-          "end_line": 57,
+          "path": "crewAI/lib/crewai/src/crewai/hooks/tool_hooks.py",
+          "line": 210,
+          "end_line": 240,
           "prose_kind": "docstring"
         },
         "second": {
-          "path": "crewAI/lib/crewai/src/crewai/knowledge/source/base_knowledge_source.py",
-          "line": 68,
-          "end_line": 74,
+          "path": "crewAI/lib/crewai/src/crewai/hooks/tool_hooks.py",
+          "line": 247,
+          "end_line": 271,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8076923076923077
+        "similarity": 0.8378378378378378
       }
     },
     {
@@ -2131,47 +2445,10 @@
     {
       "code": "TPX003",
       "path": "crewAI/lib/crewai/src/crewai/llm.py",
-      "line": 1229,
-      "end_line": 1241,
-      "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/llm.py:1229-1241: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/llm.py:1384-1396 (weakest crewAI/lib/crewai/src/crewai/llm.py:1229-1241 ~ crewAI/lib/crewai/src/crewai/llm.py:1384-1396, similarity 0.904)",
-      "locations": [
-        {
-          "path": "crewAI/lib/crewai/src/crewai/llm.py",
-          "line": 1229,
-          "end_line": 1241,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "crewAI/lib/crewai/src/crewai/llm.py",
-          "line": 1384,
-          "end_line": 1396,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "crewAI/lib/crewai/src/crewai/llm.py",
-          "line": 1229,
-          "end_line": 1241,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "crewAI/lib/crewai/src/crewai/llm.py",
-          "line": 1384,
-          "end_line": 1396,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.9038461538461539
-      }
-    },
-    {
-      "code": "TPX003",
-      "path": "crewAI/lib/crewai/src/crewai/llm.py",
       "line": 1830,
       "end_line": 1855,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/llm.py:1830-1855: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/llm.py:1969-1994 (weakest crewAI/lib/crewai/src/crewai/llm.py:1830-1855 ~ crewAI/lib/crewai/src/crewai/llm.py:1969-1994, similarity 0.994)",
+      "message": "crewAI/lib/crewai/src/crewai/llm.py:1830-1855: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/llm.py:1969-1994 (weakest crewAI/lib/crewai/src/crewai/llm.py:1830-1855 ~ crewAI/lib/crewai/src/crewai/llm.py:1969-1994, similarity 0.750)",
       "locations": [
         {
           "path": "crewAI/lib/crewai/src/crewai/llm.py",
@@ -2199,7 +2476,7 @@
           "end_line": 1994,
           "prose_kind": "docstring"
         },
-        "similarity": 0.9935483870967742
+        "similarity": 0.75
       }
     },
     {
@@ -2208,7 +2485,7 @@
       "line": 2205,
       "end_line": 2215,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/llm.py:2205-2215: TPX003 same explanation in 3 places: crewAI/lib/crewai/src/crewai/llm.py:2256-2266, crewAI/lib/crewai/src/crewai/llms/base_llm.py:846-856 (weakest crewAI/lib/crewai/src/crewai/llm.py:2256-2266 ~ crewAI/lib/crewai/src/crewai/llms/base_llm.py:846-856, similarity 0.878)",
+      "message": "crewAI/lib/crewai/src/crewai/llm.py:2205-2215: TPX003 same explanation in 3 places: crewAI/lib/crewai/src/crewai/llm.py:2256-2266, crewAI/lib/crewai/src/crewai/llms/base_llm.py:846-856 (weakest crewAI/lib/crewai/src/crewai/llm.py:2256-2266 ~ crewAI/lib/crewai/src/crewai/llms/base_llm.py:846-856, similarity 0.806)",
       "locations": [
         {
           "path": "crewAI/lib/crewai/src/crewai/llm.py",
@@ -2242,7 +2519,7 @@
           "end_line": 856,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8775510204081632
+        "similarity": 0.8064516129032258
       }
     },
     {
@@ -2358,80 +2635,6 @@
     },
     {
       "code": "TPX003",
-      "path": "crewAI/lib/crewai/src/crewai/llms/hooks/transport.py",
-      "line": 67,
-      "end_line": 72,
-      "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/llms/hooks/transport.py:67-72: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/llms/hooks/transport.py:103-108 (weakest crewAI/lib/crewai/src/crewai/llms/hooks/transport.py:67-72 ~ crewAI/lib/crewai/src/crewai/llms/hooks/transport.py:103-108, similarity 0.864)",
-      "locations": [
-        {
-          "path": "crewAI/lib/crewai/src/crewai/llms/hooks/transport.py",
-          "line": 67,
-          "end_line": 72,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "crewAI/lib/crewai/src/crewai/llms/hooks/transport.py",
-          "line": 103,
-          "end_line": 108,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "crewAI/lib/crewai/src/crewai/llms/hooks/transport.py",
-          "line": 67,
-          "end_line": 72,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "crewAI/lib/crewai/src/crewai/llms/hooks/transport.py",
-          "line": 103,
-          "end_line": 108,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.8636363636363636
-      }
-    },
-    {
-      "code": "TPX003",
-      "path": "crewAI/lib/crewai/src/crewai/llms/hooks/transport.py",
-      "line": 77,
-      "end_line": 84,
-      "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/llms/hooks/transport.py:77-84: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/llms/hooks/transport.py:113-120 (weakest crewAI/lib/crewai/src/crewai/llms/hooks/transport.py:77-84 ~ crewAI/lib/crewai/src/crewai/llms/hooks/transport.py:113-120, similarity 0.800)",
-      "locations": [
-        {
-          "path": "crewAI/lib/crewai/src/crewai/llms/hooks/transport.py",
-          "line": 77,
-          "end_line": 84,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "crewAI/lib/crewai/src/crewai/llms/hooks/transport.py",
-          "line": 113,
-          "end_line": 120,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "crewAI/lib/crewai/src/crewai/llms/hooks/transport.py",
-          "line": 77,
-          "end_line": 84,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "crewAI/lib/crewai/src/crewai/llms/hooks/transport.py",
-          "line": 113,
-          "end_line": 120,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.8
-      }
-    },
-    {
-      "code": "TPX003",
       "path": "crewAI/lib/crewai/src/crewai/llms/providers/anthropic/completion.py",
       "line": 258,
       "end_line": 261,
@@ -2465,43 +2668,6 @@
           "prose_kind": "docstring"
         },
         "similarity": 0.8
-      }
-    },
-    {
-      "code": "TPX003",
-      "path": "crewAI/lib/crewai/src/crewai/llms/providers/anthropic/completion.py",
-      "line": 349,
-      "end_line": 361,
-      "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/llms/providers/anthropic/completion.py:349-361: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/llms/providers/anthropic/completion.py:423-436 (weakest crewAI/lib/crewai/src/crewai/llms/providers/anthropic/completion.py:349-361 ~ crewAI/lib/crewai/src/crewai/llms/providers/anthropic/completion.py:423-436, similarity 0.787)",
-      "locations": [
-        {
-          "path": "crewAI/lib/crewai/src/crewai/llms/providers/anthropic/completion.py",
-          "line": 349,
-          "end_line": 361,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "crewAI/lib/crewai/src/crewai/llms/providers/anthropic/completion.py",
-          "line": 423,
-          "end_line": 436,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "crewAI/lib/crewai/src/crewai/llms/providers/anthropic/completion.py",
-          "line": 349,
-          "end_line": 361,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "crewAI/lib/crewai/src/crewai/llms/providers/anthropic/completion.py",
-          "line": 423,
-          "end_line": 436,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.7868852459016393
       }
     },
     {
@@ -2544,10 +2710,47 @@
     {
       "code": "TPX003",
       "path": "crewAI/lib/crewai/src/crewai/llms/providers/azure/completion.py",
+      "line": 481,
+      "end_line": 494,
+      "prose_kind": "docstring",
+      "message": "crewAI/lib/crewai/src/crewai/llms/providers/azure/completion.py:481-494: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/llms/providers/azure/completion.py:563-576 (weakest crewAI/lib/crewai/src/crewai/llms/providers/azure/completion.py:481-494 ~ crewAI/lib/crewai/src/crewai/llms/providers/azure/completion.py:563-576, similarity 0.750)",
+      "locations": [
+        {
+          "path": "crewAI/lib/crewai/src/crewai/llms/providers/azure/completion.py",
+          "line": 481,
+          "end_line": 494,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai/src/crewai/llms/providers/azure/completion.py",
+          "line": 563,
+          "end_line": 576,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "crewAI/lib/crewai/src/crewai/llms/providers/azure/completion.py",
+          "line": 481,
+          "end_line": 494,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "crewAI/lib/crewai/src/crewai/llms/providers/azure/completion.py",
+          "line": 563,
+          "end_line": 576,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.75
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "crewAI/lib/crewai/src/crewai/llms/providers/azure/completion.py",
       "line": 796,
       "end_line": 812,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/llms/providers/azure/completion.py:796-812: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/llms/providers/gemini/completion.py:688-704 (weakest crewAI/lib/crewai/src/crewai/llms/providers/azure/completion.py:796-812 ~ crewAI/lib/crewai/src/crewai/llms/providers/gemini/completion.py:688-704, similarity 0.750)",
+      "message": "crewAI/lib/crewai/src/crewai/llms/providers/azure/completion.py:796-812: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/llms/providers/gemini/completion.py:688-704 (weakest crewAI/lib/crewai/src/crewai/llms/providers/azure/completion.py:796-812 ~ crewAI/lib/crewai/src/crewai/llms/providers/gemini/completion.py:688-704, similarity 1.000)",
       "locations": [
         {
           "path": "crewAI/lib/crewai/src/crewai/llms/providers/azure/completion.py",
@@ -2575,7 +2778,7 @@
           "end_line": 704,
           "prose_kind": "docstring"
         },
-        "similarity": 0.75
+        "similarity": 1.0
       }
     },
     {
@@ -2653,43 +2856,6 @@
       }
     },
     {
-      "code": "TPX003",
-      "path": "crewAI/lib/crewai/src/crewai/llms/providers/gemini/completion.py",
-      "line": 283,
-      "end_line": 296,
-      "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/llms/providers/gemini/completion.py:283-296: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/llms/providers/gemini/completion.py:369-382 (weakest crewAI/lib/crewai/src/crewai/llms/providers/gemini/completion.py:283-296 ~ crewAI/lib/crewai/src/crewai/llms/providers/gemini/completion.py:369-382, similarity 0.940)",
-      "locations": [
-        {
-          "path": "crewAI/lib/crewai/src/crewai/llms/providers/gemini/completion.py",
-          "line": 283,
-          "end_line": 296,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "crewAI/lib/crewai/src/crewai/llms/providers/gemini/completion.py",
-          "line": 369,
-          "end_line": 382,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "crewAI/lib/crewai/src/crewai/llms/providers/gemini/completion.py",
-          "line": 283,
-          "end_line": 296,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "crewAI/lib/crewai/src/crewai/llms/providers/gemini/completion.py",
-          "line": 369,
-          "end_line": 382,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.9402985074626866
-      }
-    },
-    {
       "code": "TPX002",
       "path": "crewAI/lib/crewai/src/crewai/llms/providers/openai/completion.py",
       "line": 167,
@@ -2701,110 +2867,79 @@
     },
     {
       "code": "TPX003",
-      "path": "crewAI/lib/crewai/src/crewai/llms/providers/openai/completion.py",
-      "line": 424,
-      "end_line": 437,
+      "path": "crewAI/lib/crewai/src/crewai/memory/storage/backend.py",
+      "line": 123,
+      "end_line": 132,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/llms/providers/openai/completion.py:424-437: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/llms/providers/openai/completion.py:524-537 (weakest crewAI/lib/crewai/src/crewai/llms/providers/openai/completion.py:424-437 ~ crewAI/lib/crewai/src/crewai/llms/providers/openai/completion.py:524-537, similarity 0.824)",
+      "message": "crewAI/lib/crewai/src/crewai/memory/storage/backend.py:123-132: TPX003 same explanation in 3 places: crewAI/lib/crewai/src/crewai/memory/storage/lancedb_storage.py:497-506, crewAI/lib/crewai/src/crewai/memory/unified_memory.py:939-946 (weakest crewAI/lib/crewai/src/crewai/memory/storage/backend.py:123-132 ~ crewAI/lib/crewai/src/crewai/memory/storage/lancedb_storage.py:497-506, similarity 1.000)",
       "locations": [
         {
-          "path": "crewAI/lib/crewai/src/crewai/llms/providers/openai/completion.py",
-          "line": 424,
-          "end_line": 437,
+          "path": "crewAI/lib/crewai/src/crewai/memory/storage/backend.py",
+          "line": 123,
+          "end_line": 132,
           "prose_kind": "docstring"
         },
         {
-          "path": "crewAI/lib/crewai/src/crewai/llms/providers/openai/completion.py",
-          "line": 524,
-          "end_line": 537,
+          "path": "crewAI/lib/crewai/src/crewai/memory/storage/lancedb_storage.py",
+          "line": 497,
+          "end_line": 506,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai/src/crewai/memory/unified_memory.py",
+          "line": 939,
+          "end_line": 946,
           "prose_kind": "docstring"
         }
       ],
       "weakest": {
         "first": {
-          "path": "crewAI/lib/crewai/src/crewai/llms/providers/openai/completion.py",
-          "line": 424,
-          "end_line": 437,
+          "path": "crewAI/lib/crewai/src/crewai/memory/storage/backend.py",
+          "line": 123,
+          "end_line": 132,
           "prose_kind": "docstring"
         },
         "second": {
-          "path": "crewAI/lib/crewai/src/crewai/llms/providers/openai/completion.py",
-          "line": 524,
-          "end_line": 537,
+          "path": "crewAI/lib/crewai/src/crewai/memory/storage/lancedb_storage.py",
+          "line": 497,
+          "end_line": 506,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8235294117647058
-      }
-    },
-    {
-      "code": "TPX003",
-      "path": "crewAI/lib/crewai/src/crewai/mcp/transports/http.py",
-      "line": 62,
-      "end_line": 70,
-      "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/mcp/transports/http.py:62-70: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/mcp/transports/sse.py:51-59 (weakest crewAI/lib/crewai/src/crewai/mcp/transports/http.py:62-70 ~ crewAI/lib/crewai/src/crewai/mcp/transports/sse.py:51-59, similarity 0.818)",
-      "locations": [
-        {
-          "path": "crewAI/lib/crewai/src/crewai/mcp/transports/http.py",
-          "line": 62,
-          "end_line": 70,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "crewAI/lib/crewai/src/crewai/mcp/transports/sse.py",
-          "line": 51,
-          "end_line": 59,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "crewAI/lib/crewai/src/crewai/mcp/transports/http.py",
-          "line": 62,
-          "end_line": 70,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "crewAI/lib/crewai/src/crewai/mcp/transports/sse.py",
-          "line": 51,
-          "end_line": 59,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.8181818181818182
+        "similarity": 1.0
       }
     },
     {
       "code": "TPX003",
       "path": "crewAI/lib/crewai/src/crewai/memory/storage/backend.py",
-      "line": 123,
-      "end_line": 132,
+      "line": 180,
+      "end_line": 184,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/memory/storage/backend.py:123-132: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/memory/storage/lancedb_storage.py:497-506 (weakest crewAI/lib/crewai/src/crewai/memory/storage/backend.py:123-132 ~ crewAI/lib/crewai/src/crewai/memory/storage/lancedb_storage.py:497-506, similarity 1.000)",
+      "message": "crewAI/lib/crewai/src/crewai/memory/storage/backend.py:180-184: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/memory/unified_memory.py:1016-1021 (weakest crewAI/lib/crewai/src/crewai/memory/storage/backend.py:180-184 ~ crewAI/lib/crewai/src/crewai/memory/unified_memory.py:1016-1021, similarity 1.000)",
       "locations": [
         {
           "path": "crewAI/lib/crewai/src/crewai/memory/storage/backend.py",
-          "line": 123,
-          "end_line": 132,
+          "line": 180,
+          "end_line": 184,
           "prose_kind": "docstring"
         },
         {
-          "path": "crewAI/lib/crewai/src/crewai/memory/storage/lancedb_storage.py",
-          "line": 497,
-          "end_line": 506,
+          "path": "crewAI/lib/crewai/src/crewai/memory/unified_memory.py",
+          "line": 1016,
+          "end_line": 1021,
           "prose_kind": "docstring"
         }
       ],
       "weakest": {
         "first": {
           "path": "crewAI/lib/crewai/src/crewai/memory/storage/backend.py",
-          "line": 123,
-          "end_line": 132,
+          "line": 180,
+          "end_line": 184,
           "prose_kind": "docstring"
         },
         "second": {
-          "path": "crewAI/lib/crewai/src/crewai/memory/storage/lancedb_storage.py",
-          "line": 497,
-          "end_line": 506,
+          "path": "crewAI/lib/crewai/src/crewai/memory/unified_memory.py",
+          "line": 1016,
+          "end_line": 1021,
           "prose_kind": "docstring"
         },
         "similarity": 1.0
@@ -2849,11 +2984,85 @@
     },
     {
       "code": "TPX003",
+      "path": "crewAI/lib/crewai/src/crewai/project/wrappers.py",
+      "line": 176,
+      "end_line": 184,
+      "prose_kind": "docstring",
+      "message": "crewAI/lib/crewai/src/crewai/project/wrappers.py:176-184: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/project/wrappers.py:300-308 (weakest crewAI/lib/crewai/src/crewai/project/wrappers.py:176-184 ~ crewAI/lib/crewai/src/crewai/project/wrappers.py:300-308, similarity 1.000)",
+      "locations": [
+        {
+          "path": "crewAI/lib/crewai/src/crewai/project/wrappers.py",
+          "line": 176,
+          "end_line": 184,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai/src/crewai/project/wrappers.py",
+          "line": 300,
+          "end_line": 308,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "crewAI/lib/crewai/src/crewai/project/wrappers.py",
+          "line": 176,
+          "end_line": 184,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "crewAI/lib/crewai/src/crewai/project/wrappers.py",
+          "line": 300,
+          "end_line": 308,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "crewAI/lib/crewai/src/crewai/rag/chromadb/client.py",
+      "line": 209,
+      "end_line": 235,
+      "prose_kind": "docstring",
+      "message": "crewAI/lib/crewai/src/crewai/rag/chromadb/client.py:209-235: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/rag/chromadb/client.py:259-288 (weakest crewAI/lib/crewai/src/crewai/rag/chromadb/client.py:209-235 ~ crewAI/lib/crewai/src/crewai/rag/chromadb/client.py:259-288, similarity 0.792)",
+      "locations": [
+        {
+          "path": "crewAI/lib/crewai/src/crewai/rag/chromadb/client.py",
+          "line": 209,
+          "end_line": 235,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai/src/crewai/rag/chromadb/client.py",
+          "line": 259,
+          "end_line": 288,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "crewAI/lib/crewai/src/crewai/rag/chromadb/client.py",
+          "line": 209,
+          "end_line": 235,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "crewAI/lib/crewai/src/crewai/rag/chromadb/client.py",
+          "line": 259,
+          "end_line": 288,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.7916666666666666
+      }
+    },
+    {
+      "code": "TPX003",
       "path": "crewAI/lib/crewai/src/crewai/rag/chromadb/client.py",
       "line": 310,
       "end_line": 327,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/rag/chromadb/client.py:310-327: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/rag/chromadb/client.py:361-378 (weakest crewAI/lib/crewai/src/crewai/rag/chromadb/client.py:310-327 ~ crewAI/lib/crewai/src/crewai/rag/chromadb/client.py:361-378, similarity 0.814)",
+      "message": "crewAI/lib/crewai/src/crewai/rag/chromadb/client.py:310-327: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/rag/chromadb/client.py:361-378 (weakest crewAI/lib/crewai/src/crewai/rag/chromadb/client.py:310-327 ~ crewAI/lib/crewai/src/crewai/rag/chromadb/client.py:361-378, similarity 0.815)",
       "locations": [
         {
           "path": "crewAI/lib/crewai/src/crewai/rag/chromadb/client.py",
@@ -2881,7 +3090,7 @@
           "end_line": 378,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8141592920353983
+        "similarity": 0.8148148148148148
       }
     },
     {
@@ -2890,7 +3099,7 @@
       "line": 413,
       "end_line": 435,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/rag/chromadb/client.py:413-435: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/rag/chromadb/client.py:476-498 (weakest crewAI/lib/crewai/src/crewai/rag/chromadb/client.py:413-435 ~ crewAI/lib/crewai/src/crewai/rag/chromadb/client.py:476-498, similarity 0.851)",
+      "message": "crewAI/lib/crewai/src/crewai/rag/chromadb/client.py:413-435: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/rag/chromadb/client.py:476-498 (weakest crewAI/lib/crewai/src/crewai/rag/chromadb/client.py:413-435 ~ crewAI/lib/crewai/src/crewai/rag/chromadb/client.py:476-498, similarity 0.821)",
       "locations": [
         {
           "path": "crewAI/lib/crewai/src/crewai/rag/chromadb/client.py",
@@ -2918,7 +3127,155 @@
           "end_line": 498,
           "prose_kind": "docstring"
         },
-        "similarity": 0.851063829787234
+        "similarity": 0.8214285714285714
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "crewAI/lib/crewai/src/crewai/rag/chromadb/client.py",
+      "line": 537,
+      "end_line": 553,
+      "prose_kind": "docstring",
+      "message": "crewAI/lib/crewai/src/crewai/rag/chromadb/client.py:537-553: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/rag/chromadb/client.py:567-586 (weakest crewAI/lib/crewai/src/crewai/rag/chromadb/client.py:537-553 ~ crewAI/lib/crewai/src/crewai/rag/chromadb/client.py:567-586, similarity 0.792)",
+      "locations": [
+        {
+          "path": "crewAI/lib/crewai/src/crewai/rag/chromadb/client.py",
+          "line": 537,
+          "end_line": 553,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai/src/crewai/rag/chromadb/client.py",
+          "line": 567,
+          "end_line": 586,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "crewAI/lib/crewai/src/crewai/rag/chromadb/client.py",
+          "line": 537,
+          "end_line": 553,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "crewAI/lib/crewai/src/crewai/rag/chromadb/client.py",
+          "line": 567,
+          "end_line": 586,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.7916666666666666
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "crewAI/lib/crewai/src/crewai/rag/chromadb/client.py",
+      "line": 600,
+      "end_line": 613,
+      "prose_kind": "docstring",
+      "message": "crewAI/lib/crewai/src/crewai/rag/chromadb/client.py:600-613: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/rag/chromadb/client.py:624-640 (weakest crewAI/lib/crewai/src/crewai/rag/chromadb/client.py:600-613 ~ crewAI/lib/crewai/src/crewai/rag/chromadb/client.py:624-640, similarity 0.861)",
+      "locations": [
+        {
+          "path": "crewAI/lib/crewai/src/crewai/rag/chromadb/client.py",
+          "line": 600,
+          "end_line": 613,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai/src/crewai/rag/chromadb/client.py",
+          "line": 624,
+          "end_line": 640,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "crewAI/lib/crewai/src/crewai/rag/chromadb/client.py",
+          "line": 600,
+          "end_line": 613,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "crewAI/lib/crewai/src/crewai/rag/chromadb/client.py",
+          "line": 624,
+          "end_line": 640,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8611111111111112
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "crewAI/lib/crewai/src/crewai/rag/chromadb/utils.py",
+      "line": 33,
+      "end_line": 40,
+      "prose_kind": "docstring",
+      "message": "crewAI/lib/crewai/src/crewai/rag/chromadb/utils.py:33-40: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/rag/qdrant/utils.py:50-57 (weakest crewAI/lib/crewai/src/crewai/rag/chromadb/utils.py:33-40 ~ crewAI/lib/crewai/src/crewai/rag/qdrant/utils.py:50-57, similarity 0.800)",
+      "locations": [
+        {
+          "path": "crewAI/lib/crewai/src/crewai/rag/chromadb/utils.py",
+          "line": 33,
+          "end_line": 40,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/utils.py",
+          "line": 50,
+          "end_line": 57,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "crewAI/lib/crewai/src/crewai/rag/chromadb/utils.py",
+          "line": 33,
+          "end_line": 40,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/utils.py",
+          "line": 50,
+          "end_line": 57,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "crewAI/lib/crewai/src/crewai/rag/chromadb/utils.py",
+      "line": 45,
+      "end_line": 52,
+      "prose_kind": "docstring",
+      "message": "crewAI/lib/crewai/src/crewai/rag/chromadb/utils.py:45-52: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/rag/qdrant/utils.py:62-69 (weakest crewAI/lib/crewai/src/crewai/rag/chromadb/utils.py:45-52 ~ crewAI/lib/crewai/src/crewai/rag/qdrant/utils.py:62-69, similarity 0.800)",
+      "locations": [
+        {
+          "path": "crewAI/lib/crewai/src/crewai/rag/chromadb/utils.py",
+          "line": 45,
+          "end_line": 52,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/utils.py",
+          "line": 62,
+          "end_line": 69,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "crewAI/lib/crewai/src/crewai/rag/chromadb/utils.py",
+          "line": 45,
+          "end_line": 52,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/utils.py",
+          "line": 62,
+          "end_line": 69,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8
       }
     },
     {
@@ -2927,7 +3284,7 @@
       "line": 116,
       "end_line": 125,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/rag/core/base_client.py:116-125: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/rag/core/base_client.py:130-139 (weakest crewAI/lib/crewai/src/crewai/rag/core/base_client.py:116-125 ~ crewAI/lib/crewai/src/crewai/rag/core/base_client.py:130-139, similarity 0.886)",
+      "message": "crewAI/lib/crewai/src/crewai/rag/core/base_client.py:116-125: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/rag/core/base_client.py:130-139 (weakest crewAI/lib/crewai/src/crewai/rag/core/base_client.py:116-125 ~ crewAI/lib/crewai/src/crewai/rag/core/base_client.py:130-139, similarity 0.875)",
       "locations": [
         {
           "path": "crewAI/lib/crewai/src/crewai/rag/core/base_client.py",
@@ -2955,7 +3312,50 @@
           "end_line": 139,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8863636363636364
+        "similarity": 0.875
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "crewAI/lib/crewai/src/crewai/rag/core/base_client.py",
+      "line": 166,
+      "end_line": 177,
+      "prose_kind": "docstring",
+      "message": "crewAI/lib/crewai/src/crewai/rag/core/base_client.py:166-177: TPX003 same explanation in 3 places: crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:149-171, crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:193-215 (weakest crewAI/lib/crewai/src/crewai/rag/core/base_client.py:166-177 ~ crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:149-171, similarity 0.909)",
+      "locations": [
+        {
+          "path": "crewAI/lib/crewai/src/crewai/rag/core/base_client.py",
+          "line": 166,
+          "end_line": 177,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
+          "line": 149,
+          "end_line": 171,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
+          "line": 193,
+          "end_line": 215,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "crewAI/lib/crewai/src/crewai/rag/core/base_client.py",
+          "line": 166,
+          "end_line": 177,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
+          "line": 149,
+          "end_line": 171,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.9090909090909091
       }
     },
     {
@@ -2967,6 +3367,135 @@
       "message": "crewAI/lib/crewai/src/crewai/rag/core/base_client.py:280-322: TPX002 docstring is 203 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 203,
       "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "crewAI/lib/crewai/src/crewai/rag/core/base_client.py",
+      "line": 329,
+      "end_line": 362,
+      "prose_kind": "docstring",
+      "message": "crewAI/lib/crewai/src/crewai/rag/core/base_client.py:329-362: TPX003 same explanation in 3 places: crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:325-340, crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:380-395 (weakest crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:325-340 ~ crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:380-395, similarity 0.833)",
+      "locations": [
+        {
+          "path": "crewAI/lib/crewai/src/crewai/rag/core/base_client.py",
+          "line": 329,
+          "end_line": 362,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
+          "line": 325,
+          "end_line": 340,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
+          "line": 380,
+          "end_line": 395,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
+          "line": 325,
+          "end_line": 340,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
+          "line": 380,
+          "end_line": 395,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8333333333333334
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "crewAI/lib/crewai/src/crewai/rag/core/base_client.py",
+      "line": 389,
+      "end_line": 407,
+      "prose_kind": "docstring",
+      "message": "crewAI/lib/crewai/src/crewai/rag/core/base_client.py:389-407: TPX003 same explanation in 3 places: crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:431-439, crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:456-464 (weakest crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:431-439 ~ crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:456-464, similarity 0.833)",
+      "locations": [
+        {
+          "path": "crewAI/lib/crewai/src/crewai/rag/core/base_client.py",
+          "line": 389,
+          "end_line": 407,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
+          "line": 431,
+          "end_line": 439,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
+          "line": 456,
+          "end_line": 464,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
+          "line": 431,
+          "end_line": 439,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
+          "line": 456,
+          "end_line": 464,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8333333333333334
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "crewAI/lib/crewai/src/crewai/rag/core/base_client.py",
+      "line": 432,
+      "end_line": 447,
+      "prose_kind": "docstring",
+      "message": "crewAI/lib/crewai/src/crewai/rag/core/base_client.py:432-447: TPX003 same explanation in 3 places: crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:481-485, crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:500-504 (weakest crewAI/lib/crewai/src/crewai/rag/core/base_client.py:432-447 ~ crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:481-485, similarity 0.800)",
+      "locations": [
+        {
+          "path": "crewAI/lib/crewai/src/crewai/rag/core/base_client.py",
+          "line": 432,
+          "end_line": 447,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
+          "line": 481,
+          "end_line": 485,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
+          "line": 500,
+          "end_line": 504,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "crewAI/lib/crewai/src/crewai/rag/core/base_client.py",
+          "line": 432,
+          "end_line": 447,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
+          "line": 481,
+          "end_line": 485,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8
+      }
     },
     {
       "code": "TPX003",
@@ -3017,7 +3546,7 @@
       "line": 69,
       "end_line": 89,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:69-89: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:109-129 (weakest crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:69-89 ~ crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:109-129, similarity 0.958)",
+      "message": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:69-89: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:109-129 (weakest crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:69-89 ~ crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:109-129, similarity 0.800)",
       "locations": [
         {
           "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
@@ -3045,44 +3574,7 @@
           "end_line": 129,
           "prose_kind": "docstring"
         },
-        "similarity": 0.957983193277311
-      }
-    },
-    {
-      "code": "TPX003",
-      "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
-      "line": 149,
-      "end_line": 171,
-      "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:149-171: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:193-215 (weakest crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:149-171 ~ crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:193-215, similarity 0.960)",
-      "locations": [
-        {
-          "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
-          "line": 149,
-          "end_line": 171,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
-          "line": 193,
-          "end_line": 215,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
-          "line": 149,
-          "end_line": 171,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
-          "line": 193,
-          "end_line": 215,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.9596774193548387
+        "similarity": 0.8
       }
     },
     {
@@ -3091,7 +3583,7 @@
       "line": 235,
       "end_line": 245,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:235-245: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:280-290 (weakest crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:235-245 ~ crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:280-290, similarity 0.917)",
+      "message": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:235-245: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:280-290 (weakest crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:235-245 ~ crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:280-290, similarity 0.857)",
       "locations": [
         {
           "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
@@ -3119,118 +3611,7 @@
           "end_line": 290,
           "prose_kind": "docstring"
         },
-        "similarity": 0.9166666666666666
-      }
-    },
-    {
-      "code": "TPX003",
-      "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
-      "line": 325,
-      "end_line": 340,
-      "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:325-340: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:380-395 (weakest crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:325-340 ~ crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:380-395, similarity 0.936)",
-      "locations": [
-        {
-          "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
-          "line": 325,
-          "end_line": 340,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
-          "line": 380,
-          "end_line": 395,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
-          "line": 325,
-          "end_line": 340,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
-          "line": 380,
-          "end_line": 395,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.9358974358974359
-      }
-    },
-    {
-      "code": "TPX003",
-      "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
-      "line": 431,
-      "end_line": 439,
-      "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:431-439: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:456-464 (weakest crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:431-439 ~ crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:456-464, similarity 0.848)",
-      "locations": [
-        {
-          "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
-          "line": 431,
-          "end_line": 439,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
-          "line": 456,
-          "end_line": 464,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
-          "line": 431,
-          "end_line": 439,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
-          "line": 456,
-          "end_line": 464,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.8484848484848485
-      }
-    },
-    {
-      "code": "TPX003",
-      "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
-      "line": 481,
-      "end_line": 485,
-      "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:481-485: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:500-504 (weakest crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:481-485 ~ crewAI/lib/crewai/src/crewai/rag/qdrant/client.py:500-504, similarity 0.750)",
-      "locations": [
-        {
-          "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
-          "line": 481,
-          "end_line": 485,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
-          "line": 500,
-          "end_line": 504,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
-          "line": 481,
-          "end_line": 485,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/client.py",
-          "line": 500,
-          "end_line": 504,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.75
+        "similarity": 0.8571428571428571
       }
     },
     {
@@ -3239,7 +3620,7 @@
       "line": 51,
       "end_line": 58,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/rag/qdrant/types.py:51-58: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/rag/qdrant/types.py:81-88 (weakest crewAI/lib/crewai/src/crewai/rag/qdrant/types.py:51-58 ~ crewAI/lib/crewai/src/crewai/rag/qdrant/types.py:81-88, similarity 0.773)",
+      "message": "crewAI/lib/crewai/src/crewai/rag/qdrant/types.py:51-58: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/rag/qdrant/types.py:81-88 (weakest crewAI/lib/crewai/src/crewai/rag/qdrant/types.py:51-58 ~ crewAI/lib/crewai/src/crewai/rag/qdrant/types.py:81-88, similarity 0.750)",
       "locations": [
         {
           "path": "crewAI/lib/crewai/src/crewai/rag/qdrant/types.py",
@@ -3267,44 +3648,7 @@
           "end_line": 88,
           "prose_kind": "docstring"
         },
-        "similarity": 0.7727272727272727
-      }
-    },
-    {
-      "code": "TPX003",
-      "path": "crewAI/lib/crewai/src/crewai/state/provider/core.py",
-      "line": 28,
-      "end_line": 38,
-      "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/state/provider/core.py:28-38: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/state/provider/core.py:50-60 (weakest crewAI/lib/crewai/src/crewai/state/provider/core.py:28-38 ~ crewAI/lib/crewai/src/crewai/state/provider/core.py:50-60, similarity 0.864)",
-      "locations": [
-        {
-          "path": "crewAI/lib/crewai/src/crewai/state/provider/core.py",
-          "line": 28,
-          "end_line": 38,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "crewAI/lib/crewai/src/crewai/state/provider/core.py",
-          "line": 50,
-          "end_line": 60,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "crewAI/lib/crewai/src/crewai/state/provider/core.py",
-          "line": 28,
-          "end_line": 38,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "crewAI/lib/crewai/src/crewai/state/provider/core.py",
-          "line": 50,
-          "end_line": 60,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.8636363636363636
+        "similarity": 0.75
       }
     },
     {
@@ -3313,7 +3657,7 @@
       "line": 50,
       "end_line": 62,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/state/provider/json_provider.py:50-62: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/state/provider/json_provider.py:78-90 (weakest crewAI/lib/crewai/src/crewai/state/provider/json_provider.py:50-62 ~ crewAI/lib/crewai/src/crewai/state/provider/json_provider.py:78-90, similarity 0.915)",
+      "message": "crewAI/lib/crewai/src/crewai/state/provider/json_provider.py:50-62: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/state/provider/json_provider.py:78-90 (weakest crewAI/lib/crewai/src/crewai/state/provider/json_provider.py:50-62 ~ crewAI/lib/crewai/src/crewai/state/provider/json_provider.py:78-90, similarity 0.750)",
       "locations": [
         {
           "path": "crewAI/lib/crewai/src/crewai/state/provider/json_provider.py",
@@ -3341,7 +3685,44 @@
           "end_line": 90,
           "prose_kind": "docstring"
         },
-        "similarity": 0.9152542372881356
+        "similarity": 0.75
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "crewAI/lib/crewai/src/crewai/state/provider/json_provider.py",
+      "line": 124,
+      "end_line": 131,
+      "prose_kind": "docstring",
+      "message": "crewAI/lib/crewai/src/crewai/state/provider/json_provider.py:124-131: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/state/provider/json_provider.py:135-142 (weakest crewAI/lib/crewai/src/crewai/state/provider/json_provider.py:124-131 ~ crewAI/lib/crewai/src/crewai/state/provider/json_provider.py:135-142, similarity 0.750)",
+      "locations": [
+        {
+          "path": "crewAI/lib/crewai/src/crewai/state/provider/json_provider.py",
+          "line": 124,
+          "end_line": 131,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai/src/crewai/state/provider/json_provider.py",
+          "line": 135,
+          "end_line": 142,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "crewAI/lib/crewai/src/crewai/state/provider/json_provider.py",
+          "line": 124,
+          "end_line": 131,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "crewAI/lib/crewai/src/crewai/state/provider/json_provider.py",
+          "line": 135,
+          "end_line": 142,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.75
       }
     },
     {
@@ -3350,7 +3731,7 @@
       "line": 66,
       "end_line": 76,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/state/provider/sqlite_provider.py:66-76: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/state/provider/sqlite_provider.py:94-104 (weakest crewAI/lib/crewai/src/crewai/state/provider/sqlite_provider.py:66-76 ~ crewAI/lib/crewai/src/crewai/state/provider/sqlite_provider.py:94-104, similarity 0.896)",
+      "message": "crewAI/lib/crewai/src/crewai/state/provider/sqlite_provider.py:66-76: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/state/provider/sqlite_provider.py:94-104 (weakest crewAI/lib/crewai/src/crewai/state/provider/sqlite_provider.py:66-76 ~ crewAI/lib/crewai/src/crewai/state/provider/sqlite_provider.py:94-104, similarity 0.833)",
       "locations": [
         {
           "path": "crewAI/lib/crewai/src/crewai/state/provider/sqlite_provider.py",
@@ -3378,44 +3759,81 @@
           "end_line": 104,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8958333333333334
+        "similarity": 0.8333333333333334
       }
     },
     {
       "code": "TPX003",
-      "path": "crewAI/lib/crewai/src/crewai/state/runtime.py",
-      "line": 287,
-      "end_line": 295,
+      "path": "crewAI/lib/crewai/src/crewai/state/provider/sqlite_provider.py",
+      "line": 127,
+      "end_line": 137,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/state/runtime.py:287-295: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/state/runtime.py:320-328 (weakest crewAI/lib/crewai/src/crewai/state/runtime.py:287-295 ~ crewAI/lib/crewai/src/crewai/state/runtime.py:320-328, similarity 0.812)",
+      "message": "crewAI/lib/crewai/src/crewai/state/provider/sqlite_provider.py:127-137: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/state/provider/sqlite_provider.py:147-157 (weakest crewAI/lib/crewai/src/crewai/state/provider/sqlite_provider.py:127-137 ~ crewAI/lib/crewai/src/crewai/state/provider/sqlite_provider.py:147-157, similarity 0.833)",
       "locations": [
         {
-          "path": "crewAI/lib/crewai/src/crewai/state/runtime.py",
-          "line": 287,
-          "end_line": 295,
+          "path": "crewAI/lib/crewai/src/crewai/state/provider/sqlite_provider.py",
+          "line": 127,
+          "end_line": 137,
           "prose_kind": "docstring"
         },
         {
-          "path": "crewAI/lib/crewai/src/crewai/state/runtime.py",
-          "line": 320,
-          "end_line": 328,
+          "path": "crewAI/lib/crewai/src/crewai/state/provider/sqlite_provider.py",
+          "line": 147,
+          "end_line": 157,
           "prose_kind": "docstring"
         }
       ],
       "weakest": {
         "first": {
-          "path": "crewAI/lib/crewai/src/crewai/state/runtime.py",
-          "line": 287,
-          "end_line": 295,
+          "path": "crewAI/lib/crewai/src/crewai/state/provider/sqlite_provider.py",
+          "line": 127,
+          "end_line": 137,
           "prose_kind": "docstring"
         },
         "second": {
-          "path": "crewAI/lib/crewai/src/crewai/state/runtime.py",
-          "line": 320,
-          "end_line": 328,
+          "path": "crewAI/lib/crewai/src/crewai/state/provider/sqlite_provider.py",
+          "line": 147,
+          "end_line": 157,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8125
+        "similarity": 0.8333333333333334
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "crewAI/lib/crewai/src/crewai/tools/base_tool.py",
+      "line": 411,
+      "end_line": 416,
+      "prose_kind": "docstring",
+      "message": "crewAI/lib/crewai/src/crewai/tools/base_tool.py:411-416: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/tools/base_tool.py:596-610 (weakest crewAI/lib/crewai/src/crewai/tools/base_tool.py:411-416 ~ crewAI/lib/crewai/src/crewai/tools/base_tool.py:596-610, similarity 1.000)",
+      "locations": [
+        {
+          "path": "crewAI/lib/crewai/src/crewai/tools/base_tool.py",
+          "line": 411,
+          "end_line": 416,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai/src/crewai/tools/base_tool.py",
+          "line": 596,
+          "end_line": 610,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "crewAI/lib/crewai/src/crewai/tools/base_tool.py",
+          "line": 411,
+          "end_line": 416,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "crewAI/lib/crewai/src/crewai/tools/base_tool.py",
+          "line": 596,
+          "end_line": 610,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
       }
     },
     {
@@ -3461,7 +3879,7 @@
       "line": 570,
       "end_line": 574,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/types/streaming.py:570-574: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/types/streaming.py:602-606 (weakest crewAI/lib/crewai/src/crewai/types/streaming.py:570-574 ~ crewAI/lib/crewai/src/crewai/types/streaming.py:602-606, similarity 0.750)",
+      "message": "crewAI/lib/crewai/src/crewai/types/streaming.py:570-574: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/types/streaming.py:602-606 (weakest crewAI/lib/crewai/src/crewai/types/streaming.py:570-574 ~ crewAI/lib/crewai/src/crewai/types/streaming.py:602-606, similarity 1.000)",
       "locations": [
         {
           "path": "crewAI/lib/crewai/src/crewai/types/streaming.py",
@@ -3489,44 +3907,7 @@
           "end_line": 606,
           "prose_kind": "docstring"
         },
-        "similarity": 0.75
-      }
-    },
-    {
-      "code": "TPX003",
-      "path": "crewAI/lib/crewai/src/crewai/utilities/agent_utils.py",
-      "line": 484,
-      "end_line": 506,
-      "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/utilities/agent_utils.py:484-506: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/utilities/agent_utils.py:537-559 (weakest crewAI/lib/crewai/src/crewai/utilities/agent_utils.py:484-506 ~ crewAI/lib/crewai/src/crewai/utilities/agent_utils.py:537-559, similarity 0.903)",
-      "locations": [
-        {
-          "path": "crewAI/lib/crewai/src/crewai/utilities/agent_utils.py",
-          "line": 484,
-          "end_line": 506,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "crewAI/lib/crewai/src/crewai/utilities/agent_utils.py",
-          "line": 537,
-          "end_line": 559,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "crewAI/lib/crewai/src/crewai/utilities/agent_utils.py",
-          "line": 484,
-          "end_line": 506,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "crewAI/lib/crewai/src/crewai/utilities/agent_utils.py",
-          "line": 537,
-          "end_line": 559,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.9029850746268657
+        "similarity": 1.0
       }
     },
     {
@@ -3572,7 +3953,7 @@
       "line": 69,
       "end_line": 75,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/utilities/file_store.py:69-75: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/utilities/file_store.py:183-189 (weakest crewAI/lib/crewai/src/crewai/utilities/file_store.py:69-75 ~ crewAI/lib/crewai/src/crewai/utilities/file_store.py:183-189, similarity 0.828)",
+      "message": "crewAI/lib/crewai/src/crewai/utilities/file_store.py:69-75: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/utilities/file_store.py:183-189 (weakest crewAI/lib/crewai/src/crewai/utilities/file_store.py:69-75 ~ crewAI/lib/crewai/src/crewai/utilities/file_store.py:183-189, similarity 0.800)",
       "locations": [
         {
           "path": "crewAI/lib/crewai/src/crewai/utilities/file_store.py",
@@ -3600,7 +3981,7 @@
           "end_line": 189,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8275862068965517
+        "similarity": 0.8
       }
     },
     {
@@ -3643,10 +4024,47 @@
     {
       "code": "TPX003",
       "path": "crewAI/lib/crewai/src/crewai/utilities/file_store.py",
+      "line": 99,
+      "end_line": 103,
+      "prose_kind": "docstring",
+      "message": "crewAI/lib/crewai/src/crewai/utilities/file_store.py:99-103: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/utilities/file_store.py:206-210 (weakest crewAI/lib/crewai/src/crewai/utilities/file_store.py:99-103 ~ crewAI/lib/crewai/src/crewai/utilities/file_store.py:206-210, similarity 0.800)",
+      "locations": [
+        {
+          "path": "crewAI/lib/crewai/src/crewai/utilities/file_store.py",
+          "line": 99,
+          "end_line": 103,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai/src/crewai/utilities/file_store.py",
+          "line": 206,
+          "end_line": 210,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "crewAI/lib/crewai/src/crewai/utilities/file_store.py",
+          "line": 99,
+          "end_line": 103,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "crewAI/lib/crewai/src/crewai/utilities/file_store.py",
+          "line": 206,
+          "end_line": 210,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "crewAI/lib/crewai/src/crewai/utilities/file_store.py",
       "line": 114,
       "end_line": 120,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/utilities/file_store.py:114-120: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/utilities/file_store.py:219-225 (weakest crewAI/lib/crewai/src/crewai/utilities/file_store.py:114-120 ~ crewAI/lib/crewai/src/crewai/utilities/file_store.py:219-225, similarity 0.821)",
+      "message": "crewAI/lib/crewai/src/crewai/utilities/file_store.py:114-120: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/utilities/file_store.py:219-225 (weakest crewAI/lib/crewai/src/crewai/utilities/file_store.py:114-120 ~ crewAI/lib/crewai/src/crewai/utilities/file_store.py:219-225, similarity 0.800)",
       "locations": [
         {
           "path": "crewAI/lib/crewai/src/crewai/utilities/file_store.py",
@@ -3674,7 +4092,7 @@
           "end_line": 225,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8214285714285714
+        "similarity": 0.8
       }
     },
     {
@@ -3683,7 +4101,7 @@
       "line": 127,
       "end_line": 134,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/utilities/file_store.py:127-134: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/utilities/file_store.py:230-237 (weakest crewAI/lib/crewai/src/crewai/utilities/file_store.py:127-134 ~ crewAI/lib/crewai/src/crewai/utilities/file_store.py:230-237, similarity 0.792)",
+      "message": "crewAI/lib/crewai/src/crewai/utilities/file_store.py:127-134: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/utilities/file_store.py:230-237 (weakest crewAI/lib/crewai/src/crewai/utilities/file_store.py:127-134 ~ crewAI/lib/crewai/src/crewai/utilities/file_store.py:230-237, similarity 0.800)",
       "locations": [
         {
           "path": "crewAI/lib/crewai/src/crewai/utilities/file_store.py",
@@ -3711,44 +4129,44 @@
           "end_line": 237,
           "prose_kind": "docstring"
         },
-        "similarity": 0.7916666666666666
+        "similarity": 0.8
       }
     },
     {
       "code": "TPX003",
       "path": "crewAI/lib/crewai/src/crewai/utilities/file_store.py",
-      "line": 158,
-      "end_line": 168,
+      "line": 144,
+      "end_line": 148,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/utilities/file_store.py:158-168: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/utilities/file_store.py:254-264 (weakest crewAI/lib/crewai/src/crewai/utilities/file_store.py:158-168 ~ crewAI/lib/crewai/src/crewai/utilities/file_store.py:254-264, similarity 0.886)",
+      "message": "crewAI/lib/crewai/src/crewai/utilities/file_store.py:144-148: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/utilities/file_store.py:242-246 (weakest crewAI/lib/crewai/src/crewai/utilities/file_store.py:144-148 ~ crewAI/lib/crewai/src/crewai/utilities/file_store.py:242-246, similarity 0.800)",
       "locations": [
         {
           "path": "crewAI/lib/crewai/src/crewai/utilities/file_store.py",
-          "line": 158,
-          "end_line": 168,
+          "line": 144,
+          "end_line": 148,
           "prose_kind": "docstring"
         },
         {
           "path": "crewAI/lib/crewai/src/crewai/utilities/file_store.py",
-          "line": 254,
-          "end_line": 264,
+          "line": 242,
+          "end_line": 246,
           "prose_kind": "docstring"
         }
       ],
       "weakest": {
         "first": {
           "path": "crewAI/lib/crewai/src/crewai/utilities/file_store.py",
-          "line": 158,
-          "end_line": 168,
+          "line": 144,
+          "end_line": 148,
           "prose_kind": "docstring"
         },
         "second": {
           "path": "crewAI/lib/crewai/src/crewai/utilities/file_store.py",
-          "line": 254,
-          "end_line": 264,
+          "line": 242,
+          "end_line": 246,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8863636363636364
+        "similarity": 0.8
       }
     },
     {
@@ -3770,43 +4188,6 @@
       "message": "crewAI/lib/crewai/src/crewai/utilities/pydantic_schema_utils.py:821-862: TPX002 docstring is 226 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 226,
       "max_volume": 200
-    },
-    {
-      "code": "TPX003",
-      "path": "crewAI/lib/crewai/src/crewai/utilities/tool_utils.py",
-      "line": 41,
-      "end_line": 62,
-      "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/utilities/tool_utils.py:41-62: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/utilities/tool_utils.py:165-184 (weakest crewAI/lib/crewai/src/crewai/utilities/tool_utils.py:41-62 ~ crewAI/lib/crewai/src/crewai/utilities/tool_utils.py:165-184, similarity 0.836)",
-      "locations": [
-        {
-          "path": "crewAI/lib/crewai/src/crewai/utilities/tool_utils.py",
-          "line": 41,
-          "end_line": 62,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "crewAI/lib/crewai/src/crewai/utilities/tool_utils.py",
-          "line": 165,
-          "end_line": 184,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "crewAI/lib/crewai/src/crewai/utilities/tool_utils.py",
-          "line": 41,
-          "end_line": 62,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "crewAI/lib/crewai/src/crewai/utilities/tool_utils.py",
-          "line": 165,
-          "end_line": 184,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.8359375
-      }
     },
     {
       "code": "TPX003",
@@ -4437,76 +4818,39 @@
     },
     {
       "code": "TPX003",
-      "path": "crewAI/lib/crewai/tests/llms/hooks/test_transport.py",
-      "line": 23,
-      "end_line": 30,
+      "path": "crewAI/lib/crewai/tests/llms/hooks/test_base_interceptor.py",
+      "line": 30,
+      "end_line": 37,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/tests/llms/hooks/test_transport.py:23-30: TPX003 same explanation in 2 places: crewAI/lib/crewai/tests/llms/hooks/test_transport.py:49-56 (weakest crewAI/lib/crewai/tests/llms/hooks/test_transport.py:23-30 ~ crewAI/lib/crewai/tests/llms/hooks/test_transport.py:49-56, similarity 0.824)",
+      "message": "crewAI/lib/crewai/tests/llms/hooks/test_base_interceptor.py:30-37: TPX003 same explanation in 2 places: crewAI/lib/crewai/tests/llms/hooks/test_transport.py:36-43 (weakest crewAI/lib/crewai/tests/llms/hooks/test_base_interceptor.py:30-37 ~ crewAI/lib/crewai/tests/llms/hooks/test_transport.py:36-43, similarity 1.000)",
       "locations": [
         {
-          "path": "crewAI/lib/crewai/tests/llms/hooks/test_transport.py",
-          "line": 23,
-          "end_line": 30,
+          "path": "crewAI/lib/crewai/tests/llms/hooks/test_base_interceptor.py",
+          "line": 30,
+          "end_line": 37,
           "prose_kind": "docstring"
         },
-        {
-          "path": "crewAI/lib/crewai/tests/llms/hooks/test_transport.py",
-          "line": 49,
-          "end_line": 56,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "crewAI/lib/crewai/tests/llms/hooks/test_transport.py",
-          "line": 23,
-          "end_line": 30,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "crewAI/lib/crewai/tests/llms/hooks/test_transport.py",
-          "line": 49,
-          "end_line": 56,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.8235294117647058
-      }
-    },
-    {
-      "code": "TPX003",
-      "path": "crewAI/lib/crewai/tests/llms/hooks/test_transport.py",
-      "line": 36,
-      "end_line": 43,
-      "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/tests/llms/hooks/test_transport.py:36-43: TPX003 same explanation in 2 places: crewAI/lib/crewai/tests/llms/hooks/test_transport.py:62-69 (weakest crewAI/lib/crewai/tests/llms/hooks/test_transport.py:36-43 ~ crewAI/lib/crewai/tests/llms/hooks/test_transport.py:62-69, similarity 0.786)",
-      "locations": [
         {
           "path": "crewAI/lib/crewai/tests/llms/hooks/test_transport.py",
           "line": 36,
           "end_line": 43,
           "prose_kind": "docstring"
-        },
-        {
-          "path": "crewAI/lib/crewai/tests/llms/hooks/test_transport.py",
-          "line": 62,
-          "end_line": 69,
-          "prose_kind": "docstring"
         }
       ],
       "weakest": {
         "first": {
+          "path": "crewAI/lib/crewai/tests/llms/hooks/test_base_interceptor.py",
+          "line": 30,
+          "end_line": 37,
+          "prose_kind": "docstring"
+        },
+        "second": {
           "path": "crewAI/lib/crewai/tests/llms/hooks/test_transport.py",
           "line": 36,
           "end_line": 43,
           "prose_kind": "docstring"
         },
-        "second": {
-          "path": "crewAI/lib/crewai/tests/llms/hooks/test_transport.py",
-          "line": 62,
-          "end_line": 69,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.7857142857142857
+        "similarity": 1.0
       }
     },
     {
@@ -4676,6 +5020,43 @@
           "path": "crewAI/lib/crewai/tests/test_multimodal_validation.py",
           "line": 9,
           "end_line": 12,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "crewAI/lib/crewai/tests/test_custom_llm.py",
+      "line": 71,
+      "end_line": 75,
+      "prose_kind": "docstring",
+      "message": "crewAI/lib/crewai/tests/test_custom_llm.py:71-75: TPX003 same explanation in 2 places: crewAI/lib/crewai/tests/test_custom_llm.py:322-326 (weakest crewAI/lib/crewai/tests/test_custom_llm.py:71-75 ~ crewAI/lib/crewai/tests/test_custom_llm.py:322-326, similarity 1.000)",
+      "locations": [
+        {
+          "path": "crewAI/lib/crewai/tests/test_custom_llm.py",
+          "line": 71,
+          "end_line": 75,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "crewAI/lib/crewai/tests/test_custom_llm.py",
+          "line": 322,
+          "end_line": 326,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "crewAI/lib/crewai/tests/test_custom_llm.py",
+          "line": 71,
+          "end_line": 75,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "crewAI/lib/crewai/tests/test_custom_llm.py",
+          "line": 322,
+          "end_line": 326,
           "prose_kind": "docstring"
         },
         "similarity": 1.0

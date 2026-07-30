@@ -81,6 +81,15 @@ looking at the data is a protocol the data can bend, and the band is the size of
 
 ### 1.2 The 24 verdicts
 
+🔴 **Provenance, added 2026-07-30 by `exclude-reference-scaffolding-from-tpx003`. The verdicts below
+are unchanged; what changed is the run they were drawn from.** The sample was selected by
+`corpus/sample_clusters.py` over the `corpus/runs/*.json` written by the detector **before** that
+task, i.e. at `772c1c3` / `v0.3.8`. `TPX003` now compares the narrative remainder of a block, so
+`corpus/runs/` holds a different set of clusters and re-running the command in §1 no longer
+reproduces these 24. Re-drawing and re-annotating a sample under the accepted marking rule is
+EPIC.md Decisions #16's "protocol migration" and is deliberately **not** done here. The
+post-change fate of each of these 24, measured cluster by cluster, is in that task's report.
+
 | # | repo | weakest | what the cluster is | verdict | why |
 |---|---|---|---|---|---|
 | 1 | OpenHands | 0.885 | the same "caller has no new key" rationale, copied between `enterprise/server/routes/org_profiles.py` and `openhands/app_server/settings/settings_router.py` | **yes** | one rationale, two files; one copy should reference the other |

@@ -1,7 +1,7 @@
 //! Duplicate prose detection: the same rationale written in several places.
 //!
 //! The finding is a **cluster** — a connected component of the similarity graph, whose edges are
-//! "identical normalised text" and "Jaccard `>=` [`SIMILARITY_THRESHOLD`]". One rationale copied
+//! "identical narrative" and "Jaccard `>=` [`SIMILARITY_THRESHOLD`]". One rationale copied
 //! into a docstring, a CI-job comment and a state file is three places that rot independently, and
 //! the one that gets updated is not the one you read; it is *one* problem with three addresses, and
 //! a pair-shaped finding reported it three times. At corpus scale that is the difference between
@@ -17,13 +17,22 @@
 //! [`duplicates`] is the whole entry point; everything it consumes comes from
 //! [`crate::extract`] and is not redefined here:
 //!
-//! * text is compared through [`crate::extract::normalize`] and nothing else, because
-//!   [`SIMILARITY_THRESHOLD`] was measured under that normaliser;
+//! * text is compared through [`crate::extract::ProseBlock::narrative`] and nothing else — the
+//!   block's prose with its API-reference scaffolding discarded, still under
+//!   [`crate::extract::normalize`], because [`SIMILARITY_THRESHOLD`] was measured under that
+//!   normaliser. **Which text is compared is [`crate::extract`]'s decision, not this module's**, and
+//!   the reason it is not the whole block is written out on [`crate::extract::narrative`]: a
+//!   repeated parameter table is prose nobody can act on, and it does not separate from a genuine
+//!   finding by similarity — 0.898 against 0.750, measured;
+//! * a block whose narrative is **empty** takes no part in the rule. That is not a guard written
+//!   here: an empty text has no shingle, so the index never proposes it as a candidate, and
+//!   `exact_groups` skips it explicitly;
 //! * blocks arrive already filtered by [`crate::extract::MIN_BLOCK_LINES`] `AND`
-//!   [`crate::extract::MIN_BLOCK_WORDS`], and are not re-filtered;
+//!   [`crate::extract::MIN_BLOCK_WORDS`], and are not re-filtered. Those two count the **whole**
+//!   block, so a block can be large enough to arrive here and still have nothing to compare;
 //! * nothing here walks the filesystem, and nothing here is parallel.
 //!
-//! Two paths produce edges, for the reason spelled out on each: identical normalised text is
+//! Two paths produce edges, for the reason spelled out on each: identical narrative is
 //! connected arithmetically (`exact_groups`), with no Jaccard computed at all, and everything else
 //! is paired through an inverted shingle index (`candidate_pairs`) and scored with `jaccard`.
 //! Both feed the same `Components`, which is why an exact group and a near duplicate of it come out
@@ -57,12 +66,19 @@ pub const SHINGLE_K: usize = 3;
 /// an audited repository), 0.9 finds nothing more there (8 -> 8) and costs 20.6% of the corpus
 /// pool (1470 -> 1167). It is measured under [`SHINGLE_K`] and under
 /// [`crate::extract::normalize`], which is why this module uses that normaliser and no other.
+///
+/// **It was measured over whole blocks, and it is applied to narratives** — deliberately, and this
+/// is the honest statement of it. `exclude-reference-scaffolding-from-tpx003` changed *what* is
+/// compared and was explicitly forbidden from re-calibrating *this*, on the grounds that a feature
+/// defect and a constant defect are two decisions and mixing them makes neither measurable. Nothing
+/// here claims 0.75 is still the knee on the new feature; re-measuring it is a separate, measured
+/// decision that has not been taken.
 pub const SIMILARITY_THRESHOLD: f64 = 0.75;
 
 /// One finding: every block that says the same thing as at least one other block in the group.
 ///
 /// Formally a connected component of size `>= 2` in the graph whose vertices are blocks and whose
-/// edges are "identical normalised text" or "Jaccard `>=` [`SIMILARITY_THRESHOLD`]".
+/// edges are "identical narrative" or "Jaccard `>=` [`SIMILARITY_THRESHOLD`]".
 ///
 /// # The transitivity this asserts, and why [`Self::weakest`] is not optional
 ///
@@ -75,7 +91,7 @@ pub const SIMILARITY_THRESHOLD: f64 = 0.75;
 #[derive(Debug, Clone, PartialEq)]
 #[non_exhaustive]
 pub struct Cluster<'a> {
-    /// Every block in the component, ordered by coordinate and then normalised text, with no two
+    /// Every block in the component, ordered by coordinate and then narrative, with no two
     /// members sharing both.
     ///
     /// Always at least two. Two blocks with the same coordinate *and* the same text are the same
@@ -155,7 +171,7 @@ impl fmt::Display for Cluster<'_> {
 #[derive(Debug, Clone, PartialEq)]
 #[non_exhaustive]
 pub struct Report<'a> {
-    /// The findings, sorted by their smallest member's coordinate and then normalised text, and
+    /// The findings, sorted by their smallest member's coordinate and then narrative, and
     /// byte-identical for any arrival order of the same blocks. The private `cluster_key` records
     /// why the text belongs in that order rather than the coordinate alone.
     ///
@@ -218,11 +234,17 @@ type Shingle<'a> = [&'a str; SHINGLE_K];
 ///
 /// **One branch of `measure.py` is deliberately not ported.** It yields a single short gram for a
 /// text of fewer than [`SHINGLE_K`] words; here such a text yields an *empty* set, which
-/// [`jaccard`] scores 0.0. The branch is unreachable on this detector's input —
-/// [`crate::extract::MIN_BLOCK_WORDS`] is 8 — and where it would matter the two definitions agree
-/// anyway: identical short texts land in the exact-text groups and score 1.0 arithmetically, and
-/// two *different* short texts share no gram under either definition. Empty is also the safe side:
-/// it can only withhold a finding, never invent one.
+/// [`jaccard`] scores 0.0. Where it would matter the two definitions agree anyway: identical short
+/// texts land in the exact-text groups and score 1.0 arithmetically, and two *different* short texts
+/// share no gram under either definition. Empty is also the safe side: it can only withhold a
+/// finding, never invent one.
+///
+/// ⚠️ **The empty set is REACHABLE, and used to be documented here as impossible.** The claim was
+/// that [`crate::extract::MIN_BLOCK_WORDS`] is 8, so no extracted block can be shorter than a
+/// shingle — true of the *whole* block, which is what that constant counts, and false of the
+/// [`crate::extract::ProseBlock::narrative`] this function is now handed. A docstring that is
+/// nothing but a parameter table is 8 words or more and has an empty narrative, so it lands here
+/// and gets an empty set, which is exactly how it takes no part in the rule.
 fn shingles(normalized: &str) -> Vec<Shingle<'_>> {
     let words: Vec<&str> = normalized.split_whitespace().collect();
     // `collect` sizes itself exactly here, unlike the `HashSet` this replaced: `Windows` is an
@@ -294,7 +316,7 @@ type End<'a> = (Coordinates<'a>, &'a str);
 
 /// Where a block is and what it says.
 fn end_of(block: &ProseBlock) -> End<'_> {
-    (block.coordinates(), block.normalized.as_str())
+    (block.coordinates(), block.narrative.as_str())
 }
 
 /// The output order of the clusters: the [`End`] of the smallest member.
@@ -309,7 +331,7 @@ fn end_of(block: &ProseBlock) -> End<'_> {
 /// # Why this makes the order total, without comparing floats
 ///
 /// Two clusters cannot share a member: components partition the blocks. And two blocks with the same
-/// [`End`] have identical normalised text, so they are exact twins, so they are in the *same*
+/// [`End`] have identical narrative, so they are exact twins, so they are in the *same*
 /// component. Therefore no two clusters have the same smallest member, and this key is a total
 /// order over the output — without any `f64` entering it.
 ///
@@ -555,7 +577,7 @@ impl Components {
 pub fn duplicates(blocks: &[ProseBlock]) -> Report<'_> {
     let sets: Vec<Vec<Shingle<'_>>> = blocks
         .iter()
-        .map(|block| shingles(&block.normalized))
+        .map(|block| shingles(&block.narrative))
         .collect();
 
     let mut components = Components::new(blocks.len());
@@ -576,7 +598,7 @@ pub fn duplicates(blocks: &[ProseBlock]) -> Report<'_> {
     }
 }
 
-/// Connects every group of blocks whose normalised text is identical, and returns, per block, the
+/// Connects every group of blocks whose narrative is identical, and returns, per block, the
 /// group it belongs to (its smallest member by [`end_of`], or `None` when it has no exact twin).
 ///
 /// Connected arithmetically: `n - 1` edges at score 1.0, with no Jaccard computed. That is a
@@ -595,12 +617,15 @@ pub fn duplicates(blocks: &[ProseBlock]) -> Report<'_> {
 /// first one to arrive — the recorded edge set is then the same for any permutation of the input,
 /// and so is the pair [`Cluster::weakest`] names.
 fn exact_groups(blocks: &[ProseBlock], components: &mut Components) -> Vec<Option<usize>> {
-    // One entry per distinct normalised text, so `blocks.len()` is the exact ceiling.
+    // One entry per distinct narrative, so `blocks.len()` is the exact ceiling.
     let mut by_text: HashMap<&str, Vec<usize>> = HashMap::with_capacity(blocks.len());
     for (position, block) in blocks.iter().enumerate() {
-        if !block.normalized.is_empty() {
+        // The emptiness test is `TPX003`'s whole answer to "what about a block that is nothing but
+        // a parameter table?" — see [`crate::extract::ProseBlock::narrative`]. Two such blocks are
+        // byte-identical here, so without it they would be an exact group scoring 1.0.
+        if !block.narrative.is_empty() {
             by_text
-                .entry(block.normalized.as_str())
+                .entry(block.narrative.as_str())
                 .or_default()
                 .push(position);
         }
@@ -608,7 +633,7 @@ fn exact_groups(blocks: &[ProseBlock], components: &mut Components) -> Vec<Optio
 
     let mut group_of: Vec<Option<usize>> = vec![None; blocks.len()];
     for members in by_text.values().filter(|members| members.len() > 1) {
-        // Every member has the same normalised text, so they differ only in coordinate; the
+        // Every member has the same narrative, so they differ only in coordinate; the
         // smallest one is therefore a group identity that depends on neither hash order nor
         // arrival order. `min_by_key` cannot fail on a group of two or more.
         let Some(&representative) = members
@@ -732,7 +757,7 @@ mod tests {
         Components, Report, SIMILARITY_THRESHOLD, Shingle, duplicates, exact_groups, jaccard,
         shingles,
     };
-    use crate::extract::{ProseBlock, ProseKind, extract, normalize};
+    use crate::extract::{ProseBlock, ProseKind, extract, narrative, normalize};
 
     /// A block built directly, for the tests that need a coordinate the parser cannot produce.
     ///
@@ -752,6 +777,7 @@ mod tests {
             line_start,
             line_end,
             normalized: normalize(text),
+            narrative: narrative(text),
             raw: text.to_owned(),
         }
     }
@@ -774,6 +800,73 @@ layer down.
 # and only makes the outage longer for every caller queued behind this one. Raising the
 # cap here without also raising the quota on their side would just move the failure one
 # layer down.
+";
+
+    /// `requests/src/requests/api.py:120-166` verbatim, at the pin `corpus/corpus.lock` names —
+    /// three public callables whose whole docstring is a reST info-field list under a one-line
+    /// summary that differs in the HTTP verb. Cluster #12 of `corpus/annotations.md` §1.2, 0.898.
+    ///
+    /// A raw string literal with the `#` hashes, because the docstrings carry `\*\*kwargs`: without
+    /// them `\*` would be an unknown Rust escape, and `\\*` would change the bytes under test.
+    const REQUESTS_API_PY: &str = r#"def post(url, data=None, json=None, **kwargs):
+    r"""Sends a POST request.
+
+    :param url: URL for the new :class:`Request` object.
+    :param data: (optional) Dictionary, list of tuples, bytes, or file-like
+        object to send in the body of the :class:`Request`.
+    :param json: (optional) A JSON serializable Python object to send in the body of the :class:`Request`.
+    :param \*\*kwargs: Optional arguments that ``request`` takes.
+    :return: :class:`Response <Response>` object
+    :rtype: requests.Response
+    """
+
+    return request("post", url, data=data, json=json, **kwargs)
+
+
+def put(url, data=None, **kwargs):
+    r"""Sends a PUT request.
+
+    :param url: URL for the new :class:`Request` object.
+    :param data: (optional) Dictionary, list of tuples, bytes, or file-like
+        object to send in the body of the :class:`Request`.
+    :param json: (optional) A JSON serializable Python object to send in the body of the :class:`Request`.
+    :param \*\*kwargs: Optional arguments that ``request`` takes.
+    :return: :class:`Response <Response>` object
+    :rtype: requests.Response
+    """
+
+    return request("put", url, data=data, **kwargs)
+
+
+def patch(url, data=None, **kwargs):
+    r"""Sends a PATCH request.
+
+    :param url: URL for the new :class:`Request` object.
+    :param data: (optional) Dictionary, list of tuples, bytes, or file-like
+        object to send in the body of the :class:`Request`.
+    :param json: (optional) A JSON serializable Python object to send in the body of the :class:`Request`.
+    :param \*\*kwargs: Optional arguments that ``request`` takes.
+    :return: :class:`Response <Response>` object
+    :rtype: requests.Response
+    """
+
+    return request("patch", url, data=data, **kwargs)
+"#;
+
+    /// `OpenHands/enterprise/server/routes/org_profiles.py:101-105` verbatim — one half of cluster
+    /// #1 of `corpus/annotations.md` §1.2, a `yes` verdict at 0.885.
+    const ORG_PROFILES_PY: &str = r"include_secrets: bool = True
+# Set when the caller has no new key (UI key field left blank), so an
+# existing profile's stored key survives instead of the snapshotted one.
+preserve_existing_api_key: bool = False
+";
+
+    /// `OpenHands/openhands/app_server/settings/settings_router.py:486-490` verbatim — the other
+    /// half of cluster #1. One word apart (`active`), and pure narrative.
+    const SETTINGS_ROUTER_PY: &str = r"include_secrets: bool = True
+# Set when the caller has no new key (UI key field left blank), so an
+# existing profile's stored key survives instead of the snapshotted active one.
+preserve_existing_api_key: bool = False
 ";
 
     fn corpus(files: &[(&str, &str)]) -> Vec<ProseBlock> {
@@ -851,6 +944,7 @@ layer down.
                 line_start: position * 3 + 1,
                 line_end: position * 3 + 2,
                 normalized: normalize(&text),
+                narrative: narrative(&text),
                 raw: text,
             })
             .collect()
@@ -981,6 +1075,109 @@ layer down.
             report.clusters
         );
         assert_eq!(report.comparisons, 1, "the pair must have been scored");
+    }
+
+    /// Three public callables whose docstrings differ only in an HTTP verb are **not** a finding.
+    ///
+    /// The bytes are `requests/src/requests/api.py:123-166` verbatim (`post`, `put`, `patch`), the
+    /// cluster `corpus/annotations.md` §1.2 records as #12 at similarity **0.898** — the measured
+    /// false positive this rule exists to remove. There is no fix a user could apply: `help(post)`
+    /// and `help(put)` each need their own reference table, so "delete or merge one copy" is advice
+    /// that can only make the documentation worse.
+    ///
+    /// Everything the three share is a reST info-field list (`:param:`, `:return:`, `:rtype:`).
+    /// What remains once that is discarded is `Sends a POST request.` against
+    /// `Sends a PUT request.`, which share no three-word gram at all.
+    ///
+    /// **Why 0.898 proves this is a feature defect and not a constant one:** the genuine finding in
+    /// `a_rationale_copied_between_two_files_is_still_a_finding` scores 0.885 on the same scale, and
+    /// `a_pair_exactly_on_the_threshold_is_a_cluster` pins a real one at 0.750. The classes overlap,
+    /// so no threshold separates them.
+    #[test]
+    fn a_shared_parameter_table_is_not_duplicate_prose() {
+        // Arrange
+        let blocks = corpus(&[("api.py", REQUESTS_API_PY)]);
+        assert_eq!(blocks.len(), 3, "the fixture must yield one block each");
+
+        // Act
+        let report = duplicates(&blocks);
+
+        // Assert
+        assert!(
+            report.clusters.is_empty(),
+            "a repeated reference table is not duplicated prose; got {:?}",
+            report.clusters
+        );
+    }
+
+    /// One rationale copied between two files **stays** a finding — the guard against overreach.
+    ///
+    /// The bytes are `OpenHands/enterprise/server/routes/org_profiles.py:103-104` and
+    /// `openhands/app_server/settings/settings_router.py:488-489` verbatim, cluster #1 of
+    /// `corpus/annotations.md` §1.2 at similarity 0.885 and a `yes` verdict: one of the two copies
+    /// should reference the other.
+    ///
+    /// It carries **no** scaffolding of any kind — no `Args:`, no `:param:`, no example — so the
+    /// only way [`crate::extract::narrative`] can silence it is by eating narrative, which is the
+    /// mutation this test exists to catch. It is green before the change and must stay green after;
+    /// "exclude everything" would otherwise pass as a solution to the test above.
+    #[test]
+    fn a_rationale_copied_between_two_files_is_still_a_finding() {
+        // Arrange
+        let blocks = corpus(&[
+            ("org_profiles.py", ORG_PROFILES_PY),
+            ("settings_router.py", SETTINGS_ROUTER_PY),
+        ]);
+        assert_eq!(blocks.len(), 2, "the fixture must yield one block each");
+
+        // Act
+        let report = duplicates(&blocks);
+
+        // Assert
+        assert_eq!(report.clusters.len(), 1, "got {:?}", report.clusters);
+        assert_eq!(report.clusters[0].members.len(), 2);
+        assert!(
+            report.clusters[0].weakest_score >= SIMILARITY_THRESHOLD,
+            "got {}",
+            report.clusters[0].weakest_score
+        );
+    }
+
+    /// A block that is nothing **but** a parameter table takes no part in the rule at all.
+    ///
+    /// The third open question of `exclude-reference-scaffolding-from-tpx003`: once scaffolding is
+    /// discarded there is no explanation left to have been "said twice", so the block has nothing to
+    /// be a duplicate *of*. Two byte-identical copies of such a docstring are the case that decides
+    /// it — under the old rule they were an exact-text group scoring 1.0.
+    ///
+    /// The corpus deliberately also carries one real duplicate, so the assertion is `exactly one
+    /// finding, and it is not the table` rather than `nothing was found`.
+    #[test]
+    fn a_block_that_is_only_a_parameter_table_is_not_compared_at_all() {
+        // Arrange
+        let table = "def send(payload, timeout):\n    \"\"\"\n    Args:\n        payload: the body to send, already encoded by the caller.\n        timeout: how long to wait for the server, in seconds.\n    \"\"\"\n\n\n\
+                     # The retry budget here is deliberately small, and that matters because\n\
+                     # the upstream service rate limits us on every fourth call.\n";
+        let blocks = corpus(&[("left.py", table), ("right.py", table)]);
+        assert_eq!(
+            blocks.len(),
+            4,
+            "two docstrings and two comment runs: {blocks:?}"
+        );
+
+        // Act
+        let report = duplicates(&blocks);
+
+        // Assert
+        assert_eq!(
+            report.clusters.len(),
+            1,
+            "only the prose may be reported; got {:?}",
+            report.clusters
+        );
+        for member in &report.clusters[0].members {
+            assert_eq!(member.kind, ProseKind::Comment, "got {member:?}");
+        }
     }
 
     /// A group of `n` identical blocks is **one** finding carrying all `n` addresses, and costs
@@ -1684,13 +1881,16 @@ layer down.
 
     /// An empty shingle set scores 0.0 against anything — `corpus/measure.py:313-318`.
     ///
-    /// Tested directly, because it cannot be reached through [`duplicates`]: [`candidate_pairs`]
-    /// indexes only real shingles, so it never emits a pair with an empty side, and
-    /// [`crate::extract::MIN_BLOCK_WORDS`] is 8, so no extracted block has one. The branch is kept
-    /// rather than deleted for the same reason task 3 kept its trailing-comment rule: it is
-    /// fidelity to the measured definition, and it becomes reachable the moment `MIN_BLOCK_WORDS`
-    /// drops below [`SHINGLE_K`]. Returning 1.0 there — the one-token mutation — would make every
-    /// too-short block a duplicate of everything.
+    /// Tested directly, because [`duplicates`] cannot route a pair *into* it: `candidate_pairs`
+    /// indexes only real shingles, so it never emits a pair with an empty side. An empty side is
+    /// otherwise entirely reachable, and this test is the wrong place to say otherwise — a block
+    /// whose [`crate::extract::ProseBlock::narrative`] is empty has an empty set, and
+    /// [`crate::extract::MIN_BLOCK_WORDS`] cannot prevent it, because that constant counts the
+    /// whole block and this function is handed the narrative.
+    ///
+    /// The empty branch is what makes such a block silent rather than a duplicate of every other
+    /// silent block. Returning 1.0 there — the one-token mutation — would make every block with no
+    /// narrative a duplicate of everything.
     #[test]
     fn jaccard_is_zero_when_either_side_has_no_shingles() {
         // Arrange — under SHINGLE_K = 3 a two-word text has no shingle at all.

@@ -10,7 +10,7 @@
       "line": 20,
       "end_line": 27,
       "prose_kind": "docstring",
-      "message": "openai-agents-python/examples/agent_patterns/human_in_the_loop.py:20-27: TPX003 same explanation in 2 places: openai-agents-python/examples/agent_patterns/human_in_the_loop_stream.py:40-47 (weakest openai-agents-python/examples/agent_patterns/human_in_the_loop.py:20-27 ~ openai-agents-python/examples/agent_patterns/human_in_the_loop_stream.py:40-47, similarity 1.000)",
+      "message": "openai-agents-python/examples/agent_patterns/human_in_the_loop.py:20-27: TPX003 same explanation in 3 places: openai-agents-python/examples/agent_patterns/human_in_the_loop_stream.py:40-47, openai-agents-python/tests/test_function_tool_decorator.py:219-223 (weakest openai-agents-python/examples/agent_patterns/human_in_the_loop.py:20-27 ~ openai-agents-python/examples/agent_patterns/human_in_the_loop_stream.py:40-47, similarity 1.000)",
       "locations": [
         {
           "path": "openai-agents-python/examples/agent_patterns/human_in_the_loop.py",
@@ -22,6 +22,12 @@
           "path": "openai-agents-python/examples/agent_patterns/human_in_the_loop_stream.py",
           "line": 40,
           "end_line": 47,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "openai-agents-python/tests/test_function_tool_decorator.py",
+          "line": 219,
+          "end_line": 223,
           "prose_kind": "docstring"
         }
       ],
@@ -900,47 +906,10 @@
     {
       "code": "TPX003",
       "path": "openai-agents-python/src/agents/extensions/memory/async_sqlite_session.py",
-      "line": 39,
-      "end_line": 49,
-      "prose_kind": "docstring",
-      "message": "openai-agents-python/src/agents/extensions/memory/async_sqlite_session.py:39-49: TPX003 same explanation in 2 places: openai-agents-python/src/agents/memory/sqlite_session.py:38-48 (weakest openai-agents-python/src/agents/extensions/memory/async_sqlite_session.py:39-49 ~ openai-agents-python/src/agents/memory/sqlite_session.py:38-48, similarity 0.924)",
-      "locations": [
-        {
-          "path": "openai-agents-python/src/agents/extensions/memory/async_sqlite_session.py",
-          "line": 39,
-          "end_line": 49,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "openai-agents-python/src/agents/memory/sqlite_session.py",
-          "line": 38,
-          "end_line": 48,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "openai-agents-python/src/agents/extensions/memory/async_sqlite_session.py",
-          "line": 39,
-          "end_line": 49,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "openai-agents-python/src/agents/memory/sqlite_session.py",
-          "line": 38,
-          "end_line": 48,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.9242424242424242
-      }
-    },
-    {
-      "code": "TPX003",
-      "path": "openai-agents-python/src/agents/extensions/memory/async_sqlite_session.py",
       "line": 118,
       "end_line": 126,
       "prose_kind": "docstring",
-      "message": "openai-agents-python/src/agents/extensions/memory/async_sqlite_session.py:118-126: TPX003 same explanation in 5 places: openai-agents-python/src/agents/extensions/memory/dapr_session.py:262-270, openai-agents-python/src/agents/extensions/memory/redis_session.py:157-165, openai-agents-python/src/agents/extensions/memory/sqlalchemy_session.py:290-298, openai-agents-python/src/agents/memory/sqlite_session.py:207-215 (weakest openai-agents-python/src/agents/extensions/memory/async_sqlite_session.py:118-126 ~ openai-agents-python/src/agents/extensions/memory/dapr_session.py:262-270, similarity 1.000)",
+      "message": "openai-agents-python/src/agents/extensions/memory/async_sqlite_session.py:118-126: TPX003 same explanation in 8 places: openai-agents-python/src/agents/extensions/memory/dapr_session.py:262-270, openai-agents-python/src/agents/extensions/memory/mongodb_session.py:259-270, openai-agents-python/src/agents/extensions/memory/redis_session.py:157-165, openai-agents-python/src/agents/extensions/memory/sqlalchemy_session.py:290-298, openai-agents-python/src/agents/memory/session.py:25-33, openai-agents-python/src/agents/memory/session.py:72-80, openai-agents-python/src/agents/memory/sqlite_session.py:207-215 (weakest openai-agents-python/src/agents/extensions/memory/async_sqlite_session.py:118-126 ~ openai-agents-python/src/agents/extensions/memory/dapr_session.py:262-270, similarity 1.000)",
       "locations": [
         {
           "path": "openai-agents-python/src/agents/extensions/memory/async_sqlite_session.py",
@@ -955,6 +924,12 @@
           "prose_kind": "docstring"
         },
         {
+          "path": "openai-agents-python/src/agents/extensions/memory/mongodb_session.py",
+          "line": 259,
+          "end_line": 270,
+          "prose_kind": "docstring"
+        },
+        {
           "path": "openai-agents-python/src/agents/extensions/memory/redis_session.py",
           "line": 157,
           "end_line": 165,
@@ -964,6 +939,18 @@
           "path": "openai-agents-python/src/agents/extensions/memory/sqlalchemy_session.py",
           "line": 290,
           "end_line": 298,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "openai-agents-python/src/agents/memory/session.py",
+          "line": 25,
+          "end_line": 33,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "openai-agents-python/src/agents/memory/session.py",
+          "line": 72,
+          "end_line": 80,
           "prose_kind": "docstring"
         },
         {
@@ -995,7 +982,7 @@
       "line": 168,
       "end_line": 172,
       "prose_kind": "docstring",
-      "message": "openai-agents-python/src/agents/extensions/memory/async_sqlite_session.py:168-172: TPX003 same explanation in 7 places: openai-agents-python/src/agents/extensions/memory/dapr_session.py:301-305, openai-agents-python/src/agents/extensions/memory/redis_session.py:196-200, openai-agents-python/src/agents/extensions/memory/sqlalchemy_session.py:342-346, openai-agents-python/src/agents/memory/session.py:37-41, openai-agents-python/src/agents/memory/session.py:85-89, openai-agents-python/src/agents/memory/sqlite_session.py:262-266 (weakest openai-agents-python/src/agents/extensions/memory/async_sqlite_session.py:168-172 ~ openai-agents-python/src/agents/extensions/memory/dapr_session.py:301-305, similarity 1.000)",
+      "message": "openai-agents-python/src/agents/extensions/memory/async_sqlite_session.py:168-172: TPX003 same explanation in 8 places: openai-agents-python/src/agents/extensions/memory/dapr_session.py:301-305, openai-agents-python/src/agents/extensions/memory/mongodb_session.py:301-305, openai-agents-python/src/agents/extensions/memory/redis_session.py:196-200, openai-agents-python/src/agents/extensions/memory/sqlalchemy_session.py:342-346, openai-agents-python/src/agents/memory/session.py:37-41, openai-agents-python/src/agents/memory/session.py:85-89, openai-agents-python/src/agents/memory/sqlite_session.py:262-266 (weakest openai-agents-python/src/agents/extensions/memory/async_sqlite_session.py:168-172 ~ openai-agents-python/src/agents/extensions/memory/dapr_session.py:301-305, similarity 1.000)",
       "locations": [
         {
           "path": "openai-agents-python/src/agents/extensions/memory/async_sqlite_session.py",
@@ -1005,6 +992,12 @@
         },
         {
           "path": "openai-agents-python/src/agents/extensions/memory/dapr_session.py",
+          "line": 301,
+          "end_line": 305,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "openai-agents-python/src/agents/extensions/memory/mongodb_session.py",
           "line": 301,
           "end_line": 305,
           "prose_kind": "docstring"
@@ -1237,6 +1230,43 @@
     {
       "code": "TPX003",
       "path": "openai-agents-python/src/agents/lifecycle.py",
+      "line": 52,
+      "end_line": 58,
+      "prose_kind": "docstring",
+      "message": "openai-agents-python/src/agents/lifecycle.py:52-58: TPX003 same explanation in 2 places: openai-agents-python/src/agents/lifecycle.py:129-135 (weakest openai-agents-python/src/agents/lifecycle.py:52-58 ~ openai-agents-python/src/agents/lifecycle.py:129-135, similarity 1.000)",
+      "locations": [
+        {
+          "path": "openai-agents-python/src/agents/lifecycle.py",
+          "line": 52,
+          "end_line": 58,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "openai-agents-python/src/agents/lifecycle.py",
+          "line": 129,
+          "end_line": 135,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "openai-agents-python/src/agents/lifecycle.py",
+          "line": 52,
+          "end_line": 58,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "openai-agents-python/src/agents/lifecycle.py",
+          "line": 129,
+          "end_line": 135,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "openai-agents-python/src/agents/lifecycle.py",
       "line": 76,
       "end_line": 82,
       "prose_kind": "docstring",
@@ -1329,55 +1359,6 @@
       "max_volume": 200
     },
     {
-      "code": "TPX003",
-      "path": "openai-agents-python/src/agents/mcp/server.py",
-      "line": 569,
-      "end_line": 602,
-      "prose_kind": "docstring",
-      "message": "openai-agents-python/src/agents/mcp/server.py:569-602: TPX003 same explanation in 4 places: openai-agents-python/src/agents/mcp/server.py:1183-1221, openai-agents-python/src/agents/mcp/server.py:1308-1348, openai-agents-python/src/agents/mcp/server.py:1448-1489 (weakest openai-agents-python/src/agents/mcp/server.py:569-602 ~ openai-agents-python/src/agents/mcp/server.py:1183-1221, similarity 0.760)",
-      "locations": [
-        {
-          "path": "openai-agents-python/src/agents/mcp/server.py",
-          "line": 569,
-          "end_line": 602,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "openai-agents-python/src/agents/mcp/server.py",
-          "line": 1183,
-          "end_line": 1221,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "openai-agents-python/src/agents/mcp/server.py",
-          "line": 1308,
-          "end_line": 1348,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "openai-agents-python/src/agents/mcp/server.py",
-          "line": 1448,
-          "end_line": 1489,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "openai-agents-python/src/agents/mcp/server.py",
-          "line": 569,
-          "end_line": 602,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "openai-agents-python/src/agents/mcp/server.py",
-          "line": 1183,
-          "end_line": 1221,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.7602040816326531
-      }
-    },
-    {
       "code": "TPX002",
       "path": "openai-agents-python/src/agents/mcp/server.py",
       "line": 1183,
@@ -1406,43 +1387,6 @@
       "message": "openai-agents-python/src/agents/mcp/server.py:1448-1489: TPX002 docstring is 406 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 406,
       "max_volume": 200
-    },
-    {
-      "code": "TPX003",
-      "path": "openai-agents-python/src/agents/memory/session.py",
-      "line": 25,
-      "end_line": 33,
-      "prose_kind": "docstring",
-      "message": "openai-agents-python/src/agents/memory/session.py:25-33: TPX003 same explanation in 2 places: openai-agents-python/src/agents/memory/session.py:72-80 (weakest openai-agents-python/src/agents/memory/session.py:25-33 ~ openai-agents-python/src/agents/memory/session.py:72-80, similarity 1.000)",
-      "locations": [
-        {
-          "path": "openai-agents-python/src/agents/memory/session.py",
-          "line": 25,
-          "end_line": 33,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "openai-agents-python/src/agents/memory/session.py",
-          "line": 72,
-          "end_line": 80,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "openai-agents-python/src/agents/memory/session.py",
-          "line": 25,
-          "end_line": 33,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "openai-agents-python/src/agents/memory/session.py",
-          "line": 72,
-          "end_line": 80,
-          "prose_kind": "docstring"
-        },
-        "similarity": 1.0
-      }
     },
     {
       "code": "TPX002",
@@ -1492,43 +1436,6 @@
       }
     },
     {
-      "code": "TPX003",
-      "path": "openai-agents-python/src/agents/models/interface.py",
-      "line": 75,
-      "end_line": 92,
-      "prose_kind": "docstring",
-      "message": "openai-agents-python/src/agents/models/interface.py:75-92: TPX003 same explanation in 2 places: openai-agents-python/src/agents/models/interface.py:110-127 (weakest openai-agents-python/src/agents/models/interface.py:75-92 ~ openai-agents-python/src/agents/models/interface.py:110-127, similarity 0.863)",
-      "locations": [
-        {
-          "path": "openai-agents-python/src/agents/models/interface.py",
-          "line": 75,
-          "end_line": 92,
-          "prose_kind": "docstring"
-        },
-        {
-          "path": "openai-agents-python/src/agents/models/interface.py",
-          "line": 110,
-          "end_line": 127,
-          "prose_kind": "docstring"
-        }
-      ],
-      "weakest": {
-        "first": {
-          "path": "openai-agents-python/src/agents/models/interface.py",
-          "line": 75,
-          "end_line": 92,
-          "prose_kind": "docstring"
-        },
-        "second": {
-          "path": "openai-agents-python/src/agents/models/interface.py",
-          "line": 110,
-          "end_line": 127,
-          "prose_kind": "docstring"
-        },
-        "similarity": 0.8627450980392157
-      }
-    },
-    {
       "code": "TPX002",
       "path": "openai-agents-python/src/agents/models/multi_provider.py",
       "line": 94,
@@ -1537,6 +1444,43 @@
       "message": "openai-agents-python/src/agents/models/multi_provider.py:94-133: TPX002 docstring is 370 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 370,
       "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "openai-agents-python/src/agents/models/multi_provider.py",
+      "line": 94,
+      "end_line": 133,
+      "prose_kind": "docstring",
+      "message": "openai-agents-python/src/agents/models/multi_provider.py:94-133: TPX003 same explanation in 2 places: openai-agents-python/src/agents/models/openai_provider.py:62-89 (weakest openai-agents-python/src/agents/models/multi_provider.py:94-133 ~ openai-agents-python/src/agents/models/openai_provider.py:62-89, similarity 1.000)",
+      "locations": [
+        {
+          "path": "openai-agents-python/src/agents/models/multi_provider.py",
+          "line": 94,
+          "end_line": 133,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "openai-agents-python/src/agents/models/openai_provider.py",
+          "line": 62,
+          "end_line": 89,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "openai-agents-python/src/agents/models/multi_provider.py",
+          "line": 94,
+          "end_line": 133,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "openai-agents-python/src/agents/models/openai_provider.py",
+          "line": 62,
+          "end_line": 89,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
     },
     {
       "code": "TPX003",
@@ -1661,6 +1605,80 @@
     },
     {
       "code": "TPX003",
+      "path": "openai-agents-python/src/agents/realtime/model.py",
+      "line": 42,
+      "end_line": 48,
+      "prose_kind": "docstring",
+      "message": "openai-agents-python/src/agents/realtime/model.py:42-48: TPX003 same explanation in 2 places: openai-agents-python/src/agents/realtime/model.py:53-59 (weakest openai-agents-python/src/agents/realtime/model.py:42-48 ~ openai-agents-python/src/agents/realtime/model.py:53-59, similarity 1.000)",
+      "locations": [
+        {
+          "path": "openai-agents-python/src/agents/realtime/model.py",
+          "line": 42,
+          "end_line": 48,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "openai-agents-python/src/agents/realtime/model.py",
+          "line": 53,
+          "end_line": 59,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "openai-agents-python/src/agents/realtime/model.py",
+          "line": 42,
+          "end_line": 48,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "openai-agents-python/src/agents/realtime/model.py",
+          "line": 53,
+          "end_line": 59,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "openai-agents-python/src/agents/result.py",
+      "line": 474,
+      "end_line": 496,
+      "prose_kind": "docstring",
+      "message": "openai-agents-python/src/agents/result.py:474-496: TPX003 same explanation in 2 places: openai-agents-python/src/agents/result.py:971-997 (weakest openai-agents-python/src/agents/result.py:474-496 ~ openai-agents-python/src/agents/result.py:971-997, similarity 0.796)",
+      "locations": [
+        {
+          "path": "openai-agents-python/src/agents/result.py",
+          "line": 474,
+          "end_line": 496,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "openai-agents-python/src/agents/result.py",
+          "line": 971,
+          "end_line": 997,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "openai-agents-python/src/agents/result.py",
+          "line": 474,
+          "end_line": 496,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "openai-agents-python/src/agents/result.py",
+          "line": 971,
+          "end_line": 997,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.7959183673469388
+      }
+    },
+    {
+      "code": "TPX003",
       "path": "openai-agents-python/src/agents/run.py",
       "line": 157,
       "end_line": 160,
@@ -1711,6 +1729,43 @@
       "message": "openai-agents-python/src/agents/run.py:219-270: TPX002 docstring is 403 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
       "words": 403,
       "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "openai-agents-python/src/agents/run.py",
+      "line": 219,
+      "end_line": 270,
+      "prose_kind": "docstring",
+      "message": "openai-agents-python/src/agents/run.py:219-270: TPX003 same explanation in 2 places: openai-agents-python/src/agents/run.py:385-431 (weakest openai-agents-python/src/agents/run.py:219-270 ~ openai-agents-python/src/agents/run.py:385-431, similarity 0.830)",
+      "locations": [
+        {
+          "path": "openai-agents-python/src/agents/run.py",
+          "line": 219,
+          "end_line": 270,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "openai-agents-python/src/agents/run.py",
+          "line": 385,
+          "end_line": 431,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "openai-agents-python/src/agents/run.py",
+          "line": 219,
+          "end_line": 270,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "openai-agents-python/src/agents/run.py",
+          "line": 385,
+          "end_line": 431,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8299319727891157
+      }
     },
     {
       "code": "TPX002",
@@ -2636,6 +2691,49 @@
           "line": 19,
           "end_line": 20,
           "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "openai-agents-python/tests/test_doc_parsing.py",
+      "line": 5,
+      "end_line": 14,
+      "prose_kind": "docstring",
+      "message": "openai-agents-python/tests/test_doc_parsing.py:5-14: TPX003 same explanation in 3 places: openai-agents-python/tests/test_doc_parsing.py:20-34, openai-agents-python/tests/test_doc_parsing.py:39-45 (weakest openai-agents-python/tests/test_doc_parsing.py:5-14 ~ openai-agents-python/tests/test_doc_parsing.py:20-34, similarity 1.000)",
+      "locations": [
+        {
+          "path": "openai-agents-python/tests/test_doc_parsing.py",
+          "line": 5,
+          "end_line": 14,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "openai-agents-python/tests/test_doc_parsing.py",
+          "line": 20,
+          "end_line": 34,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "openai-agents-python/tests/test_doc_parsing.py",
+          "line": 39,
+          "end_line": 45,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "openai-agents-python/tests/test_doc_parsing.py",
+          "line": 5,
+          "end_line": 14,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "openai-agents-python/tests/test_doc_parsing.py",
+          "line": 20,
+          "end_line": 34,
+          "prose_kind": "docstring"
         },
         "similarity": 1.0
       }
