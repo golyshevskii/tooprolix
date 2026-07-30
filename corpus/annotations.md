@@ -397,3 +397,337 @@ What is **not** a substitute, and is deliberately not offered as one:
 
 AC1, AC1b, AC2 and AC3 are unaffected: each is defined over the pinned corpus as a whole, and each
 is closed on it.
+
+---
+
+## 4. Dry run — the artifact schema and the marking rule, rehearsed on calibration data (2026-07-30)
+
+🔴 **Read this before any number below.** This is a **dry run on calibration data. It is not
+held-out evidence and it may not be cited as any part of the anti-false-positive gate.** Every
+cluster here comes out of `corpus/runs/*.json` — the same six repositories that calibrated the 150 /
+200 word limits and the 0.75 Jaccard threshold — and the whole point of
+`close-anti-fp-gate-with-public-reference` is that a number taken there describes the tuning set, not
+the tool. Its purpose is narrower and is stated as such: **shake the record format and the marking
+rule out before they are used where they count**, and produce numbers informed enough that the gate's
+threshold is set from something rather than guessed.
+
+⚠️ **The annotator was not blind.** The corpus numbers were fully visible before the draw, §1.4 had
+already been read, and nine of the ten near clusters below turned out to be clusters §1.4 had already
+judged. Same disclosure as §1.4's, for the same reason.
+
+### 4.1 What was measured on, exactly
+
+**Detector: `v0.4.0`.** `corpus/runs/*.json` were regenerated at `7de4c6e` (the merge of
+`exclude-reference-scaffolding-from-tpx003`); the tag `v0.4.0` is `cf65fd6`; `main` is `e6adfed`.
+**`git diff 7de4c6e e6adfed -- src/` is empty** — the three commits differ only in the version in
+`Cargo.toml`/`Cargo.lock` — so all three carry the same detector, and the numbers below describe the
+binary that goes to PyPI. AC9's tag is `v0.4.0`.
+
+### 4.2 Population at `v0.4.0` — the carried-forward numbers, re-measured
+
+STATE.md carried near 160 / exact 457 / total 617 forward from task 13. Re-measured from
+`corpus/runs/*.json` rather than taken on trust — **confirmed exactly**:
+
+| repo | near (`weakest < 1.0`) | exact (`== 1.0`) | total |
+|---|---|---|---|
+| OpenHands | 21 | 43 | 64 |
+| crewAI | 51 | 43 | 94 |
+| langgraph | 47 | 213 | 260 |
+| openai-agents-python | 12 | 60 | 72 |
+| pydantic | 27 | 94 | 121 |
+| requests | 2 | 4 | 6 |
+| **total** | **160** | **457** | **617** |
+
+### 4.3 The draw
+
+Deterministic, and it is `corpus/sample_clusters.py` that enforces it — the same sampler §1 used,
+extended with `--population` and `--limit` rather than replaced:
+
+* clusters ordered inside each repository by the finding's **own** reported address `(path, line)`;
+* repositories interleaved round-robin in ASCII order of the run name;
+* the **interleaved** sequence truncated to the sample size — never the individual pools, which
+  would be the single-repository prefix `sample_clusters.py` exists to avoid.
+
+```bash
+CORPUS_ROOT=… uv run python3 corpus/sample_clusters.py --population exact --per-repo 20 --limit 20
+CORPUS_ROOT=… uv run python3 corpus/sample_clusters.py --population near  --per-repo 10 --limit 10
+```
+
+**20 exact and 10 near, and the ratio is the point.** Exact is 457 of 617 clusters and **its
+precision has never been measured**: 0.875, 0.750, 0.867 and the 0.667–0.867 band are all near-only
+numbers. Whether the gate can pass at all may turn on the half nobody has looked at.
+
+⚠️ **The near half is almost entirely a re-draw of §1.4 and carries close to no new information.**
+Nine of the ten near clusters are §1.4's #1, #2, #3, #4, #7, #10, #18, #20 and #21; only near 5 is
+new. That is a property of the ordering, not an accident, and it is why the near figure below should
+be read as a consistency check on §1.4 rather than as evidence. The exact half is entirely new.
+
+### 4.4 The marking rule, and the two readings it is reported under
+
+The rule is EPIC.md Decisions #16 as restated in §1.4, applied unchanged. Stated operationally, so
+that the band below is mechanical rather than a mood:
+
+1. discard `Args` / `Attributes` / `Returns` / `Raises` / `Yields` / `:param:` / `:rtype:` entries
+   and callable-specific examples and doctests;
+2. discard a summary line that is a **per-callable template** — the copies differing exactly in the
+   token that names their own callable, verb or version;
+3. **main reading:** keep a summary line that is **byte-identical** across copies (this is how §1.4
+   treated its boundary clusters #15/#17/#19). **Strict reading:** discard every summary line;
+4. the finding is actionable only if what remains asserts the same thing in substance **and** a
+   concrete canonical owner or cross-reference is nameable that removes one copy without leaving
+   either callable's reference incomplete. Every `TP` in the artifact names that fix, and
+   `corpus/classification.py` refuses to load one that does not.
+
+**One mechanism was verified rather than assumed**, because five verdicts turn on it:
+`inspect.getdoc` walks the MRO, so deleting an override's docstring leaves `help()` complete when the
+base carries it. Checked in this session for both a plain method and `__init__`. That is the fact
+separating *override repeats its base* (actionable) from *two unrelated callables share a summary*
+(not).
+
+### 4.5 The 30 verdicts
+
+Full records — members, reason, named fix, FP shape, attributes — are in
+`corpus/dry_run_classification.json`; the table is the index. ⚠️ marks a boundary call.
+
+#### Exact (20)
+
+| # | repo | first member | verdict |
+|---|---|---|---|
+| 1 | OpenHands | `enterprise/migrations/env.py:5-6` (+1) | **TP** |
+| 2 | crewAI | `a2a/extensions/base.py:179-183` (+1) | **FP** |
+| 3 | langgraph | `checkpoint/postgres/__init__.py:86-91` (+3) | **TP** |
+| 4 | openai-agents-python | `examples/agent_patterns/human_in_the_loop.py:20-27` (+2) | **FP** |
+| 5 | pydantic | `pydantic_core/core_schema.py:3587-3606` (+1) | **TP** ⚠️ |
+| 6 | requests | `src/requests/adapters.py:137-150` (+1) | **TP** |
+| 7 | OpenHands | `enterprise/migrations/env.py:86-87` (+1) | **FP** |
+| 8 | crewAI | `agent/core.py:1985-1996` (+1) | **FP** |
+| 9 | langgraph | `checkpoint/postgres/__init__.py:309-310` (+1) | **TP** |
+| 10 | openai-agents-python | `examples/agent_patterns/human_in_the_loop.py:41-48` (+1) | **FP** |
+| 11 | pydantic | `tests/serializers/test_dataclasses.py:261-266` (+2) | **TP** ⚠️ |
+| 12 | requests | `src/requests/cookies.py:584-591` (+1) | **TP** ⚠️ |
+| 13 | OpenHands | `enterprise/migrations/env.py:90-91` (+1) | **FP** |
+| 14 | crewAI | `agent_adapters/base_agent_adapter.py:42-46` (+1) | **TP** |
+| 15 | langgraph | `checkpoint/postgres/__init__.py:406-412` (+6) | **TP** ⚠️ |
+| 16 | openai-agents-python | `examples/agent_patterns/human_in_the_loop.py:66-73` (+1) | **FP** |
+| 17 | pydantic | `tests/serializers/test_simple.py:67-69` (+1) | **FP** |
+| 18 | requests | `tests/test_requests.py:2252-2254` (+1) | **FP** |
+| 19 | OpenHands | `enterprise/migrations/env.py:103-112` (+1) | **FP** ⚠️ |
+| 20 | crewAI | `agent_adapters/langgraph/langgraph_tool_adapter.py:23-27` (+1) | **TP** ⚠️ |
+
+#### Near (10)
+
+| # | repo | first member | weakest | verdict | same cluster as |
+|---|---|---|---|---|---|
+| 1 | OpenHands | `enterprise/server/routes/org_profiles.py:103-104` (+1) | 0.885 | **TP** | §1.4 #1 |
+| 2 | crewAI | `a2a/extensions/a2ui/models.py:258-262` (+1) | 0.760 | **TP** | §1.4 #2 |
+| 3 | langgraph | `checkpoint/postgres/__init__.py:120-151` (+5) | 0.769 | **TP** | §1.4 #21 |
+| 4 | openai-agents-python | `src/agents/computer.py:9-14` (+1) | 0.829 | **TP** | §1.4 #4 |
+| 5 | pydantic | `pydantic_core/core_schema.py:2370-2398` (+1) | 0.780 | **FP** | — (new) |
+| 6 | requests | `src/requests/models.py:838-844` (+2) | 0.889 | **TP** | §1.4 #18 |
+| 7 | OpenHands | `enterprise/server/routes/org_profiles.py:255-256` (+1) | 0.800 | **TP** | §1.4 #7 |
+| 8 | crewAI | `agent/core.py:766-780` (+1) | 0.800 | **FP** | §1.4 #20 |
+| 9 | langgraph | `checkpoint/postgres/__init__.py:193-226` (+5) | 0.772 | **TP** | §1.4 #3 |
+| 10 | openai-agents-python | `src/agents/extensions/memory/async_sqlite_session.py:22-27` (+1) | 0.971 | **TP** | §1.4 #10 |
+
+### 4.6 The rates
+
+Computed by `corpus/classification.py` from the records, never stored in the artifact. 95% Wilson
+score intervals.
+
+| population | FP | clusters | FP rate | 95% Wilson |
+|---|---|---|---|---|
+| **exact** | 10 | 20 | **0.500** | 0.299 – 0.701 |
+| **near** | 2 | 10 | **0.200** | 0.057 – 0.510 |
+| **combined** | 12 | 30 | **0.400** | 0.246 – 0.577 |
+
+**Under the strict reading of step 3** — every summary line discarded, so a cluster whose only
+surviving overlap is a summary line becomes not actionable — records 5, 6, 12, 14, 15 and 20 flip to
+FP and no near record moves:
+
+| population | FP | clusters | FP rate | 95% Wilson |
+|---|---|---|---|---|
+| exact (strict) | 16 | 20 | **0.800** | 0.584 – 0.919 |
+| near (strict) | 2 | 10 | 0.200 | 0.057 – 0.510 |
+| combined (strict) | 18 | 30 | **0.600** | 0.423 – 0.754 |
+
+**The headline is the exact half, and it is the first measurement of it that exists: 0.500 under the
+stated reading, 0.800 under the strict one.** Near, on a sample that is 90 % §1.4 re-judged, comes
+out at 0.200 — consistent with §1.4's 13/15 precision, as it should be, and for that reason not
+independent evidence of anything.
+
+### 4.7 The false-positive shapes, and the three that are not in §1.5
+
+Ten of the twelve FPs fall into three shapes; §1.5 named one of them.
+
+1. **Templated / identical summary line, nothing else surviving** — §1.5's class, both its 0.800 and
+   its 1.000 form. Records exact 2, 4, 8, 10, 16 and near 5, 8. §1.5 predicted the 1.000 form from a
+   *constructed* pair; **it is here in the wild, five times in twenty exact clusters**, and it is the
+   single largest FP shape in the sample. Near 8 is §1.5's own named residual, counted in the
+   numerator exactly as Decisions #17 requires.
+2. 🆕 **Third-party generated scaffolding, duplicated by a generator rather than by an author.**
+   Records 7, 13, 19 — three of OpenHands' four exact clusters. Both directories hold the
+   `env.py` + `script.py.mako` + `versions/` + README set `alembic init` writes; the duplicated text
+   is alembic's own template. The canonical owner is upstream, outside the repository, and any
+   cross-reference is overwritten the next time the file is generated. Record 19 is marked as a
+   boundary because a substantive paragraph *does* survive the strip there — the rule's first clause
+   passes and only the second one fails.
+   ⚠️ Not in §1.5, and it is **exact-only**: a generator emits byte-identical text.
+3. 🆕 **A bare external cross-reference used as a docstring.** Record 17: two adjacent tests whose
+   entire docstring is `See https://github.com/pydantic/pydantic-core/pull/866`. There is no
+   explanation to own — it is per-callable provenance — and removing either copy takes that test's
+   link with it. Not in §1.5.
+4. 🆕 **Normalisation collapses a semantically load-bearing token.** Record 18: two tests asserting
+   **opposite** conditions, `with size 0` and `with size > 0`, reported as one cluster at similarity
+   **1.000**. Measured with the shipped extractor rather than reasoned about — both
+   `tooprolix.prose_blocks` normalisations are byte-identical, because `extract::normalize` replaces
+   every non-alphanumeric character with a space and the `>` disappears:
+
+   ```
+   'ensure that a byte stream with size 0 will not set both a content length and transfer encoding header'
+   'ensure that a byte stream with size 0 will not set both a content length and transfer encoding header'
+   ```
+
+   Not in §1.5, and it is a different kind of thing from the other three: the other shapes are the
+   rule declining to call a real duplication actionable, this one is the detector reporting an
+   identity that **does not exist in the source**.
+
+   ➡️ **This shape was subsequently FIXED, by the owner's decision, in the same session — see §5.**
+   The sentence that stood here ("recorded, not fixed") described the state before that decision and
+   is superseded: `normalize` was split into a counting form and a comparison form, and this cluster
+   now scores 0.750 instead of 1.000. Everything else in §4 still describes the pre-fix detector, and
+   §5 is the delta.
+
+### 4.8 One verdict changed during annotation, and it is recorded rather than smoothed
+
+Record 12 (`requests` cookie jar helpers) was first read as an FP — identical summary line, different
+parameter tables, the shape of records 2 and 8. Opening the body flipped it:
+`utils.add_dict_to_cookiejar` is `return cookiejar_from_dict(cookie_dict, cj)`, a one-line wrapper,
+so a canonical owner is nameable and the rule's second clause passes. Recorded in the artifact as
+`flipped_during_annotation`. The direction is against the annotator's first instinct and it *lowers*
+the FP rate by one, which is the direction worth disclosing.
+
+### 4.9 The artifact and the verification mechanism
+
+* **`corpus/dry_run_classification.json`** — one record per classified finding: run, address, member
+  list, weakest similarity, near/exact, class, reason, named fix (TP) or shape (FP), attributes.
+* **`corpus/classification.py`** — parses it, refuses anything malformed, and `verify()` grades it
+  against the runs on disk: the SHA-256 of each run's bytes, the population re-drawn by
+  `sample_clusters`, and every record's similarity, half and member list. Nothing it checks is read
+  back out of a field the artifact wrote about itself.
+* **`tests/unit/test_classification_artifact.py`** — 15 tests, run by `make test`, including the
+  shipped artifact verifying against the shipped runs.
+
+**Exactly two classes.** `classification` is `TP` or `FP` and the parser rejects anything else by
+name, so Decisions #17's third-class loophole cannot be opened by writing `intentional` in the field;
+`intentional` is permitted in `attributes`, where it does not leave the numerator. A `TP` with no
+named fix and an `FP` with no named shape are both refused at load time.
+
+**Mutation-proved, both directions:**
+
+| mutation | result |
+|---|---|
+| delete one record from the committed artifact | `make test` **6 failed, 183 passed** — `test_the_dry_run_artifact_verifies_against_corpus_runs` names the lost address. Restored from a `cp` backup → 189 passed. |
+| append one byte to `corpus/runs/requests.json` | `corpus/classification.py` exits **1**: `requests: … hashes d8c6dd0d…, the artifact pins 70fdf84a…`. Restored → exit 0. |
+
+⚠️ Stated rather than glossed: the deletion reddens **six** tests, not one. Two are the guards of the
+deletion itself and two are the denominator guards; the other two fail for the wrong reason, because
+they build their fixtures from the shipped artifact and their fixture was the thing that was broken.
+They isolate correctly while the artifact is intact, which is the state the suite runs in.
+
+---
+
+## 5. Re-derivation on the fixed detector (2026-07-30, same session)
+
+🔴 **Still a dry run on calibration data, still a non-blind annotator.** §4's disclosures apply
+unchanged. Re-measuring does not turn calibration data into held-out evidence.
+
+`close-anti-fp-gate-with-public-reference` fixed the operator erasure §4.7 shape 4 measured, so §4's
+numbers describe a detector that no longer exists. This section is the **delta**, not a fresh
+annotation: the sample was re-drawn by the identical deterministic rule and diffed against §4's 30
+records.
+
+### 5.0 What this was measured on
+
+⚠️ **Not a released detector.** The runs behind §5 come from a **working-tree build**, branch
+`test/anti-fp-gate-holdout` on base `e6adfed`, with the operator fix applied and **not committed**.
+The artifact records it as `v0.4.0 + normalize_comparable (UNCOMMITTED working tree)` rather than as
+a tag, because claiming a tag the binary does not correspond to is the exact defect AC9 exists to
+prevent. §4's `v0.4.0` numbers describe the released detector; these do not, and the release type
+for this change is the owner's decision (see the delta in §5.2).
+
+### 5.1 What the fix was
+
+`extract::normalize` was serving two contracts and only one of them wanted operators erased. It is
+now two functions:
+
+| form | function | read by | operators |
+|---|---|---|---|
+| counting | `normalize` | `size_words` → `MIN_BLOCK_WORDS`, `TPX001`, `TPX002` | erased, as calibrated |
+| comparison | `normalize_comparable` | `narrative` → `TPX003` | `<`, `>`, `=` survive as words |
+
+**The set was chosen by measurement.** Over the 457 exact clusters, 138 have members whose raw text
+differs; `>` is the sole distinguishing character in **exactly one** — record 18 itself. The
+characters that fuse the most clusters are `_` (11), `.` (7) and `` ` `` (4), every one an erasure
+the comparison depends on. Preserving punctuation generally would not fix a defect, it would delete
+the feature.
+
+🔴 **The first attempt applied the rule inside `normalize` itself and was wrong**, which the corpus
+caught rather than review: `OpenHands` `TPX001` went **3 → 35** and `langgraph` `TPX002` **74 → 79**,
+because an operator that survives is an operator `size_words` counts, silently recalibrating limits
+this task may not touch. After the split, `TPX001`/`TPX002` are byte-identical on all seven rows and
+`corpus/units.py --verify` still reproduces **173 volume findings exactly**.
+
+### 5.2 Corpus delta
+
+| | before | after |
+|---|---|---|
+| near | 160 | **162** |
+| exact | 457 | **456** |
+| total | 617 | **618** |
+
+1 cluster appeared, **0** disappeared, 16 changed score, **0** changed membership — 17 of 617 (2.8%)
+touched. The defect itself: `requests/tests/test_requests.py:2252` moved **1.000 → 0.750**.
+
+**What that move is and is not.** It is the detector no longer claiming two opposite statements are
+the *same text*: 1.000 comes off the exact path, which has no threshold and which no user,
+configuration or future calibration can reach. It is **not** the finding disappearing — at 0.750 it
+is still emitted, and it is still a false positive. The fix moves the class from unreachable to
+reachable; suppressing it is a `SIMILARITY_THRESHOLD` decision this task may not take, and §1.5
+already measured that genuine findings sit at 0.760, 0.769 and 0.772.
+
+### 5.3 Sample delta — 29 of 30 carried forward unchanged
+
+Re-drawn by the identical rule (`--population exact --per-repo 20 --limit 20`, `--population near
+--per-repo 10 --limit 10`).
+
+* **29 records carried forward explicitly**, each with identical score, members and population:
+  exact 1–17, 19, 20 and all 10 near records. Their verdicts are re-used **because the cluster they
+  describe is byte-identical**, not because re-reading them was skipped.
+* **1 dropped: exact 18**, `requests/tests/test_requests.py:2252` — §4's FP record 18. It left the
+  *exact* population because it is no longer exact.
+* **1 new: exact 18**, `requests/tests/test_testserver.py:153-154` / `:164-165` at 1.000 — the
+  cluster that moved up one slot to fill the vacancy. Annotated fresh: **TP**. Two adjacent test
+  methods repeat the same two-line rationale for why their assertion matters; pure narrative, no
+  scaffolding, and the enclosing class is a nameable owner. Same shape as exact 1 and 9.
+
+**All of the movement is the fix; there is no sampling churn.** No carried-over cluster changed
+score, membership or population.
+
+### 5.4 The rates, old against new
+
+| population | §4 (before) | §5 (after) | 95% Wilson (after) |
+|---|---|---|---|
+| **exact** | 0.500 (10/20) | **0.450** (9/20) | 0.258 – 0.658 |
+| **near** | 0.200 (2/10) | **0.200** (2/10) | 0.057 – 0.510 |
+| **combined** | 0.400 (12/30) | **0.367** (11/30) | 0.219 – 0.545 |
+
+Strict reading: exact **0.750** (15/20, 0.531 – 0.888), near 0.200, combined **0.567** (17/30,
+0.392 – 0.726).
+
+🔴 **Read the improvement correctly, because the obvious reading of it is wrong.** Exact did not go
+0.500 → 0.450 because the fix removed a false positive from the population. It went there because
+the drawn sample **lost one FP and gained one TP**: the operator-collision cluster fell out of the
+exact draw when it stopped being exact, and a TP moved up to fill the slot. The false positive still
+exists in the corpus, at 0.750, on the near path — it is simply no longer among the drawn 30. One
+sample slot changing hands is well inside the interval either way, and neither 0.500 nor 0.450 is
+distinguishable from the other at n = 20.

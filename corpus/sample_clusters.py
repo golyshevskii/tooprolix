@@ -5,12 +5,19 @@ AC1 is "precision >= 0.8 on a hand-annotated sample of at least 20 `TPX003` find
 script owns the two decisions that make that number mean anything. Both are recorded decisions of
 the epic, not choices made here:
 
-* **Near clusters only.** A cluster whose weakest edge is exactly 1.0 holds definitionally
-  identical text; asking whether one of two identical explanations should be merged says nothing
-  about a detector tuned around a 0.75 Jaccard threshold. `weakest_score < 1.0` is the only
-  operational signal available — `Cluster` carries no provenance field — and it is *conservative*:
-  a near edge that happens to score exactly 1.0 is counted as exact and dropped. Measured on the
-  runs in `corpus/runs/`, the population is large enough that the conservatism costs nothing.
+* **Near clusters only, by default.** A cluster whose weakest edge is exactly 1.0 holds
+  definitionally identical text; asking whether one of two identical explanations should be merged
+  says nothing about a detector tuned around a 0.75 Jaccard threshold. `weakest_score < 1.0` is the
+  only operational signal available — `Cluster` carries no provenance field — and it is
+  *conservative*: a near edge that happens to score exactly 1.0 is counted as exact and dropped.
+  Measured on the runs in `corpus/runs/`, the population is large enough that the conservatism costs
+  nothing.
+
+  ⚠️ **This is AC1's population and a default, not a ceiling.** `--population exact|all` exists for
+  the anti-false-positive gate of `close-anti-fp-gate-with-public-reference`, whose AC8 requires the
+  exact clusters to be measured too: at `v0.4.0` they are **457 of 617**, and every precision number
+  this epic owns was drawn near-only. The population actually used is printed in the sample's own
+  heading, so a number can never be read under the wrong one.
 * **Round-robin over repositories.** A global prefix over `(repo, path, line)` in ASCII order lies
   entirely inside `OpenHands` and never reaches `langgraph` or `pydantic`.
 
@@ -24,6 +31,8 @@ differently.
 
 Usage:
     CORPUS_ROOT=/somewhere/outside uv run python3 corpus/sample_clusters.py [--per-repo 4]
+    CORPUS_ROOT=/somewhere/outside uv run python3 corpus/sample_clusters.py \
+        --population exact --per-repo 20 --limit 20
 """
 
 from __future__ import annotations
@@ -35,7 +44,13 @@ import sys
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, get_args
+
+#: The three populations of `TPX003` clusters, by the only operational signal there is.
+Population = Literal["near", "exact", "all"]
+
+#: Valid `--population` values, derived from the type so the two cannot drift apart.
+POPULATIONS: tuple[str, ...] = get_args(Population)
 
 #: Runs that are not part of the AC1 population: `crewAI-full` is the same checkout as `crewAI` at
 #: a root that cannot be measured at all (exit 2).
@@ -73,19 +88,32 @@ class Cluster:
         """The sort key: the finding's own reported address, nothing derived."""
         return (self.path, self.line)
 
+    @property
+    def is_exact(self) -> bool:
+        """Whether the cluster's weakest edge is exact, i.e. the cluster came off the exact path."""
+        return self.weakest >= 1.0
+
 
 def _member(raw: Mapping[str, Any]) -> Member:
     return Member(path=str(raw["path"]), line=int(raw["line"]), end_line=int(raw["end_line"]))
 
 
-def near_clusters(repo: str, report: Mapping[str, Any]) -> list[Cluster]:
+def tpx003_clusters(repo: str, report: Mapping[str, Any], population: Population = "near") -> list[Cluster]:
     """
-    Return every `TPX003` finding of `report` whose weakest edge is inexact, ordered by address.
+    Return the `TPX003` findings of `report` in `population`, ordered by address.
 
     Findings without a `weakest` field are volume findings (`TPX001`/`TPX002`) and are skipped
     rather than defaulted: a default would put a block that no similarity was ever computed for
     into a precision measurement about similarity.
+
+    # Raises
+
+    `ValueError` if `population` is not one of [`POPULATIONS`]. Falling back to the `near` default
+    would report a near-only number under an `exact` heading, which is the single failure mode the
+    exact population was added to prevent — so the guard fails closed.
     """
+    if population not in POPULATIONS:
+        raise ValueError(f"unknown population {population!r}; expected one of {', '.join(POPULATIONS)}")
     clusters: list[Cluster] = []
     for raw in report.get("findings", []):
         if raw.get("code") != "TPX003":
@@ -94,7 +122,9 @@ def near_clusters(repo: str, report: Mapping[str, Any]) -> list[Cluster]:
         if weakest is None:
             continue
         similarity = float(weakest["similarity"])
-        if similarity >= 1.0:
+        if population == "near" and similarity >= 1.0:
+            continue
+        if population == "exact" and similarity < 1.0:
             continue
         clusters.append(
             Cluster(
@@ -109,17 +139,23 @@ def near_clusters(repo: str, report: Mapping[str, Any]) -> list[Cluster]:
     return clusters
 
 
-def round_robin(pools: Mapping[str, Sequence[Cluster]], per_repo: int, minimum: int = MINIMUM_SAMPLE) -> list[Cluster]:
+def round_robin(
+    pools: Mapping[str, Sequence[Cluster]], per_repo: int, minimum: int = MINIMUM_SAMPLE, limit: int | None = None
+) -> list[Cluster]:
     """
     Return the first `per_repo` clusters of each repository, repositories interleaved by name.
 
     Interleaving rather than concatenating matters for reading, not for the set: a reviewer who
     stops early has still seen every repository.
 
+    `limit` truncates the **interleaved** sequence, never the individual pools. That distinction is
+    the rule, not an implementation detail: cutting each pool first is the single-repository prefix
+    this function exists to avoid, wearing a different name.
+
     # Raises
-    `SampleTooSmall` if fewer than `minimum` clusters come out. Pools smaller than `per_repo` shrink
-    the sample silently, and AC1's "at least 20 findings" would then live only in prose with no red
-    path in the tool that draws it.
+    `SampleTooSmall` if fewer than `minimum` clusters come out, counted after `limit` is applied.
+    Pools smaller than `per_repo` shrink the sample silently, and AC1's "at least 20 findings" would
+    then live only in prose with no red path in the tool that draws it.
     """
     ordered = sorted(pools)
     sampled: list[Cluster] = []
@@ -128,6 +164,8 @@ def round_robin(pools: Mapping[str, Sequence[Cluster]], per_repo: int, minimum: 
             pool = pools[repo]
             if index < len(pool):
                 sampled.append(pool[index])
+    if limit is not None:
+        sampled = sampled[:limit]
     if len(sampled) < minimum:
         raise SampleTooSmall(
             f"{len(sampled)} clusters drawn from {len(ordered)} repositories at {per_repo} each; "
@@ -143,14 +181,15 @@ def _quote(root: Path, member: Member) -> str:
     return "\n".join(f"    {line}" for line in body)
 
 
-def _load_runs(runs_dir: Path) -> dict[str, list[Cluster]]:
+def load_runs(runs_dir: Path, population: Population = "near") -> dict[str, list[Cluster]]:
+    """Return one ordered pool per run file in `runs_dir`, restricted to `population`."""
     pools: dict[str, list[Cluster]] = {}
     for path in sorted(runs_dir.glob("*.json")):
         repo = path.stem
         if repo in EXCLUDED_RUNS or path.stat().st_size == 0:
             continue
         report = json.loads(path.read_text(encoding="utf-8"))
-        pool = near_clusters(repo, report)
+        pool = tpx003_clusters(repo, report, population)
         if pool:
             pools[repo] = pool
     return pools
@@ -160,6 +199,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     """Print the sample as Markdown. Returns a process exit code."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--per-repo", type=int, default=4, help="clusters drawn per repository")
+    parser.add_argument("--population", choices=POPULATIONS, default="near", help="which TPX003 clusters are eligible")
+    parser.add_argument("--limit", type=int, default=None, help="truncate the interleaved sequence to this many")
     parser.add_argument(
         "--runs", type=Path, default=Path(__file__).resolve().parent / "runs", help="directory of run_all.sh output"
     )
@@ -171,24 +212,26 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 2
     root = Path(corpus_root)
 
-    pools = _load_runs(args.runs)
+    pools = load_runs(args.runs, args.population)
     if not pools:
-        print(f"error: no near clusters in {args.runs}; run corpus/run_all.sh first", file=sys.stderr)
+        print(f"error: no {args.population} clusters in {args.runs}; run corpus/run_all.sh first", file=sys.stderr)
         return 2
 
+    minimum = args.limit if args.limit is not None else MINIMUM_SAMPLE
     try:
-        sampled = round_robin(pools, args.per_repo)
+        sampled = round_robin(pools, args.per_repo, minimum=minimum, limit=args.limit)
     except SampleTooSmall as error:
         print(f"error: {error}", file=sys.stderr)
         return 1
-    print(f"# AC1 sample — {len(sampled)} near clusters, {args.per_repo} per repository\n")
-    print("| repo | near clusters available |")
+    print(f"# Sample — {len(sampled)} {args.population} clusters, {args.per_repo} per repository\n")
+    print(f"| repo | {args.population} clusters available |")
     print("|---|---|")
     for repo in sorted(pools):
         print(f"| {repo} | {len(pools[repo])} |")
     print()
     for index, cluster in enumerate(sampled, start=1):
-        print(f"## {index}. `{cluster.repo}` — weakest edge {cluster.weakest:.3f}\n")
+        kind = "exact" if cluster.is_exact else "near"
+        print(f"## {index}. `{cluster.repo}` — {kind}, weakest edge {cluster.weakest:.3f}\n")
         for member in cluster.members:
             print(f"`{member.path}:{member.line}-{member.end_line}`\n")
             print(_quote(root, member))

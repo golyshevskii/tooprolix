@@ -9,7 +9,14 @@ worthless, and this file is one test per way:
      edge at similarity 1.0 — definitionally identical text. Asking "should one of these copies be
      merged" of identical text is not a question about the detector, and the 0.75 near threshold
      the detector was tuned around never enters the answer. The blocking number is precision over
-     NEAR clusters only, so an exact cluster must never reach the sample.
+     NEAR clusters only, so an exact cluster must never reach the sample **by default**.
+
+     ⚠️ **Amended by `close-anti-fp-gate-with-public-reference` AC8, 2026-07-30.** The anti-FP gate
+     measures a *false-positive* share, not AC1's precision, and its population explicitly includes
+     exact clusters — at `v0.4.0` they are 457 of 617. So the exact population is reachable, but
+     only when asked for by name: `TestTheExactPopulationIsReachable` below pins that it is opt-in,
+     that the near default above is untouched, and that an unrecognised population is fatal rather
+     than silently near.
   2. **A global prefix over `(repo, path, line)` never leaves the first repository.** In ASCII
      order the whole prefix lies inside `OpenHands` and reaches neither `langgraph` nor `pydantic`.
      Round-robin by repository is just as deterministic and covers the corpus.
@@ -55,11 +62,11 @@ class TestNearOnly:
 
     def test_a_cluster_whose_weakest_edge_is_exact_is_not_sampled(self) -> None:
         report = {"findings": [finding("a.py", 1, 1.0)]}
-        assert sample_clusters.near_clusters("repo", report) == []
+        assert sample_clusters.tpx003_clusters("repo", report) == []
 
     def test_a_cluster_with_an_inexact_edge_is_sampled(self) -> None:
         report = {"findings": [finding("a.py", 1, 0.871)]}
-        sampled = sample_clusters.near_clusters("repo", report)
+        sampled = sample_clusters.tpx003_clusters("repo", report)
         assert [cluster.weakest for cluster in sampled] == [0.871]
 
     def test_volume_findings_never_enter_the_pool(self) -> None:
@@ -70,7 +77,7 @@ class TestNearOnly:
                 finding("b.py", 7, 0.9),
             ]
         }
-        sampled = sample_clusters.near_clusters("repo", report)
+        sampled = sample_clusters.tpx003_clusters("repo", report)
         assert [cluster.path for cluster in sampled] == ["b.py"]
 
 
@@ -80,16 +87,16 @@ class TestRoundRobin:
     def test_every_repository_is_represented_even_when_one_sorts_entirely_first(self) -> None:
         """A global `(repo, path, line)` prefix of size 2 would return two `AAA` clusters only."""
         pools = {
-            "AAA": sample_clusters.near_clusters("AAA", {"findings": [finding("a.py", i, 0.8) for i in (1, 2, 3)]}),
-            "zzz": sample_clusters.near_clusters("zzz", {"findings": [finding("z.py", i, 0.8) for i in (1, 2, 3)]}),
+            "AAA": sample_clusters.tpx003_clusters("AAA", {"findings": [finding("a.py", i, 0.8) for i in (1, 2, 3)]}),
+            "zzz": sample_clusters.tpx003_clusters("zzz", {"findings": [finding("z.py", i, 0.8) for i in (1, 2, 3)]}),
         }
         sampled = sample_clusters.round_robin(pools, per_repo=1, minimum=0)
         assert sorted(cluster.repo for cluster in sampled) == ["AAA", "zzz"]
 
     def test_a_repository_with_fewer_clusters_than_asked_contributes_all_it_has(self) -> None:
         pools = {
-            "small": sample_clusters.near_clusters("small", {"findings": [finding("a.py", 1, 0.8)]}),
-            "large": sample_clusters.near_clusters(
+            "small": sample_clusters.tpx003_clusters("small", {"findings": [finding("a.py", 1, 0.8)]}),
+            "large": sample_clusters.tpx003_clusters(
                 "large", {"findings": [finding("b.py", i, 0.8) for i in (1, 2, 3, 4, 5)]}
             ),
         }
@@ -105,7 +112,7 @@ class TestDeterminism:
     def test_the_first_two_clusters_are_the_same_whatever_order_the_input_is_in(self, lines: tuple[int, ...]) -> None:
         report = {"findings": [finding("a.py", line, 0.8) for line in lines]}
         sampled = sample_clusters.round_robin(
-            {"repo": sample_clusters.near_clusters("repo", report)}, per_repo=2, minimum=0
+            {"repo": sample_clusters.tpx003_clusters("repo", report)}, per_repo=2, minimum=0
         )
         assert [cluster.line for cluster in sampled] == [1, 2]
 
@@ -129,7 +136,7 @@ class TestDeterminism:
         """
         report = {"findings": [finding(path, 5, 0.8) for path in arrival]}
 
-        sampled = sample_clusters.near_clusters("repo", report)
+        sampled = sample_clusters.tpx003_clusters("repo", report)
 
         assert [cluster.path for cluster in sampled] == ["a.py", "z.py"]
 
@@ -142,18 +149,86 @@ class TestTheSampleHasAFloor:
         Pools smaller than `--per-repo` shrink the sample silently, and AC1's "≥ 20" then lives only
         in prose. Moot at today's 224 near clusters — which is exactly when it is cheap to add.
         """
-        pools = {"one": sample_clusters.near_clusters("one", {"findings": [finding("a.py", 1, 0.8)]})}
+        pools = {"one": sample_clusters.tpx003_clusters("one", {"findings": [finding("a.py", 1, 0.8)]})}
         with pytest.raises(sample_clusters.SampleTooSmall, match="1"):
             sample_clusters.round_robin(pools, per_repo=4, minimum=20)
 
     def test_a_sample_at_the_floor_passes(self) -> None:
         pools = {
-            f"repo{index}": sample_clusters.near_clusters(
+            f"repo{index}": sample_clusters.tpx003_clusters(
                 f"repo{index}", {"findings": [finding("a.py", line, 0.8) for line in range(1, 6)]}
             )
             for index in range(4)
         }
         assert len(sample_clusters.round_robin(pools, per_repo=5, minimum=20)) == 20
+
+
+class TestTheExactPopulationIsReachable:
+    """
+    AC8 of `close-anti-fp-gate-with-public-reference`: the gate's population **includes exact
+    clusters**, and its false-positive share is reported near/exact separately and combined.
+
+    Measured on `corpus/runs/` at `v0.4.0`: **exact is 457 of 617 clusters**, and no number this
+    epic owns — 0.867, 0.750, the 0.667–0.867 band — was ever drawn from one. A sampler that can
+    only reach the near 160 makes the majority of what a user actually sees unmeasurable, so
+    "exact is unreachable" is a defect of the measuring instrument, not a property of the corpus.
+
+    The near-only default of §1 stands and is asserted above: it is AC1's population, and it is a
+    *default*, not a ceiling.
+    """
+
+    def test_the_exact_population_selects_only_clusters_whose_weakest_edge_is_one(self) -> None:
+        report = {"findings": [finding("a.py", 1, 1.0), finding("b.py", 2, 0.8)]}
+
+        sampled = sample_clusters.tpx003_clusters("repo", report, population="exact")
+
+        assert [cluster.path for cluster in sampled] == ["a.py"]
+
+    def test_the_combined_population_selects_both_kinds(self) -> None:
+        report = {"findings": [finding("a.py", 1, 1.0), finding("b.py", 2, 0.8)]}
+
+        sampled = sample_clusters.tpx003_clusters("repo", report, population="all")
+
+        assert [(cluster.path, cluster.is_exact) for cluster in sampled] == [("a.py", True), ("b.py", False)]
+
+    def test_an_unknown_population_is_fatal_rather_than_silently_near(self) -> None:
+        """
+        Guards fail closed. A typo'd population that fell back to the near default would report a
+        near-only number under an `exact` heading — the one failure mode AC8 exists to prevent.
+
+        `ty` flags the literal below, correctly: a *type-checked* caller cannot write it. The runtime
+        guard is for the callers that are not type-checked — the `--population` argument and the
+        `population` field of a classification artifact, both of which arrive as arbitrary strings —
+        so the diagnostic is suppressed rather than the test deleted.
+        """
+        with pytest.raises(ValueError, match="sideways"):
+            sample_clusters.tpx003_clusters("repo", {"findings": []}, population="sideways")  # ty: ignore[invalid-argument-type]
+
+
+class TestTheLimitTruncatesAfterInterleaving:
+    """
+    The sample size is fixed by pre-registration, so the sampler needs a truncation rule — and
+    *where* it truncates is the whole point. Truncating each repository's pool before interleaving
+    is the single-repository prefix bug of `TestRoundRobin` under a new name; truncating the
+    interleaved sequence keeps every repository represented.
+    """
+
+    def test_the_limit_cuts_the_interleaved_sequence_not_each_pool(self) -> None:
+        pools = {
+            "AAA": sample_clusters.tpx003_clusters("AAA", {"findings": [finding("a.py", i, 0.8) for i in (1, 2, 3)]}),
+            "zzz": sample_clusters.tpx003_clusters("zzz", {"findings": [finding("z.py", i, 0.8) for i in (1, 2, 3)]}),
+        }
+
+        sampled = sample_clusters.round_robin(pools, per_repo=3, minimum=0, limit=3)
+
+        assert [(cluster.repo, cluster.line) for cluster in sampled] == [("AAA", 1), ("zzz", 1), ("AAA", 2)]
+
+    def test_a_limit_that_cannot_be_filled_is_fatal(self) -> None:
+        """The floor is checked on what came out, not on what was asked for."""
+        pools = {"one": sample_clusters.tpx003_clusters("one", {"findings": [finding("a.py", 1, 0.8)]})}
+
+        with pytest.raises(sample_clusters.SampleTooSmall, match="1"):
+            sample_clusters.round_robin(pools, per_repo=20, minimum=20, limit=20)
 
 
 class TestTheEntryPointRefusesRatherThanSampleNothing:
