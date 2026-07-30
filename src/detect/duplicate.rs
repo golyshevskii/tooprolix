@@ -616,14 +616,69 @@ pub fn duplicates(blocks: &[ProseBlock]) -> Report<'_> {
 /// and that is why the centre of the star is the smallest member by [`end_of`] rather than the
 /// first one to arrive — the recorded edge set is then the same for any permutation of the input,
 /// and so is the pair [`Cluster::weakest`] names.
+/// Whether `TPX003` compares this block at all: its narrative must be able to carry one shingle.
+///
+/// # The decision this records, and the measurement behind it
+///
+/// Once [`crate::extract::narrative`] discards the reference scaffolding, some blocks have little or
+/// nothing left. `exclude-reference-scaffolding-from-tpx003` had to choose a floor, and the choice
+/// was measured on the six pinned checkouts rather than argued:
+///
+/// ⚠️ **This section previously carried a comparison table that does not reproduce, and it is
+/// removed rather than patched.** It claimed an eight-word floor yields corpus `TPX003` **543**
+/// against non-empty's **617**. Re-measured by the supervisor 2026-07-30 against *this* code, by
+/// changing the constant below to [`crate::extract::MIN_BLOCK_WORDS`], rebuilding, and running
+/// `corpus/run_all.sh` over all six pinned checkouts: **617 either way — the floor changes nothing
+/// on the corpus.** The 543 was measured when the floor sat somewhere else in the pipeline and did
+/// not survive the move into this function; it was reported as current and is not.
+///
+/// **What is measured about this floor, stated at the size it actually is.** It gates the **exact**
+/// path only (this function has one caller, `exact_groups`). The **near** path has no explicit
+/// floor: a narrative of fewer than [`SHINGLE_K`] words yields no shingle, so the inverted index
+/// never proposes it. The two populations therefore coincide *at* [`SHINGLE_K`] by construction —
+/// which is why raising this constant alone moves nothing, and why raising it would have to be done
+/// in both places to mean anything.
+///
+/// The floor is [`SHINGLE_K`]: the smallest value that means anything at all, and the value at which
+/// the two paths already agree. A larger floor is a **recall** decision that this task's Out-of-scope
+/// forbids taking on a hunch, and the measurement that would justify one does not exist yet.
+///
+/// # Why [`SHINGLE_K`] and not "non-empty", which is what this used to say
+///
+/// Non-empty left the two edge paths disagreeing about the population, and the review measured the
+/// false positive that follows. The **near** path already refuses a narrative of fewer than
+/// [`SHINGLE_K`] words: such a text has no shingle, so the inverted index never proposes it and
+/// `jaccard` never sees it. The **exact** path had no floor, so a one-word residue could only ever
+/// be *matched*, never *scored* — and no threshold could reach it. Two unrelated callables both
+/// summarised `"""Send.` above different `Args:` tables came out as one finding at similarity 1.000.
+///
+/// ⚠️ **This function has ONE caller — `exact_groups`.** An earlier revision of this comment said
+/// "both paths now ask this one function, so the population is one decision in one place"; `grep -n
+/// 'is_compared('` returns the definition and that single call site, so the sentence described an
+/// intention rather than the code. The near path reaches the same population by a different
+/// mechanism (no shingle below [`SHINGLE_K`] words), which is why the *effect* matches and the
+/// *claim* did not. Anyone raising this floor must change both places; this one will not do it alone.
+///
+/// 🔵 **Known residual, and it is the same class the task set out to remove rather than a new one.**
+/// Two unrelated callables whose narratives are the *same* templated summary of at least
+/// [`SHINGLE_K`] words still form a finding at similarity 1.000 — measured on a constructed pair
+/// sharing `"""Sends the prepared request now.` above different `Args:` tables. This is the
+/// templated-summary class that also leaves annotated clusters #13 and #20 alive at 0.800
+/// (`corpus/annotations.md` §1.5), and §1.5 records the measurement that rules out closing it with
+/// the threshold: a genuine finding sits at exactly 0.800 too. Closing it needs a rule about
+/// templated summary lines, which is a judgement and not this task's grammar.
+fn is_compared(block: &ProseBlock) -> bool {
+    block.narrative.split_whitespace().count() >= SHINGLE_K
+}
+
 fn exact_groups(blocks: &[ProseBlock], components: &mut Components) -> Vec<Option<usize>> {
     // One entry per distinct narrative, so `blocks.len()` is the exact ceiling.
     let mut by_text: HashMap<&str, Vec<usize>> = HashMap::with_capacity(blocks.len());
     for (position, block) in blocks.iter().enumerate() {
-        // The emptiness test is `TPX003`'s whole answer to "what about a block that is nothing but
-        // a parameter table?" — see [`crate::extract::ProseBlock::narrative`]. Two such blocks are
-        // byte-identical here, so without it they would be an exact group scoring 1.0.
-        if !block.narrative.is_empty() {
+        // `is_compared` is `TPX003`'s whole answer to "what is left of a block that is mostly a
+        // parameter table?" — see its rustdoc. Two such blocks are byte-identical here, so without
+        // it they would be an exact group scoring 1.0 on a residue of one word.
+        if is_compared(block) {
             by_text
                 .entry(block.narrative.as_str())
                 .or_default()
@@ -1178,6 +1233,52 @@ preserve_existing_api_key: bool = False
         for member in &report.clusters[0].members {
             assert_eq!(member.kind, ProseKind::Comment, "got {member:?}");
         }
+    }
+
+    /// 🔴 **Two unrelated callables that happen to share a one-word summary are not a finding** —
+    /// the false positive this task's own first cut introduced.
+    ///
+    /// `send_email` and `send_packet` document different parameters, do different things and share
+    /// nothing but the word `Send`. Discarding their `Args:` tables leaves each with the single word
+    /// `send`, and the *exact* path keyed on that: the review measured
+    /// `TPX003 same explanation in 2 places … similarity 1.000` on this input, against
+    /// `All checks passed!` from the pre-change detector. A task whose purpose is removing a class
+    /// of false positives had introduced one.
+    ///
+    /// The asymmetry that caused it is what [`is_compared`] now fixes, and it is worth naming: the
+    /// **near** path already refuses a narrative shorter than [`SHINGLE_K`] words, because such a
+    /// text has no shingle and the inverted index never proposes it as a candidate. The **exact**
+    /// path had no floor at all, so a one-word residue could only ever be matched — never scored —
+    /// and no threshold could reach it.
+    #[test]
+    fn two_unrelated_callables_sharing_a_one_word_summary_are_not_a_finding() {
+        // Arrange
+        let source = "def send_email(to, subject, body, retries):\n    \"\"\"Send.\n\n\
+                      \x20   Args:\n\
+                      \x20       to: the recipient address, already validated by the caller.\n\
+                      \x20       subject: the subject line, trimmed to the provider's limit.\n\
+                      \x20       body: the rendered message body.\n\
+                      \x20       retries: how many times to retry a soft bounce.\n\
+                      \x20   \"\"\"\n\n\n\
+                      def send_packet(iface, payload, ttl, checksum):\n    \"\"\"Send.\n\n\
+                      \x20   Args:\n\
+                      \x20       iface: the interface to write the frame to.\n\
+                      \x20       payload: the bytes to put on the wire.\n\
+                      \x20       ttl: hop limit, decremented by every router on the path.\n\
+                      \x20       checksum: the precomputed checksum, or None to compute one.\n\
+                      \x20   \"\"\"\n";
+        let blocks = corpus(&[("send.py", source)]);
+        assert_eq!(blocks.len(), 2, "the fixture must yield one block each");
+
+        // Act
+        let report = duplicates(&blocks);
+
+        // Assert
+        assert!(
+            report.clusters.is_empty(),
+            "one shared word is not one shared explanation; got {:?}",
+            report.clusters
+        );
     }
 
     /// A group of `n` identical blocks is **one** finding carrying all `n` addresses, and costs

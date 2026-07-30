@@ -147,6 +147,111 @@ this task may tune (Out of scope).
 Two things the sample is *not* evidence about, by construction: exact clusters (398 of the corpus's
 646 at the time of task 4a; 393 of 617 here) are excluded, and recall is not measured at all.
 
+### 1.4 Protocol migration — the same 24 re-judged under the accepted rule (2026-07-30)
+
+⚠️ **§1.2 above is NOT edited and its verdicts stand as the historical record.** This section is the
+**protocol migration** that EPIC.md Decisions #16 called for when it replaced §1's two-criterion
+boundary rule: *"Переразметить те 24 по принятому правилу стоит, но это миграция протокола, а не
+новое held-out доказательство."* Re-judging known cases is **not** new held-out evidence, and nothing
+here may be reported as such.
+
+**Why it was necessary.** Decisions #16 applied its new rule only to the six disputed clusters and
+left the other 18 verdicts standing from the rule it had just superseded. Judging a
+narrative-only detector against that mixture measures the new detector against the old ground truth.
+
+**The rule applied** (Decisions #16, verbatim in substance): discard the self-contained reference
+scaffolding first — templated summary line, `Args`/`Attributes`/`:param:`/returns/raises entries, and
+callable-specific examples. The finding is actionable **only if** what remains asserts the same thing
+in substance *and* the annotator can name a concrete canonical owner or cross-reference that removes
+one copy without making either callable's reference incomplete. *"These words are similar"* is not a
+basis: the annotation must name the proposed fix.
+
+**Annotator: the supervisor. ⚠️ This re-annotation was NOT blind** — the detector's post-change
+behaviour on several clusters was known beforehand. That is a bias risk and it is recorded rather
+than hidden, in the same spirit as §1's provenance note. The one piece of evidence against pure
+confirmation bias: **#20 was marked `no` although the detector keeps it**, i.e. a verdict was
+recorded against the implementation's outcome.
+
+| # | §1.2 said | now | why, under the accepted rule | named owner |
+|---|---|---|---|---|
+| 1 | yes | **yes** | pure narrative rationale in two files, no scaffolding at all | one copy cites the other |
+| 2 | yes | **yes** | shared `raw_decode`/braces implementation contract beyond the summary | `v0_9` cites `models` |
+| 3 | yes | **yes** | substantive shared behaviour paragraph survives the strip | `BaseCheckpointSaver.get_tuple` |
+| 4 | yes | **yes** | identical paragraph on subclass runtime and the `keys` argument | "async variant of `Computer`" |
+| 5 | no | **no** | templated summary only (`…with a {function\|wrap function}`) | — |
+| 6 | yes | **yes** | override repeating its base; the base class is a concrete owner | `BaseAdapter.send` |
+| 7 | yes | **yes** | pure narrative rationale, as #1 | one copy cites the other |
+| 8 | yes | **NO — flipped** | after the strip only `…support (sync)`/`(async)` remains | none without breaking `help()` |
+| 9 | yes | **yes** | shared parent-config contract paragraph survives | `BaseCheckpointSaver.put` |
+| 10 | yes | **yes** | three identical substantive sentences, no `Args` at all | async cites sync |
+| 11 | no | **no** | templated summary only (`a {float\|decimal} value`) | — |
+| 12 | no | **no** | templated summary only (`Sends a {POST\|PUT\|PATCH} request`) | — |
+| 13 | no | **no** | templated summary only (`{Update\|Delete} a webhook entry…`) | — |
+| 14 | yes | **NO — flipped** | after the strip only `…(sync path)`/`(async path)` remains | none without breaking `help()` |
+| 15 | yes | **yes** ⚠️ | *boundary.* Summary byte-identical across six helpers, not a per-callable template | a shared mixin/base |
+| 16 | yes | **NO — flipped** | after the strip only `Initialize the {async }SQLite session` remains | none without breaking `help()` |
+| 17 | yes | **yes** ⚠️ | *boundary.* Summary byte-identical; all that distinguishes them is the example | v3 cites v1 |
+| 18 | yes | **yes** | three identical substantive sentences, no `Args` | `ok` owns it |
+| 19 | yes | **yes** ⚠️ | *boundary.* Summary byte-identical across a service and its store | the store owns it |
+| 20 | yes | **NO — flipped** | after the strip only `…with the agent{ asynchronously}` remains | none without breaking `help()` |
+| 21 | yes | **yes** | shared ordering-contract paragraph survives the strip | `BaseCheckpointSaver.alist` |
+| 22 | yes | **NO — flipped** | its first member is `"""` + `Args:` and nothing else — **no narrative exists** | — |
+| 23 | no | **no** | templated summary only (`…with possibly multiple hosts`) | — |
+| 24 | no | **no** | templated summary only (`Sends a {OPTIONS\|HEAD\|DELETE} request`) | — |
+
+**Corrected ground truth: 13 actionable, 11 not.** Five verdicts flipped `yes → no` (#8, #14, #16,
+#20, #22); none flipped the other way.
+
+**The band, stated rather than smoothed over — same discipline as §1.3.** Three verdicts (#15, #17,
+#19) are genuine boundary calls: their summary line is *byte-identical* rather than a per-callable
+template, so whether the rule's "discard the templated summary line" clause reaches them is a
+judgement. Marked `yes` here because a concrete canonical owner is nameable for each. Under the
+strict reading they are `no`, giving **10 actionable / 14 not**. Both endpoints are reported below.
+
+### 1.5 The narrative-only detector measured against the corrected ground truth
+
+Detector at `feat/narrative-only-tpx003`. Of the 24 sampled clusters it now emits **15** and drops
+**9** (#5, #8, #11, #12, #14, #16, #22, #23, #24).
+
+| reading | before (all 24 emitted) | after (15 emitted) | recall |
+|---|---|---|---|
+| **main** (13 actionable) | 13/24 = **0.542** | 13/15 = **0.867** | 13/13 = **1.000** |
+| **strict** (10 actionable) | 10/24 = **0.417** | 10/15 = **0.667** | 10/10 = **1.000** |
+
+**Recall on this sample is 1.000 before and after: the detector drops no cluster the accepted rule
+calls actionable.** The earlier reading — "four genuine findings were lost" — was an artifact of
+judging the new detector against the superseded ground truth of §1.2; all four (#8, #14, #16, #22)
+are `no` under the rule that replaced it.
+
+🔴 **The residual, and the measurement that kills the obvious fix.** Exactly two false positives
+survive, #13 and #20, and they are **one shape**: a templated summary line whose two copies differ by
+a single token, which alone scores **0.800**. That is a narrower residual than the class this task
+removed — but it is **not** closable by the threshold either, and this is measured, not assumed:
+
+| cluster | verdict | post-change weakest |
+|---|---|---|
+| #13 `gitlab_webhook_store` update/delete | **not actionable** | **0.800** |
+| #20 `execute_task` sync/async | **not actionable** | **0.800** |
+| **#7 copied rationale, two files, zero scaffolding** | **actionable** | **0.800** |
+| #2 versioned copy | actionable | 0.760 |
+| #21 `list`/`alist`, four backends | actionable | 0.769 |
+| #3 `get_tuple`, six backends | actionable | 0.772 |
+
+**A genuine finding sits at exactly the same score as both survivors, and three more sit below it.**
+Any threshold that removes #13 and #20 removes #7 as well, and a threshold above 0.769 removes #2,
+#3 and #21. The classes still overlap after the feature fix — the same structural situation Decisions
+#16 established for the pre-fix detector, on a smaller residual. **Chasing these two with the
+constant is therefore ruled out by measurement, not by the Out-of-scope rule alone.**
+
+**The same class has a 1.000 shape as well, and it is recorded so it is not rediscovered as a bug.**
+Where #13 and #20 differ by one token and land at 0.800, two callables whose templated summaries are
+*identical* land at **1.000** by the exact path. Constructed and measured by the supervisor: two
+unrelated functions sharing `"""Sends the prepared request now.` above entirely different `Args:`
+tables are reported as one finding. The floor in `is_compared` does not reach it — that floor is
+[`SHINGLE_K`]-sized, and this narrative is five words. It is the templated-summary class again, not a
+separate defect, and it is closable only by a rule about templated summary lines — a judgement, not a
+grammar, and therefore outside what this task may decide.
+
 ---
 
 ## 2. AC1b — which unit of volume is more precise
