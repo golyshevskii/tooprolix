@@ -262,16 +262,39 @@ class TestTheArtifactCannotDefineWhatItIsGradedAgainst:
         with pytest.raises(classification.ClassificationError, match="no pre-registered profile"):
             classification.load_preregistration(PREREGISTRATION).profile("whatever-passes")
 
-    def test_a_gate_profile_with_no_numeric_threshold_refuses_to_be_used(self) -> None:
+    def test_a_gate_profile_with_no_numeric_threshold_refuses_to_be_used(self, tmp_path: Path) -> None:
         """
-        The holdout may not run until the owner sets a number.
-
         A gate whose threshold is a placeholder cannot be failed, so offering it would be offering a
         measurement that can only pass. Refused at retrieval rather than at load, so that an
-        undecided holdout threshold does not also block the dry run.
+        undecided threshold does not also block a non-gate profile in the same file.
+
+        ⚠️ **The placeholder is CONSTRUCTED here rather than read from the real file.** This test
+        used to assert that the live `holdout` profile refuses — which passed only while the owner
+        had not yet chosen a number, and went red the moment they did. That is a test pinned to a
+        transient state of the project instead of to the guarantee, and the guarantee is what has to
+        survive: *any* gate profile without a numeric threshold refuses, whatever the real file says
+        today.
         """
+        payload = json.loads(PREREGISTRATION.read_text())
+        payload["profiles"]["holdout"]["threshold"] = "<<THRESHOLD - not yet set>>"
+        placeholder = tmp_path / "preregistration.json"
+        placeholder.write_text(json.dumps(payload))
+
         with pytest.raises(classification.ClassificationError, match="cannot\n?\\s*be failed|gate"):
-            classification.load_preregistration(PREREGISTRATION).profile("holdout")
+            classification.load_preregistration(placeholder).profile("holdout")
+
+    def test_the_holdout_threshold_is_frozen_as_a_number_before_the_gate_runs(self) -> None:
+        """
+        The other half of the guarantee above, and the one that matters now.
+
+        The owner set 0.40 on 2026-07-30 while the holdout was still unseen. Pinning it here means a
+        later edit of `preregistration.json` — the file that decides whether publication is allowed —
+        cannot quietly move the bar without reddening a named test.
+        """
+        holdout = classification.load_preregistration(PREREGISTRATION).profile("holdout")
+
+        assert holdout.is_gate is True
+        assert holdout.threshold == 0.40
 
 
 class TestTheRunItselfIsGradedBeforeItsFindingsAreRead:
