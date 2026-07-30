@@ -39,7 +39,7 @@
 //! `validate-detectors-on-reference-corpus`, which owns the labelled corpus.
 
 use std::cmp::Ordering;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::fmt;
 
 use crate::extract::{Coordinates, ProseBlock, write_address};
@@ -175,47 +175,103 @@ pub struct Report<'a> {
     pub comparisons: usize,
 }
 
-/// Word shingles of `normalized`: the **set** of every [`SHINGLE_K`] consecutive words.
+/// One shingle: [`SHINGLE_K`] consecutive normalised words.
+type Shingle<'a> = [&'a str; SHINGLE_K];
+
+/// Word shingles of `normalized`: every [`SHINGLE_K`] consecutive words, **sorted and without
+/// duplicates**.
 ///
-/// A set, so a phrase repeated inside one block does not count twice — the `frozenset` of
-/// `corpus/measure.py:305-310`, ported rather than reinvented.
+/// Duplicate-free, so a phrase repeated inside one block does not count twice — the `frozenset` of
+/// `corpus/measure.py:305-310`, ported rather than reinvented. It is a sorted `Vec` rather than a
+/// `HashSet`, which is a representation change and **not** a semantic one: the value is still the
+/// set of grams, and [`jaccard`] still computes `|A n B| / |A u B|` over exactly that set.
 ///
-/// **One branch of that function is deliberately not ported.** `measure.py` yields a single short
-/// gram for a text of fewer than [`SHINGLE_K`] words; here such a text yields an *empty* set, which
+/// # Why sorted, and why this is not the anti-pattern it resembles
+///
+/// The usual advice is to reach for a `HashSet` over a `Vec` for membership, and it is right when
+/// the question is "is this one element present". That is not the question here. [`jaccard`] needs
+/// the size of a **full intersection** of two gram sets, and the pairs are scored `C(n, 2)` times
+/// on the input this detector is slowest on. A sorted merge answers that in one linear pass over
+/// two contiguous allocations; a `HashSet` answers it as `min(|A|, |B|)` hash lookups scattered
+/// across a table. The `Vec` is never scanned linearly *for a member* — there is no `contains` in
+/// the hot path — so the cost model the advice is about does not apply.
+///
+/// **Measured, on the case that owns the wall-clock budget** (2 000 files whose prose header
+/// differs in one token, `tests/adversarial_bench.rs`): the detect stage went from **5.97 s to
+/// 2.33 s**, a 2.57x improvement, and the whole run from 7.81 s to 4.22 s — from over the
+/// `< 5 s / 100 000 lines` budget to inside it. On the six pinned corpus checkouts, where the
+/// candidate index already removes ~97% of the pairs, the same change measures **neutral**
+/// (0.87x–1.11x, i.e. inside the noise): the pairs it makes cheaper are pairs those repositories
+/// barely score. Output is byte-identical on all six, which is the gate this change had to pass.
+///
+/// Sorting is `O(w log w)` **once per block** against `C(n, 2)` scorings, so it is bought back
+/// immediately. A hash of the gram was rejected: it would make the comparison cheaper still and
+/// introduce a collision probability, i.e. a chance of scoring two different grams as equal, which
+/// is the same class of "probably right" this module already refuses in `for_each_candidate_pair`.
+/// Comparing the words themselves keeps the result exact.
+///
+/// **One branch of `measure.py` is deliberately not ported.** It yields a single short gram for a
+/// text of fewer than [`SHINGLE_K`] words; here such a text yields an *empty* set, which
 /// [`jaccard`] scores 0.0. The branch is unreachable on this detector's input —
 /// [`crate::extract::MIN_BLOCK_WORDS`] is 8 — and where it would matter the two definitions agree
 /// anyway: identical short texts land in the exact-text groups and score 1.0 arithmetically, and
 /// two *different* short texts share no gram under either definition. Empty is also the safe side:
 /// it can only withhold a finding, never invent one.
-fn shingles(normalized: &str) -> HashSet<[&str; SHINGLE_K]> {
+fn shingles(normalized: &str) -> Vec<Shingle<'_>> {
     let words: Vec<&str> = normalized.split_whitespace().collect();
-    // Sized up front rather than `collect`ed: this runs once per block, and `collect` cannot size
-    // itself here because `SplitWhitespace::size_hint` is `(0, None)`, so the set would rehash its
-    // way up from nothing on every block. A text of `w` words has at most `w - (SHINGLE_K - 1)`
-    // distinct shingles, so this over-allocates only by the number of repeated grams.
-    let mut grams = HashSet::with_capacity(words.len().saturating_sub(SHINGLE_K - 1));
-    grams.extend(
-        words
-            .windows(SHINGLE_K)
-            // `from_fn` rather than `[window[0], window[1], window[2]]`: the literal spelled the
-            // arity a second time, right next to the constant that owns it, so `SHINGLE_K` could
-            // not be remeasured without editing two places. `windows(SHINGLE_K)` yields slices of
-            // exactly that length, so every index here is in bounds by construction.
-            .map(|window| std::array::from_fn(|index| window[index])),
-    );
+    // `collect` sizes itself exactly here, unlike the `HashSet` this replaced: `Windows` is an
+    // `ExactSizeIterator`, so there is one allocation of the right length and no growth.
+    let mut grams: Vec<Shingle<'_>> = words
+        .windows(SHINGLE_K)
+        // `from_fn` rather than `[window[0], window[1], window[2]]`: the literal spelled the
+        // arity a second time, right next to the constant that owns it, so `SHINGLE_K` could
+        // not be remeasured without editing two places. `windows(SHINGLE_K)` yields slices of
+        // exactly that length, so every index here is in bounds by construction.
+        .map(|window| std::array::from_fn(|index| window[index]))
+        .collect();
+    // Unstable is free here: the elements are compared by value and equal grams are
+    // indistinguishable, so no order between them can be observed. `dedup` needs the sort anyway,
+    // and the sort is what `jaccard` relies on.
+    grams.sort_unstable();
+    grams.dedup();
     grams
 }
 
 /// `|A n B| / |A u B|`, and `0.0` if either side is empty — `corpus/measure.py:313-318`.
+///
+/// Both sides must be sorted and duplicate-free, which is [`shingles`]'s postcondition and the
+/// only way this function is ever called. The intersection is a merge of the two, so the whole
+/// score costs one pass of `|A| + |B|` comparisons over contiguous memory with no hashing at all.
 #[allow(
     clippy::cast_precision_loss,
     reason = "shingle counts are far below 2^53, where f64 stops being exact on integers"
 )]
-fn jaccard(left: &HashSet<[&str; SHINGLE_K]>, right: &HashSet<[&str; SHINGLE_K]>) -> f64 {
+fn jaccard(left: &[Shingle<'_>], right: &[Shingle<'_>]) -> f64 {
     if left.is_empty() || right.is_empty() {
         return 0.0;
     }
-    let intersection = left.intersection(right).count();
+    let mut left_grams = left.iter().peekable();
+    let mut right_grams = right.iter().peekable();
+    let mut intersection = 0usize;
+    // Iterators rather than indices: no bounds check per step, and the two cursors cannot be
+    // advanced out of step by an editing slip the way two `usize`s can.
+    while let (Some(&&next_left), Some(&&next_right)) = (left_grams.peek(), right_grams.peek()) {
+        match next_left.cmp(&next_right) {
+            Ordering::Less => {
+                left_grams.next();
+            }
+            Ordering::Greater => {
+                right_grams.next();
+            }
+            Ordering::Equal => {
+                intersection += 1;
+                left_grams.next();
+                right_grams.next();
+            }
+        }
+    }
+    // Inclusion-exclusion, exactly as before: both sides are duplicate-free, so this is the size
+    // of the union without materialising it.
     let union = left.len() + right.len() - intersection;
     intersection as f64 / union as f64
 }
@@ -491,7 +547,7 @@ impl Components {
 /// ```
 #[must_use]
 pub fn duplicates(blocks: &[ProseBlock]) -> Report<'_> {
-    let sets: Vec<HashSet<[&str; SHINGLE_K]>> = blocks
+    let sets: Vec<Vec<Shingle<'_>>> = blocks
         .iter()
         .map(|block| shingles(&block.normalized))
         .collect();
@@ -607,14 +663,14 @@ fn exact_groups(blocks: &[ProseBlock], components: &mut Components) -> Vec<Optio
 /// 737 681 exact pairs, 99.4% of them) was measured at the unfiltered `1 line / 1 word` level,
 /// which the inherited size conjunction already removes before anything reaches this function.
 fn for_each_candidate_pair(
-    sets: &[HashSet<[&str; SHINGLE_K]>],
+    sets: &[Vec<Shingle<'_>>],
     group_of: &[Option<usize>],
     mut visit: impl FnMut(usize, usize),
 ) {
     // Every gram of every block gets inserted, so the sum of the set sizes is the exact ceiling
     // on distinct keys. One O(n) pass to avoid rehashing an index that reaches ~88k keys.
-    let mut index: HashMap<[&str; SHINGLE_K], Vec<usize>> =
-        HashMap::with_capacity(sets.iter().map(HashSet::len).sum());
+    let mut index: HashMap<Shingle<'_>, Vec<usize>> =
+        HashMap::with_capacity(sets.iter().map(Vec::len).sum());
     for (position, set) in sets.iter().enumerate() {
         for &gram in set {
             index.entry(gram).or_default().push(position);
@@ -667,7 +723,8 @@ mod tests {
     use std::path::{Path, PathBuf};
 
     use super::{
-        Components, Report, SIMILARITY_THRESHOLD, duplicates, exact_groups, jaccard, shingles,
+        Components, Report, SIMILARITY_THRESHOLD, Shingle, duplicates, exact_groups, jaccard,
+        shingles,
     };
     use crate::extract::{ProseBlock, ProseKind, extract, normalize};
 
@@ -1550,7 +1607,10 @@ layer down.
             "14 and 10 shingles"
         );
         assert_eq!(
-            long_set.intersection(&short_set).count(),
+            short_set
+                .iter()
+                .filter(|gram| long_set.binary_search(gram).is_ok())
+                .count(),
             10,
             "the prefix's shingles are a subset"
         );
@@ -1561,6 +1621,59 @@ layer down.
         // Assert — 10/14, and therefore BELOW the threshold: a false 1.0 would be a false finding.
         assert!((score - 10.0 / 14.0).abs() < 1e-12, "got {score}");
         assert!(score < SIMILARITY_THRESHOLD);
+    }
+
+    /// [`shingles`] returns its grams **sorted and duplicate-free**, which is the precondition
+    /// [`jaccard`]'s merge is built on.
+    ///
+    /// This is the guard the representation change owes. `jaccard` no longer hashes: it walks two
+    /// sequences in step and stops advancing a side when its head compares greater. Hand it an
+    /// unsorted side and it silently returns an intersection that is too *small* — a lower score,
+    /// a pair pushed under the threshold, a finding that quietly stops being reported.
+    ///
+    /// # Which half of this each mutation actually proves, measured rather than claimed
+    ///
+    /// The two halves are **not** equally defended, and saying so is the point of writing it down:
+    ///
+    /// * deleting `grams.sort_unstable()` reddens **four** tests — this one,
+    ///   `jaccard_is_intersection_over_union_for_unequal_sets`,
+    ///   `a_rationale_written_twice_in_two_files_is_one_cluster` and
+    ///   `members_are_ordered_by_what_they_say_when_the_coordinate_ties`. So the sort is already
+    ///   defended behaviourally, and the third of those is the one that matters: it is a real
+    ///   cross-file finding disappearing. This test's contribution there is a *diagnosis* — it
+    ///   names the cause instead of leaving a reader to infer it from a missing cluster.
+    /// * deleting `grams.dedup()` reddens **only this test**. That half has no other guard at all,
+    ///   and it is not cosmetic: `jaccard` computes the union as `|A| + |B| - |A n B|`, which is
+    ///   the size of the union only when neither side counts a gram twice. A repeated phrase would
+    ///   inflate both lengths, deflate every score containing it, and drop findings silently.
+    ///
+    /// That asymmetry is why this test exists as its own test rather than as an assertion bolted
+    /// onto a clustering fixture.
+    #[test]
+    fn shingles_are_sorted_and_duplicate_free() {
+        // Arrange — a text whose grams are emitted OUT of sorted order by the window walk, and one
+        // phrase repeated so the dedup has something to remove.
+        let text = normalize("zebra yak xray whale zebra yak xray");
+        let grams = shingles(&text);
+
+        // Assert
+        assert!(
+            grams.windows(2).all(|pair| pair[0] < pair[1]),
+            "shingles must come back strictly ascending — sorted AND deduplicated; got {grams:?}"
+        );
+        // Strictly ascending already implies no duplicates, so this second assertion is about the
+        // COUNT: it pins that dedup removed the repeat rather than that the repeat never existed.
+        let distinct: std::collections::HashSet<Shingle<'_>> = grams.iter().copied().collect();
+        assert_eq!(
+            grams.len(),
+            distinct.len(),
+            "the repeated phrase must be carried once"
+        );
+        assert!(
+            grams.len() < 5,
+            "the fixture must actually contain a repeat, or the dedup half proves nothing; got {}",
+            grams.len()
+        );
     }
 
     /// An empty shingle set scores 0.0 against anything — `corpus/measure.py:313-318`.

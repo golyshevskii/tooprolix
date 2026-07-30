@@ -23,56 +23,86 @@
 //! number recorded here can be tied to the tree it was measured on rather than to a file count that
 //! several different trees could share.
 //!
-//! # 🔴 This gate is RED on `main`, and that is the finding — not a defect of the gate
+//! # Measured, and what the numbers say
 //!
-//! Measured 2026-07-30 at `d90049e` (`0.3.7`), three independent release runs. The budget holds at
-//! 500 files, **straddles** at 1 000, and is **decisively exceeded at 2 000**. Nothing here has been
-//! optimised to hide that: the overrun is the measurement this file was written to take, and what to
-//! do about it is a policy decision that belongs to the user, not to a benchmark.
+//! Measured 2026-07-30 on the named host below. The budget is met at every size **after** the
+//! change recorded in `src/detect/duplicate.rs`'s `shingles`; it was not met before it, and both
+//! sides are kept here because the "after" number means nothing without the "before".
 //!
-//! | files | lines | blocks | comparisons | clusters | budget | median (3 runs) | extract | detect |
-//! |---|---|---|---|---|---|---|---|---|
-//! | 500 | 25 000 | 500 | 124 750 | 1 | 1.250 s | **0.90–1.01 s** ✅ under | 0.49–0.61 s | 0.40–0.42 s |
-//! | 1 000 | 50 000 | 1 000 | 499 500 | 1 | 2.500 s | **2.49–2.69 s** ⚠️ straddles | 0.97–1.17 s | 1.52 s |
-//! | 2 000 | 100 000 | 2 000 | 1 999 000 | 1 | 5.000 s | **7.81–8.67 s** 🔴 over by 1.6–1.7× | 1.84–2.79 s | 5.87–5.97 s |
-//!
-//! The 1 000-file row is reported as straddling rather than as passing or failing, because it is:
-//! one of the three runs came in at 2.491 s against a 2.500 s budget and the other two did not.
-//! A gate whose verdict flips on the page cache is a gate whose verdict is "too close to call", and
-//! recording it as a clean pass would be picking the convenient sample. The 2 000-file row needs no
-//! such care — it is over by more than half the budget in every run.
+//! | files | lines | comparisons | budget | before | after | detect before | detect after |
+//! |---|---|---|---|---|---|---|---|
+//! | 500 | 25 000 | 124 750 | 1.250 s | 0.428 s | **0.202–0.207 s** | 0.379 s | 0.158–0.165 s |
+//! | 1 000 | 50 000 | 499 500 | 2.500 s | 1.599 s | **0.701–0.723 s** | 1.529 s | 0.628–0.647 s |
+//! | 2 000 | 100 000 | 1 999 000 | 5.000 s | **6.262 s** 🔴 | **2.59–2.74 s** ✅ | 6.119 s | 2.46–2.60 s |
 //!
 //! Input fingerprints, in the same order: `3b0e8cb73922afcf`, `81dfc75f559dd74b`,
-//! `02cd5bba8850271f`. The comparison counts are exactly `C(n, 2)` at every size, which is the
-//! measured proof that the index removes nothing here rather than a claim that it does not.
+//! `02cd5bba8850271f`, pinned as constants by
+//! `the_timed_trees_are_the_ones_the_recorded_numbers_were_measured_on` so this table cannot come
+//! adrift from the trees it describes. Comparisons are exactly `C(n, 2)` at every size — measured
+//! proof that the index removes nothing here, not a claim that it does not — and they are
+//! **unchanged** across the two columns, which is what makes this a speed-up rather than a recall
+//! change.
 //!
-//! **The two halves grow differently, and that is the whole diagnosis.** `extract` grows with the
-//! lines (0.61 → 1.17 → 1.84 s, roughly linear); `detect` grows with the square of the blocks
-//! (0.40 → 1.52 → 5.97 s, i.e. ×3.80 then ×3.93 against a theoretical ×4). At 2 000 files the
-//! detector **alone** exceeds the whole budget.
+//! # Which stage owns the time, named by the instrument rather than by prose
+//!
+//! `detect` is split against a control input of the same shape that shares **no** shingle
+//! (`disjoint_source`), so the pair-dependent work is measured by difference. At 2 000 files,
+//! before the change: total 6.262 s, of which `detect` 6.119 s (97.7%), of which **scoring
+//! 6.078 s** — that is 97.1% of the entire run spent on `C(n, 2)` Jaccard evaluations. Extraction
+//! is 0.143 s, about 2%. After the change scoring is 2.37–2.57 s, a **2.4–2.6x** improvement, and
+//! it is still the dominant stage. There is nowhere else to look, and this split is what says so.
+//!
+//! # Deriving the break-even, from this table and nothing else
+//!
+//! The budget is a rate, so a run is inside it whenever
+//! `lines >= seconds / 5 s * 100 000`. Dividing by the file count gives the density at which this
+//! workload breaks even, and every input is on the line above:
+//!
+//! ```text
+//! break-even lines/file = median_seconds / 5.0 * 100_000 / files
+//! ```
+//!
+//! At 2 000 files that is `6.262 / 5 * 100000 / 2000` = **62.6 lines/file before** the change
+//! (62.3–63.6 across runs) and `2.59 / 5 * 100000 / 2000` = **25.9–27.4 lines/file after** it.
+//! Ranges, not points, and taken across *independent* runs rather than within one: the same
+//! machine reproduces a median to about 6%, which is the honest precision of any number here.
+//! Below that density a tree of near-identical headers misses the budget; above it, it does not.
 //!
 //! # What this does NOT say, measured so it cannot be over-read
 //!
 //! The fixture is deliberately the densest input the budget can be stated over: 50 lines per file
-//! maximises files — and therefore `n²` — per line of allowance. Real Python is nothing like it.
-//! Measured over the six pinned checkouts: 3 913 files and 1 207 535 lines, i.e. **309 lines per
-//! file**, with no repository below 230. The break-even for this workload is **83 lines per file**;
-//! every pinned repository is at least 2.8× above it. Measured end-to-end on the largest of them
-//! (`crewAI`, 1 269 files, 292 204 lines) the shipped binary takes **0.73 s** against a 14.6 s
-//! budget — about 5% of it.
+//! maximises files — and therefore `n^2` — per line of allowance. Real Python is nothing like it.
+//! Measured over the six pinned checkouts with
+//! `find <repo> -name '*.py' -type f | wc -l` and `... -exec cat {} + | wc -l`: 3 913 files and
+//! 1 207 535 lines, i.e. **309 lines per file**, with no repository below 230 — every one of them
+//! at least 3.7x above even the pre-change break-even.
 //!
-//! So the overrun is real and reproducible, and it is reachable only by a tree that is
-//! simultaneously file-dense and near-uniformly headed. Whether that tree is worth designing for is
-//! the decision this measurement exists to inform.
+//! End-to-end on the largest of them, with the release binary and a `CORPUS_ROOT` outside this
+//! repository (`tooprolix check crewAI --format json`, five runs, median): **0.675 s** for 1 269
+//! files and 292 204 lines, against a 14.6 s budget — under 5% of it. That figure comes from a
+//! hand-run of the shipped binary rather than from either committed harness; the command is given
+//! so it can be re-taken, because a number whose provenance is not committed is a number a reader
+//! has to trust.
 //!
-//! Reference host: Apple M-series, macOS (Darwin 25.5.0), stable toolchain pinned by
-//! `rust-toolchain.toml`, cargo's default release profile (`opt-level = 3`, no LTO,
+//! So the overrun this file was written to find was real, reproducible, and reachable only by a
+//! tree that is simultaneously file-dense and near-uniformly headed.
+//!
+//! # The reference host
+//!
+//! **Apple M1 Max (`MacBookPro18,2`), macOS 26.5.2, `rustc 1.97.0` pinned by
+//! `rust-toolchain.toml`**, cargo's default release profile (`opt-level = 3`, no LTO,
 //! `codegen-units = 16` — this crate declares no `[profile.release]`, which is
-//! `dry-run-packaging-matrix`'s A/B to make and deliberately not this file's). One discarded
-//! warm-up run per size, then [`RUNS`] timed runs, median reported. Wall-clock numbers are not
-//! byte-reproducible across hosts; they are re-runnable on this one. The ranges above are the
-//! spread across repeated runs — the `detect` half is stable to ±3%, the `extract` half varies by
-//! up to ±30% with the page cache, which is why the tolerance is a range and not a point.
+//! `dry-run-packaging-matrix`'s A/B to make and deliberately not this file's). Naming the chip
+//! matters: "Apple M-series" spans parts that differ by more than the margin being measured.
+//! One discarded warm-up run per size, then [`RUNS`] timed runs, median reported.
+//!
+//! Wall-clock numbers are not byte-reproducible across hosts; they are re-runnable on this one.
+//! The spread between the printed `min` and `max` within one run is under 2% at every size; across
+//! independent runs the median moves by up to 6%, which is why every figure above is a range. An earlier revision of
+//! this file reported an `extract` half three to twenty times larger and varying by ±30%; that was
+//! filesystem writeback from generating the tree still in flight during the timed runs, and it is
+//! gone now that a second tree is written between generation and measurement. The `detect` half was
+//! never affected — it measured 5.87–6.12 s under both harnesses.
 //!
 //! # Two gates, and they fail for different reasons
 //!
@@ -84,6 +114,16 @@
 //! Keeping them apart is deliberate — a correctness regression and a performance regression are
 //! diagnosed and fixed differently, and a single test that could be red for either reason tells you
 //! neither.
+//!
+//! **The shape test guards one direction only, and that is on purpose.** It asserts
+//! `comparisons == C(n, 2)`, so it reddens when candidate generation starts scoring *fewer* pairs —
+//! the direction that would silently invalidate every timing here, and the direction a recall loss
+//! arrives from. It stays green if the index is replaced by unconditional full enumeration, because
+//! that scores exactly the same pairs and its claim — "the wall clock below is the wall clock of
+//! `C(n, 2)` real Jaccard scores" — remains true. Catching *that* is
+//! `src/detect/duplicate.rs`'s `bench_smoke_comparisons_grow_no_faster_than_the_corpus`, which
+//! measures growth on an input where the index is supposed to help. Two tests, two directions,
+//! neither shadowing the other.
 //!
 //! Run the budget gate with:
 //!
@@ -180,9 +220,15 @@ fn fingerprint(bytes: &[u8], seed: u64) -> u64 {
 /// the input rather than about how many blocks the generator happened to emit per file.
 ///
 /// The distinguishing token is the last word of the header. With `SHINGLE_K = 3` it therefore
-/// belongs to exactly one shingle, so two headers share all but one gram each and score
-/// `78 / 80 = 0.975` — far above the 0.75 threshold, and *not* exact, so the arithmetic
-/// exact-group path is bypassed and every pair is really scored.
+/// belongs to exactly one shingle, so two headers differ by one gram each way.
+///
+/// Counted against the shipped normaliser rather than eyeballed: the header is **80 normalised
+/// words**, giving **78** shingles per block; two of them intersect in **77** and union to **79**,
+/// so the score is `77 / 79 = 0.974684`. Far above the 0.75 threshold, and *not* 1.0, so the
+/// arithmetic exact-group path is bypassed and every pair is really scored — which is the property
+/// the whole benchmark depends on. (An earlier revision of this comment said `78 / 80 = 0.975`,
+/// which was arithmetic written from memory rather than derived; the conclusion was unaffected but
+/// the numbers were wrong.)
 fn adversarial_source(index: usize) -> String {
     let mut source = String::with_capacity(LINES_PER_FILE * 80);
     source.push_str(
@@ -207,8 +253,72 @@ fn adversarial_source(index: usize) -> String {
     source
 }
 
-/// Writes `files` adversarial sources into `directory` and returns exactly what was written.
-fn generate(directory: &Path, files: usize) -> Manifest {
+/// The same shape as [`adversarial_source`] — same line count, same word count, same structure —
+/// but sharing **no** shingle with any other file.
+///
+/// This is the control that turns one opaque `detect` number into a stage split, and it is why AC1
+/// can name where the time goes rather than assert it. Every word of the header carries the file's
+/// own index, so no gram is ever in two blocks' sets: the inverted index yields zero candidate
+/// pairs, no Jaccard is computed and no edge is connected. What a run on this input therefore costs
+/// is exactly the stages that do **not** depend on pairs — shingling every block, building the
+/// index, and the final clustering pass.
+///
+/// So `detect(adversarial) - detect(disjoint)` is the pair-dependent half — candidate enumeration
+/// plus scoring plus union-find — measured by difference against a real input rather than by
+/// instrumenting production code with timers, which is the alternative this avoids.
+fn disjoint_source(index: usize) -> String {
+    let mut source = String::with_capacity(LINES_PER_FILE * 80);
+    source.push_str("# Rationale");
+    // 79 more words, each unique to this file, so the 80-word count matches `adversarial_source`
+    // exactly and only the SHARING differs between the two inputs.
+    for word in 0..79 {
+        write!(source, " u{index}w{word}").expect("writing into a String cannot fail");
+        // Wrap onto a new comment line every 12 words, so the header spans HEADER_LINES lines.
+        if word % 12 == 11 {
+            source.push_str("\n#");
+        }
+    }
+    source.push('\n');
+    while source.lines().count() < HEADER_LINES {
+        source.push_str("# filler\n");
+    }
+    source.push('\n');
+    let code_lines = LINES_PER_FILE - HEADER_LINES - 1;
+    for step in 0..code_lines / 2 {
+        write!(
+            source,
+            "def step_{step}(value: int) -> int:\n    return value + {step}\n"
+        )
+        .expect("writing into a String cannot fail");
+    }
+    source
+}
+
+/// What [`generate`] would produce, without touching the filesystem.
+///
+/// Split out so the *timed* trees can be pinned by the cheap, always-run correctness test: asserting
+/// a 2 000-file fingerprint costs 2 000 string builds here, against 2 000 file writes through
+/// `generate`. Without this split the only assertion affordable in the fast test was over the
+/// 64-file tree, and a generator changed only for `index >= 64` would leave the committed timing
+/// table describing a tree that no longer exists while every non-ignored test stayed green.
+fn manifest_of(files: usize, source_of: fn(usize) -> String) -> Manifest {
+    let mut manifest = Manifest {
+        files,
+        lines: 0,
+        bytes: 0,
+        fingerprint: 0xcbf2_9ce4_8422_2325,
+    };
+    for index in 0..files {
+        let source = source_of(index);
+        manifest.lines += source.lines().count();
+        manifest.bytes += source.len();
+        manifest.fingerprint = fingerprint(source.as_bytes(), manifest.fingerprint);
+    }
+    manifest
+}
+
+/// Writes `files` sources into `directory` and returns exactly what was written.
+fn generate(directory: &Path, files: usize, source_of: fn(usize) -> String) -> Manifest {
     fs::create_dir_all(directory).expect("the scratch tree is creatable");
     let mut manifest = Manifest {
         files,
@@ -219,7 +329,7 @@ fn generate(directory: &Path, files: usize) -> Manifest {
     // Ascending index is ascending zero-padded name, so the write order below and the sorted read
     // order in `read_blocks` are the same order, and the fingerprint does not depend on which.
     for index in 0..files {
-        let source = adversarial_source(index);
+        let source = source_of(index);
         manifest.lines += source.lines().count();
         manifest.bytes += source.len();
         manifest.fingerprint = fingerprint(source.as_bytes(), manifest.fingerprint);
@@ -227,6 +337,16 @@ fn generate(directory: &Path, files: usize) -> Manifest {
             .expect("a scratch file is writable");
     }
     manifest
+}
+
+/// Whether a measured total misses the budget.
+///
+/// The contract is strictly `< 5 s / 100 000 lines`, so a run landing **exactly** on the budget has
+/// not met it. Extracted as a named predicate purely so that boundary can be tested: written inline
+/// it was `>`, which passed a total equal to the budget, and no test could reach the case because
+/// no test can make a wall clock land on an exact value.
+fn over_budget(total: Duration, budget: Duration) -> bool {
+    total >= budget
 }
 
 /// A scratch directory outside the repository, canonicalised so macOS's `/var` symlink cannot make
@@ -298,7 +418,7 @@ fn the_generated_headers_are_adversarial_by_construction() {
     /// headers still collide in every shingle bucket.
     const FINGERPRINT: u64 = 0xdd84_bb40_1446_e11b;
     let directory = scratch("shape");
-    let manifest = generate(&directory, FILES);
+    let manifest = generate(&directory, FILES, adversarial_source);
 
     // Act
     let blocks = read_blocks(&directory);
@@ -345,6 +465,61 @@ fn the_generated_headers_are_adversarial_by_construction() {
     fs::remove_dir_all(&directory).expect("the scratch tree is removable");
 }
 
+/// The three **timed** trees are pinned here, in the test that always runs.
+///
+/// Pinning only the 64-file tree left a hole with a name: change the generated text for
+/// `index >= 64` while keeping the headers all-pairs similar, and every non-ignored test stays
+/// green while the committed timing table in this file's module documentation silently describes a
+/// tree that no longer exists. The `#[ignore]`d benchmark merely *prints* the new fingerprints,
+/// and printed evidence a human is expected to eyeball is exactly the self-report this repository
+/// keeps paying for.
+///
+/// [`manifest_of`] is what makes this affordable in a test that must stay cheap: it is 2 000 string
+/// builds and no filesystem at all, a few milliseconds. `bytes` is pinned alongside the fingerprint
+/// because it is the one field of [`Manifest`] the fingerprint cannot imply — a change that
+/// preserved the hash by coincidence would still have to move the byte count.
+#[test]
+fn the_timed_trees_are_the_ones_the_recorded_numbers_were_measured_on() {
+    // (files, lines, bytes, fingerprint) — measured 2026-07-30, the trees the module table times.
+    let pinned: [(usize, usize, usize, u64); 3] = [
+        (500, 25_000, 793_890, 0x3b0e_8cb7_3922_afcf),
+        (1_000, 50_000, 1_587_890, 0x81df_c75f_559d_d74b),
+        (2_000, 100_000, 3_176_890, 0x02cd_5bba_8850_271f),
+    ];
+    for (files, lines, bytes, expected) in pinned {
+        let manifest = manifest_of(files, adversarial_source);
+        assert_eq!(
+            (manifest.files, manifest.lines, manifest.bytes),
+            (files, lines, bytes),
+            "the {files}-file tree changed shape"
+        );
+        assert_eq!(
+            manifest.fingerprint, expected,
+            "the {files}-file tree changed content; the timings recorded in this file's module \
+             documentation describe the OLD tree and must be re-measured before re-pinning"
+        );
+    }
+}
+
+/// The budget is `< 5 s`, so landing exactly on it is a miss.
+///
+/// One character of the gate, and unreachable from the gate itself: no test can make a wall clock
+/// land on an exact `Duration`. [`over_budget`] exists as a named predicate so the boundary can be
+/// stated at all. Written as `>`, the middle case below passes a budget it does not meet.
+#[test]
+fn a_run_exactly_on_the_budget_has_not_met_it() {
+    let budget = Duration::from_secs(5);
+    assert!(
+        !over_budget(Duration::from_millis(4_999), budget),
+        "under budget is not over budget"
+    );
+    assert!(
+        over_budget(budget, budget),
+        "the contract is strictly < 5 s, so exactly 5 s is a miss"
+    );
+    assert!(over_budget(Duration::from_millis(5_001), budget));
+}
+
 /// AC3 — the wall-clock budget, on the input that defeats the candidate index.
 ///
 /// `#[ignore]`d for the same reason `tests/volume_corpus.rs`'s corpus test is: it is an instrument,
@@ -355,7 +530,7 @@ fn the_generated_headers_are_adversarial_by_construction() {
 #[ignore = "wall-clock instrument: needs --release and writes 2000 files"]
 fn adversarial_headers_stay_within_the_line_rate_budget() {
     println!(
-        "{:>6} {:>8} {:>7} {:>11} {:>9} {:>9} {:>9} {:>9} {:>9} {:>9} {:>18}",
+        "{:>6} {:>8} {:>7} {:>11} {:>8} {:>9} {:>9} {:>9} {:>9} {:>9} {:>9} {:>18}",
         "files",
         "lines",
         "blocks",
@@ -367,18 +542,25 @@ fn adversarial_headers_stay_within_the_line_rate_budget() {
         "max",
         "extract",
         "detect",
+        "of which scoring",
     );
     let mut failures: Vec<String> = Vec::new();
 
     for files in SIZES {
         // Arrange
         let directory = scratch(&format!("bench-{files}"));
-        let manifest = generate(&directory, files);
+        let manifest = generate(&directory, files, adversarial_source);
         assert_eq!(
-            manifest.lines,
-            files * LINES_PER_FILE,
-            "the generator drifted off its own line budget"
+            manifest,
+            manifest_of(files, adversarial_source),
+            "what reached the disk differs from what `manifest_of` pins in the always-run test"
         );
+
+        // The stage control: same shape, same word count, zero shared shingles. See
+        // `disjoint_source` — the difference between the two `detect` times is the pair-dependent
+        // work, which is the number AC1 needs and a single total cannot give.
+        let control_directory = scratch(&format!("control-{files}"));
+        generate(&control_directory, files, disjoint_source);
 
         // Act — one discarded warm-up so the page cache is warm for every timed run, exactly as
         // `corpus/bench.py` does, then RUNS timed runs.
@@ -390,9 +572,17 @@ fn adversarial_headers_stay_within_the_line_rate_budget() {
         passes.sort_unstable_by_key(|pass| pass.total());
         let middle = passes[RUNS / 2];
 
+        measure(&control_directory);
+        let control = measure(&control_directory);
+        assert_eq!(
+            control.comparisons, 0,
+            "the control must share no shingle, or it is not measuring the pair-free stages"
+        );
+        let scoring = middle.detecting.saturating_sub(control.detecting);
+
         let budget = manifest.budget();
         println!(
-            "{files:>6} {:>8} {:>7} {:>11} {:>9} {:>8.3}s {:>8.3}s {:>8.3}s {:>8.3}s {:>8.3}s {:>8.3}s  fp={:016x}",
+            "{files:>6} {:>8} {:>7} {:>11} {:>8} {:>8.3}s {:>8.3}s {:>8.3}s {:>8.3}s {:>8.3}s {:>8.3}s {:>17.3}s  fp={:016x}",
             manifest.lines,
             middle.blocks,
             middle.comparisons,
@@ -403,13 +593,14 @@ fn adversarial_headers_stay_within_the_line_rate_budget() {
             passes[RUNS - 1].total().as_secs_f64(),
             middle.extracting.as_secs_f64(),
             middle.detecting.as_secs_f64(),
+            scoring.as_secs_f64(),
             manifest.fingerprint,
         );
 
         // Assert — collected rather than asserted in place, so one size over budget still reports
         // the other two. A gate that stops at the first failure hides the shape of the curve, and
         // the shape is what says whether the cost is in the files or in their square.
-        if middle.total() > budget {
+        if over_budget(middle.total(), budget) {
             failures.push(format!(
                 "{files} files / {} lines took {:.3}s against a {:.3}s budget",
                 manifest.lines,
@@ -429,6 +620,7 @@ fn adversarial_headers_stay_within_the_line_rate_budget() {
             "one shared header is one finding, at every size"
         );
         fs::remove_dir_all(&directory).expect("the scratch tree is removable");
+        fs::remove_dir_all(&control_directory).expect("the scratch tree is removable");
     }
 
     assert!(
