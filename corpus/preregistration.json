@@ -1,0 +1,88 @@
+{
+  "_comment": "Machine-readable half of corpus/PREREGISTRATION.md. Read by corpus/classification.py; a classification artifact is graded AGAINST this and can never define it.",
+  "profiles": {
+    "dry_run": {
+      "purpose": "calibration-data rehearsal on the six corpus repos; NOT held-out evidence",
+      "threshold": null,
+      "draws": [
+        {
+          "population": "exact",
+          "per_repo": 20,
+          "limit": 20,
+          "minimum": 20
+        },
+        {
+          "population": "near",
+          "per_repo": 10,
+          "limit": 10,
+          "minimum": 10
+        }
+      ],
+      "runs": {
+        "OpenHands": {
+          "schema_version": "2",
+          "complete": true,
+          "skipped": 0,
+          "excluded": 0,
+          "files_walked": 914
+        },
+        "crewAI": {
+          "schema_version": "2",
+          "complete": true,
+          "skipped": 0,
+          "excluded": 0,
+          "files_walked": 754
+        },
+        "langgraph": {
+          "schema_version": "2",
+          "complete": true,
+          "skipped": 0,
+          "excluded": 0,
+          "files_walked": 445
+        },
+        "openai-agents-python": {
+          "schema_version": "2",
+          "complete": true,
+          "skipped": 0,
+          "excluded": 0,
+          "files_walked": 834
+        },
+        "pydantic": {
+          "schema_version": "2",
+          "complete": true,
+          "skipped": 0,
+          "excluded": 0,
+          "files_walked": 404
+        },
+        "requests": {
+          "schema_version": "2",
+          "complete": true,
+          "skipped": 0,
+          "excluded": 0,
+          "files_walked": 37
+        }
+      },
+      "is_gate": false
+    },
+    "holdout": {
+      "purpose": "the gate; one repository from the pre-registered pool, never seen by the detector",
+      "threshold": "<<THRESHOLD - set by the user before the holdout is run>>",
+      "draws": [
+        {
+          "population": "exact",
+          "per_repo": 40,
+          "limit": 30,
+          "minimum": 5
+        },
+        {
+          "population": "near",
+          "per_repo": 40,
+          "limit": 10,
+          "minimum": 5
+        }
+      ],
+      "runs": {},
+      "is_gate": true
+    }
+  }
+}

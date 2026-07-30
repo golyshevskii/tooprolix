@@ -335,14 +335,74 @@ pub(crate) type Coordinates<'a> = (&'a Path, usize, usize, ProseKind);
 /// `<` is here for symmetry even though no corpus cluster is distinguished by it: it is `>`'s
 /// mirror, and a rule that separated `a > b` from `a b` while still fusing `a > b` with `a < b`
 /// would close the instance and leave the class open. `=` is here because without it `>=` and `>`
-/// normalise alike, which is the same defect one character over; it also separates `a == b` from
-/// `a != b`, since `==` yields two tokens and `!=` yields one.
+/// normalise alike, which is the same defect one character over.
 ///
-/// Deliberately **not** here, and each for a measured reason: `.`, `_`, `` ` ``, `,`, `(`, `)` —
-/// the erasures above, which the comparison depends on; `-`, which is a hyphen in prose far more
-/// often than a minus (`non-blocking`) and distinguishes 4 corpus clusters; `!`, which is a
-/// sentence terminator in prose and is not needed for `!=` vs `==` (see above).
-const OPERATOR_TOKENS: [char; 3] = ['<', '>', '='];
+/// # 🔴 The corpus count picked this set and the corpus count was the wrong instrument
+///
+/// The first version of this rule was `['<', '>', '=']` and nothing else, justified by the frequency
+/// count above. Review found the class still open, and the reason is the warning task 13 carried
+/// forward verbatim: **the corpus cannot see this class, so a count over it cannot say a set is
+/// sufficient.** Two constructed pairs, both measured at similarity **1.000** on the released
+/// binary, are what the count could not show:
+///
+/// | pair | why it collided |
+/// |---|---|
+/// | `value != 0` ~ `value = 0` | `!` was erased, so `!=` folded to `=` |
+/// | `limit > -1` ~ `limit > 1` | `-` was erased, so the sign vanished |
+///
+/// The rationale offered for excluding `!` — *"`==` yields two tokens and `!=` yields one"* — was
+/// simply wrong: `!=` yields `=`, which is what `=` yields. Frequency over a blind corpus is not
+/// evidence of sufficiency, and constructed inputs are the only defence for this grammar.
+///
+/// # Why membership is not enough, and the rule is contextual
+///
+/// `!` and `-` cannot be preserved unconditionally, because in prose they are punctuation far more
+/// often than operators — and preserving a prose hyphen would dilute genuine matches, which is a
+/// second defect traded for the first (`-` distinguishes 4 corpus clusters *as a hyphen*). `>` has
+/// the mirror problem: at the start of a line it is Markdown quoting, and erasing it is what lets a
+/// quoted copy of a paragraph match the original. Measured on the released binary: identical prose
+/// with one copy quoted `> ` per line scored 1.000 before this rule and **0.778** after the
+/// membership-only version — 0.028 above the 0.75 threshold, i.e. one edit away from silently losing
+/// a genuine finding.
+///
+/// So the decision is per occurrence, and [`is_operator_here`] owns it. Each clause is pinned by a
+/// row in `these_shapes_must_not_normalise_alike` **and** by a row in
+/// `these_shapes_must_normalise_alike`, because every one of them can fail in both directions.
+///
+/// Still deliberately **absent**, and each for a measured reason: `.`, `_`, `` ` ``, `,`, `(`, `)` —
+/// the erasures the comparison depends on, which is what makes `snake_case` match `snake case` and a
+/// `# comment` match a `"""docstring"""`.
+const OPERATOR_TOKENS: [char; 5] = ['<', '>', '=', '!', '-'];
+
+/// Whether this occurrence of `character` is a relational operator rather than prose punctuation.
+///
+/// Context, not membership: see [`OPERATOR_TOKENS`] for why every clause here is necessary and what
+/// broke without it. `previous` and `next` are the raw neighbouring characters, and `alnum_on_line`
+/// is whether any alphanumeric has already appeared on the current line.
+fn is_operator_here(
+    character: char,
+    previous: Option<char>,
+    next: Option<char>,
+    alnum_on_line: bool,
+) -> bool {
+    match character {
+        // Unambiguous: neither is prose punctuation in any position.
+        '<' | '=' => true,
+        // `>` opens a Markdown blockquote and a `doctest` prompt when nothing alphanumeric precedes
+        // it on the line. Mid-line it is a comparison. Without this, quoting a paragraph rewrote it.
+        '>' => alnum_on_line,
+        // `!` is an operator only as the negation half of `!=`. Everywhere else it terminates a
+        // sentence, and `Done!` must still match `Done`.
+        '!' => next == Some('='),
+        // `-` is a sign only when it binds to a digit and is not glued to a preceding word. That
+        // keeps `> -1` apart from `> 1` while leaving the prose hyphen of `non-blocking` erased.
+        '-' => {
+            next.is_some_and(|following| following.is_ascii_digit())
+                && !previous.is_some_and(char::is_alphanumeric)
+        }
+        _ => false,
+    }
+}
 
 /// Collapses `text` to the **counting** form: lower-case alphanumeric words, single spaces, no
 /// line breaks.
@@ -402,16 +462,36 @@ pub(crate) fn normalize_comparable(text: &str) -> String {
 /// miss. The flag is never passed at a call site — both callers are the named wrappers above.
 fn fold(text: &str, keep_operators: bool) -> String {
     let mut folded = String::with_capacity(text.len());
-    for character in text.chars() {
+    // Peekable rather than a collected `Vec<char>`: [`is_operator_here`] needs one character of
+    // look-behind and one of look-ahead, and this runs once per prose block on every walked file.
+    let mut characters = text.chars().peekable();
+    let mut previous: Option<char> = None;
+    // Whether an alphanumeric has appeared on the current line, which is how `>` as Markdown quoting
+    // is told from `>` as a comparison. Reset on the newline itself, before the next line is read.
+    let mut alnum_on_line = false;
+    while let Some(character) = characters.next() {
+        if character == '\n' {
+            alnum_on_line = false;
+        }
         if character.is_alphanumeric() {
+            alnum_on_line = true;
             folded.extend(character.to_lowercase());
-        } else if keep_operators && OPERATOR_TOKENS.contains(&character) {
+        } else if keep_operators
+            && OPERATOR_TOKENS.contains(&character)
+            && is_operator_here(
+                character,
+                previous,
+                characters.peek().copied(),
+                alnum_on_line,
+            )
+        {
             folded.push(' ');
             folded.push(character);
             folded.push(' ');
         } else {
             folded.push(' ');
         }
+        previous = Some(character);
     }
     folded.split_whitespace().collect::<Vec<_>>().join(" ")
 }
@@ -1169,75 +1249,126 @@ mod tests {
         assert_ne!(from_flat[0].raw, from_wrapped[0].raw);
     }
 
-    /// 🔴 **The counterweight to the test above, and the defect it was missing.**
+    /// 🔴 **The guard that can say "these two must stay DIFFERENT", and the reason it exists.**
     ///
-    /// Collapsing every non-alphanumeric character to a space is what lets a comment be compared
-    /// with a docstring — and it also erased the operators that carry the *meaning* of a sentence
-    /// about a bound. Measured on the pinned corpus by `close-anti-fp-gate-with-public-reference`
-    /// (`corpus/annotations.md` §4.7, record 18): `requests`' two tests
-    /// `…with size 0…` and `…with size > 0…` normalise to the same string and are reported as one
-    /// `TPX003` finding at similarity **1.000**.
+    /// `a_malformed_or_unrecognised_construct_leaves_the_narrative_unchanged` cannot protect this
+    /// class and never could: it asserts `narrative(text) == normalize_comparable(text)`, so both
+    /// sides move together and a normaliser that returned a constant would keep every row green.
+    /// **Proved by mutation, not argued** — reverting the operator branch reddens the rows below and
+    /// leaves that table untouched. An equality table cannot express an inequality invariant, so
+    /// this is the second table, and every shape [`is_operator_here`] decides gets a row in it.
     ///
-    /// The pair below is the sharper form of the same defect and the reason it is not arguable:
-    /// `> 0` and `< 0` are **logically opposite**, not near-synonyms, and no reading of "the same
-    /// explanation" covers them. Anything that keeps them apart also keeps `0` and `> 0` apart.
+    /// Each row is a pair that a *reader* would call two different statements. If any pair collapses
+    /// to one string, `TPX003` will report them as one explanation at similarity 1.000 — the exact
+    /// false identity this whole rule exists to stop.
     #[test]
-    fn statements_differing_only_by_a_comparison_operator_do_not_normalise_alike() {
-        // Arrange — identical but for the operator, which is the whole assertion each one makes.
-        let greater = "the request is rejected when the declared size > 0 and no body follows";
-        let less = "the request is rejected when the declared size < 0 and no body follows";
-        let absent = "the request is rejected when the declared size 0 and no body follows";
+    fn these_shapes_must_not_normalise_alike() {
+        // Arrange — (what it is, left, right). Rows 1-3 are the original operator class; rows 4-5
+        // are the two the corpus frequency count was blind to and review found still open at 1.000.
+        let cases = [
+            (
+                "a comparison against its absence",
+                "the request is rejected when the declared size > 0 and no body follows",
+                "the request is rejected when the declared size 0 and no body follows",
+            ),
+            (
+                "opposite bounds",
+                "the request is rejected when the declared size > 0 and no body follows",
+                "the request is rejected when the declared size < 0 and no body follows",
+            ),
+            (
+                "an inclusive bound against a strict one",
+                "the retry budget is >= 4 attempts before the call is abandoned",
+                "the retry budget is > 4 attempts before the call is abandoned",
+            ),
+            (
+                "a negated equality against an equality",
+                "the request is rejected when the declared value != 0 and no body follows",
+                "the request is rejected when the declared value = 0 and no body follows",
+            ),
+            (
+                "a negative bound against a positive one",
+                "the request is rejected when the declared limit > -1 and no body follows",
+                "the request is rejected when the declared limit > 1 and no body follows",
+            ),
+        ];
 
-        // Act & Assert
-        assert_ne!(
-            normalize_comparable(greater),
-            normalize_comparable(less),
-            "`>` and `<` state opposite bounds and must not collapse to one explanation"
-        );
-        assert_ne!(
-            normalize_comparable(greater),
-            normalize_comparable(absent),
-            "an operator that vanishes takes the bound it expressed with it"
-        );
+        // Act — every row, not the first failing one, for the reason the sibling table gives.
+        let collapsed: Vec<&str> = cases
+            .into_iter()
+            .filter(|(_, left, right)| normalize_comparable(left) == normalize_comparable(right))
+            .map(|(what, _, _)| what)
+            .collect();
 
-        // ⚠️ Each member of `OPERATOR_TOKENS` is asserted against the *operator-free* sentence, one
-        // by one, and not merely against each other. Proved necessary by mutation: with only the
-        // `greater`/`less` comparison above, deleting `<` from the set left all 137 tests passing —
-        // the two sentences still differed, because `>` survived and carried the difference alone.
-        // A guard whose removal nothing notices is this epic's defect #4, and this is what closes it.
-        assert_ne!(
-            normalize_comparable(less),
-            normalize_comparable(absent),
-            "`<` must survive on its own"
-        );
-        assert_ne!(
-            normalize_comparable("the retry budget is >= 4 attempts before the call is abandoned"),
-            normalize_comparable("the retry budget is > 4 attempts before the call is abandoned"),
-            "`=` must survive on its own, or `>=` and `>` state the same bound"
+        // Assert
+        assert!(
+            collapsed.is_empty(),
+            "{} of {} distinct statements normalised to one string: {collapsed:#?}",
+            collapsed.len(),
+            cases.len()
         );
     }
 
-    /// An operator is its own word, so the spacing around it in the source cannot change the result.
+    /// The other direction, and it is not optional: every clause of [`is_operator_here`] can fail
+    /// by keeping too much just as easily as by keeping too little.
     ///
-    /// The other half of [`OPERATOR_TOKENS`], and the half that is easy to get wrong: keeping the
-    /// character *in place* rather than spacing it out would make `size>0` and `size > 0` normalise
-    /// differently, and two spellings of one statement would stop matching. That is the same
-    /// property [`Self::line_breaks_and_indentation_do_not_change_the_normalised_text`] pins for
-    /// whitespace, which no operator reaches — so without this row the rustdoc's claim is asserted
-    /// by nothing and a glued implementation passes every test.
+    /// Preserving a character unconditionally trades one false identity for diluted genuine matches,
+    /// which is a worse bargain than it looks — a prose hyphen distinguishes four corpus clusters,
+    /// and Markdown-quoting a paragraph took an identical copy from 1.000 to **0.778**, within 0.028
+    /// of the threshold, on the membership-only version of this rule. Each row here is a pair a
+    /// reader would call the *same* statement, and each is the mirror of a row above.
     #[test]
-    fn the_spacing_around_an_operator_does_not_change_the_normalised_text() {
-        // Arrange — one statement, three spellings that differ only in whitespace.
-        let tight = "reject the payload when size>0 and no body follows the header";
-        let spaced = "reject the payload when size > 0 and no body follows the header";
-        let wide = "reject the payload when size   >   0 and no body follows the header";
+    fn these_shapes_must_normalise_alike() {
+        // Arrange — (what it is, left, right).
+        let cases = [
+            (
+                "an operator spaced differently, which is one statement written twice",
+                "reject the payload when size>0 and no body follows the header",
+                "reject the payload when size   >   0 and no body follows the header",
+            ),
+            (
+                "a Markdown blockquote, whose `>` is quoting and not a comparison",
+                "> the caller keeps ownership of the buffer for the whole call\n> and must not retain it",
+                "the caller keeps ownership of the buffer for the whole call\nand must not retain it",
+            ),
+            (
+                "a quoted comment, where the marker and the quote both precede the prose",
+                "# > the caller keeps ownership of the buffer for the whole call",
+                "# the caller keeps ownership of the buffer for the whole call",
+            ),
+            (
+                "a hyphen inside a compound word, which is prose and not a minus sign",
+                "the adapter is non-blocking and state-of-the-art for this workload",
+                "the adapter is non blocking and state of the art for this workload",
+            ),
+            (
+                "an exclamation mark, which terminates a sentence and negates nothing",
+                "the caller keeps ownership of the buffer!",
+                "the caller keeps ownership of the buffer",
+            ),
+            // The row that isolates the look-BEHIND half of the `-` clause. Every other hyphen row
+            // is followed by a letter, so dropping `!previous.is_alphanumeric()` leaves them green:
+            // only a hyphen glued to a word AND followed by a digit can tell the two halves apart.
+            (
+                "a hyphen binding a word to a digit, which is a name and not a signed number",
+                "the payload is decoded as utf-8 before the adapter inspects it",
+                "the payload is decoded as utf 8 before the adapter inspects it",
+            ),
+        ];
 
-        // Act & Assert
-        assert_eq!(normalize_comparable(tight), normalize_comparable(spaced));
-        assert_eq!(normalize_comparable(spaced), normalize_comparable(wide));
-        assert_eq!(
-            normalize_comparable(spaced),
-            "reject the payload when size > 0 and no body follows the header"
+        // Act
+        let split: Vec<&str> = cases
+            .into_iter()
+            .filter(|(_, left, right)| normalize_comparable(left) != normalize_comparable(right))
+            .map(|(what, _, _)| what)
+            .collect();
+
+        // Assert
+        assert!(
+            split.is_empty(),
+            "{} of {} identical statements normalised apart: {split:#?}",
+            split.len(),
+            cases.len()
         );
     }
 

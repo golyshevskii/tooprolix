@@ -1,6 +1,8 @@
 {
-  "detector_tag": "v0.4.0 + normalize_comparable (UNCOMMITTED working tree)",
-  "detector_commit": "e6adfed8b833a125d94170da4dc64cf5ef4e6d2f",
+  "detector_tag": "v0.4.0 + contextual operator rule in normalize_comparable",
+  "detector_dirty": true,
+  "binary_sha256": "bf6af69c6eca4d3d641db19373a25a946a620ae1407a76a690c95c67472820e2",
+  "detector_commit": "6242f300ef471cf490ca3e80636d87e2f858d6de",
   "protocol": "EPIC.md Decisions #16, restated in corpus/annotations.md 1.4, applied in sections 4 and 5",
   "blind": false,
   "runs": [
@@ -14,7 +16,7 @@
     },
     {
       "name": "langgraph",
-      "sha256": "3e7ec46daffe265a94bacc093de303d0e2dffe75abe5de548f3f6be81715ed63"
+      "sha256": "122df21c5358a91e04eee5668361fec238fdfb4eef4169cb2cfe3a337040849e"
     },
     {
       "name": "openai-agents-python",
@@ -22,23 +24,11 @@
     },
     {
       "name": "pydantic",
-      "sha256": "672965a7c530026eac07a1df9a655e8050106a577c86fc795e14167a79c48bc3"
+      "sha256": "1ac991aada04b60e097f19db76faa39cea859373c0320687beb752a739b56ede"
     },
     {
       "name": "requests",
       "sha256": "ac661901c88ada9f30fde78091cf1e234bcfa5154cca886af96f1330e45148b0"
-    }
-  ],
-  "draws": [
-    {
-      "population": "exact",
-      "per_repo": 20,
-      "limit": 20
-    },
-    {
-      "population": "near",
-      "per_repo": 10,
-      "limit": 10
     }
   ],
   "records": [
@@ -502,12 +492,12 @@
     {
       "repo": "pydantic",
       "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
-      "line": 2370,
+      "line": 1073,
       "population": "near",
-      "weakest_similarity": 0.78,
+      "weakest_similarity": 0.75,
       "members": [
-        "pydantic/pydantic-core/python/pydantic_core/core_schema.py:2370-2398",
-        "pydantic/pydantic-core/python/pydantic_core/core_schema.py:2420-2450"
+        "pydantic/pydantic-core/python/pydantic_core/core_schema.py:1073-1074",
+        "pydantic/pydantic-core/python/pydantic_core/core_schema.py:1208-1209"
       ],
       "classification": "FP",
       "reason": "`no_info_wrap_validator_function` / `with_info_wrap_validator_function`. The one clause that differs — 'no `info` argument is passed' against 'an `info` argument is also passed' — is precisely what distinguishes the two constructors, so the shared text is a per-callable template with the distinguishing token in it. Everything else that overlaps is the worked example and the Args table.",

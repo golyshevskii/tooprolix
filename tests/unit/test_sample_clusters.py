@@ -264,3 +264,42 @@ class TestTheEntryPointRefusesRatherThanSampleNothing:
 
         assert sample_clusters.main(["--runs", str(empty_runs)]) == 2
         assert "run_all.sh" in capsys.readouterr().err
+
+
+class TestAMalformedFindingIsNeverSkipped:
+    """
+    Review round 1, finding B2 — a guard that a key rename switched off.
+
+    `tpx003_clusters` used to do `if weakest is None: continue`. Measured on a copy of the corpus:
+    renaming `weakest` to `weakest_v2` on six findings dropped the sampled population from 618 to
+    612 with no error, no warning and no exit code. Every rate computed afterwards would have been
+    taken over a quietly smaller denominator — and the numbers would have looked entirely normal.
+
+    Guards fail closed: a similarity finding that cannot state its similarity stops the run.
+    """
+
+    def test_a_tpx003_finding_without_a_weakest_is_fatal_and_names_the_address(self) -> None:
+        report = {"findings": [finding("a.py", 7, 0.8)]}
+        del report["findings"][0]["weakest"]
+
+        with pytest.raises(sample_clusters.MalformedFinding, match="a.py:7"):
+            sample_clusters.tpx003_clusters("repo", report, population="all")
+
+    def test_a_renamed_weakest_key_is_fatal_rather_than_a_smaller_population(self) -> None:
+        """The exploit verbatim: the key is present under a new name, so `.get` returns nothing."""
+        report = {"findings": [finding("a.py", 1, 0.8), finding("b.py", 2, 0.9)]}
+        report["findings"][1]["weakest_v2"] = report["findings"][1].pop("weakest")
+
+        with pytest.raises(sample_clusters.MalformedFinding, match="b.py:2"):
+            sample_clusters.tpx003_clusters("repo", report, population="all")
+
+    def test_a_volume_finding_is_still_not_in_the_population(self) -> None:
+        """The other direction: `TPX001`/`TPX002` legitimately carry no similarity and are not errors."""
+        report = {
+            "findings": [
+                {"code": "TPX002", "path": "a.py", "line": 1, "end_line": 4, "message": "long"},
+                finding("b.py", 7, 0.9),
+            ]
+        }
+
+        assert [c.path for c in sample_clusters.tpx003_clusters("repo", report, population="all")] == ["b.py"]

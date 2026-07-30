@@ -64,6 +64,10 @@ class SampleTooSmall(RuntimeError):
     """The corpus could not supply the sample AC1 requires."""
 
 
+class MalformedFinding(RuntimeError):
+    """A `TPX003` finding the sampler cannot interpret, which it refuses to skip."""
+
+
 @dataclass(frozen=True, order=True)
 class Member:
     """One block inside a cluster, at the address the CLI reported."""
@@ -102,15 +106,23 @@ def tpx003_clusters(repo: str, report: Mapping[str, Any], population: Population
     """
     Return the `TPX003` findings of `report` in `population`, ordered by address.
 
-    Findings without a `weakest` field are volume findings (`TPX001`/`TPX002`) and are skipped
-    rather than defaulted: a default would put a block that no similarity was ever computed for
-    into a precision measurement about similarity.
+    Findings whose `code` is not `TPX003` are volume findings and are not in this population at all.
+    A `TPX003` finding without a readable `weakest`, however, is a **hard error**: see below.
 
     # Raises
 
     `ValueError` if `population` is not one of [`POPULATIONS`]. Falling back to the `near` default
     would report a near-only number under an `exact` heading, which is the single failure mode the
     exact population was added to prevent — so the guard fails closed.
+
+    `MalformedFinding` if a `TPX003` finding carries no readable `weakest.similarity`.
+
+    🔴 **This used to be `if weakest is None: continue`, and that is a guard a rename switches
+    off.** Measured on a copy of the corpus: renaming `weakest` to `weakest_v2` on six findings
+    dropped the sampled population from 618 to 612 with no error, no warning and no exit code — the
+    clusters simply stopped existing, and every rate computed from them would have been quietly
+    taken over a smaller denominator. A check that skips what it cannot interpret is a check that
+    can be disabled by editing a key, so it now names the address and stops.
     """
     if population not in POPULATIONS:
         raise ValueError(f"unknown population {population!r}; expected one of {', '.join(POPULATIONS)}")
@@ -119,8 +131,12 @@ def tpx003_clusters(repo: str, report: Mapping[str, Any], population: Population
         if raw.get("code") != "TPX003":
             continue
         weakest = raw.get("weakest")
-        if weakest is None:
-            continue
+        where = f"{raw.get('path', '?')}:{raw.get('line', '?')}"
+        if not isinstance(weakest, Mapping) or "similarity" not in weakest:
+            raise MalformedFinding(
+                f"{repo}: TPX003 finding at {where} has no readable `weakest.similarity`; "
+                "a similarity finding that cannot state its similarity is not skippable"
+            )
         similarity = float(weakest["similarity"])
         if population == "near" and similarity >= 1.0:
             continue

@@ -40,6 +40,12 @@ import pytest
 CORPUS = Path(__file__).resolve().parents[2] / "corpus"
 ARTIFACT = CORPUS / "dry_run_classification.json"
 RUNS = CORPUS / "runs"
+PREREGISTRATION = CORPUS / "preregistration.json"
+
+
+def profile(name: str = "dry_run") -> classification.Profile:
+    """Return the pre-registered profile a caller grades against — never read out of the artifact."""
+    return classification.load_preregistration(PREREGISTRATION).profile(name)
 
 
 def _artifact_json() -> dict[str, Any]:
@@ -56,7 +62,7 @@ class TestTheShippedArtifactDescribesTheShippedRuns:
     """The committed dry run must verify against the committed runs, or it is a transcript."""
 
     def test_the_dry_run_artifact_verifies_against_corpus_runs(self) -> None:
-        classification.verify(classification.load(ARTIFACT), RUNS)
+        classification.verify(classification.load(ARTIFACT), RUNS, profile())
 
     def test_it_covers_thirty_clusters_split_twenty_exact_and_ten_near(self) -> None:
         """
@@ -89,7 +95,7 @@ class TestTheArtifactIsGradedAgainstTheRunAndNotAgainstItself:
         payload["runs"][0]["sha256"] = "0" * 64
 
         with pytest.raises(classification.ClassificationError, match=payload["runs"][0]["name"]):
-            classification.verify(classification.load(_write(tmp_path, payload)), RUNS)
+            classification.verify(classification.load(_write(tmp_path, payload)), RUNS, profile())
 
     def test_a_record_that_misstates_the_similarity_it_classified_is_fatal(self, tmp_path: Path) -> None:
         """A near/exact split the run does not support would silently move the AC8 numbers."""
@@ -97,7 +103,7 @@ class TestTheArtifactIsGradedAgainstTheRunAndNotAgainstItself:
         payload["records"][0]["weakest_similarity"] = 0.123
 
         with pytest.raises(classification.ClassificationError, match=payload["records"][0]["path"]):
-            classification.verify(classification.load(_write(tmp_path, payload)), RUNS)
+            classification.verify(classification.load(_write(tmp_path, payload)), RUNS, profile())
 
     def test_a_record_that_misstates_its_members_is_fatal(self, tmp_path: Path) -> None:
         """
@@ -108,7 +114,7 @@ class TestTheArtifactIsGradedAgainstTheRunAndNotAgainstItself:
         payload["records"][0]["members"] = ["nowhere/at/all.py:1-2"]
 
         with pytest.raises(classification.ClassificationError, match=payload["records"][0]["path"]):
-            classification.verify(classification.load(_write(tmp_path, payload)), RUNS)
+            classification.verify(classification.load(_write(tmp_path, payload)), RUNS, profile())
 
 
 class TestCoverageIsExactInBothDirections:
@@ -126,7 +132,7 @@ class TestCoverageIsExactInBothDirections:
         dropped = payload["records"].pop(0)
 
         with pytest.raises(classification.ClassificationError, match=dropped["path"]):
-            classification.verify(classification.load(_write(tmp_path, payload)), RUNS)
+            classification.verify(classification.load(_write(tmp_path, payload)), RUNS, profile())
 
     def test_a_row_that_no_finding_backs_is_fatal(self, tmp_path: Path) -> None:
         payload = _artifact_json()
@@ -135,7 +141,7 @@ class TestCoverageIsExactInBothDirections:
         payload["records"].append(invented)
 
         with pytest.raises(classification.ClassificationError, match="invented/module.py"):
-            classification.verify(classification.load(_write(tmp_path, payload)), RUNS)
+            classification.verify(classification.load(_write(tmp_path, payload)), RUNS, profile())
 
 
 class TestThereAreExactlyTwoClasses:
@@ -197,3 +203,204 @@ class TestTheRatesAreComputedFromTheRecordsAndNotStored:
         """Guards fail closed: a typo'd population must not divide by an empty set and report 0.0."""
         with pytest.raises(ValueError, match="sideways"):
             classification.load(ARTIFACT).denominator("sideways")
+
+
+class TestTheArtifactCannotDefineWhatItIsGradedAgainst:
+    """
+    Review round 1, finding B1 — the single most important guard in this file.
+
+    `verify` used to re-draw the expected population from the **artifact's own** `draws`, so the
+    thing being graded chose its own denominator. Measured: an artifact declaring
+    `{"limit": 0}` with `records: []` verified clean and reported `unavailable`, i.e. the gate
+    cleared with nothing labelled at all. That is this epic's defect #6 — a validator grading a
+    self-report — at its seventh layer.
+    """
+
+    def test_an_artifact_that_declares_its_own_draws_is_refused(self, tmp_path: Path) -> None:
+        payload = _artifact_json()
+        payload["draws"] = [{"population": "exact", "per_repo": 20, "limit": 0}]
+
+        with pytest.raises(classification.ClassificationError, match="own draws"):
+            classification.load(_write(tmp_path, payload))
+
+    def test_labelling_nothing_is_fatal_rather_than_unavailable(self, tmp_path: Path) -> None:
+        """The exploit's payload: zero records against a pre-registration that draws 30."""
+        payload = _artifact_json()
+        payload["records"] = []
+
+        with pytest.raises(classification.ClassificationError, match="carry no class"):
+            classification.verify(classification.load(_write(tmp_path, payload)), RUNS, profile())
+
+    def test_a_draw_that_selects_nothing_is_fatal_rather_than_an_empty_population(self, tmp_path: Path) -> None:
+        """
+        Found by mutation: disabling the empty-population guard left every test green.
+
+        `test_labelling_nothing_is_fatal…` above cannot reach it — there the *expected* set is still
+        30, so the coverage check fires first — and neither can `verify`, which hashes the run files
+        before it draws. So the draw is exercised directly.
+
+        ⚠️ **Why the guard exists even though `round_robin` also refuses a short draw.** That refusal
+        is driven by the pre-registered `minimum`, so a profile registering `minimum: 0` slips past
+        it. This is the backstop for exactly that case, and "the gate passed because it measured
+        nothing" is the outcome it exists to prevent.
+        """
+        empty_runs = tmp_path / "runs"
+        empty_runs.mkdir()
+        permissive = classification.Profile(
+            name="probe",
+            purpose="a draw that asks for nothing and is allowed to get nothing",
+            is_gate=False,
+            threshold=None,
+            draws=(classification.Draw(population="exact", per_repo=20, limit=20, minimum=0),),
+            runs={},
+        )
+
+        with pytest.raises(classification.ClassificationError, match="drew no findings"):
+            classification._expected(permissive, empty_runs)
+
+    def test_the_profile_comes_from_the_caller_and_an_unknown_one_fails_closed(self) -> None:
+        with pytest.raises(classification.ClassificationError, match="no pre-registered profile"):
+            classification.load_preregistration(PREREGISTRATION).profile("whatever-passes")
+
+    def test_a_gate_profile_with_no_numeric_threshold_refuses_to_be_used(self) -> None:
+        """
+        The holdout may not run until the owner sets a number.
+
+        A gate whose threshold is a placeholder cannot be failed, so offering it would be offering a
+        measurement that can only pass. Refused at retrieval rather than at load, so that an
+        undecided holdout threshold does not also block the dry run.
+        """
+        with pytest.raises(classification.ClassificationError, match="cannot\n?\\s*be failed|gate"):
+            classification.load_preregistration(PREREGISTRATION).profile("holdout")
+
+
+class TestTheRunItselfIsGradedBeforeItsFindingsAreRead:
+    """
+    Review round 1, finding B3. A hash proves a file did not change; it proves nothing about
+    whether the run behind it measured the whole tree.
+    """
+
+    def test_a_truncated_walk_is_fatal_even_though_the_run_calls_itself_complete(self, tmp_path: Path) -> None:
+        """
+        The parent-`.gitignore` trap, which is measured and still live.
+
+        A run under an ancestor `.gitignore` walks ~1 file per repository and still reports
+        `complete: true` with an empty `skipped[]` — the finding counts simply come out small. The
+        walked-file count is the only signal, it cannot live in the run JSON, and so it is written
+        to a sidecar and compared against the count pinned in the pre-registration.
+        """
+        runs = tmp_path / "runs"
+        runs.mkdir()
+        for source in RUNS.iterdir():
+            (runs / source.name).write_bytes(source.read_bytes())
+        (runs / "crewAI.files").write_text("5\n", encoding="utf-8")
+
+        with pytest.raises(classification.ClassificationError, match="the walk saw 5"):
+            classification.verify(classification.load(ARTIFACT), runs, profile())
+
+    def test_a_missing_walk_count_is_fatal_rather_than_skipped(self, tmp_path: Path) -> None:
+        runs = tmp_path / "runs"
+        runs.mkdir()
+        for source in RUNS.iterdir():
+            (runs / source.name).write_bytes(source.read_bytes())
+        (runs / "requests.files").unlink()
+
+        with pytest.raises(classification.ClassificationError, match="size of the walk is unknown"):
+            classification.verify(classification.load(ARTIFACT), runs, profile())
+
+
+class TestDetectorProvenanceIsCheckedAgainstSomethingReal:
+    """
+    Review round 1, finding B4. `detector_tag` was free text that changed no outcome.
+
+    ⚠️ **Stated rather than overclaimed: none of this proves which binary produced a given JSON.**
+    Only re-running it does. What it rules out is a commit that does not exist, a dirty tree that
+    does not say so, and a binary on disk that is not the one the artifact names.
+    """
+
+    def test_a_commit_that_does_not_resolve_is_fatal(self, tmp_path: Path) -> None:
+        payload = _artifact_json()
+        payload["detector_commit"] = "0" * 40
+
+        with pytest.raises(classification.ClassificationError, match="does not resolve"):
+            classification.verify(classification.load(_write(tmp_path, payload)), RUNS, profile())
+
+    def test_a_binary_that_does_not_match_its_recorded_hash_is_fatal(self, tmp_path: Path) -> None:
+        payload = _artifact_json()
+        payload["binary_sha256"] = "0" * 64
+        impostor = tmp_path / "tooprolix"
+        impostor.write_bytes(b"not the detector")
+
+        with pytest.raises(classification.ClassificationError, match="hashes"):
+            classification.verify(classification.load(_write(tmp_path, payload)), RUNS, profile(), binary=impostor)
+
+    def test_the_dirty_flag_must_be_stated_and_not_omitted(self, tmp_path: Path) -> None:
+        payload = _artifact_json()
+        del payload["detector_dirty"]
+
+        with pytest.raises(classification.ClassificationError, match="detector_dirty"):
+            classification.load(_write(tmp_path, payload))
+
+
+class TestTheBaselineIsDerivedFromTheLabels:
+    """
+    Review round 1, finding B5. Decisions #17's ordering, made structural instead of described.
+
+    A baseline taken before annotation is a filter that decides what gets annotated. A function
+    whose only input is the labelled records cannot be called before they exist, which is the
+    difference between a rule and a sentence about a rule.
+    """
+
+    def test_the_baseline_is_exactly_the_false_positives(self) -> None:
+        artifact = classification.load(ARTIFACT)
+
+        baseline = classification.baseline_from(artifact)
+
+        assert len(baseline) == artifact.false_positive_count("all")
+        assert list(baseline) == sorted(baseline), "a baseline must be ordered, or its diff is noise"
+
+    def test_a_true_positive_is_never_suppressed(self) -> None:
+        """Suppressing a TP would suppress the tool's own value, so the derivation must exclude it."""
+        artifact = classification.load(ARTIFACT)
+        true_positives = {r.members[0] for r in artifact.records if r.classification == "TP"}
+
+        assert not (set(classification.baseline_from(artifact)) & true_positives)
+
+
+class TestTheGateCanActuallyFail:
+    """
+    The comparison the measurement exists to feed, wired now so that a red outcome is reachable
+    before the owner sets the real number.
+
+    A gate nothing compares is a gate that cannot say no, which is the `exit 0` loophole the first
+    edition of this task shipped under a different name.
+    """
+
+    def _probe(self, tmp_path: Path, threshold: float) -> classification.Profile:
+        payload = json.loads(PREREGISTRATION.read_text(encoding="utf-8"))
+        probe = json.loads(json.dumps(payload["profiles"]["dry_run"]))
+        probe["is_gate"] = True
+        probe["threshold"] = threshold
+        payload["profiles"]["probe"] = probe
+        path = tmp_path / "preregistration.json"
+        path.write_text(json.dumps(payload), encoding="utf-8")
+        return classification.load_preregistration(path).profile("probe")
+
+    def test_a_threshold_below_the_measured_share_is_red(self, tmp_path: Path) -> None:
+        passed, explanation = classification.gate(classification.load(ARTIFACT), self._probe(tmp_path, 0.20))
+
+        assert not passed
+        assert "RED" in explanation
+
+    def test_a_threshold_above_the_measured_share_passes(self, tmp_path: Path) -> None:
+        passed, explanation = classification.gate(classification.load(ARTIFACT), self._probe(tmp_path, 0.50))
+
+        assert passed
+        assert "PASS" in explanation
+
+    def test_an_unevaluated_threshold_is_not_a_pass(self) -> None:
+        """`None` must never read as "green"; it reads as "no gate was evaluated"."""
+        passed, explanation = classification.gate(classification.load(ARTIFACT), profile())
+
+        assert not passed
+        assert "not a pass" in explanation

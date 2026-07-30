@@ -25,6 +25,43 @@
       "max_volume": 200
     },
     {
+      "code": "TPX003",
+      "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
+      "line": 1073,
+      "end_line": 1074,
+      "prose_kind": "comment",
+      "message": "pydantic/pydantic-core/python/pydantic_core/core_schema.py:1073-1074: TPX003 same explanation in 2 places: pydantic/pydantic-core/python/pydantic_core/core_schema.py:1208-1209 (weakest pydantic/pydantic-core/python/pydantic_core/core_schema.py:1073-1074 ~ pydantic/pydantic-core/python/pydantic_core/core_schema.py:1208-1209, similarity 0.750)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
+          "line": 1073,
+          "end_line": 1074,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
+          "line": 1208,
+          "end_line": 1209,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
+          "line": 1073,
+          "end_line": 1074,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
+          "line": 1208,
+          "end_line": 1209,
+          "prose_kind": "comment"
+        },
+        "similarity": 0.75
+      }
+    },
+    {
       "code": "TPX002",
       "path": "pydantic/pydantic-core/python/pydantic_core/core_schema.py",
       "line": 1232,

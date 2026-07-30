@@ -9690,7 +9690,7 @@
       "line": 645,
       "end_line": 652,
       "prose_kind": "docstring",
-      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/stream.py:645-652: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/stream.py:711-718 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/stream.py:645-652 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/stream.py:711-718, similarity 0.896)",
+      "message": "langgraph/libs/sdk-py/langgraph_sdk/_async/stream.py:645-652: TPX003 same explanation in 2 places: langgraph/libs/sdk-py/langgraph_sdk/_sync/stream.py:711-718 (weakest langgraph/libs/sdk-py/langgraph_sdk/_async/stream.py:645-652 ~ langgraph/libs/sdk-py/langgraph_sdk/_sync/stream.py:711-718, similarity 0.898)",
       "locations": [
         {
           "path": "langgraph/libs/sdk-py/langgraph_sdk/_async/stream.py",
@@ -9718,7 +9718,7 @@
           "end_line": 718,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8958333333333334
+        "similarity": 0.8979591836734694
       }
     },
     {

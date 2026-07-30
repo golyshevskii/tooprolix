@@ -731,3 +731,65 @@ exact draw when it stopped being exact, and a TP moved up to fill the slot. The 
 exists in the corpus, at 0.750, on the near path — it is simply no longer among the drawn 30. One
 sample slot changing hands is well inside the interval either way, and neither 0.500 nor 0.450 is
 distinguishable from the other at n = 20.
+
+---
+
+## 6. Review round 1 — the operator rule became contextual (2026-07-30)
+
+🔴 **Still calibration data, still a non-blind annotator.** §4's disclosures stand.
+
+### 6.1 The corpus was the wrong instrument, and it said so
+
+§5 chose the operator set `['<', '>', '=']` from a frequency count over the 138 exact clusters whose
+members' raw text differs. Review found the class still open. The reason is the warning task 13
+carried forward verbatim and which §5 quoted while not applying: **the corpus cannot see this class,
+so a count over it can never show a set is sufficient.** Two constructed pairs, both measured at
+**1.000** on the released binary:
+
+| pair | why it collided |
+|---|---|
+| `value != 0` ~ `value = 0` | `!` erased, so `!=` folded to `=` |
+| `limit > -1` ~ `limit > 1` | `-` erased, so the sign vanished |
+
+§5's stated reason for excluding `!` — *"`==` yields two tokens and `!=` yields one"* — was simply
+wrong, and is withdrawn rather than patched.
+
+The mirror defect was measured too: keeping `>` unconditionally made Markdown quoting rewrite
+prose. An identical paragraph, one copy prefixed `> ` per line, fell from **1.000 to 0.778** — 0.028
+above the threshold, one edit from silently losing a genuine finding.
+
+### 6.2 The rule
+
+`is_operator_here` decides **per occurrence**, not by membership:
+
+| character | kept when | erased when |
+|---|---|---|
+| `<`, `=` | always | — |
+| `>` | something alphanumeric precedes it on the line | at line start — Markdown quoting, `doctest` prompt |
+| `!` | immediately followed by `=` | everywhere else — sentence terminator |
+| `-` | followed by a digit **and** not preceded by an alphanumeric | `non-blocking`, `utf-8` — prose hyphen |
+
+Verified after the change: `!=`/`=` **1.000 → 0.773**, `> -1`/`> 1` **1.000 → 0.773**, and the
+quoted paragraph **0.778 → 1.000**, i.e. the dilution is gone entirely.
+
+### 6.3 The guard that can express an inequality
+
+`a_malformed_or_unrecognised_construct_leaves_the_narrative_unchanged` asserts
+`narrative(text) == normalize_comparable(text)`; both sides move together, so a constant-returning
+normaliser keeps every row green. **Proved by mutation, not argued.** An equality table cannot state
+"these two must stay different", so there are now two tables — `these_shapes_must_not_normalise_alike`
+and `these_shapes_must_normalise_alike` — and every clause above has a row in each. Both directions
+are needed: each clause can fail by keeping too much as easily as by keeping too little.
+
+### 6.4 Corpus delta
+
+| | §5 | §6 |
+|---|---|---|
+| near | 162 | **163** |
+| exact | 456 | **456** |
+| total | 618 | **619** |
+
+One row moves, `pydantic` 122 → 123. `TPX001`/`TPX002` byte-identical on all seven rows and
+`corpus/units.py --verify` still reproduces **173 volume findings exactly** — the counting/comparison
+split did not leak. The drawn sample of 30 is **unchanged**, so §5.4's rates stand: exact **0.450**
+(0.258 – 0.658), near **0.200** (0.057 – 0.510), combined **0.367** (0.219 – 0.545).
