@@ -127,13 +127,36 @@ done
 # TPX001 and TPX002 are unchanged in every row, which is the check that the change stayed inside
 # the duplicate rule: `narrative` is a second field beside `normalized`, and volume still counts the
 # whole block.
+#
+# ## 2026-07-30 — `close-anti-fp-gate-with-public-reference` made relational operators survive
+#
+# `extract::normalize_comparable` keeps `<`, `>` and `=` as words on the path `TPX003` compares,
+# because erasing them made `with size 0` and `with size > 0` the *same text* at similarity 1.000
+# (`corpus/annotations.md` §4.7, record 18). Two rows move, and only in `TPX003`:
+#
+#   repo                  TPX003 before -> after   near before -> after   exact before -> after
+#   crewAI-full                  127 -> 128               73 -> 74               54 -> 54
+#   pydantic                     121 -> 122               27 -> 28               94 -> 94
+#   requests                       6 -> 6                  2 -> 3                 4 -> 3
+#   (the other four rows are unchanged in every column)
+#
+# Totals over the six `corpus.lock` rows: near **160 -> 162**, exact **457 -> 456**,
+# total **617 -> 618**. One cluster appeared, none disappeared, 16 changed score and none changed
+# membership — 17 of 617 touched.
+#
+# 🔴 **`TPX001` and `TPX002` are byte-identical on all seven rows, and that is the load-bearing
+# check rather than a footnote.** The first version of this fix applied the operator rule inside
+# `normalize` itself, which is the unit `size_words` counts in — and `OpenHands` `TPX001` went
+# **3 -> 35** and `langgraph` `TPX002` **74 -> 79**, because an operator that survives is an operator
+# the 150/200 limits suddenly count. Splitting the counting form from the comparison form is what
+# holds those columns still, and this table is what would catch them moving again.
 readonly EXPECTED=(
 	"OpenHands|OpenHands|OpenHands|1|914|0|3|12|64"
-	"crewAI-full|crewAI|crewAI|1|1269|5|0|21|127"
+	"crewAI-full|crewAI|crewAI|1|1269|5|0|21|128"
 	"crewAI|crewAI/lib/crewai|crewAI|1|754|0|0|16|94"
 	"langgraph|langgraph|langgraph|1|445|0|2|74|260"
 	"openai-agents-python|openai-agents-python|openai-agents-python|1|834|0|2|14|72"
-	"pydantic|pydantic|pydantic|1|404|0|1|46|121"
+	"pydantic|pydantic|pydantic|1|404|0|1|46|122"
 	"requests|requests|requests|1|37|0|0|3|6"
 )
 

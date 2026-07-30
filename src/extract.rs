@@ -242,9 +242,16 @@ pub struct ProseBlock {
     /// and the string `TPX003` compares.
     ///
     /// Equal to [`Self::normalized`] for every block that carries no `Args:`, `:param:`, fenced
-    /// example or doctest — which is every comment run, and most docstrings. Where the two differ,
-    /// the difference is exactly the text a duplicate finding could not have asked anyone to
-    /// delete.
+    /// example or doctest **and no relational operator** — which is most comment runs and most
+    /// docstrings. Where scaffolding is what differs, the difference is exactly the text a duplicate
+    /// finding could not have asked anyone to delete.
+    ///
+    /// ⚠️ **The operator clause is the second reason the two can differ, and it is newer.** The two
+    /// fields are produced by two normalisers: this one keeps `<`, `>` and `=` as words because
+    /// erasing them made opposite statements compare identical, while [`Self::normalized`] erases
+    /// them because it is the unit the 150 / 200 volume limits were calibrated in. So
+    /// `# reject when size > 0` yields a `narrative` of `reject when size > 0` and a `normalized` of
+    /// `reject when size 0`, with no scaffolding involved at all.
     ///
     /// **Empty is a meaningful value**: a docstring that is nothing but a parameter table has no
     /// explanation left to have been said twice, and [`crate::detect::duplicate::duplicates`] leaves
@@ -306,18 +313,102 @@ impl ProseBlock {
 /// re-spell the tuple without noticing it already exists.
 pub(crate) type Coordinates<'a> = (&'a Path, usize, usize, ProseKind);
 
-/// Collapses `text` to the form the detectors compare: lower-case alphanumeric words, single
-/// spaces, no line breaks.
+/// Relational operators, which survive normalisation as words of their own.
+///
+/// 🔴 **The exception to "every non-alphanumeric character becomes a space", and it exists because
+/// that rule erased meaning.** Measured on the pinned corpus by
+/// `close-anti-fp-gate-with-public-reference` (`corpus/annotations.md` §4.7, record 18):
+/// `requests`' `test_requests.py:2252` and `:2264` assert **opposite** things about a byte stream —
+/// `with size 0` against `with size > 0` — and were reported as one `TPX003` finding at similarity
+/// **1.000**, because the `>` became a space. That is not the detector declining to call a
+/// duplication actionable; it is the detector asserting an identity that does not exist in the
+/// source.
+///
+/// **The set is this small because it was chosen by measurement, not by taxonomy.** Over the 457
+/// exact clusters of the pinned corpus, 138 have members whose raw text differs, and the character
+/// that distinguishes them was counted for each. `>` is the sole distinguishing character in
+/// **exactly one** cluster — record 18 itself. The characters that fuse the most clusters are `_`
+/// (11), `.` (7) and `` ` `` (4), and every one of those is an erasure the tool *wants*: they are
+/// what makes `snake_case` match `snake case`, and a `# comment` match a `"""docstring"""`.
+/// Preserving punctuation in general would not fix a defect, it would remove the feature.
+///
+/// `<` is here for symmetry even though no corpus cluster is distinguished by it: it is `>`'s
+/// mirror, and a rule that separated `a > b` from `a b` while still fusing `a > b` with `a < b`
+/// would close the instance and leave the class open. `=` is here because without it `>=` and `>`
+/// normalise alike, which is the same defect one character over; it also separates `a == b` from
+/// `a != b`, since `==` yields two tokens and `!=` yields one.
+///
+/// Deliberately **not** here, and each for a measured reason: `.`, `_`, `` ` ``, `,`, `(`, `)` —
+/// the erasures above, which the comparison depends on; `-`, which is a hyphen in prose far more
+/// often than a minus (`non-blocking`) and distinguishes 4 corpus clusters; `!`, which is a
+/// sentence terminator in prose and is not needed for `!=` vs `==` (see above).
+const OPERATOR_TOKENS: [char; 3] = ['<', '>', '='];
+
+/// Collapses `text` to the **counting** form: lower-case alphanumeric words, single spaces, no
+/// line breaks.
 ///
 /// Every non-alphanumeric character becomes a space, which is what removes `#` prefixes, docstring
 /// quotes and all punctuation without a rule per marker. Unicode letters survive, so Russian prose
 /// normalises too.
+///
+/// 🔴 **This is the unit [`MIN_BLOCK_WORDS`] and the 150 / 200 volume limits were measured in, and
+/// that is why the relational operators `<`, `>` and `=` are *not* kept here.**
+/// `close-anti-fp-gate-with-public-reference` first applied the operator rule in this function and
+/// measured the result on the pinned corpus: `TPX001` on `OpenHands` went **3 → 35** and `TPX002` on
+/// `langgraph` **74 → 79**, because an operator that survives is an operator that `size_words`
+/// counts, and blocks thick with `=` and `>` crossed a threshold calibrated without them. Changing
+/// what a "word" is silently recalibrates every volume limit, which that task is explicitly
+/// forbidden from doing.
+///
+/// The crate-internal `normalize_comparable` is the form that does keep them — it is what `TPX003`
+/// compares — and the `OPERATOR_TOKENS` constant next to it records the measurement that chose the
+/// set. Both are deliberately private: the split is an internal contract between two detectors, not
+/// something a consumer of this crate should depend on. Linked in prose rather than with intra-doc
+/// links because `rust.doc` rejects a public item linking to a private one, and widening their
+/// visibility to satisfy rustdoc would be the documentation dictating the API.
 #[must_use]
 pub fn normalize(text: &str) -> String {
+    fold(text, false)
+}
+
+/// Collapses `text` to the **comparison** form: [`normalize`], plus [`OPERATOR_TOKENS`] as words.
+///
+/// This is what `TPX003` compares, via [`narrative`]. The two forms exist because [`normalize`] was
+/// serving two contracts that want different things, and the defect measured in
+/// `corpus/annotations.md` §4.7 is what made the difference observable:
+///
+/// * **counting** ([`normalize`]) wants a stable unit, because 8 / 150 / 200 were measured in it;
+/// * **comparison** (this one) wants meaning preserved, because erasing `>` makes
+///   `with size 0` and `with size > 0` the *same text* at similarity 1.000.
+///
+/// Splitting them is the root-cause fix and not a patch on the detector: `TPX003` reads
+/// [`ProseBlock::narrative`] and never [`ProseBlock::normalized`], and the volume rules read
+/// [`ProseBlock::size_words`] and never the narrative, so the two contracts were already separated
+/// by field — only the normaliser was shared. Measured: with the split, `TPX001` and `TPX002` are
+/// byte-identical to their pre-change counts on all six checkouts.
+///
+/// An operator is emitted **surrounded by spaces**, never glued to its neighbour, so that `size>0`
+/// and `size > 0` still compare alike — the same whitespace-insensitivity
+/// `line_breaks_and_indentation_do_not_change_the_normalised_text` pins for the counting form.
+#[must_use]
+pub(crate) fn normalize_comparable(text: &str) -> String {
+    fold(text, true)
+}
+
+/// The shared body of [`normalize`] and [`normalize_comparable`].
+///
+/// One implementation with one flag rather than two loops: the folding rule is a single decision
+/// about a single character class, and two copies of it would be two places for the next change to
+/// miss. The flag is never passed at a call site — both callers are the named wrappers above.
+fn fold(text: &str, keep_operators: bool) -> String {
     let mut folded = String::with_capacity(text.len());
     for character in text.chars() {
         if character.is_alphanumeric() {
             folded.extend(character.to_lowercase());
+        } else if keep_operators && OPERATOR_TOKENS.contains(&character) {
+            folded.push(' ');
+            folded.push(character);
+            folded.push(' ');
         } else {
             folded.push(' ');
         }
@@ -501,7 +592,9 @@ pub fn narrative(text: &str) -> String {
         kept.push('\n');
         position += 1;
     }
-    normalize(&kept)
+    // `normalize_comparable`, not `normalize`: this string is what `TPX003` compares, and comparison
+    // is the contract that needs operators to survive. The volume rules never read it.
+    normalize_comparable(&kept)
 }
 
 /// The doctest starting at `start`, as `(end of the input run, end of its output)`.
@@ -1019,6 +1112,7 @@ mod tests {
 
     use super::{
         MIN_BLOCK_LINES, MIN_BLOCK_WORDS, ProseBlock, ProseKind, extract, narrative, normalize,
+        normalize_comparable,
     };
 
     const SAMPLE_PY: &str = include_str!("../tests/fixtures/extract/sample.py");
@@ -1073,6 +1167,78 @@ mod tests {
         );
         // ... and the raw text really does differ, so the equality above is not trivial.
         assert_ne!(from_flat[0].raw, from_wrapped[0].raw);
+    }
+
+    /// 🔴 **The counterweight to the test above, and the defect it was missing.**
+    ///
+    /// Collapsing every non-alphanumeric character to a space is what lets a comment be compared
+    /// with a docstring — and it also erased the operators that carry the *meaning* of a sentence
+    /// about a bound. Measured on the pinned corpus by `close-anti-fp-gate-with-public-reference`
+    /// (`corpus/annotations.md` §4.7, record 18): `requests`' two tests
+    /// `…with size 0…` and `…with size > 0…` normalise to the same string and are reported as one
+    /// `TPX003` finding at similarity **1.000**.
+    ///
+    /// The pair below is the sharper form of the same defect and the reason it is not arguable:
+    /// `> 0` and `< 0` are **logically opposite**, not near-synonyms, and no reading of "the same
+    /// explanation" covers them. Anything that keeps them apart also keeps `0` and `> 0` apart.
+    #[test]
+    fn statements_differing_only_by_a_comparison_operator_do_not_normalise_alike() {
+        // Arrange — identical but for the operator, which is the whole assertion each one makes.
+        let greater = "the request is rejected when the declared size > 0 and no body follows";
+        let less = "the request is rejected when the declared size < 0 and no body follows";
+        let absent = "the request is rejected when the declared size 0 and no body follows";
+
+        // Act & Assert
+        assert_ne!(
+            normalize_comparable(greater),
+            normalize_comparable(less),
+            "`>` and `<` state opposite bounds and must not collapse to one explanation"
+        );
+        assert_ne!(
+            normalize_comparable(greater),
+            normalize_comparable(absent),
+            "an operator that vanishes takes the bound it expressed with it"
+        );
+
+        // ⚠️ Each member of `OPERATOR_TOKENS` is asserted against the *operator-free* sentence, one
+        // by one, and not merely against each other. Proved necessary by mutation: with only the
+        // `greater`/`less` comparison above, deleting `<` from the set left all 137 tests passing —
+        // the two sentences still differed, because `>` survived and carried the difference alone.
+        // A guard whose removal nothing notices is this epic's defect #4, and this is what closes it.
+        assert_ne!(
+            normalize_comparable(less),
+            normalize_comparable(absent),
+            "`<` must survive on its own"
+        );
+        assert_ne!(
+            normalize_comparable("the retry budget is >= 4 attempts before the call is abandoned"),
+            normalize_comparable("the retry budget is > 4 attempts before the call is abandoned"),
+            "`=` must survive on its own, or `>=` and `>` state the same bound"
+        );
+    }
+
+    /// An operator is its own word, so the spacing around it in the source cannot change the result.
+    ///
+    /// The other half of [`OPERATOR_TOKENS`], and the half that is easy to get wrong: keeping the
+    /// character *in place* rather than spacing it out would make `size>0` and `size > 0` normalise
+    /// differently, and two spellings of one statement would stop matching. That is the same
+    /// property [`Self::line_breaks_and_indentation_do_not_change_the_normalised_text`] pins for
+    /// whitespace, which no operator reaches — so without this row the rustdoc's claim is asserted
+    /// by nothing and a glued implementation passes every test.
+    #[test]
+    fn the_spacing_around_an_operator_does_not_change_the_normalised_text() {
+        // Arrange — one statement, three spellings that differ only in whitespace.
+        let tight = "reject the payload when size>0 and no body follows the header";
+        let spaced = "reject the payload when size > 0 and no body follows the header";
+        let wide = "reject the payload when size   >   0 and no body follows the header";
+
+        // Act & Assert
+        assert_eq!(normalize_comparable(tight), normalize_comparable(spaced));
+        assert_eq!(normalize_comparable(spaced), normalize_comparable(wide));
+        assert_eq!(
+            normalize_comparable(spaced),
+            "reject the payload when size > 0 and no body follows the header"
+        );
     }
 
     /// AC3(a) — `"""Init."""` fails both halves. The single most common docstring in the corpus.
@@ -1548,7 +1714,7 @@ mod tests {
 
         // Act & Assert
         assert_eq!(narrative(docstring), "r sends a post request");
-        assert_eq!(narrative(role_only), normalize(role_only));
+        assert_eq!(narrative(role_only), normalize_comparable(role_only));
     }
 
     /// AC1, `NumPy` — a section is recognised by its row of dashes, and by nothing else.
@@ -1579,7 +1745,7 @@ mod tests {
             narrative(underlined),
             "summarise the run notes the summary is advisory only"
         );
-        assert_eq!(narrative(unmarked), normalize(unmarked));
+        assert_eq!(narrative(unmarked), normalize_comparable(unmarked));
     }
 
     /// AC1, examples — a fenced block and a doctest run are scaffolding; a doctest's output is not.
@@ -1713,13 +1879,24 @@ mod tests {
                  :return policy: the caller keeps ownership of the buffer, the whole contract here.\n\
                  \"\"\"",
             ),
+            // Row 10 comes from `close-anti-fp-gate-with-public-reference`, which made `>` survive
+            // normalisation (see `OPERATOR_TOKENS`). `>` is also `doctest`'s prompt character, so a
+            // line opening with one is the shape where that change and this grammar could meet.
+            // They do not meet today — [`is_prompt`] requires `>>>` followed by whitespace, which a
+            // blockquote never satisfies — and this row is what keeps that true.
+            (
+                "a Markdown blockquote, whose `>` is prose and not a `doctest` prompt",
+                "\"\"\"Do the thing.\n\n\
+                 > The caller keeps ownership of the buffer, which is the whole contract here.\n\
+                 \"\"\"",
+            ),
         ];
 
         // Act — every row, not the first failing one. A table that stops at row four hides rows
         // five to seven, and this class was found three instances at a time.
         let swallowed: Vec<&str> = cases
             .into_iter()
-            .filter(|(_, text)| narrative(text) != normalize(text))
+            .filter(|(_, text)| narrative(text) != normalize_comparable(text))
             .map(|(what, _)| what)
             .collect();
 
@@ -1816,6 +1993,6 @@ mod tests {
                    # >>> service rate limits us on every fourth call\n";
 
         // Act & Assert
-        assert_eq!(narrative(run), normalize(run));
+        assert_eq!(narrative(run), normalize_comparable(run));
     }
 }

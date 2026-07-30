@@ -1362,7 +1362,7 @@
       "line": 258,
       "end_line": 261,
       "prose_kind": "docstring",
-      "message": "crewAI/lib/crewai/src/crewai/llms/providers/anthropic/completion.py:258-261: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/llms/providers/openai/completion.py:275-278 (weakest crewAI/lib/crewai/src/crewai/llms/providers/anthropic/completion.py:258-261 ~ crewAI/lib/crewai/src/crewai/llms/providers/openai/completion.py:275-278, similarity 0.800)",
+      "message": "crewAI/lib/crewai/src/crewai/llms/providers/anthropic/completion.py:258-261: TPX003 same explanation in 2 places: crewAI/lib/crewai/src/crewai/llms/providers/openai/completion.py:275-278 (weakest crewAI/lib/crewai/src/crewai/llms/providers/anthropic/completion.py:258-261 ~ crewAI/lib/crewai/src/crewai/llms/providers/openai/completion.py:275-278, similarity 0.806)",
       "locations": [
         {
           "path": "crewAI/lib/crewai/src/crewai/llms/providers/anthropic/completion.py",
@@ -1390,7 +1390,7 @@
           "end_line": 278,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8
+        "similarity": 0.8064516129032258
       }
     },
     {

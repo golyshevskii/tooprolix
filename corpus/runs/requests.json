@@ -157,7 +157,7 @@
       "line": 2252,
       "end_line": 2254,
       "prose_kind": "docstring",
-      "message": "requests/tests/test_requests.py:2252-2254: TPX003 same explanation in 2 places: requests/tests/test_requests.py:2264-2266 (weakest requests/tests/test_requests.py:2252-2254 ~ requests/tests/test_requests.py:2264-2266, similarity 1.000)",
+      "message": "requests/tests/test_requests.py:2252-2254: TPX003 same explanation in 2 places: requests/tests/test_requests.py:2264-2266 (weakest requests/tests/test_requests.py:2252-2254 ~ requests/tests/test_requests.py:2264-2266, similarity 0.750)",
       "locations": [
         {
           "path": "requests/tests/test_requests.py",
@@ -185,7 +185,7 @@
           "end_line": 2266,
           "prose_kind": "docstring"
         },
-        "similarity": 1.0
+        "similarity": 0.75
       }
     },
     {

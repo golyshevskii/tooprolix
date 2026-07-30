@@ -590,7 +590,7 @@
       "line": 1681,
       "end_line": 1683,
       "prose_kind": "comment",
-      "message": "pydantic/pydantic-core/tests/validators/test_model_fields.py:1681-1683: TPX003 same explanation in 2 places: pydantic/pydantic-core/tests/validators/test_typed_dict.py:1106-1108 (weakest pydantic/pydantic-core/tests/validators/test_model_fields.py:1681-1683 ~ pydantic/pydantic-core/tests/validators/test_typed_dict.py:1106-1108, similarity 0.914)",
+      "message": "pydantic/pydantic-core/tests/validators/test_model_fields.py:1681-1683: TPX003 same explanation in 2 places: pydantic/pydantic-core/tests/validators/test_typed_dict.py:1106-1108 (weakest pydantic/pydantic-core/tests/validators/test_model_fields.py:1681-1683 ~ pydantic/pydantic-core/tests/validators/test_typed_dict.py:1106-1108, similarity 0.917)",
       "locations": [
         {
           "path": "pydantic/pydantic-core/tests/validators/test_model_fields.py",
@@ -618,7 +618,7 @@
           "end_line": 1108,
           "prose_kind": "comment"
         },
-        "similarity": 0.9142857142857143
+        "similarity": 0.9166666666666666
       }
     },
     {
@@ -807,7 +807,7 @@
       "line": 261,
       "end_line": 263,
       "prose_kind": "comment",
-      "message": "pydantic/pydantic/_internal/_generate_schema.py:261-263: TPX003 same explanation in 2 places: pydantic/pydantic/_internal/_generate_schema.py:1286-1289 (weakest pydantic/pydantic/_internal/_generate_schema.py:261-263 ~ pydantic/pydantic/_internal/_generate_schema.py:1286-1289, similarity 0.805)",
+      "message": "pydantic/pydantic/_internal/_generate_schema.py:261-263: TPX003 same explanation in 2 places: pydantic/pydantic/_internal/_generate_schema.py:1286-1289 (weakest pydantic/pydantic/_internal/_generate_schema.py:261-263 ~ pydantic/pydantic/_internal/_generate_schema.py:1286-1289, similarity 0.810)",
       "locations": [
         {
           "path": "pydantic/pydantic/_internal/_generate_schema.py",
@@ -835,7 +835,7 @@
           "end_line": 1289,
           "prose_kind": "comment"
         },
-        "similarity": 0.8048780487804879
+        "similarity": 0.8095238095238095
       }
     },
     {
@@ -3061,7 +3061,7 @@
       "line": 519,
       "end_line": 527,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/mypy.py:519-527: TPX003 same explanation in 2 places: pydantic/pydantic/v1/mypy.py:302-310 (weakest pydantic/pydantic/mypy.py:519-527 ~ pydantic/pydantic/v1/mypy.py:302-310, similarity 0.857)",
+      "message": "pydantic/pydantic/mypy.py:519-527: TPX003 same explanation in 2 places: pydantic/pydantic/v1/mypy.py:302-310 (weakest pydantic/pydantic/mypy.py:519-527 ~ pydantic/pydantic/v1/mypy.py:302-310, similarity 0.845)",
       "locations": [
         {
           "path": "pydantic/pydantic/mypy.py",
@@ -3089,7 +3089,7 @@
           "end_line": 310,
           "prose_kind": "docstring"
         },
-        "similarity": 0.8571428571428571
+        "similarity": 0.8448275862068966
       }
     },
     {
@@ -3659,6 +3659,43 @@
     },
     {
       "code": "TPX003",
+      "path": "pydantic/pydantic/networks.py",
+      "line": 1315,
+      "end_line": 1330,
+      "prose_kind": "docstring",
+      "message": "pydantic/pydantic/networks.py:1315-1330: TPX003 same explanation in 2 places: pydantic/pydantic/v1/networks.py:712-718 (weakest pydantic/pydantic/networks.py:1315-1330 ~ pydantic/pydantic/v1/networks.py:712-718, similarity 0.750)",
+      "locations": [
+        {
+          "path": "pydantic/pydantic/networks.py",
+          "line": 1315,
+          "end_line": 1330,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "pydantic/pydantic/v1/networks.py",
+          "line": 712,
+          "end_line": 718,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "pydantic/pydantic/networks.py",
+          "line": 1315,
+          "end_line": 1330,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "pydantic/pydantic/v1/networks.py",
+          "line": 712,
+          "end_line": 718,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.75
+      }
+    },
+    {
+      "code": "TPX003",
       "path": "pydantic/pydantic/plugin/__init__.py",
       "line": 126,
       "end_line": 138,
@@ -3756,7 +3793,7 @@
       "line": 164,
       "end_line": 233,
       "prose_kind": "docstring",
-      "message": "pydantic/pydantic/types.py:164-233: TPX003 same explanation in 3 places: pydantic/pydantic/types.py:425-494, pydantic/pydantic/types.py:1063-1134 (weakest pydantic/pydantic/types.py:164-233 ~ pydantic/pydantic/types.py:1063-1134, similarity 0.792)",
+      "message": "pydantic/pydantic/types.py:164-233: TPX003 same explanation in 3 places: pydantic/pydantic/types.py:425-494, pydantic/pydantic/types.py:1063-1134 (weakest pydantic/pydantic/types.py:164-233 ~ pydantic/pydantic/types.py:1063-1134, similarity 0.805)",
       "locations": [
         {
           "path": "pydantic/pydantic/types.py",
@@ -3790,7 +3827,7 @@
           "end_line": 1134,
           "prose_kind": "docstring"
         },
-        "similarity": 0.7922077922077922
+        "similarity": 0.8048780487804879
       }
     },
     {
