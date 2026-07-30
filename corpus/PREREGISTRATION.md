@@ -393,17 +393,21 @@ the calibration corpus all along at `complete: false` with 5 unparseable files, 
 never treated as a broken run. Requiring `skipped: 0` of the holdout would have failed the gate for a
 reason with nothing whatever to do with false positives.
 
-**Replaced by two checks that catch what the original was actually for:**
+**Replaced by per-run pins, which is what the calibration corpus already does.** The blanket
+requirement is dropped and each of the ten runs pins its **observed** `sha256`, `schema_version`,
+`complete`, `skipped`, `excluded` and `files_walked`. This adds no freedom — the content hash already
+fixes the run byte for byte — and it does the two jobs the requirement was reaching for:
 
-* **`max_skipped_fraction: 0.01`** — a run in which more than one file in a hundred fails to parse is
-  not a measurement. The three known cases sit far inside it: `crewAI-full` 5/1269 = 0.0039,
-  `06` 1/184 = 0.0054, `09` 5/4255 = 0.0012.
-* **Per-run pins rather than a predicted tolerance.** §7 step 1 promised the walk would be "within a
-  stated tolerance" of §3.0.1's file count and **no tolerance was ever stated**, so nothing compared
-  them and a 63% shortfall would have passed unnoticed. The ten runs of record now exist and are
-  hashed, so the holdout pins each run's **observed** walked-file count exactly as the corpus does.
-  This adds no freedom — the content hash already fixes the run — and it does the job the tolerance
-  was meant to do: catch a *later* re-run that measures less.
+* §7 step 1 promised the walk would land "within a **stated tolerance**" of §3.0.1's file count and
+  **no tolerance was ever stated**, so nothing compared them and a 63% shortfall would have passed
+  unnoticed. An exact pin needs no tolerance.
+* A *later* re-run that measures less — the parent-`.gitignore` trap, a truncated tree — still fails
+  loudly, on the count as well as the hash.
+
+**The sanity check applied before accepting a nonzero `skipped`**, recorded so the acceptance is not
+merely "the number that happened": a run in which more than one file in a hundred fails to parse is
+not a measurement. All three known cases sit far inside that: `crewAI-full` 5/1269 = 0.0039,
+`06` 1/184 = 0.0054, `09` 5/4255 = 0.0012.
 
 ### 5.0.3 Disclosed, not amended — the walker does not enter hidden directories
 

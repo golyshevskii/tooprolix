@@ -35,6 +35,7 @@ from typing import Any
 
 import classification
 import pytest
+import sample_clusters
 
 #: The dry-run artifact this repository ships, and the runs it describes.
 CORPUS = Path(__file__).resolve().parents[2] / "corpus"
@@ -427,3 +428,86 @@ class TestTheGateCanActuallyFail:
 
         assert not passed
         assert "not a pass" in explanation
+
+
+class TestHoldoutAndCalibrationRunsMayNotShareADirectory:
+    """
+    Amendment 2 made the directory separation load-bearing, so it is checked rather than remembered.
+
+    Measured during phase 3: the holdout's first run was written into `corpus/runs/`, and because
+    `sample_clusters.load_runs` **globs** the directory, five `Raven` clusters silently joined the
+    *dry-run* population. The only symptom was a coverage error naming a Raven path — nothing said
+    "two populations just merged". A convention that depends on everyone remembering it is not a
+    guard, and this is the guard.
+    """
+
+    def test_an_extra_run_in_the_directory_is_fatal(self, tmp_path: Path) -> None:
+        runs = tmp_path / "runs"
+        runs.mkdir()
+        for source in RUNS.iterdir():
+            (runs / source.name).write_bytes(source.read_bytes())
+        (runs / "Raven.json").write_text(
+            json.dumps({"schema_version": "2", "complete": True, "skipped": [], "excluded": [], "findings": []}),
+            encoding="utf-8",
+        )
+
+        with pytest.raises(classification.ClassificationError, match="never share a directory"):
+            classification.verify(classification.load(ARTIFACT), runs, profile())
+
+    def test_a_run_the_sampler_excludes_is_not_counted_as_an_intruder(self) -> None:
+        """
+        The other direction, and it is why the guard reuses `EXCLUDED_RUNS` instead of a second list.
+
+        `crewAI-full` sits in `corpus/runs/` and is in no population at all — the same checkout at a
+        root that cannot be measured. A guard that simply compared directory contents to the
+        artifact would call it contamination and redden the shipped dry run.
+        """
+        assert "crewAI-full" in sample_clusters.EXCLUDED_RUNS
+        assert (RUNS / "crewAI-full.json").exists()
+
+        classification.verify(classification.load(ARTIFACT), RUNS, profile())
+
+
+class TestARunWithNothingPinnedIsAHoleAndNotADefault:
+    """
+    Found by mutation: removing the "pins neither expectations nor requirements" guard left every
+    test green, so the branch that makes an unchecked run fatal was asserted by nothing.
+
+    A profile may pin per-run numbers (the corpus, already measured) or state requirements (a
+    holdout, not yet run). Neither means every run passes its health check by default, which is the
+    fail-open shape this epic keeps finding.
+    """
+
+    def test_a_profile_pinning_neither_is_fatal(self, tmp_path: Path) -> None:
+        payload = json.loads(PREREGISTRATION.read_text(encoding="utf-8"))
+        probe = json.loads(json.dumps(payload["profiles"]["dry_run"]))
+        probe["runs"] = {}
+        probe.pop("run_requirements", None)
+        payload["profiles"]["probe"] = probe
+        path = tmp_path / "preregistration.json"
+        path.write_text(json.dumps(payload), encoding="utf-8")
+
+        with pytest.raises(classification.ClassificationError, match="neither per-run expectations"):
+            classification.verify(
+                classification.load(ARTIFACT), RUNS, classification.load_preregistration(path).profile("probe")
+            )
+
+
+class TestTheScanSizeIsFixedBeforeTheData:
+    """
+    Amendment 2's core property. A short **stratum** is a reportable result; a short **scan** is not,
+    because the number of repositories was decided before any count was seen.
+    """
+
+    def test_covering_fewer_repositories_than_pre_registered_is_fatal(self, tmp_path: Path) -> None:
+        payload = json.loads(PREREGISTRATION.read_text(encoding="utf-8"))
+        probe = json.loads(json.dumps(payload["profiles"]["dry_run"]))
+        probe["repositories"] = 10  # the artifact covers six
+        payload["profiles"]["probe"] = probe
+        path = tmp_path / "preregistration.json"
+        path.write_text(json.dumps(payload), encoding="utf-8")
+
+        with pytest.raises(classification.ClassificationError, match="fixes 10 repositories"):
+            classification.verify(
+                classification.load(ARTIFACT), RUNS, classification.load_preregistration(path).profile("probe")
+            )
