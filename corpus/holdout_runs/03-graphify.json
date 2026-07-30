@@ -1,0 +1,1263 @@
+{
+  "schema_version": "2",
+  "complete": true,
+  "skipped": [],
+  "excluded": [],
+  "findings": [
+    {
+      "code": "TPX003",
+      "path": "03-graphify/graphify/analyze.py",
+      "line": 64,
+      "end_line": 70,
+      "prose_kind": "docstring",
+      "message": "03-graphify/graphify/analyze.py:64-70: TPX003 same explanation in 2 places: 03-graphify/worked/mixed-corpus/raw/analyze.py:12-18 (weakest 03-graphify/graphify/analyze.py:64-70 ~ 03-graphify/worked/mixed-corpus/raw/analyze.py:12-18, similarity 1.000)",
+      "locations": [
+        {
+          "path": "03-graphify/graphify/analyze.py",
+          "line": 64,
+          "end_line": 70,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "03-graphify/worked/mixed-corpus/raw/analyze.py",
+          "line": 12,
+          "end_line": 18,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "03-graphify/graphify/analyze.py",
+          "line": 64,
+          "end_line": 70,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "03-graphify/worked/mixed-corpus/raw/analyze.py",
+          "line": 12,
+          "end_line": 18,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "03-graphify/graphify/analyze.py",
+      "line": 85,
+      "end_line": 86,
+      "prose_kind": "comment",
+      "message": "03-graphify/graphify/analyze.py:85-86: TPX003 same explanation in 2 places: 03-graphify/worked/mixed-corpus/raw/analyze.py:28-29 (weakest 03-graphify/graphify/analyze.py:85-86 ~ 03-graphify/worked/mixed-corpus/raw/analyze.py:28-29, similarity 1.000)",
+      "locations": [
+        {
+          "path": "03-graphify/graphify/analyze.py",
+          "line": 85,
+          "end_line": 86,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "03-graphify/worked/mixed-corpus/raw/analyze.py",
+          "line": 28,
+          "end_line": 29,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "03-graphify/graphify/analyze.py",
+          "line": 85,
+          "end_line": 86,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "03-graphify/worked/mixed-corpus/raw/analyze.py",
+          "line": 28,
+          "end_line": 29,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "03-graphify/graphify/analyze.py",
+      "line": 110,
+      "end_line": 114,
+      "prose_kind": "docstring",
+      "message": "03-graphify/graphify/analyze.py:110-114: TPX003 same explanation in 2 places: 03-graphify/worked/mixed-corpus/raw/analyze.py:36-40 (weakest 03-graphify/graphify/analyze.py:110-114 ~ 03-graphify/worked/mixed-corpus/raw/analyze.py:36-40, similarity 1.000)",
+      "locations": [
+        {
+          "path": "03-graphify/graphify/analyze.py",
+          "line": 110,
+          "end_line": 114,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "03-graphify/worked/mixed-corpus/raw/analyze.py",
+          "line": 36,
+          "end_line": 40,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "03-graphify/graphify/analyze.py",
+          "line": 110,
+          "end_line": 114,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "03-graphify/worked/mixed-corpus/raw/analyze.py",
+          "line": 36,
+          "end_line": 40,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "03-graphify/graphify/analyze.py",
+      "line": 138,
+      "end_line": 150,
+      "prose_kind": "docstring",
+      "message": "03-graphify/graphify/analyze.py:138-150: TPX003 same explanation in 2 places: 03-graphify/worked/mixed-corpus/raw/analyze.py:62-74 (weakest 03-graphify/graphify/analyze.py:138-150 ~ 03-graphify/worked/mixed-corpus/raw/analyze.py:62-74, similarity 1.000)",
+      "locations": [
+        {
+          "path": "03-graphify/graphify/analyze.py",
+          "line": 138,
+          "end_line": 150,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "03-graphify/worked/mixed-corpus/raw/analyze.py",
+          "line": 62,
+          "end_line": 74,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "03-graphify/graphify/analyze.py",
+          "line": 138,
+          "end_line": 150,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "03-graphify/worked/mixed-corpus/raw/analyze.py",
+          "line": 62,
+          "end_line": 74,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "03-graphify/graphify/analyze.py",
+      "line": 166,
+      "end_line": 173,
+      "prose_kind": "docstring",
+      "message": "03-graphify/graphify/analyze.py:166-173: TPX003 same explanation in 2 places: 03-graphify/worked/mixed-corpus/raw/analyze.py:90-97 (weakest 03-graphify/graphify/analyze.py:166-173 ~ 03-graphify/worked/mixed-corpus/raw/analyze.py:90-97, similarity 1.000)",
+      "locations": [
+        {
+          "path": "03-graphify/graphify/analyze.py",
+          "line": 166,
+          "end_line": 173,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "03-graphify/worked/mixed-corpus/raw/analyze.py",
+          "line": 90,
+          "end_line": 97,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "03-graphify/graphify/analyze.py",
+          "line": 166,
+          "end_line": 173,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "03-graphify/worked/mixed-corpus/raw/analyze.py",
+          "line": 90,
+          "end_line": 97,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "03-graphify/graphify/analyze.py",
+      "line": 278,
+      "end_line": 290,
+      "prose_kind": "docstring",
+      "message": "03-graphify/graphify/analyze.py:278-290: TPX003 same explanation in 2 places: 03-graphify/worked/mixed-corpus/raw/analyze.py:182-194 (weakest 03-graphify/graphify/analyze.py:278-290 ~ 03-graphify/worked/mixed-corpus/raw/analyze.py:182-194, similarity 1.000)",
+      "locations": [
+        {
+          "path": "03-graphify/graphify/analyze.py",
+          "line": 278,
+          "end_line": 290,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "03-graphify/worked/mixed-corpus/raw/analyze.py",
+          "line": 182,
+          "end_line": 194,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "03-graphify/graphify/analyze.py",
+          "line": 278,
+          "end_line": 290,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "03-graphify/worked/mixed-corpus/raw/analyze.py",
+          "line": 182,
+          "end_line": 194,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "03-graphify/graphify/analyze.py",
+      "line": 345,
+      "end_line": 351,
+      "prose_kind": "docstring",
+      "message": "03-graphify/graphify/analyze.py:345-351: TPX003 same explanation in 2 places: 03-graphify/worked/mixed-corpus/raw/analyze.py:244-250 (weakest 03-graphify/graphify/analyze.py:345-351 ~ 03-graphify/worked/mixed-corpus/raw/analyze.py:244-250, similarity 1.000)",
+      "locations": [
+        {
+          "path": "03-graphify/graphify/analyze.py",
+          "line": 345,
+          "end_line": 351,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "03-graphify/worked/mixed-corpus/raw/analyze.py",
+          "line": 244,
+          "end_line": 250,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "03-graphify/graphify/analyze.py",
+          "line": 345,
+          "end_line": 351,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "03-graphify/worked/mixed-corpus/raw/analyze.py",
+          "line": 244,
+          "end_line": 250,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "03-graphify/graphify/analyze.py",
+      "line": 416,
+      "end_line": 417,
+      "prose_kind": "comment",
+      "message": "03-graphify/graphify/analyze.py:416-417: TPX003 same explanation in 2 places: 03-graphify/worked/mixed-corpus/raw/analyze.py:309-310 (weakest 03-graphify/graphify/analyze.py:416-417 ~ 03-graphify/worked/mixed-corpus/raw/analyze.py:309-310, similarity 1.000)",
+      "locations": [
+        {
+          "path": "03-graphify/graphify/analyze.py",
+          "line": 416,
+          "end_line": 417,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "03-graphify/worked/mixed-corpus/raw/analyze.py",
+          "line": 309,
+          "end_line": 310,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "03-graphify/graphify/analyze.py",
+          "line": 416,
+          "end_line": 417,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "03-graphify/worked/mixed-corpus/raw/analyze.py",
+          "line": 309,
+          "end_line": 310,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "03-graphify/graphify/analyze.py",
+      "line": 434,
+      "end_line": 438,
+      "prose_kind": "docstring",
+      "message": "03-graphify/graphify/analyze.py:434-438: TPX003 same explanation in 2 places: 03-graphify/worked/mixed-corpus/raw/analyze.py:327-331 (weakest 03-graphify/graphify/analyze.py:434-438 ~ 03-graphify/worked/mixed-corpus/raw/analyze.py:327-331, similarity 1.000)",
+      "locations": [
+        {
+          "path": "03-graphify/graphify/analyze.py",
+          "line": 434,
+          "end_line": 438,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "03-graphify/worked/mixed-corpus/raw/analyze.py",
+          "line": 327,
+          "end_line": 331,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "03-graphify/graphify/analyze.py",
+          "line": 434,
+          "end_line": 438,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "03-graphify/worked/mixed-corpus/raw/analyze.py",
+          "line": 327,
+          "end_line": 331,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "03-graphify/graphify/analyze.py",
+      "line": 557,
+      "end_line": 567,
+      "prose_kind": "docstring",
+      "message": "03-graphify/graphify/analyze.py:557-567: TPX003 same explanation in 2 places: 03-graphify/worked/mixed-corpus/raw/analyze.py:439-449 (weakest 03-graphify/graphify/analyze.py:557-567 ~ 03-graphify/worked/mixed-corpus/raw/analyze.py:439-449, similarity 1.000)",
+      "locations": [
+        {
+          "path": "03-graphify/graphify/analyze.py",
+          "line": 557,
+          "end_line": 567,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "03-graphify/worked/mixed-corpus/raw/analyze.py",
+          "line": 439,
+          "end_line": 449,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "03-graphify/graphify/analyze.py",
+          "line": 557,
+          "end_line": 567,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "03-graphify/worked/mixed-corpus/raw/analyze.py",
+          "line": 439,
+          "end_line": 449,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX001",
+      "path": "03-graphify/graphify/build.py",
+      "line": 1,
+      "end_line": 22,
+      "prose_kind": "comment",
+      "message": "03-graphify/graphify/build.py:1-22: TPX001 comment is 178 words long, over the 150-word limit — shorten it, or mark it with `# !TPX001` on the line above it",
+      "words": 178,
+      "max_volume": 150
+    },
+    {
+      "code": "TPX001",
+      "path": "03-graphify/graphify/build.py",
+      "line": 781,
+      "end_line": 809,
+      "prose_kind": "comment",
+      "message": "03-graphify/graphify/build.py:781-809: TPX001 comment is 331 words long, over the 150-word limit — shorten it, or mark it with `# !TPX001` on the line above it",
+      "words": 331,
+      "max_volume": 150
+    },
+    {
+      "code": "TPX001",
+      "path": "03-graphify/graphify/build.py",
+      "line": 875,
+      "end_line": 894,
+      "prose_kind": "comment",
+      "message": "03-graphify/graphify/build.py:875-894: TPX001 comment is 225 words long, over the 150-word limit — shorten it, or mark it with `# !TPX001` on the line above it",
+      "words": 225,
+      "max_volume": 150
+    },
+    {
+      "code": "TPX003",
+      "path": "03-graphify/graphify/build.py",
+      "line": 951,
+      "end_line": 952,
+      "prose_kind": "comment",
+      "message": "03-graphify/graphify/build.py:951-952: TPX003 same explanation in 2 places: 03-graphify/worked/mixed-corpus/raw/build.py:23-24 (weakest 03-graphify/graphify/build.py:951-952 ~ 03-graphify/worked/mixed-corpus/raw/build.py:23-24, similarity 1.000)",
+      "locations": [
+        {
+          "path": "03-graphify/graphify/build.py",
+          "line": 951,
+          "end_line": 952,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "03-graphify/worked/mixed-corpus/raw/build.py",
+          "line": 23,
+          "end_line": 24,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "03-graphify/graphify/build.py",
+          "line": 951,
+          "end_line": 952,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "03-graphify/worked/mixed-corpus/raw/build.py",
+          "line": 23,
+          "end_line": 24,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX001",
+      "path": "03-graphify/graphify/cache.py",
+      "line": 517,
+      "end_line": 533,
+      "prose_kind": "comment",
+      "message": "03-graphify/graphify/cache.py:517-533: TPX001 comment is 224 words long, over the 150-word limit — shorten it, or mark it with `# !TPX001` on the line above it",
+      "words": 224,
+      "max_volume": 150
+    },
+    {
+      "code": "TPX002",
+      "path": "03-graphify/graphify/cache.py",
+      "line": 777,
+      "end_line": 806,
+      "prose_kind": "docstring",
+      "message": "03-graphify/graphify/cache.py:777-806: TPX002 docstring is 270 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 270,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX001",
+      "path": "03-graphify/graphify/cache.py",
+      "line": 879,
+      "end_line": 894,
+      "prose_kind": "comment",
+      "message": "03-graphify/graphify/cache.py:879-894: TPX001 comment is 154 words long, over the 150-word limit — shorten it, or mark it with `# !TPX001` on the line above it",
+      "words": 154,
+      "max_volume": 150
+    },
+    {
+      "code": "TPX003",
+      "path": "03-graphify/graphify/cache.py",
+      "line": 939,
+      "end_line": 942,
+      "prose_kind": "comment",
+      "message": "03-graphify/graphify/cache.py:939-942: TPX003 same explanation in 2 places: 03-graphify/graphify/cache.py:958-960 (weakest 03-graphify/graphify/cache.py:939-942 ~ 03-graphify/graphify/cache.py:958-960, similarity 0.774)",
+      "locations": [
+        {
+          "path": "03-graphify/graphify/cache.py",
+          "line": 939,
+          "end_line": 942,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "03-graphify/graphify/cache.py",
+          "line": 958,
+          "end_line": 960,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "03-graphify/graphify/cache.py",
+          "line": 939,
+          "end_line": 942,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "03-graphify/graphify/cache.py",
+          "line": 958,
+          "end_line": 960,
+          "prose_kind": "comment"
+        },
+        "similarity": 0.7741935483870968
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "03-graphify/graphify/cache.py",
+      "line": 969,
+      "end_line": 1003,
+      "prose_kind": "docstring",
+      "message": "03-graphify/graphify/cache.py:969-1003: TPX002 docstring is 337 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 337,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "03-graphify/graphify/cache.py",
+      "line": 1030,
+      "end_line": 1057,
+      "prose_kind": "docstring",
+      "message": "03-graphify/graphify/cache.py:1030-1057: TPX002 docstring is 246 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 246,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "03-graphify/graphify/cache.py",
+      "line": 1124,
+      "end_line": 1171,
+      "prose_kind": "docstring",
+      "message": "03-graphify/graphify/cache.py:1124-1171: TPX002 docstring is 409 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 409,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "03-graphify/graphify/cli.py",
+      "line": 94,
+      "end_line": 118,
+      "prose_kind": "docstring",
+      "message": "03-graphify/graphify/cli.py:94-118: TPX002 docstring is 237 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 237,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "03-graphify/graphify/cli.py",
+      "line": 154,
+      "end_line": 191,
+      "prose_kind": "docstring",
+      "message": "03-graphify/graphify/cli.py:154-191: TPX002 docstring is 348 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 348,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "03-graphify/graphify/cli.py",
+      "line": 1215,
+      "end_line": 1217,
+      "prose_kind": "comment",
+      "message": "03-graphify/graphify/cli.py:1215-1217: TPX003 same explanation in 2 places: 03-graphify/graphify/serve.py:1520-1522 (weakest 03-graphify/graphify/cli.py:1215-1217 ~ 03-graphify/graphify/serve.py:1520-1522, similarity 1.000)",
+      "locations": [
+        {
+          "path": "03-graphify/graphify/cli.py",
+          "line": 1215,
+          "end_line": 1217,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "03-graphify/graphify/serve.py",
+          "line": 1520,
+          "end_line": 1522,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "03-graphify/graphify/cli.py",
+          "line": 1215,
+          "end_line": 1217,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "03-graphify/graphify/serve.py",
+          "line": 1520,
+          "end_line": 1522,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX001",
+      "path": "03-graphify/graphify/cli.py",
+      "line": 3544,
+      "end_line": 3560,
+      "prose_kind": "comment",
+      "message": "03-graphify/graphify/cli.py:3544-3560: TPX001 comment is 169 words long, over the 150-word limit — shorten it, or mark it with `# !TPX001` on the line above it",
+      "words": 169,
+      "max_volume": 150
+    },
+    {
+      "code": "TPX002",
+      "path": "03-graphify/graphify/detect.py",
+      "line": 1581,
+      "end_line": 1614,
+      "prose_kind": "docstring",
+      "message": "03-graphify/graphify/detect.py:1581-1614: TPX002 docstring is 306 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 306,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "03-graphify/graphify/extract.py",
+      "line": 151,
+      "end_line": 155,
+      "prose_kind": "comment",
+      "message": "03-graphify/graphify/extract.py:151-155: TPX003 same explanation in 2 places: 03-graphify/graphify/extractors/base.py:8-12 (weakest 03-graphify/graphify/extract.py:151-155 ~ 03-graphify/graphify/extractors/base.py:8-12, similarity 1.000)",
+      "locations": [
+        {
+          "path": "03-graphify/graphify/extract.py",
+          "line": 151,
+          "end_line": 155,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "03-graphify/graphify/extractors/base.py",
+          "line": 8,
+          "end_line": 12,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "03-graphify/graphify/extract.py",
+          "line": 151,
+          "end_line": 155,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "03-graphify/graphify/extractors/base.py",
+          "line": 8,
+          "end_line": 12,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "03-graphify/graphify/extract.py",
+      "line": 1117,
+      "end_line": 1120,
+      "prose_kind": "comment",
+      "message": "03-graphify/graphify/extract.py:1117-1120: TPX003 same explanation in 2 places: 03-graphify/graphify/extract.py:1258-1261 (weakest 03-graphify/graphify/extract.py:1117-1120 ~ 03-graphify/graphify/extract.py:1258-1261, similarity 1.000)",
+      "locations": [
+        {
+          "path": "03-graphify/graphify/extract.py",
+          "line": 1117,
+          "end_line": 1120,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "03-graphify/graphify/extract.py",
+          "line": 1258,
+          "end_line": 1261,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "03-graphify/graphify/extract.py",
+          "line": 1117,
+          "end_line": 1120,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "03-graphify/graphify/extract.py",
+          "line": 1258,
+          "end_line": 1261,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "03-graphify/graphify/extract.py",
+      "line": 2440,
+      "end_line": 2461,
+      "prose_kind": "docstring",
+      "message": "03-graphify/graphify/extract.py:2440-2461: TPX002 docstring is 202 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 202,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "03-graphify/graphify/extract.py",
+      "line": 2568,
+      "end_line": 2597,
+      "prose_kind": "docstring",
+      "message": "03-graphify/graphify/extract.py:2568-2597: TPX002 docstring is 275 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 275,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX001",
+      "path": "03-graphify/graphify/extract.py",
+      "line": 4734,
+      "end_line": 4747,
+      "prose_kind": "comment",
+      "message": "03-graphify/graphify/extract.py:4734-4747: TPX001 comment is 176 words long, over the 150-word limit — shorten it, or mark it with `# !TPX001` on the line above it",
+      "words": 176,
+      "max_volume": 150
+    },
+    {
+      "code": "TPX001",
+      "path": "03-graphify/graphify/extract.py",
+      "line": 5159,
+      "end_line": 5173,
+      "prose_kind": "comment",
+      "message": "03-graphify/graphify/extract.py:5159-5173: TPX001 comment is 181 words long, over the 150-word limit — shorten it, or mark it with `# !TPX001` on the line above it",
+      "words": 181,
+      "max_volume": 150
+    },
+    {
+      "code": "TPX001",
+      "path": "03-graphify/graphify/extract.py",
+      "line": 5485,
+      "end_line": 5497,
+      "prose_kind": "comment",
+      "message": "03-graphify/graphify/extract.py:5485-5497: TPX001 comment is 154 words long, over the 150-word limit — shorten it, or mark it with `# !TPX001` on the line above it",
+      "words": 154,
+      "max_volume": 150
+    },
+    {
+      "code": "TPX003",
+      "path": "03-graphify/graphify/extractors/engine.py",
+      "line": 1294,
+      "end_line": 1295,
+      "prose_kind": "comment",
+      "message": "03-graphify/graphify/extractors/engine.py:1294-1295: TPX003 same explanation in 2 places: 03-graphify/graphify/extractors/engine.py:1610-1611 (weakest 03-graphify/graphify/extractors/engine.py:1294-1295 ~ 03-graphify/graphify/extractors/engine.py:1610-1611, similarity 1.000)",
+      "locations": [
+        {
+          "path": "03-graphify/graphify/extractors/engine.py",
+          "line": 1294,
+          "end_line": 1295,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "03-graphify/graphify/extractors/engine.py",
+          "line": 1610,
+          "end_line": 1611,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "03-graphify/graphify/extractors/engine.py",
+          "line": 1294,
+          "end_line": 1295,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "03-graphify/graphify/extractors/engine.py",
+          "line": 1610,
+          "end_line": 1611,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "03-graphify/graphify/extractors/engine.py",
+      "line": 2324,
+      "end_line": 2330,
+      "prose_kind": "comment",
+      "message": "03-graphify/graphify/extractors/engine.py:2324-2330: TPX003 same explanation in 6 places: 03-graphify/graphify/extractors/fortran.py:115-121, 03-graphify/graphify/extractors/julia.py:69-75, 03-graphify/graphify/extractors/objc.py:122-128, 03-graphify/graphify/extractors/powershell.py:77-83, 03-graphify/graphify/extractors/rust.py:121-127 (weakest 03-graphify/graphify/extractors/engine.py:2324-2330 ~ 03-graphify/graphify/extractors/fortran.py:115-121, similarity 1.000)",
+      "locations": [
+        {
+          "path": "03-graphify/graphify/extractors/engine.py",
+          "line": 2324,
+          "end_line": 2330,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "03-graphify/graphify/extractors/fortran.py",
+          "line": 115,
+          "end_line": 121,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "03-graphify/graphify/extractors/julia.py",
+          "line": 69,
+          "end_line": 75,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "03-graphify/graphify/extractors/objc.py",
+          "line": 122,
+          "end_line": 128,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "03-graphify/graphify/extractors/powershell.py",
+          "line": 77,
+          "end_line": 83,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "03-graphify/graphify/extractors/rust.py",
+          "line": 121,
+          "end_line": 127,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "03-graphify/graphify/extractors/engine.py",
+          "line": 2324,
+          "end_line": 2330,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "03-graphify/graphify/extractors/fortran.py",
+          "line": 115,
+          "end_line": 121,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX001",
+      "path": "03-graphify/graphify/extractors/engine.py",
+      "line": 4238,
+      "end_line": 4252,
+      "prose_kind": "comment",
+      "message": "03-graphify/graphify/extractors/engine.py:4238-4252: TPX001 comment is 175 words long, over the 150-word limit — shorten it, or mark it with `# !TPX001` on the line above it",
+      "words": 175,
+      "max_volume": 150
+    },
+    {
+      "code": "TPX002",
+      "path": "03-graphify/graphify/extractors/pascal.py",
+      "line": 159,
+      "end_line": 184,
+      "prose_kind": "docstring",
+      "message": "03-graphify/graphify/extractors/pascal.py:159-184: TPX002 docstring is 231 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 231,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "03-graphify/graphify/extractors/pascal.py",
+      "line": 260,
+      "end_line": 263,
+      "prose_kind": "comment",
+      "message": "03-graphify/graphify/extractors/pascal.py:260-263: TPX003 same explanation in 2 places: 03-graphify/graphify/extractors/pascal.py:491-494 (weakest 03-graphify/graphify/extractors/pascal.py:260-263 ~ 03-graphify/graphify/extractors/pascal.py:491-494, similarity 1.000)",
+      "locations": [
+        {
+          "path": "03-graphify/graphify/extractors/pascal.py",
+          "line": 260,
+          "end_line": 263,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "03-graphify/graphify/extractors/pascal.py",
+          "line": 491,
+          "end_line": 494,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "03-graphify/graphify/extractors/pascal.py",
+          "line": 260,
+          "end_line": 263,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "03-graphify/graphify/extractors/pascal.py",
+          "line": 491,
+          "end_line": 494,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "03-graphify/graphify/extractors/pascal.py",
+      "line": 408,
+      "end_line": 411,
+      "prose_kind": "comment",
+      "message": "03-graphify/graphify/extractors/pascal.py:408-411: TPX003 same explanation in 2 places: 03-graphify/graphify/extractors/pascal.py:647-650 (weakest 03-graphify/graphify/extractors/pascal.py:408-411 ~ 03-graphify/graphify/extractors/pascal.py:647-650, similarity 1.000)",
+      "locations": [
+        {
+          "path": "03-graphify/graphify/extractors/pascal.py",
+          "line": 408,
+          "end_line": 411,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "03-graphify/graphify/extractors/pascal.py",
+          "line": 647,
+          "end_line": 650,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "03-graphify/graphify/extractors/pascal.py",
+          "line": 408,
+          "end_line": 411,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "03-graphify/graphify/extractors/pascal.py",
+          "line": 647,
+          "end_line": 650,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "03-graphify/graphify/extractors/resolution.py",
+      "line": 2063,
+      "end_line": 2105,
+      "prose_kind": "docstring",
+      "message": "03-graphify/graphify/extractors/resolution.py:2063-2105: TPX002 docstring is 447 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 447,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX001",
+      "path": "03-graphify/graphify/extractors/sql.py",
+      "line": 303,
+      "end_line": 320,
+      "prose_kind": "comment",
+      "message": "03-graphify/graphify/extractors/sql.py:303-320: TPX001 comment is 191 words long, over the 150-word limit — shorten it, or mark it with `# !TPX001` on the line above it",
+      "words": 191,
+      "max_volume": 150
+    },
+    {
+      "code": "TPX003",
+      "path": "03-graphify/graphify/install.py",
+      "line": 947,
+      "end_line": 948,
+      "prose_kind": "comment",
+      "message": "03-graphify/graphify/install.py:947-948: TPX003 same explanation in 2 places: 03-graphify/graphify/install.py:1102-1103 (weakest 03-graphify/graphify/install.py:947-948 ~ 03-graphify/graphify/install.py:1102-1103, similarity 1.000)",
+      "locations": [
+        {
+          "path": "03-graphify/graphify/install.py",
+          "line": 947,
+          "end_line": 948,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "03-graphify/graphify/install.py",
+          "line": 1102,
+          "end_line": 1103,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "03-graphify/graphify/install.py",
+          "line": 947,
+          "end_line": 948,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "03-graphify/graphify/install.py",
+          "line": 1102,
+          "end_line": 1103,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX001",
+      "path": "03-graphify/graphify/llm.py",
+      "line": 599,
+      "end_line": 614,
+      "prose_kind": "comment",
+      "message": "03-graphify/graphify/llm.py:599-614: TPX001 comment is 182 words long, over the 150-word limit — shorten it, or mark it with `# !TPX001` on the line above it",
+      "words": 182,
+      "max_volume": 150
+    },
+    {
+      "code": "TPX002",
+      "path": "03-graphify/graphify/llm.py",
+      "line": 655,
+      "end_line": 677,
+      "prose_kind": "docstring",
+      "message": "03-graphify/graphify/llm.py:655-677: TPX002 docstring is 220 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 220,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX001",
+      "path": "03-graphify/graphify/llm.py",
+      "line": 1457,
+      "end_line": 1475,
+      "prose_kind": "comment",
+      "message": "03-graphify/graphify/llm.py:1457-1475: TPX001 comment is 190 words long, over the 150-word limit — shorten it, or mark it with `# !TPX001` on the line above it",
+      "words": 190,
+      "max_volume": 150
+    },
+    {
+      "code": "TPX002",
+      "path": "03-graphify/graphify/llm.py",
+      "line": 2007,
+      "end_line": 2039,
+      "prose_kind": "docstring",
+      "message": "03-graphify/graphify/llm.py:2007-2039: TPX002 docstring is 280 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 280,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "03-graphify/graphify/llm.py",
+      "line": 2203,
+      "end_line": 2247,
+      "prose_kind": "docstring",
+      "message": "03-graphify/graphify/llm.py:2203-2247: TPX002 docstring is 345 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 345,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "03-graphify/graphify/mcp_ingest.py",
+      "line": 1,
+      "end_line": 56,
+      "prose_kind": "docstring",
+      "message": "03-graphify/graphify/mcp_ingest.py:1-56: TPX002 docstring is 366 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 366,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "03-graphify/graphify/pascal_resolution.py",
+      "line": 1,
+      "end_line": 23,
+      "prose_kind": "docstring",
+      "message": "03-graphify/graphify/pascal_resolution.py:1-23: TPX002 docstring is 233 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 233,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "03-graphify/graphify/reflect.py",
+      "line": 1,
+      "end_line": 27,
+      "prose_kind": "docstring",
+      "message": "03-graphify/graphify/reflect.py:1-27: TPX002 docstring is 253 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 253,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX001",
+      "path": "03-graphify/graphify/serve.py",
+      "line": 193,
+      "end_line": 214,
+      "prose_kind": "comment",
+      "message": "03-graphify/graphify/serve.py:193-214: TPX001 comment is 243 words long, over the 150-word limit — shorten it, or mark it with `# !TPX001` on the line above it",
+      "words": 243,
+      "max_volume": 150
+    },
+    {
+      "code": "TPX002",
+      "path": "03-graphify/graphify/serve.py",
+      "line": 436,
+      "end_line": 461,
+      "prose_kind": "docstring",
+      "message": "03-graphify/graphify/serve.py:436-461: TPX002 docstring is 244 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 244,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "03-graphify/graphify/serve.py",
+      "line": 635,
+      "end_line": 664,
+      "prose_kind": "docstring",
+      "message": "03-graphify/graphify/serve.py:635-664: TPX002 docstring is 298 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 298,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "03-graphify/graphify/watch.py",
+      "line": 1189,
+      "end_line": 1192,
+      "prose_kind": "comment",
+      "message": "03-graphify/graphify/watch.py:1189-1192: TPX003 same explanation in 2 places: 03-graphify/graphify/watch.py:1370-1373 (weakest 03-graphify/graphify/watch.py:1189-1192 ~ 03-graphify/graphify/watch.py:1370-1373, similarity 1.000)",
+      "locations": [
+        {
+          "path": "03-graphify/graphify/watch.py",
+          "line": 1189,
+          "end_line": 1192,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "03-graphify/graphify/watch.py",
+          "line": 1370,
+          "end_line": 1373,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "03-graphify/graphify/watch.py",
+          "line": 1189,
+          "end_line": 1192,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "03-graphify/graphify/watch.py",
+          "line": 1370,
+          "end_line": 1373,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "03-graphify/tests/bench_query_scoring.py",
+      "line": 68,
+      "end_line": 74,
+      "prose_kind": "docstring",
+      "message": "03-graphify/tests/bench_query_scoring.py:68-74: TPX003 same explanation in 2 places: 03-graphify/tests/test_serve.py:1078-1085 (weakest 03-graphify/tests/bench_query_scoring.py:68-74 ~ 03-graphify/tests/test_serve.py:1078-1085, similarity 0.921)",
+      "locations": [
+        {
+          "path": "03-graphify/tests/bench_query_scoring.py",
+          "line": 68,
+          "end_line": 74,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "03-graphify/tests/test_serve.py",
+          "line": 1078,
+          "end_line": 1085,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "03-graphify/tests/bench_query_scoring.py",
+          "line": 68,
+          "end_line": 74,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "03-graphify/tests/test_serve.py",
+          "line": 1078,
+          "end_line": 1085,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.9206349206349206
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "03-graphify/tests/test_cache.py",
+      "line": 310,
+      "end_line": 312,
+      "prose_kind": "docstring",
+      "message": "03-graphify/tests/test_cache.py:310-312: TPX003 same explanation in 2 places: 03-graphify/tests/test_stat_index_portability.py:27-29 (weakest 03-graphify/tests/test_cache.py:310-312 ~ 03-graphify/tests/test_stat_index_portability.py:27-29, similarity 0.778)",
+      "locations": [
+        {
+          "path": "03-graphify/tests/test_cache.py",
+          "line": 310,
+          "end_line": 312,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "03-graphify/tests/test_stat_index_portability.py",
+          "line": 27,
+          "end_line": 29,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "03-graphify/tests/test_cache.py",
+          "line": 310,
+          "end_line": 312,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "03-graphify/tests/test_stat_index_portability.py",
+          "line": 27,
+          "end_line": 29,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.7777777777777778
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "03-graphify/tests/test_indirect_call_nested_closure_shadow.py",
+      "line": 1,
+      "end_line": 22,
+      "prose_kind": "docstring",
+      "message": "03-graphify/tests/test_indirect_call_nested_closure_shadow.py:1-22: TPX002 docstring is 209 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 209,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "03-graphify/tests/test_pascal_resolution.py",
+      "line": 1,
+      "end_line": 22,
+      "prose_kind": "docstring",
+      "message": "03-graphify/tests/test_pascal_resolution.py:1-22: TPX002 docstring is 225 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 225,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "03-graphify/tools/skillgen/gen.py",
+      "line": 1,
+      "end_line": 23,
+      "prose_kind": "docstring",
+      "message": "03-graphify/tools/skillgen/gen.py:1-23: TPX002 docstring is 212 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 212,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX001",
+      "path": "03-graphify/tools/skillgen/gen.py",
+      "line": 45,
+      "end_line": 57,
+      "prose_kind": "comment",
+      "message": "03-graphify/tools/skillgen/gen.py:45-57: TPX001 comment is 168 words long, over the 150-word limit — shorten it, or mark it with `# !TPX001` on the line above it",
+      "words": 168,
+      "max_volume": 150
+    },
+    {
+      "code": "TPX001",
+      "path": "03-graphify/tools/skillgen/gen.py",
+      "line": 200,
+      "end_line": 226,
+      "prose_kind": "comment",
+      "message": "03-graphify/tools/skillgen/gen.py:200-226: TPX001 comment is 268 words long, over the 150-word limit — shorten it, or mark it with `# !TPX001` on the line above it",
+      "words": 268,
+      "max_volume": 150
+    }
+  ]
+}

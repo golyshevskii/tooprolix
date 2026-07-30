@@ -1,0 +1,3 @@
+warning: 1 file(s) skipped:
+  06-claude-scientific-writer/extensions/docx-editor-zotero/zotero_docx_preserver.py: could not parse Python source: f-string: single `}` is not allowed at byte range 16950..16951
+warning: TPX003 was computed over an incomplete set of files; a missing file makes a different cluster graph, not the same clusters minus a file

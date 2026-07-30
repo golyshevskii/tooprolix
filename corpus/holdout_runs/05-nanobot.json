@@ -1,0 +1,119 @@
+{
+  "schema_version": "2",
+  "complete": true,
+  "skipped": [],
+  "excluded": [],
+  "findings": [
+    {
+      "code": "TPX003",
+      "path": "05-nanobot/nanobot/channels/telegram/tests/test_telegram_channel.py",
+      "line": 744,
+      "end_line": 745,
+      "prose_kind": "comment",
+      "message": "05-nanobot/nanobot/channels/telegram/tests/test_telegram_channel.py:744-745: TPX003 same explanation in 2 places: 05-nanobot/nanobot/channels/telegram/tests/test_telegram_channel.py:769-770 (weakest 05-nanobot/nanobot/channels/telegram/tests/test_telegram_channel.py:744-745 ~ 05-nanobot/nanobot/channels/telegram/tests/test_telegram_channel.py:769-770, similarity 1.000)",
+      "locations": [
+        {
+          "path": "05-nanobot/nanobot/channels/telegram/tests/test_telegram_channel.py",
+          "line": 744,
+          "end_line": 745,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "05-nanobot/nanobot/channels/telegram/tests/test_telegram_channel.py",
+          "line": 769,
+          "end_line": 770,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "05-nanobot/nanobot/channels/telegram/tests/test_telegram_channel.py",
+          "line": 744,
+          "end_line": 745,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "05-nanobot/nanobot/channels/telegram/tests/test_telegram_channel.py",
+          "line": 769,
+          "end_line": 770,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "05-nanobot/nanobot/cli/gateway_runtime.py",
+      "line": 439,
+      "end_line": 440,
+      "prose_kind": "comment",
+      "message": "05-nanobot/nanobot/cli/gateway_runtime.py:439-440: TPX003 same explanation in 2 places: 05-nanobot/nanobot/command/builtin.py:458-459 (weakest 05-nanobot/nanobot/cli/gateway_runtime.py:439-440 ~ 05-nanobot/nanobot/command/builtin.py:458-459, similarity 1.000)",
+      "locations": [
+        {
+          "path": "05-nanobot/nanobot/cli/gateway_runtime.py",
+          "line": 439,
+          "end_line": 440,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "05-nanobot/nanobot/command/builtin.py",
+          "line": 458,
+          "end_line": 459,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "05-nanobot/nanobot/cli/gateway_runtime.py",
+          "line": 439,
+          "end_line": 440,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "05-nanobot/nanobot/command/builtin.py",
+          "line": 458,
+          "end_line": 459,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "05-nanobot/nanobot/providers/openai_compat_provider.py",
+      "line": 1756,
+      "end_line": 1758,
+      "prose_kind": "comment",
+      "message": "05-nanobot/nanobot/providers/openai_compat_provider.py:1756-1758: TPX003 same explanation in 2 places: 05-nanobot/nanobot/providers/openai_compat_provider.py:1851-1853 (weakest 05-nanobot/nanobot/providers/openai_compat_provider.py:1756-1758 ~ 05-nanobot/nanobot/providers/openai_compat_provider.py:1851-1853, similarity 1.000)",
+      "locations": [
+        {
+          "path": "05-nanobot/nanobot/providers/openai_compat_provider.py",
+          "line": 1756,
+          "end_line": 1758,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "05-nanobot/nanobot/providers/openai_compat_provider.py",
+          "line": 1851,
+          "end_line": 1853,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "05-nanobot/nanobot/providers/openai_compat_provider.py",
+          "line": 1756,
+          "end_line": 1758,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "05-nanobot/nanobot/providers/openai_compat_provider.py",
+          "line": 1851,
+          "end_line": 1853,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    }
+  ]
+}

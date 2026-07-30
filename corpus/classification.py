@@ -99,8 +99,34 @@ class RunExpectation:
 
 
 @dataclass(frozen=True)
+class RunRequirements:
+    """
+    What every run of a profile must satisfy, when it cannot be predicted in advance.
+
+    🔴 **The answer to a chicken-and-egg the first version of `RunExpectation` created.** For the
+    corpus, the per-run numbers were already measured and could simply be pinned. For a holdout they
+    cannot be — nobody has run it, which is the entire point — so pinning them would either be
+    impossible or would have to be filled in *after* the run, which is the post-hoc self-report this
+    file exists to prevent. Requirements are predictable where counts are not: a run that is not
+    `complete`, or that skipped or excluded anything, is a bad run whatever it found.
+    """
+
+    schema_version: str
+    complete: bool
+    skipped: int
+    excluded: int
+
+
+@dataclass(frozen=True)
 class Profile:
-    """One pre-registered measurement: its draws, its run expectations and its threshold."""
+    """
+    One pre-registered measurement: its draws, its run expectations and its threshold.
+
+    `runs` pins per-run numbers that were already measured (the calibration corpus); `repositories`
+    and `run_requirements` are amendment 2's answer for a holdout, whose per-run numbers cannot be
+    predicted because nobody has run it. Fixing the repository **count** in advance is what stops the
+    scan's size from depending on what the detector found.
+    """
 
     name: str
     purpose: str
@@ -108,6 +134,8 @@ class Profile:
     threshold: float | None
     draws: tuple[Draw, ...]
     runs: Mapping[str, RunExpectation]
+    repositories: int | None = None
+    run_requirements: RunRequirements | None = None
 
 
 @dataclass(frozen=True)
@@ -368,6 +396,17 @@ def load_preregistration(path: Path) -> Preregistration:
                 )
                 for draw in body["draws"]
             ),
+            repositories=None if body.get("repositories") is None else int(body["repositories"]),
+            run_requirements=(
+                RunRequirements(
+                    schema_version=str(body["run_requirements"]["schema_version"]),
+                    complete=bool(body["run_requirements"]["complete"]),
+                    skipped=int(body["run_requirements"]["skipped"]),
+                    excluded=int(body["run_requirements"]["excluded"]),
+                )
+                if body.get("run_requirements")
+                else None
+            ),
             runs={
                 run_name: RunExpectation(
                     schema_version=str(expected["schema_version"]),
@@ -410,7 +449,9 @@ def _expected(profile: Profile, runs_dir: Path) -> dict[tuple[str, str, int], tu
     return expected
 
 
-def _check_run_health(name: str, path: Path, expected: RunExpectation, runs_dir: Path) -> None:
+def _check_run_health(
+    name: str, path: Path, expected: RunExpectation | None, requirements: RunRequirements | None, runs_dir: Path
+) -> None:
     """
     Grade a run's own metadata before any finding is read out of it.
 
@@ -421,10 +462,21 @@ def _check_run_health(name: str, path: Path, expected: RunExpectation, runs_dir:
     the pre-registration, so the check is against an external expectation rather than a self-report.
     """
     document: Mapping[str, Any] = json.loads(path.read_text(encoding="utf-8"))
-    for field_name, want in (("schema_version", expected.schema_version), ("complete", expected.complete)):
+    # A profile pins per-run numbers when they were already measured (the corpus) and states
+    # requirements when they cannot be predicted (a holdout nobody has run). One of the two must
+    # exist: a run nothing checks is a hole, not a default.
+    health: RunExpectation | RunRequirements | None = expected or requirements
+    _require(
+        health is not None,
+        f"{name}: the profile pins neither per-run expectations nor run requirements, so nothing "
+        "about this run would be checked at all",
+    )
+    if health is None:  # unreachable after the guard; narrows the union for the type checker
+        return
+    for field_name, want in (("schema_version", health.schema_version), ("complete", health.complete)):
         got = document.get(field_name)
         _require(got == want, f"{name}: {field_name} is {got!r}, the pre-registration expects {want!r}")
-    for field_name, want_count in (("skipped", expected.skipped), ("excluded", expected.excluded)):
+    for field_name, want_count in (("skipped", health.skipped), ("excluded", health.excluded)):
         got_count = len(document.get(field_name, []))
         _require(
             got_count == want_count,
@@ -438,6 +490,11 @@ def _check_run_health(name: str, path: Path, expected: RunExpectation, runs_dir:
         "ancestor .gitignore still reports complete=true; without this count nothing can tell.",
     )
     walked = int(sidecar.read_text(encoding="utf-8").strip())
+    if expected is None:
+        # A holdout run has no pre-registered count of its own — §3.0.1 records what the GitHub API
+        # reported and §7 step 1 compares the walk against it by hand. The sidecar must still exist,
+        # because its absence is exactly what a truncated walk looks like from here.
+        return
     _require(
         walked == expected.files_walked,
         f"{name}: the walk saw {walked} .py files, the pre-registration expects "
@@ -495,11 +552,40 @@ def verify(
     _check_detector(artifact, repo_root or Path(__file__).resolve().parent.parent, binary)
 
     declared = {run.name for run in artifact.runs}
+    if profile.runs:
+        _require(
+            declared == set(profile.runs),
+            f"the artifact covers runs {sorted(declared)}, profile {profile.name!r} pre-registers "
+            f"{sorted(profile.runs)} — a classification may not add or drop a run after the fact",
+        )
+    if profile.repositories is not None:
+        _require(
+            len(declared) == profile.repositories,
+            f"profile {profile.name!r} fixes {profile.repositories} repositories in advance and the "
+            f"artifact covers {len(declared)}. A short stratum is a reportable result; a short *scan* "
+            "is not, because the number of repositories was decided before the data.",
+        )
+
+    # 🔴 The directory separation is load-bearing and is checked rather than remembered. `load_runs`
+    # globs a directory, so a holdout run dropped into `corpus/runs/` silently joins the calibration
+    # population — measured: five `Raven` clusters entered the *dry-run* draw that way, and the only
+    # symptom was a coverage error nobody would have read as contamination. Every run the artifact
+    # declares must be in the directory being graded, and nothing else may be.
+    # `EXCLUDED_RUNS` rather than a second list: `sample_clusters` already owns which run files are
+    # outside every population (`crewAI-full` is the same checkout at an unmeasurable root), and two
+    # owners for one fact is the defect this epic keeps paying for.
+    present = {
+        path.stem
+        for path in runs_dir.glob("*.json")
+        if path.stat().st_size > 0 and path.stem not in sample_clusters.EXCLUDED_RUNS
+    }
     _require(
-        declared == set(profile.runs),
-        f"the artifact covers runs {sorted(declared)}, profile {profile.name!r} pre-registers "
-        f"{sorted(profile.runs)} — a classification may not add or drop a run after the fact",
+        present == declared,
+        f"{runs_dir} holds runs {sorted(present)} but the artifact declares {sorted(declared)}. "
+        "Calibration and holdout runs must never share a directory: the sampler globs it, so an "
+        "extra file silently enlarges the population the rates are taken over.",
     )
+
     for run in artifact.runs:
         path = runs_dir / f"{run.name}.json"
         _require(path.exists(), f"{run.name}: {path} is missing; the artifact classifies a run that is not here")
@@ -509,7 +595,7 @@ def verify(
             f"{run.name}: {path} hashes {actual}, the artifact pins {run.sha256}. The classification "
             "describes a different set of findings from the one on disk.",
         )
-        _check_run_health(run.name, path, profile.runs[run.name], runs_dir)
+        _check_run_health(run.name, path, profile.runs.get(run.name), profile.run_requirements, runs_dir)
 
     expected = _expected(profile, runs_dir)
     by_address = {record.address: record for record in artifact.records}

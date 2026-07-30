@@ -1,0 +1,1256 @@
+{
+  "schema_version": "2",
+  "complete": true,
+  "skipped": [],
+  "excluded": [],
+  "findings": [
+    {
+      "code": "TPX003",
+      "path": "08-MemMachine/evaluation/episodic_memory/llm_judge.py",
+      "line": 1,
+      "end_line": 2,
+      "prose_kind": "comment",
+      "message": "08-MemMachine/evaluation/episodic_memory/llm_judge.py:1-2: TPX003 same explanation in 2 places: 08-MemMachine/evaluation/retrieval_agent/llm_judge.py:1-2 (weakest 08-MemMachine/evaluation/episodic_memory/llm_judge.py:1-2 ~ 08-MemMachine/evaluation/retrieval_agent/llm_judge.py:1-2, similarity 1.000)",
+      "locations": [
+        {
+          "path": "08-MemMachine/evaluation/episodic_memory/llm_judge.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "08-MemMachine/evaluation/retrieval_agent/llm_judge.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "08-MemMachine/evaluation/episodic_memory/llm_judge.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "08-MemMachine/evaluation/retrieval_agent/llm_judge.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "08-MemMachine/evaluation/episodic_memory/locomo_evaluate.py",
+      "line": 1,
+      "end_line": 2,
+      "prose_kind": "comment",
+      "message": "08-MemMachine/evaluation/episodic_memory/locomo_evaluate.py:1-2: TPX003 same explanation in 2 places: 08-MemMachine/evaluation/retrieval_agent/evaluate.py:1-2 (weakest 08-MemMachine/evaluation/episodic_memory/locomo_evaluate.py:1-2 ~ 08-MemMachine/evaluation/retrieval_agent/evaluate.py:1-2, similarity 0.846)",
+      "locations": [
+        {
+          "path": "08-MemMachine/evaluation/episodic_memory/locomo_evaluate.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "08-MemMachine/evaluation/retrieval_agent/evaluate.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "08-MemMachine/evaluation/episodic_memory/locomo_evaluate.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "08-MemMachine/evaluation/retrieval_agent/evaluate.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        "similarity": 0.8461538461538461
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "08-MemMachine/evaluation/retrieval_agent/beam/beam_ingest.py",
+      "line": 22,
+      "end_line": 32,
+      "prose_kind": "docstring",
+      "message": "08-MemMachine/evaluation/retrieval_agent/beam/beam_ingest.py:22-32: TPX003 same explanation in 2 places: 08-MemMachine/evaluation/retrieval_agent/beam/beam_search.py:96-106 (weakest 08-MemMachine/evaluation/retrieval_agent/beam/beam_ingest.py:22-32 ~ 08-MemMachine/evaluation/retrieval_agent/beam/beam_search.py:96-106, similarity 1.000)",
+      "locations": [
+        {
+          "path": "08-MemMachine/evaluation/retrieval_agent/beam/beam_ingest.py",
+          "line": 22,
+          "end_line": 32,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "08-MemMachine/evaluation/retrieval_agent/beam/beam_search.py",
+          "line": 96,
+          "end_line": 106,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "08-MemMachine/evaluation/retrieval_agent/beam/beam_ingest.py",
+          "line": 22,
+          "end_line": 32,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "08-MemMachine/evaluation/retrieval_agent/beam/beam_search.py",
+          "line": 96,
+          "end_line": 106,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "08-MemMachine/evaluation/retrieval_agent/beam/beam_ingest.py",
+      "line": 37,
+      "end_line": 38,
+      "prose_kind": "comment",
+      "message": "08-MemMachine/evaluation/retrieval_agent/beam/beam_ingest.py:37-38: TPX003 same explanation in 2 places: 08-MemMachine/evaluation/retrieval_agent/beam/beam_search.py:111-112 (weakest 08-MemMachine/evaluation/retrieval_agent/beam/beam_ingest.py:37-38 ~ 08-MemMachine/evaluation/retrieval_agent/beam/beam_search.py:111-112, similarity 1.000)",
+      "locations": [
+        {
+          "path": "08-MemMachine/evaluation/retrieval_agent/beam/beam_ingest.py",
+          "line": 37,
+          "end_line": 38,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "08-MemMachine/evaluation/retrieval_agent/beam/beam_search.py",
+          "line": 111,
+          "end_line": 112,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "08-MemMachine/evaluation/retrieval_agent/beam/beam_ingest.py",
+          "line": 37,
+          "end_line": 38,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "08-MemMachine/evaluation/retrieval_agent/beam/beam_search.py",
+          "line": 111,
+          "end_line": 112,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "08-MemMachine/evaluation/retrieval_agent/hotpotQA_test.py",
+      "line": 21,
+      "end_line": 22,
+      "prose_kind": "comment",
+      "message": "08-MemMachine/evaluation/retrieval_agent/hotpotQA_test.py:21-22: TPX003 same explanation in 6 places: 08-MemMachine/evaluation/retrieval_agent/longmemeval_test.py:19-20, 08-MemMachine/evaluation/retrieval_agent/wikimultihop_search.py:16-17, 08-MemMachine/packages/server/src/memmachine_server/retrieval_agent/agents/coq_agent.py:22-24, 08-MemMachine/packages/server/src/memmachine_server/retrieval_agent/agents/split_query_agent.py:19-20, 08-MemMachine/packages/server/src/memmachine_server/retrieval_agent/agents/tool_select_agent.py:19-20 (weakest 08-MemMachine/evaluation/retrieval_agent/hotpotQA_test.py:21-22 ~ 08-MemMachine/packages/server/src/memmachine_server/retrieval_agent/agents/coq_agent.py:22-24, similarity 0.833)",
+      "locations": [
+        {
+          "path": "08-MemMachine/evaluation/retrieval_agent/hotpotQA_test.py",
+          "line": 21,
+          "end_line": 22,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "08-MemMachine/evaluation/retrieval_agent/longmemeval_test.py",
+          "line": 19,
+          "end_line": 20,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "08-MemMachine/evaluation/retrieval_agent/wikimultihop_search.py",
+          "line": 16,
+          "end_line": 17,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "08-MemMachine/packages/server/src/memmachine_server/retrieval_agent/agents/coq_agent.py",
+          "line": 22,
+          "end_line": 24,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "08-MemMachine/packages/server/src/memmachine_server/retrieval_agent/agents/split_query_agent.py",
+          "line": 19,
+          "end_line": 20,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "08-MemMachine/packages/server/src/memmachine_server/retrieval_agent/agents/tool_select_agent.py",
+          "line": 19,
+          "end_line": 20,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "08-MemMachine/evaluation/retrieval_agent/hotpotQA_test.py",
+          "line": 21,
+          "end_line": 22,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "08-MemMachine/packages/server/src/memmachine_server/retrieval_agent/agents/coq_agent.py",
+          "line": 22,
+          "end_line": 24,
+          "prose_kind": "comment"
+        },
+        "similarity": 0.8333333333333334
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "08-MemMachine/evaluation/utils/memmachine_helper.py",
+      "line": 1,
+      "end_line": 5,
+      "prose_kind": "comment",
+      "message": "08-MemMachine/evaluation/utils/memmachine_helper.py:1-5: TPX003 same explanation in 2 places: 08-MemMachine/evaluation/utils/memmachine_helper_db.py:1-5 (weakest 08-MemMachine/evaluation/utils/memmachine_helper.py:1-5 ~ 08-MemMachine/evaluation/utils/memmachine_helper_db.py:1-5, similarity 0.850)",
+      "locations": [
+        {
+          "path": "08-MemMachine/evaluation/utils/memmachine_helper.py",
+          "line": 1,
+          "end_line": 5,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "08-MemMachine/evaluation/utils/memmachine_helper_db.py",
+          "line": 1,
+          "end_line": 5,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "08-MemMachine/evaluation/utils/memmachine_helper.py",
+          "line": 1,
+          "end_line": 5,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "08-MemMachine/evaluation/utils/memmachine_helper_db.py",
+          "line": 1,
+          "end_line": 5,
+          "prose_kind": "comment"
+        },
+        "similarity": 0.85
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "08-MemMachine/evaluation/utils/memmachine_helper_base.py",
+      "line": 1,
+      "end_line": 7,
+      "prose_kind": "comment",
+      "message": "08-MemMachine/evaluation/utils/memmachine_helper_base.py:1-7: TPX003 same explanation in 3 places: 08-MemMachine/evaluation/utils/memmachine_helper_restapiv1.py:1-7, 08-MemMachine/evaluation/utils/memmachine_helper_restapiv2.py:1-7 (weakest 08-MemMachine/evaluation/utils/memmachine_helper_base.py:1-7 ~ 08-MemMachine/evaluation/utils/memmachine_helper_restapiv2.py:1-7, similarity 0.821)",
+      "locations": [
+        {
+          "path": "08-MemMachine/evaluation/utils/memmachine_helper_base.py",
+          "line": 1,
+          "end_line": 7,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "08-MemMachine/evaluation/utils/memmachine_helper_restapiv1.py",
+          "line": 1,
+          "end_line": 7,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "08-MemMachine/evaluation/utils/memmachine_helper_restapiv2.py",
+          "line": 1,
+          "end_line": 7,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "08-MemMachine/evaluation/utils/memmachine_helper_base.py",
+          "line": 1,
+          "end_line": 7,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "08-MemMachine/evaluation/utils/memmachine_helper_restapiv2.py",
+          "line": 1,
+          "end_line": 7,
+          "prose_kind": "comment"
+        },
+        "similarity": 0.8214285714285714
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "08-MemMachine/evaluation/utils/memmachine_helper_restapiv1.py",
+      "line": 184,
+      "end_line": 188,
+      "prose_kind": "docstring",
+      "message": "08-MemMachine/evaluation/utils/memmachine_helper_restapiv1.py:184-188: TPX003 same explanation in 2 places: 08-MemMachine/evaluation/utils/memmachine_helper_restapiv2.py:190-194 (weakest 08-MemMachine/evaluation/utils/memmachine_helper_restapiv1.py:184-188 ~ 08-MemMachine/evaluation/utils/memmachine_helper_restapiv2.py:190-194, similarity 1.000)",
+      "locations": [
+        {
+          "path": "08-MemMachine/evaluation/utils/memmachine_helper_restapiv1.py",
+          "line": 184,
+          "end_line": 188,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "08-MemMachine/evaluation/utils/memmachine_helper_restapiv2.py",
+          "line": 190,
+          "end_line": 194,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "08-MemMachine/evaluation/utils/memmachine_helper_restapiv1.py",
+          "line": 184,
+          "end_line": 188,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "08-MemMachine/evaluation/utils/memmachine_helper_restapiv2.py",
+          "line": 190,
+          "end_line": 194,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "08-MemMachine/evaluation/utils/memmachine_helper_restapiv1.py",
+      "line": 230,
+      "end_line": 236,
+      "prose_kind": "docstring",
+      "message": "08-MemMachine/evaluation/utils/memmachine_helper_restapiv1.py:230-236: TPX003 same explanation in 2 places: 08-MemMachine/evaluation/utils/memmachine_helper_restapiv2.py:236-242 (weakest 08-MemMachine/evaluation/utils/memmachine_helper_restapiv1.py:230-236 ~ 08-MemMachine/evaluation/utils/memmachine_helper_restapiv2.py:236-242, similarity 1.000)",
+      "locations": [
+        {
+          "path": "08-MemMachine/evaluation/utils/memmachine_helper_restapiv1.py",
+          "line": 230,
+          "end_line": 236,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "08-MemMachine/evaluation/utils/memmachine_helper_restapiv2.py",
+          "line": 236,
+          "end_line": 242,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "08-MemMachine/evaluation/utils/memmachine_helper_restapiv1.py",
+          "line": 230,
+          "end_line": 236,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "08-MemMachine/evaluation/utils/memmachine_helper_restapiv2.py",
+          "line": 236,
+          "end_line": 242,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "08-MemMachine/evaluation/utils/memmachine_helper_restapiv1.py",
+      "line": 349,
+      "end_line": 355,
+      "prose_kind": "docstring",
+      "message": "08-MemMachine/evaluation/utils/memmachine_helper_restapiv1.py:349-355: TPX003 same explanation in 3 places: 08-MemMachine/evaluation/utils/memmachine_helper_restapiv2.py:568-574, 08-MemMachine/evaluation/utils/memmachine_helper_restapiv2.py:819-825 (weakest 08-MemMachine/evaluation/utils/memmachine_helper_restapiv1.py:349-355 ~ 08-MemMachine/evaluation/utils/memmachine_helper_restapiv2.py:568-574, similarity 1.000)",
+      "locations": [
+        {
+          "path": "08-MemMachine/evaluation/utils/memmachine_helper_restapiv1.py",
+          "line": 349,
+          "end_line": 355,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "08-MemMachine/evaluation/utils/memmachine_helper_restapiv2.py",
+          "line": 568,
+          "end_line": 574,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "08-MemMachine/evaluation/utils/memmachine_helper_restapiv2.py",
+          "line": 819,
+          "end_line": 825,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "08-MemMachine/evaluation/utils/memmachine_helper_restapiv1.py",
+          "line": 349,
+          "end_line": 355,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "08-MemMachine/evaluation/utils/memmachine_helper_restapiv2.py",
+          "line": 568,
+          "end_line": 574,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "08-MemMachine/evaluation/utils/memmachine_helper_restapiv1.py",
+      "line": 507,
+      "end_line": 516,
+      "prose_kind": "docstring",
+      "message": "08-MemMachine/evaluation/utils/memmachine_helper_restapiv1.py:507-516: TPX003 same explanation in 2 places: 08-MemMachine/evaluation/utils/memmachine_helper_restapiv2.py:977-986 (weakest 08-MemMachine/evaluation/utils/memmachine_helper_restapiv1.py:507-516 ~ 08-MemMachine/evaluation/utils/memmachine_helper_restapiv2.py:977-986, similarity 1.000)",
+      "locations": [
+        {
+          "path": "08-MemMachine/evaluation/utils/memmachine_helper_restapiv1.py",
+          "line": 507,
+          "end_line": 516,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "08-MemMachine/evaluation/utils/memmachine_helper_restapiv2.py",
+          "line": 977,
+          "end_line": 986,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "08-MemMachine/evaluation/utils/memmachine_helper_restapiv1.py",
+          "line": 507,
+          "end_line": 516,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "08-MemMachine/evaluation/utils/memmachine_helper_restapiv2.py",
+          "line": 977,
+          "end_line": 986,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "08-MemMachine/evaluation/utils/memmachine_helper_restapiv2.py",
+      "line": 384,
+      "end_line": 406,
+      "prose_kind": "docstring",
+      "message": "08-MemMachine/evaluation/utils/memmachine_helper_restapiv2.py:384-406: TPX003 same explanation in 2 places: 08-MemMachine/evaluation/utils/memmachine_helper_restapiv2.py:626-648 (weakest 08-MemMachine/evaluation/utils/memmachine_helper_restapiv2.py:384-406 ~ 08-MemMachine/evaluation/utils/memmachine_helper_restapiv2.py:626-648, similarity 1.000)",
+      "locations": [
+        {
+          "path": "08-MemMachine/evaluation/utils/memmachine_helper_restapiv2.py",
+          "line": 384,
+          "end_line": 406,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "08-MemMachine/evaluation/utils/memmachine_helper_restapiv2.py",
+          "line": 626,
+          "end_line": 648,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "08-MemMachine/evaluation/utils/memmachine_helper_restapiv2.py",
+          "line": 384,
+          "end_line": 406,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "08-MemMachine/evaluation/utils/memmachine_helper_restapiv2.py",
+          "line": 626,
+          "end_line": 648,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "08-MemMachine/integrations/aws_strands_agent_sdk/strands_tools.py",
+      "line": 32,
+      "end_line": 44,
+      "prose_kind": "docstring",
+      "message": "08-MemMachine/integrations/aws_strands_agent_sdk/strands_tools.py:32-44: TPX003 same explanation in 2 places: 08-MemMachine/integrations/aws_strands_agent_sdk/tool.py:88-100 (weakest 08-MemMachine/integrations/aws_strands_agent_sdk/strands_tools.py:32-44 ~ 08-MemMachine/integrations/aws_strands_agent_sdk/tool.py:88-100, similarity 1.000)",
+      "locations": [
+        {
+          "path": "08-MemMachine/integrations/aws_strands_agent_sdk/strands_tools.py",
+          "line": 32,
+          "end_line": 44,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "08-MemMachine/integrations/aws_strands_agent_sdk/tool.py",
+          "line": 88,
+          "end_line": 100,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "08-MemMachine/integrations/aws_strands_agent_sdk/strands_tools.py",
+          "line": 32,
+          "end_line": 44,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "08-MemMachine/integrations/aws_strands_agent_sdk/tool.py",
+          "line": 88,
+          "end_line": 100,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "08-MemMachine/integrations/aws_strands_agent_sdk/strands_tools.py",
+      "line": 63,
+      "end_line": 74,
+      "prose_kind": "docstring",
+      "message": "08-MemMachine/integrations/aws_strands_agent_sdk/strands_tools.py:63-74: TPX003 same explanation in 2 places: 08-MemMachine/integrations/aws_strands_agent_sdk/tool.py:151-163 (weakest 08-MemMachine/integrations/aws_strands_agent_sdk/strands_tools.py:63-74 ~ 08-MemMachine/integrations/aws_strands_agent_sdk/tool.py:151-163, similarity 1.000)",
+      "locations": [
+        {
+          "path": "08-MemMachine/integrations/aws_strands_agent_sdk/strands_tools.py",
+          "line": 63,
+          "end_line": 74,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "08-MemMachine/integrations/aws_strands_agent_sdk/tool.py",
+          "line": 151,
+          "end_line": 163,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "08-MemMachine/integrations/aws_strands_agent_sdk/strands_tools.py",
+          "line": 63,
+          "end_line": 74,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "08-MemMachine/integrations/aws_strands_agent_sdk/tool.py",
+          "line": 151,
+          "end_line": 163,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "08-MemMachine/integrations/aws_strands_agent_sdk/strands_tools.py",
+      "line": 88,
+      "end_line": 97,
+      "prose_kind": "docstring",
+      "message": "08-MemMachine/integrations/aws_strands_agent_sdk/strands_tools.py:88-97: TPX003 same explanation in 5 places: 08-MemMachine/integrations/aws_strands_agent_sdk/tool.py:223-232, 08-MemMachine/integrations/crewai/tool.py:302-316, 08-MemMachine/packages/client/src/memmachine_client/langgraph.py:343-357, 08-MemMachine/packages/client/src/memmachine_client/memory.py:552-559 (weakest 08-MemMachine/integrations/aws_strands_agent_sdk/strands_tools.py:88-97 ~ 08-MemMachine/integrations/crewai/tool.py:302-316, similarity 0.750)",
+      "locations": [
+        {
+          "path": "08-MemMachine/integrations/aws_strands_agent_sdk/strands_tools.py",
+          "line": 88,
+          "end_line": 97,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "08-MemMachine/integrations/aws_strands_agent_sdk/tool.py",
+          "line": 223,
+          "end_line": 232,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "08-MemMachine/integrations/crewai/tool.py",
+          "line": 302,
+          "end_line": 316,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "08-MemMachine/packages/client/src/memmachine_client/langgraph.py",
+          "line": 343,
+          "end_line": 357,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "08-MemMachine/packages/client/src/memmachine_client/memory.py",
+          "line": 552,
+          "end_line": 559,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "08-MemMachine/integrations/aws_strands_agent_sdk/strands_tools.py",
+          "line": 88,
+          "end_line": 97,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "08-MemMachine/integrations/crewai/tool.py",
+          "line": 302,
+          "end_line": 316,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.75
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "08-MemMachine/integrations/aws_strands_agent_sdk/tool.py",
+      "line": 43,
+      "end_line": 57,
+      "prose_kind": "docstring",
+      "message": "08-MemMachine/integrations/aws_strands_agent_sdk/tool.py:43-57: TPX003 same explanation in 3 places: 08-MemMachine/integrations/crewai/tool.py:51-64, 08-MemMachine/packages/client/src/memmachine_client/langgraph.py:37-50 (weakest 08-MemMachine/integrations/aws_strands_agent_sdk/tool.py:43-57 ~ 08-MemMachine/integrations/crewai/tool.py:51-64, similarity 1.000)",
+      "locations": [
+        {
+          "path": "08-MemMachine/integrations/aws_strands_agent_sdk/tool.py",
+          "line": 43,
+          "end_line": 57,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "08-MemMachine/integrations/crewai/tool.py",
+          "line": 51,
+          "end_line": 64,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "08-MemMachine/packages/client/src/memmachine_client/langgraph.py",
+          "line": 37,
+          "end_line": 50,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "08-MemMachine/integrations/aws_strands_agent_sdk/tool.py",
+          "line": 43,
+          "end_line": 57,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "08-MemMachine/integrations/crewai/tool.py",
+          "line": 51,
+          "end_line": 64,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "08-MemMachine/integrations/crewai/tool.py",
+      "line": 82,
+      "end_line": 96,
+      "prose_kind": "docstring",
+      "message": "08-MemMachine/integrations/crewai/tool.py:82-96: TPX003 same explanation in 2 places: 08-MemMachine/packages/client/src/memmachine_client/langgraph.py:105-119 (weakest 08-MemMachine/integrations/crewai/tool.py:82-96 ~ 08-MemMachine/packages/client/src/memmachine_client/langgraph.py:105-119, similarity 1.000)",
+      "locations": [
+        {
+          "path": "08-MemMachine/integrations/crewai/tool.py",
+          "line": 82,
+          "end_line": 96,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "08-MemMachine/packages/client/src/memmachine_client/langgraph.py",
+          "line": 105,
+          "end_line": 119,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "08-MemMachine/integrations/crewai/tool.py",
+          "line": 82,
+          "end_line": 96,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "08-MemMachine/packages/client/src/memmachine_client/langgraph.py",
+          "line": 105,
+          "end_line": 119,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "08-MemMachine/integrations/crewai/tool.py",
+      "line": 123,
+      "end_line": 145,
+      "prose_kind": "docstring",
+      "message": "08-MemMachine/integrations/crewai/tool.py:123-145: TPX003 same explanation in 2 places: 08-MemMachine/packages/client/src/memmachine_client/langgraph.py:148-170 (weakest 08-MemMachine/integrations/crewai/tool.py:123-145 ~ 08-MemMachine/packages/client/src/memmachine_client/langgraph.py:148-170, similarity 1.000)",
+      "locations": [
+        {
+          "path": "08-MemMachine/integrations/crewai/tool.py",
+          "line": 123,
+          "end_line": 145,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "08-MemMachine/packages/client/src/memmachine_client/langgraph.py",
+          "line": 148,
+          "end_line": 170,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "08-MemMachine/integrations/crewai/tool.py",
+          "line": 123,
+          "end_line": 145,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "08-MemMachine/packages/client/src/memmachine_client/langgraph.py",
+          "line": 148,
+          "end_line": 170,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "08-MemMachine/integrations/crewai/tool.py",
+      "line": 190,
+      "end_line": 213,
+      "prose_kind": "docstring",
+      "message": "08-MemMachine/integrations/crewai/tool.py:190-213: TPX003 same explanation in 2 places: 08-MemMachine/packages/client/src/memmachine_client/langgraph.py:218-243 (weakest 08-MemMachine/integrations/crewai/tool.py:190-213 ~ 08-MemMachine/packages/client/src/memmachine_client/langgraph.py:218-243, similarity 1.000)",
+      "locations": [
+        {
+          "path": "08-MemMachine/integrations/crewai/tool.py",
+          "line": 190,
+          "end_line": 213,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "08-MemMachine/packages/client/src/memmachine_client/langgraph.py",
+          "line": 218,
+          "end_line": 243,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "08-MemMachine/integrations/crewai/tool.py",
+          "line": 190,
+          "end_line": 213,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "08-MemMachine/packages/client/src/memmachine_client/langgraph.py",
+          "line": 218,
+          "end_line": 243,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "08-MemMachine/integrations/crewai/tool.py",
+      "line": 265,
+      "end_line": 274,
+      "prose_kind": "docstring",
+      "message": "08-MemMachine/integrations/crewai/tool.py:265-274: TPX003 same explanation in 2 places: 08-MemMachine/packages/client/src/memmachine_client/langgraph.py:289-298 (weakest 08-MemMachine/integrations/crewai/tool.py:265-274 ~ 08-MemMachine/packages/client/src/memmachine_client/langgraph.py:289-298, similarity 1.000)",
+      "locations": [
+        {
+          "path": "08-MemMachine/integrations/crewai/tool.py",
+          "line": 265,
+          "end_line": 274,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "08-MemMachine/packages/client/src/memmachine_client/langgraph.py",
+          "line": 289,
+          "end_line": 298,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "08-MemMachine/integrations/crewai/tool.py",
+          "line": 265,
+          "end_line": 274,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "08-MemMachine/packages/client/src/memmachine_client/langgraph.py",
+          "line": 289,
+          "end_line": 298,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "08-MemMachine/integrations/strands-memmachine/src/strands_memmachine/tool.py",
+      "line": 1,
+      "end_line": 68,
+      "prose_kind": "docstring",
+      "message": "08-MemMachine/integrations/strands-memmachine/src/strands_memmachine/tool.py:1-68: TPX002 docstring is 215 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 215,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "08-MemMachine/integrations/strands-memmachine/src/strands_memmachine/tool.py",
+      "line": 239,
+      "end_line": 243,
+      "prose_kind": "docstring",
+      "message": "08-MemMachine/integrations/strands-memmachine/src/strands_memmachine/tool.py:239-243: TPX003 same explanation in 2 places: 08-MemMachine/packages/client/src/memmachine_client/client.py:91-105 (weakest 08-MemMachine/integrations/strands-memmachine/src/strands_memmachine/tool.py:239-243 ~ 08-MemMachine/packages/client/src/memmachine_client/client.py:91-105, similarity 1.000)",
+      "locations": [
+        {
+          "path": "08-MemMachine/integrations/strands-memmachine/src/strands_memmachine/tool.py",
+          "line": 239,
+          "end_line": 243,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "08-MemMachine/packages/client/src/memmachine_client/client.py",
+          "line": 91,
+          "end_line": 105,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "08-MemMachine/integrations/strands-memmachine/src/strands_memmachine/tool.py",
+          "line": 239,
+          "end_line": 243,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "08-MemMachine/packages/client/src/memmachine_client/client.py",
+          "line": 91,
+          "end_line": 105,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "08-MemMachine/integrations/strands-memmachine/src/strands_memmachine/tool.py",
+      "line": 701,
+      "end_line": 754,
+      "prose_kind": "docstring",
+      "message": "08-MemMachine/integrations/strands-memmachine/src/strands_memmachine/tool.py:701-754: TPX002 docstring is 304 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 304,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "08-MemMachine/packages/client/src/memmachine_client/client.py",
+      "line": 207,
+      "end_line": 240,
+      "prose_kind": "docstring",
+      "message": "08-MemMachine/packages/client/src/memmachine_client/client.py:207-240: TPX002 docstring is 207 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 207,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "08-MemMachine/packages/client/src/memmachine_client/client.py",
+      "line": 428,
+      "end_line": 468,
+      "prose_kind": "docstring",
+      "message": "08-MemMachine/packages/client/src/memmachine_client/client.py:428-468: TPX002 docstring is 275 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 275,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "08-MemMachine/packages/client/src/memmachine_client/memory.py",
+      "line": 374,
+      "end_line": 412,
+      "prose_kind": "docstring",
+      "message": "08-MemMachine/packages/client/src/memmachine_client/memory.py:374-412: TPX002 docstring is 279 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 279,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "08-MemMachine/packages/client/src/memmachine_client/memory.py",
+      "line": 833,
+      "end_line": 854,
+      "prose_kind": "docstring",
+      "message": "08-MemMachine/packages/client/src/memmachine_client/memory.py:833-854: TPX003 same explanation in 2 places: 08-MemMachine/packages/server/src/memmachine_server/main/memmachine.py:1267-1283 (weakest 08-MemMachine/packages/client/src/memmachine_client/memory.py:833-854 ~ 08-MemMachine/packages/server/src/memmachine_server/main/memmachine.py:1267-1283, similarity 1.000)",
+      "locations": [
+        {
+          "path": "08-MemMachine/packages/client/src/memmachine_client/memory.py",
+          "line": 833,
+          "end_line": 854,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "08-MemMachine/packages/server/src/memmachine_server/main/memmachine.py",
+          "line": 1267,
+          "end_line": 1283,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "08-MemMachine/packages/client/src/memmachine_client/memory.py",
+          "line": 833,
+          "end_line": 854,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "08-MemMachine/packages/server/src/memmachine_server/main/memmachine.py",
+          "line": 1267,
+          "end_line": 1283,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "08-MemMachine/packages/server/server_tests/memmachine_server/common/language_model/test_openai_chat_completions_language_model.py",
+      "line": 811,
+      "end_line": 813,
+      "prose_kind": "docstring",
+      "message": "08-MemMachine/packages/server/server_tests/memmachine_server/common/language_model/test_openai_chat_completions_language_model.py:811-813: TPX003 same explanation in 2 places: 08-MemMachine/packages/server/server_tests/memmachine_server/common/language_model/test_openai_responses_language_model.py:404-406 (weakest 08-MemMachine/packages/server/server_tests/memmachine_server/common/language_model/test_openai_chat_completions_language_model.py:811-813 ~ 08-MemMachine/packages/server/server_tests/memmachine_server/common/language_model/test_openai_responses_language_model.py:404-406, similarity 1.000)",
+      "locations": [
+        {
+          "path": "08-MemMachine/packages/server/server_tests/memmachine_server/common/language_model/test_openai_chat_completions_language_model.py",
+          "line": 811,
+          "end_line": 813,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "08-MemMachine/packages/server/server_tests/memmachine_server/common/language_model/test_openai_responses_language_model.py",
+          "line": 404,
+          "end_line": 406,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "08-MemMachine/packages/server/server_tests/memmachine_server/common/language_model/test_openai_chat_completions_language_model.py",
+          "line": 811,
+          "end_line": 813,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "08-MemMachine/packages/server/server_tests/memmachine_server/common/language_model/test_openai_responses_language_model.py",
+          "line": 404,
+          "end_line": 406,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "08-MemMachine/packages/server/server_tests/memmachine_server/common/session_manager/test_session_manager_migration.py",
+      "line": 65,
+      "end_line": 66,
+      "prose_kind": "comment",
+      "message": "08-MemMachine/packages/server/server_tests/memmachine_server/common/session_manager/test_session_manager_migration.py:65-66: TPX003 same explanation in 2 places: 08-MemMachine/packages/server/server_tests/memmachine_server/common/session_manager/test_session_manager_migration.py:132-133 (weakest 08-MemMachine/packages/server/server_tests/memmachine_server/common/session_manager/test_session_manager_migration.py:65-66 ~ 08-MemMachine/packages/server/server_tests/memmachine_server/common/session_manager/test_session_manager_migration.py:132-133, similarity 1.000)",
+      "locations": [
+        {
+          "path": "08-MemMachine/packages/server/server_tests/memmachine_server/common/session_manager/test_session_manager_migration.py",
+          "line": 65,
+          "end_line": 66,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "08-MemMachine/packages/server/server_tests/memmachine_server/common/session_manager/test_session_manager_migration.py",
+          "line": 132,
+          "end_line": 133,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "08-MemMachine/packages/server/server_tests/memmachine_server/common/session_manager/test_session_manager_migration.py",
+          "line": 65,
+          "end_line": 66,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "08-MemMachine/packages/server/server_tests/memmachine_server/common/session_manager/test_session_manager_migration.py",
+          "line": 132,
+          "end_line": 133,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "08-MemMachine/packages/server/src/memmachine_server/common/language_model/language_model.py",
+      "line": 60,
+      "end_line": 95,
+      "prose_kind": "docstring",
+      "message": "08-MemMachine/packages/server/src/memmachine_server/common/language_model/language_model.py:60-95: TPX003 same explanation in 2 places: 08-MemMachine/packages/server/src/memmachine_server/common/language_model/language_model.py:107-142 (weakest 08-MemMachine/packages/server/src/memmachine_server/common/language_model/language_model.py:60-95 ~ 08-MemMachine/packages/server/src/memmachine_server/common/language_model/language_model.py:107-142, similarity 1.000)",
+      "locations": [
+        {
+          "path": "08-MemMachine/packages/server/src/memmachine_server/common/language_model/language_model.py",
+          "line": 60,
+          "end_line": 95,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "08-MemMachine/packages/server/src/memmachine_server/common/language_model/language_model.py",
+          "line": 107,
+          "end_line": 142,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "08-MemMachine/packages/server/src/memmachine_server/common/language_model/language_model.py",
+          "line": 60,
+          "end_line": 95,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "08-MemMachine/packages/server/src/memmachine_server/common/language_model/language_model.py",
+          "line": 107,
+          "end_line": 142,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "08-MemMachine/packages/server/src/memmachine_server/common/resource_manager/embedder_manager.py",
+      "line": 206,
+      "end_line": 208,
+      "prose_kind": "comment",
+      "message": "08-MemMachine/packages/server/src/memmachine_server/common/resource_manager/embedder_manager.py:206-208: TPX003 same explanation in 3 places: 08-MemMachine/packages/server/src/memmachine_server/common/resource_manager/language_model_manager.py:207-209, 08-MemMachine/packages/server/src/memmachine_server/common/resource_manager/language_model_manager.py:234-236 (weakest 08-MemMachine/packages/server/src/memmachine_server/common/resource_manager/embedder_manager.py:206-208 ~ 08-MemMachine/packages/server/src/memmachine_server/common/resource_manager/language_model_manager.py:207-209, similarity 1.000)",
+      "locations": [
+        {
+          "path": "08-MemMachine/packages/server/src/memmachine_server/common/resource_manager/embedder_manager.py",
+          "line": 206,
+          "end_line": 208,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "08-MemMachine/packages/server/src/memmachine_server/common/resource_manager/language_model_manager.py",
+          "line": 207,
+          "end_line": 209,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "08-MemMachine/packages/server/src/memmachine_server/common/resource_manager/language_model_manager.py",
+          "line": 234,
+          "end_line": 236,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "08-MemMachine/packages/server/src/memmachine_server/common/resource_manager/embedder_manager.py",
+          "line": 206,
+          "end_line": 208,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "08-MemMachine/packages/server/src/memmachine_server/common/resource_manager/language_model_manager.py",
+          "line": 207,
+          "end_line": 209,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "08-MemMachine/packages/server/src/memmachine_server/common/vector_graph_store/nebula_graph_vector_graph_store.py",
+      "line": 58,
+      "end_line": 84,
+      "prose_kind": "docstring",
+      "message": "08-MemMachine/packages/server/src/memmachine_server/common/vector_graph_store/nebula_graph_vector_graph_store.py:58-84: TPX002 docstring is 216 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 216,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "08-MemMachine/packages/server/src/memmachine_server/common/vector_graph_store/nebula_graph_vector_graph_store.py",
+      "line": 1677,
+      "end_line": 1680,
+      "prose_kind": "comment",
+      "message": "08-MemMachine/packages/server/src/memmachine_server/common/vector_graph_store/nebula_graph_vector_graph_store.py:1677-1680: TPX003 same explanation in 2 places: 08-MemMachine/packages/server/src/memmachine_server/common/vector_graph_store/nebula_graph_vector_graph_store.py:1793-1796 (weakest 08-MemMachine/packages/server/src/memmachine_server/common/vector_graph_store/nebula_graph_vector_graph_store.py:1677-1680 ~ 08-MemMachine/packages/server/src/memmachine_server/common/vector_graph_store/nebula_graph_vector_graph_store.py:1793-1796, similarity 1.000)",
+      "locations": [
+        {
+          "path": "08-MemMachine/packages/server/src/memmachine_server/common/vector_graph_store/nebula_graph_vector_graph_store.py",
+          "line": 1677,
+          "end_line": 1680,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "08-MemMachine/packages/server/src/memmachine_server/common/vector_graph_store/nebula_graph_vector_graph_store.py",
+          "line": 1793,
+          "end_line": 1796,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "08-MemMachine/packages/server/src/memmachine_server/common/vector_graph_store/nebula_graph_vector_graph_store.py",
+          "line": 1677,
+          "end_line": 1680,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "08-MemMachine/packages/server/src/memmachine_server/common/vector_graph_store/nebula_graph_vector_graph_store.py",
+          "line": 1793,
+          "end_line": 1796,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "08-MemMachine/packages/server/src/memmachine_server/common/vector_graph_store/neo4j_vector_graph_store.py",
+      "line": 1029,
+      "end_line": 1030,
+      "prose_kind": "comment",
+      "message": "08-MemMachine/packages/server/src/memmachine_server/common/vector_graph_store/neo4j_vector_graph_store.py:1029-1030: TPX003 same explanation in 2 places: 08-MemMachine/packages/server/src/memmachine_server/common/vector_graph_store/neo4j_vector_graph_store.py:1097-1098 (weakest 08-MemMachine/packages/server/src/memmachine_server/common/vector_graph_store/neo4j_vector_graph_store.py:1029-1030 ~ 08-MemMachine/packages/server/src/memmachine_server/common/vector_graph_store/neo4j_vector_graph_store.py:1097-1098, similarity 1.000)",
+      "locations": [
+        {
+          "path": "08-MemMachine/packages/server/src/memmachine_server/common/vector_graph_store/neo4j_vector_graph_store.py",
+          "line": 1029,
+          "end_line": 1030,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "08-MemMachine/packages/server/src/memmachine_server/common/vector_graph_store/neo4j_vector_graph_store.py",
+          "line": 1097,
+          "end_line": 1098,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "08-MemMachine/packages/server/src/memmachine_server/common/vector_graph_store/neo4j_vector_graph_store.py",
+          "line": 1029,
+          "end_line": 1030,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "08-MemMachine/packages/server/src/memmachine_server/common/vector_graph_store/neo4j_vector_graph_store.py",
+          "line": 1097,
+          "end_line": 1098,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "08-MemMachine/packages/server/src/memmachine_server/semantic_memory/storage/neo4j_semantic_storage.py",
+      "line": 799,
+      "end_line": 800,
+      "prose_kind": "comment",
+      "message": "08-MemMachine/packages/server/src/memmachine_server/semantic_memory/storage/neo4j_semantic_storage.py:799-800: TPX003 same explanation in 2 places: 08-MemMachine/packages/server/src/memmachine_server/semantic_memory/storage/sqlalchemy_pgvector_semantic.py:757-758 (weakest 08-MemMachine/packages/server/src/memmachine_server/semantic_memory/storage/neo4j_semantic_storage.py:799-800 ~ 08-MemMachine/packages/server/src/memmachine_server/semantic_memory/storage/sqlalchemy_pgvector_semantic.py:757-758, similarity 1.000)",
+      "locations": [
+        {
+          "path": "08-MemMachine/packages/server/src/memmachine_server/semantic_memory/storage/neo4j_semantic_storage.py",
+          "line": 799,
+          "end_line": 800,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "08-MemMachine/packages/server/src/memmachine_server/semantic_memory/storage/sqlalchemy_pgvector_semantic.py",
+          "line": 757,
+          "end_line": 758,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "08-MemMachine/packages/server/src/memmachine_server/semantic_memory/storage/neo4j_semantic_storage.py",
+          "line": 799,
+          "end_line": 800,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "08-MemMachine/packages/server/src/memmachine_server/semantic_memory/storage/sqlalchemy_pgvector_semantic.py",
+          "line": 757,
+          "end_line": 758,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "08-MemMachine/packages/server/src/memmachine_server/server/api_v2/config_service.py",
+      "line": 715,
+      "end_line": 720,
+      "prose_kind": "docstring",
+      "message": "08-MemMachine/packages/server/src/memmachine_server/server/api_v2/config_service.py:715-720: TPX003 same explanation in 4 places: 08-MemMachine/packages/server/src/memmachine_server/server/api_v2/config_service.py:741-746, 08-MemMachine/packages/server/src/memmachine_server/server/api_v2/config_service.py:766-771, 08-MemMachine/packages/server/src/memmachine_server/server/api_v2/config_service.py:787-792 (weakest 08-MemMachine/packages/server/src/memmachine_server/server/api_v2/config_service.py:715-720 ~ 08-MemMachine/packages/server/src/memmachine_server/server/api_v2/config_service.py:766-771, similarity 0.800)",
+      "locations": [
+        {
+          "path": "08-MemMachine/packages/server/src/memmachine_server/server/api_v2/config_service.py",
+          "line": 715,
+          "end_line": 720,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "08-MemMachine/packages/server/src/memmachine_server/server/api_v2/config_service.py",
+          "line": 741,
+          "end_line": 746,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "08-MemMachine/packages/server/src/memmachine_server/server/api_v2/config_service.py",
+          "line": 766,
+          "end_line": 771,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "08-MemMachine/packages/server/src/memmachine_server/server/api_v2/config_service.py",
+          "line": 787,
+          "end_line": 792,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "08-MemMachine/packages/server/src/memmachine_server/server/api_v2/config_service.py",
+          "line": 715,
+          "end_line": 720,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "08-MemMachine/packages/server/src/memmachine_server/server/api_v2/config_service.py",
+          "line": 766,
+          "end_line": 771,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8
+      }
+    }
+  ]
+}

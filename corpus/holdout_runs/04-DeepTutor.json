@@ -1,0 +1,627 @@
+{
+  "schema_version": "2",
+  "complete": true,
+  "skipped": [],
+  "excluded": [],
+  "findings": [
+    {
+      "code": "TPX002",
+      "path": "04-DeepTutor/deeptutor/agents/_shared/tool_composition.py",
+      "line": 112,
+      "end_line": 159,
+      "prose_kind": "docstring",
+      "message": "04-DeepTutor/deeptutor/agents/_shared/tool_composition.py:112-159: TPX002 docstring is 388 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 388,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "04-DeepTutor/deeptutor/agents/chat/agentic_pipeline.py",
+      "line": 100,
+      "end_line": 101,
+      "prose_kind": "comment",
+      "message": "04-DeepTutor/deeptutor/agents/chat/agentic_pipeline.py:100-101: TPX003 same explanation in 2 places: 04-DeepTutor/deeptutor/services/config/loader.py:282-283 (weakest 04-DeepTutor/deeptutor/agents/chat/agentic_pipeline.py:100-101 ~ 04-DeepTutor/deeptutor/services/config/loader.py:282-283, similarity 0.760)",
+      "locations": [
+        {
+          "path": "04-DeepTutor/deeptutor/agents/chat/agentic_pipeline.py",
+          "line": 100,
+          "end_line": 101,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "04-DeepTutor/deeptutor/services/config/loader.py",
+          "line": 282,
+          "end_line": 283,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "04-DeepTutor/deeptutor/agents/chat/agentic_pipeline.py",
+          "line": 100,
+          "end_line": 101,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "04-DeepTutor/deeptutor/services/config/loader.py",
+          "line": 282,
+          "end_line": 283,
+          "prose_kind": "comment"
+        },
+        "similarity": 0.76
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "04-DeepTutor/deeptutor/agents/research/pipeline.py",
+      "line": 1,
+      "end_line": 30,
+      "prose_kind": "docstring",
+      "message": "04-DeepTutor/deeptutor/agents/research/pipeline.py:1-30: TPX002 docstring is 210 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 210,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "04-DeepTutor/deeptutor/api/routers/memory.py",
+      "line": 1,
+      "end_line": 28,
+      "prose_kind": "docstring",
+      "message": "04-DeepTutor/deeptutor/api/routers/memory.py:1-28: TPX002 docstring is 208 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 208,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "04-DeepTutor/deeptutor/api/routers/space_mcp.py",
+      "line": 144,
+      "end_line": 145,
+      "prose_kind": "comment",
+      "message": "04-DeepTutor/deeptutor/api/routers/space_mcp.py:144-145: TPX003 same explanation in 2 places: 04-DeepTutor/deeptutor/api/routers/space_mcp.py:341-342 (weakest 04-DeepTutor/deeptutor/api/routers/space_mcp.py:144-145 ~ 04-DeepTutor/deeptutor/api/routers/space_mcp.py:341-342, similarity 1.000)",
+      "locations": [
+        {
+          "path": "04-DeepTutor/deeptutor/api/routers/space_mcp.py",
+          "line": 144,
+          "end_line": 145,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "04-DeepTutor/deeptutor/api/routers/space_mcp.py",
+          "line": 341,
+          "end_line": 342,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "04-DeepTutor/deeptutor/api/routers/space_mcp.py",
+          "line": 144,
+          "end_line": 145,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "04-DeepTutor/deeptutor/api/routers/space_mcp.py",
+          "line": 341,
+          "end_line": 342,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "04-DeepTutor/deeptutor/api/routers/unified_ws.py",
+      "line": 1,
+      "end_line": 29,
+      "prose_kind": "docstring",
+      "message": "04-DeepTutor/deeptutor/api/routers/unified_ws.py:1-29: TPX002 docstring is 213 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 213,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "04-DeepTutor/deeptutor/api/run_server.py",
+      "line": 14,
+      "end_line": 16,
+      "prose_kind": "comment",
+      "message": "04-DeepTutor/deeptutor/api/run_server.py:14-16: TPX003 same explanation in 2 places: 04-DeepTutor/deeptutor_cli/main.py:143-145 (weakest 04-DeepTutor/deeptutor/api/run_server.py:14-16 ~ 04-DeepTutor/deeptutor_cli/main.py:143-145, similarity 1.000)",
+      "locations": [
+        {
+          "path": "04-DeepTutor/deeptutor/api/run_server.py",
+          "line": 14,
+          "end_line": 16,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "04-DeepTutor/deeptutor_cli/main.py",
+          "line": 143,
+          "end_line": 145,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "04-DeepTutor/deeptutor/api/run_server.py",
+          "line": 14,
+          "end_line": 16,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "04-DeepTutor/deeptutor_cli/main.py",
+          "line": 143,
+          "end_line": 145,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "04-DeepTutor/deeptutor/capabilities/explore_context/capability.py",
+      "line": 1,
+      "end_line": 29,
+      "prose_kind": "docstring",
+      "message": "04-DeepTutor/deeptutor/capabilities/explore_context/capability.py:1-29: TPX002 docstring is 241 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 241,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "04-DeepTutor/deeptutor/capabilities/protocol.py",
+      "line": 20,
+      "end_line": 55,
+      "prose_kind": "docstring",
+      "message": "04-DeepTutor/deeptutor/capabilities/protocol.py:20-55: TPX002 docstring is 284 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 284,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "04-DeepTutor/deeptutor/core/agentic/labeled_step.py",
+      "line": 1,
+      "end_line": 31,
+      "prose_kind": "docstring",
+      "message": "04-DeepTutor/deeptutor/core/agentic/labeled_step.py:1-31: TPX002 docstring is 283 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 283,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "04-DeepTutor/deeptutor/core/agentic/labeled_step.py",
+      "line": 124,
+      "end_line": 146,
+      "prose_kind": "docstring",
+      "message": "04-DeepTutor/deeptutor/core/agentic/labeled_step.py:124-146: TPX002 docstring is 210 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 210,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "04-DeepTutor/deeptutor/core/context.py",
+      "line": 35,
+      "end_line": 68,
+      "prose_kind": "docstring",
+      "message": "04-DeepTutor/deeptutor/core/context.py:35-68: TPX002 docstring is 272 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 272,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "04-DeepTutor/deeptutor/knowledge/kb_types.py",
+      "line": 1,
+      "end_line": 44,
+      "prose_kind": "docstring",
+      "message": "04-DeepTutor/deeptutor/knowledge/kb_types.py:1-44: TPX002 docstring is 440 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 440,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "04-DeepTutor/deeptutor/knowledge/manifest.py",
+      "line": 1,
+      "end_line": 26,
+      "prose_kind": "docstring",
+      "message": "04-DeepTutor/deeptutor/knowledge/manifest.py:1-26: TPX002 docstring is 252 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 252,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "04-DeepTutor/deeptutor/multi_user/tool_access.py",
+      "line": 1,
+      "end_line": 28,
+      "prose_kind": "docstring",
+      "message": "04-DeepTutor/deeptutor/multi_user/tool_access.py:1-28: TPX002 docstring is 241 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 241,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "04-DeepTutor/deeptutor/partners/channels/weixin.py",
+      "line": 1490,
+      "end_line": 1491,
+      "prose_kind": "comment",
+      "message": "04-DeepTutor/deeptutor/partners/channels/weixin.py:1490-1491: TPX003 same explanation in 2 places: 04-DeepTutor/deeptutor/partners/channels/weixin.py:1522-1523 (weakest 04-DeepTutor/deeptutor/partners/channels/weixin.py:1490-1491 ~ 04-DeepTutor/deeptutor/partners/channels/weixin.py:1522-1523, similarity 1.000)",
+      "locations": [
+        {
+          "path": "04-DeepTutor/deeptutor/partners/channels/weixin.py",
+          "line": 1490,
+          "end_line": 1491,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "04-DeepTutor/deeptutor/partners/channels/weixin.py",
+          "line": 1522,
+          "end_line": 1523,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "04-DeepTutor/deeptutor/partners/channels/weixin.py",
+          "line": 1490,
+          "end_line": 1491,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "04-DeepTutor/deeptutor/partners/channels/weixin.py",
+          "line": 1522,
+          "end_line": 1523,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "04-DeepTutor/deeptutor/runtime/providers/__init__.py",
+      "line": 1,
+      "end_line": 26,
+      "prose_kind": "docstring",
+      "message": "04-DeepTutor/deeptutor/runtime/providers/__init__.py:1-26: TPX002 docstring is 208 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 208,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "04-DeepTutor/deeptutor/services/cli_apps/installer.py",
+      "line": 1,
+      "end_line": 24,
+      "prose_kind": "docstring",
+      "message": "04-DeepTutor/deeptutor/services/cli_apps/installer.py:1-24: TPX002 docstring is 232 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 232,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "04-DeepTutor/deeptutor/services/cli_apps/installer.py",
+      "line": 222,
+      "end_line": 223,
+      "prose_kind": "comment",
+      "message": "04-DeepTutor/deeptutor/services/cli_apps/installer.py:222-223: TPX003 same explanation in 2 places: 04-DeepTutor/tests/services/cli_apps/test_installer.py:132-133 (weakest 04-DeepTutor/deeptutor/services/cli_apps/installer.py:222-223 ~ 04-DeepTutor/tests/services/cli_apps/test_installer.py:132-133, similarity 0.824)",
+      "locations": [
+        {
+          "path": "04-DeepTutor/deeptutor/services/cli_apps/installer.py",
+          "line": 222,
+          "end_line": 223,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "04-DeepTutor/tests/services/cli_apps/test_installer.py",
+          "line": 132,
+          "end_line": 133,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "04-DeepTutor/deeptutor/services/cli_apps/installer.py",
+          "line": 222,
+          "end_line": 223,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "04-DeepTutor/tests/services/cli_apps/test_installer.py",
+          "line": 132,
+          "end_line": 133,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8235294117647058
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "04-DeepTutor/deeptutor/services/cli_apps/models.py",
+      "line": 1,
+      "end_line": 24,
+      "prose_kind": "docstring",
+      "message": "04-DeepTutor/deeptutor/services/cli_apps/models.py:1-24: TPX002 docstring is 221 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 221,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "04-DeepTutor/deeptutor/services/cli_apps/paths.py",
+      "line": 1,
+      "end_line": 31,
+      "prose_kind": "docstring",
+      "message": "04-DeepTutor/deeptutor/services/cli_apps/paths.py:1-31: TPX002 docstring is 231 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 231,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "04-DeepTutor/deeptutor/services/embedding/adapters/base.py",
+      "line": 33,
+      "end_line": 61,
+      "prose_kind": "docstring",
+      "message": "04-DeepTutor/deeptutor/services/embedding/adapters/base.py:33-61: TPX002 docstring is 204 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 204,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "04-DeepTutor/deeptutor/services/mcp/catalog/models.py",
+      "line": 1,
+      "end_line": 29,
+      "prose_kind": "docstring",
+      "message": "04-DeepTutor/deeptutor/services/mcp/catalog/models.py:1-29: TPX002 docstring is 253 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 253,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "04-DeepTutor/deeptutor/services/mcp/oauth.py",
+      "line": 1,
+      "end_line": 31,
+      "prose_kind": "docstring",
+      "message": "04-DeepTutor/deeptutor/services/mcp/oauth.py:1-31: TPX002 docstring is 296 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 296,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "04-DeepTutor/deeptutor/services/mcp/user_config.py",
+      "line": 1,
+      "end_line": 23,
+      "prose_kind": "docstring",
+      "message": "04-DeepTutor/deeptutor/services/mcp/user_config.py:1-23: TPX002 docstring is 215 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 215,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "04-DeepTutor/deeptutor/services/memory/consolidator/modes/_shims.py",
+      "line": 1,
+      "end_line": 25,
+      "prose_kind": "docstring",
+      "message": "04-DeepTutor/deeptutor/services/memory/consolidator/modes/_shims.py:1-25: TPX002 docstring is 207 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 207,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "04-DeepTutor/deeptutor/services/parsing/engines/_install.py",
+      "line": 53,
+      "end_line": 54,
+      "prose_kind": "comment",
+      "message": "04-DeepTutor/deeptutor/services/parsing/engines/_install.py:53-54: TPX003 same explanation in 2 places: 04-DeepTutor/deeptutor/services/parsing/engines/mineru/models.py:33-34 (weakest 04-DeepTutor/deeptutor/services/parsing/engines/_install.py:53-54 ~ 04-DeepTutor/deeptutor/services/parsing/engines/mineru/models.py:33-34, similarity 1.000)",
+      "locations": [
+        {
+          "path": "04-DeepTutor/deeptutor/services/parsing/engines/_install.py",
+          "line": 53,
+          "end_line": 54,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "04-DeepTutor/deeptutor/services/parsing/engines/mineru/models.py",
+          "line": 33,
+          "end_line": 34,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "04-DeepTutor/deeptutor/services/parsing/engines/_install.py",
+          "line": 53,
+          "end_line": 54,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "04-DeepTutor/deeptutor/services/parsing/engines/mineru/models.py",
+          "line": 33,
+          "end_line": 34,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "04-DeepTutor/deeptutor/services/sandbox/runner/server.py",
+      "line": 1,
+      "end_line": 59,
+      "prose_kind": "docstring",
+      "message": "04-DeepTutor/deeptutor/services/sandbox/runner/server.py:1-59: TPX002 docstring is 398 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 398,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "04-DeepTutor/deeptutor/services/session/source_inventory.py",
+      "line": 1,
+      "end_line": 28,
+      "prose_kind": "docstring",
+      "message": "04-DeepTutor/deeptutor/services/session/source_inventory.py:1-28: TPX002 docstring is 214 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 214,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "04-DeepTutor/deeptutor/services/skill/hub.py",
+      "line": 1,
+      "end_line": 40,
+      "prose_kind": "docstring",
+      "message": "04-DeepTutor/deeptutor/services/skill/hub.py:1-40: TPX002 docstring is 239 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 239,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "04-DeepTutor/deeptutor/services/skill/service.py",
+      "line": 1,
+      "end_line": 47,
+      "prose_kind": "docstring",
+      "message": "04-DeepTutor/deeptutor/services/skill/service.py:1-47: TPX002 docstring is 264 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 264,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "04-DeepTutor/deeptutor/services/subagent/gemini.py",
+      "line": 98,
+      "end_line": 99,
+      "prose_kind": "comment",
+      "message": "04-DeepTutor/deeptutor/services/subagent/gemini.py:98-99: TPX003 same explanation in 2 places: 04-DeepTutor/deeptutor/services/subagent/kimi.py:93-94 (weakest 04-DeepTutor/deeptutor/services/subagent/gemini.py:98-99 ~ 04-DeepTutor/deeptutor/services/subagent/kimi.py:93-94, similarity 1.000)",
+      "locations": [
+        {
+          "path": "04-DeepTutor/deeptutor/services/subagent/gemini.py",
+          "line": 98,
+          "end_line": 99,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "04-DeepTutor/deeptutor/services/subagent/kimi.py",
+          "line": 93,
+          "end_line": 94,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "04-DeepTutor/deeptutor/services/subagent/gemini.py",
+          "line": 98,
+          "end_line": 99,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "04-DeepTutor/deeptutor/services/subagent/kimi.py",
+          "line": 93,
+          "end_line": 94,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "04-DeepTutor/deeptutor/services/subagent/kimi.py",
+      "line": 1,
+      "end_line": 25,
+      "prose_kind": "docstring",
+      "message": "04-DeepTutor/deeptutor/services/subagent/kimi.py:1-25: TPX002 docstring is 220 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 220,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "04-DeepTutor/deeptutor/services/subagent/models.py",
+      "line": 1,
+      "end_line": 23,
+      "prose_kind": "docstring",
+      "message": "04-DeepTutor/deeptutor/services/subagent/models.py:1-23: TPX002 docstring is 203 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 203,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "04-DeepTutor/deeptutor/services/subagent/opencode_family.py",
+      "line": 1,
+      "end_line": 23,
+      "prose_kind": "docstring",
+      "message": "04-DeepTutor/deeptutor/services/subagent/opencode_family.py:1-23: TPX002 docstring is 215 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 215,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "04-DeepTutor/deeptutor/tools/builtin/__init__.py",
+      "line": 373,
+      "end_line": 374,
+      "prose_kind": "comment",
+      "message": "04-DeepTutor/deeptutor/tools/builtin/__init__.py:373-374: TPX003 same explanation in 2 places: 04-DeepTutor/deeptutor/tools/exec_tool.py:99-100 (weakest 04-DeepTutor/deeptutor/tools/builtin/__init__.py:373-374 ~ 04-DeepTutor/deeptutor/tools/exec_tool.py:99-100, similarity 0.750)",
+      "locations": [
+        {
+          "path": "04-DeepTutor/deeptutor/tools/builtin/__init__.py",
+          "line": 373,
+          "end_line": 374,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "04-DeepTutor/deeptutor/tools/exec_tool.py",
+          "line": 99,
+          "end_line": 100,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "04-DeepTutor/deeptutor/tools/builtin/__init__.py",
+          "line": 373,
+          "end_line": 374,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "04-DeepTutor/deeptutor/tools/exec_tool.py",
+          "line": 99,
+          "end_line": 100,
+          "prose_kind": "comment"
+        },
+        "similarity": 0.75
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "04-DeepTutor/tests/api/test_unified_ws_turn_runtime.py",
+      "line": 188,
+      "end_line": 189,
+      "prose_kind": "comment",
+      "message": "04-DeepTutor/tests/api/test_unified_ws_turn_runtime.py:188-189: TPX003 same explanation in 3 places: 04-DeepTutor/tests/api/test_unified_ws_turn_runtime.py:717-718, 04-DeepTutor/tests/api/test_unified_ws_turn_runtime.py:826-827 (weakest 04-DeepTutor/tests/api/test_unified_ws_turn_runtime.py:188-189 ~ 04-DeepTutor/tests/api/test_unified_ws_turn_runtime.py:717-718, similarity 1.000)",
+      "locations": [
+        {
+          "path": "04-DeepTutor/tests/api/test_unified_ws_turn_runtime.py",
+          "line": 188,
+          "end_line": 189,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "04-DeepTutor/tests/api/test_unified_ws_turn_runtime.py",
+          "line": 717,
+          "end_line": 718,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "04-DeepTutor/tests/api/test_unified_ws_turn_runtime.py",
+          "line": 826,
+          "end_line": 827,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "04-DeepTutor/tests/api/test_unified_ws_turn_runtime.py",
+          "line": 188,
+          "end_line": 189,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "04-DeepTutor/tests/api/test_unified_ws_turn_runtime.py",
+          "line": 717,
+          "end_line": 718,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    }
+  ]
+}

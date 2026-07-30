@@ -374,6 +374,63 @@ assumed away. **The gate comparison itself is unchanged: the combined main-readi
 denominator, the annotation rule, or the two-class rule. It changes only *how many repositories are
 scanned and how the 40 are spread across them* — the axis on which no verdict has been observed.
 
+### 5.0.2 AMENDMENT 3 — the run health check, corrected 2026-07-30 before any labelling
+
+🔴 **This corrects a requirement the supervisor wrote into `preregistration.json` hours earlier, and
+it was wrong when written.** `run_requirements` demanded `complete: true` and `skipped: 0` from every
+one of the ten fixed repositories. Two of them cannot satisfy it:
+
+| repo | skipped | why |
+|---|---|---|
+| `06-claude-scientific-writer` | 1 | `zotero_docx_preserver.py` — `f-string: single '}' is not allowed` |
+| `09-PraisonAI` | 5 | four test modules with `Expected ',', found name`, one with an unclosed string |
+
+Every one is genuinely unparseable Python that the repository ships. `complete` is `false`
+*because* `skipped > 0`, so this is one condition wearing two names.
+
+**The requirement contradicted this repository's own accepted precedent.** `crewAI-full` has been in
+the calibration corpus all along at `complete: false` with 5 unparseable files, named and accepted —
+never treated as a broken run. Requiring `skipped: 0` of the holdout would have failed the gate for a
+reason with nothing whatever to do with false positives.
+
+**Replaced by two checks that catch what the original was actually for:**
+
+* **`max_skipped_fraction: 0.01`** — a run in which more than one file in a hundred fails to parse is
+  not a measurement. The three known cases sit far inside it: `crewAI-full` 5/1269 = 0.0039,
+  `06` 1/184 = 0.0054, `09` 5/4255 = 0.0012.
+* **Per-run pins rather than a predicted tolerance.** §7 step 1 promised the walk would be "within a
+  stated tolerance" of §3.0.1's file count and **no tolerance was ever stated**, so nothing compared
+  them and a 63% shortfall would have passed unnoticed. The ten runs of record now exist and are
+  hashed, so the holdout pins each run's **observed** walked-file count exactly as the corpus does.
+  This adds no freedom — the content hash already fixes the run — and it does the job the tolerance
+  was meant to do: catch a *later* re-run that measures less.
+
+### 5.0.3 Disclosed, not amended — the walker does not enter hidden directories
+
+Proved on a constructed fixture rather than inferred: three byte-identical prose blocks, two in
+visible directories and one under `.claude/skills/`, produce a finding naming **two** locations. The
+CLI documents it (`--help`: "hidden entries are skipped"), so this is shipped policy, not a defect,
+and it applied identically to the six calibration repositories.
+
+It matters here because it decides what "the emitted population" means:
+
+| repo | tracked `.py` | under a hidden directory | seen by the detector |
+|---|---|---|---|
+| `06-claude-scientific-writer` | 506 | **322** (`.claude/skills/`) | **184 — 36%** |
+| `10-skills` | 335 | 5 (`.github/`) | 330 |
+| `07-klavis` | 636 | 3 (`.fast-agent/`) | 633 |
+
+**Consequence for §2 filter 6, stated so it is not rediscovered as a surprise:** the 250-`.py` floor
+was counted from the GitHub tree API, which counts hidden directories. `06` clears the floor on 506
+while presenting 184 files. The floor is a *chance-of-yield* heuristic and Amendment 2 already
+removed its load-bearing role by fixing the repository count instead of the finding count, so it is
+disclosed rather than re-derived — re-deriving a filter from observed yield would be selecting on
+detector output.
+
+**This does not bias the gate.** The measured quantity is `FP / TPX003 clusters emitted`, and a user
+running `tooprolix` on these repositories sees exactly the same walk. It would matter to a *recall*
+claim, and this gate makes none — which is itself the limitation §8 records.
+
 ### 5.0.1 The threshold stays 0.40, and here is the correction that makes it tighter
 
 **Disclosed 2026-07-30, owner's decision to leave the number alone.** The 0.40 was chosen against the

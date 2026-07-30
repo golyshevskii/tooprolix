@@ -1,0 +1,2969 @@
+{
+  "schema_version": "2",
+  "complete": true,
+  "skipped": [],
+  "excluded": [],
+  "findings": [
+    {
+      "code": "TPX003",
+      "path": "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-apply-udf/code/generate_data.py",
+      "line": 1,
+      "end_line": 2,
+      "prose_kind": "comment",
+      "message": "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-apply-udf/code/generate_data.py:1-2: TPX003 same explanation in 144 places: 10-skills/skills/accelerated-computing-cudf/evals/files/cudf-apply-udf/code/udf_pipeline.py:1-2, 10-skills/skills/accelerated-computing-cudf/evals/files/cudf-csv-etl/code/etl_pipeline.py:1-2, 10-skills/skills/accelerated-computing-cudf/evals/files/cudf-csv-etl/code/generate_data.py:1-2, 10-skills/skills/accelerated-computing-cudf/evals/files/cudf-groupby-agg/code/generate_data.py:1-2, 10-skills/skills/accelerated-computing-cudf/evals/files/cudf-groupby-agg/code/groupby_analysis.py:1-2, 10-skills/skills/accelerated-computing-cudf/evals/files/cudf-multi-join/code/generate_data.py:1-2, 10-skills/skills/accelerated-computing-cudf/evals/files/cudf-multi-join/code/multi_join.py:1-2, 10-skills/skills/accelerated-computing-cudf/evals/files/cudf-null-handling/code/generate_data.py:1-2, 10-skills/skills/accelerated-computing-cudf/evals/files/cudf-null-handling/code/null_pipeline.py:1-2, 10-skills/skills/accelerated-computing-cudf/evals/files/cudf-parquet-io/code/generate_data.py:1-2 … and 133 more (weakest 10-skills/skills/accelerated-computing-cudf/evals/files/cudf-apply-udf/code/generate_data.py:1-2 ~ 10-skills/skills/accelerated-computing-cudf/evals/files/cudf-apply-udf/code/udf_pipeline.py:1-2, similarity 1.000)",
+      "locations": [
+        {
+          "path": "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-apply-udf/code/generate_data.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-apply-udf/code/udf_pipeline.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-csv-etl/code/etl_pipeline.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-csv-etl/code/generate_data.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-groupby-agg/code/generate_data.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-groupby-agg/code/groupby_analysis.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-multi-join/code/generate_data.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-multi-join/code/multi_join.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-null-handling/code/generate_data.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-null-handling/code/null_pipeline.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-parquet-io/code/generate_data.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-parquet-io/code/parquet_pipeline.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-pivot-melt/code/generate_data.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-pivot-melt/code/reshape_analysis.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-string-ops/code/clean_contacts.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-string-ops/code/generate_data.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-timeseries-resample/code/generate_data.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-timeseries-resample/code/timeseries_analysis.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-window-functions/code/generate_data.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-window-functions/code/window_analysis.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/accelerated-computing-cudf/evals/files/negative-deep-learning-training/code/train.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/accelerated-computing-cudf/evals/files/source-cudf-null-fillna-semantics/code/null_cleanup.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cuopt-numerical-optimization-api/assets/python/lp_duals/model.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cuopt-numerical-optimization-api/assets/python/mps_solver/model.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cuopt-server-api-python/assets/lp_basic/client.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cuopt-server-api-python/assets/milp_basic/client.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cuopt-server-api-python/assets/pdp_basic/client.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cuopt-server-api-python/assets/vrp_basic/client.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cuopt-server-api-python/assets/vrp_simple/client.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/data-designer/scripts/get_person_object_schema.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/dynamo-interconnect-check/scripts/check_interconnect.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/dynamo-recipe-runner/scripts/recipe_tool.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/dynamo-router-starter/scripts/check_router_health.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/dynamo-troubleshoot/scripts/collect_dynamo_debug_bundle.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/jetson-customize-pinmux/scripts/_pinmux_common.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/jetson-customize-pinmux/scripts/_pinmux_dt.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/jetson-customize-pinmux/scripts/generate_dtsi.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/jetson-customize-pinmux/scripts/modify_pinmux.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/jetson-inference-mem-tune/scripts/recommend.py",
+          "line": 2,
+          "end_line": 4,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/jetson-validate-image/scripts/uart_session.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nemo-data-designer-plugin/scripts/get_person_object_schema.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nemo-relay-migrate-from-flow/scripts/migrate_from_nemo_flow.py",
+          "line": 2,
+          "end_line": 4,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/assemble-package-source/scripts/check_dependencies.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/assemble-package-source/scripts/run.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/content-agents/references/material-agent-client/scripts/check_dependencies.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/content-agents/references/material-agent-client/scripts/run.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/content-agents/references/physics-agent-client/scripts/check_dependencies.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/content-agents/references/physics-agent-client/scripts/run.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/content-agents/references/texture-agent-client/scripts/check_dependencies.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/content-agents/references/texture-agent-client/scripts/run.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/content-agents/scripts/check_dependencies.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/content-agents/scripts/content_agent_check_dependencies.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/content-agents/scripts/content_agent_client.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/content-agents/scripts/content_agent_material_cleanup.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/content-agents/scripts/run.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/convert-to-usd/references/mujoco-usd-converter/scripts/check_dependencies.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/convert-to-usd/references/mujoco-usd-converter/scripts/run.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/convert-to-usd/references/urdf-usd-converter/scripts/check_dependencies.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/convert-to-usd/references/urdf-usd-converter/scripts/run.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/convert-to-usd/references/usd-convert-cad/scripts/check_dependencies.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/convert-to-usd/references/usd-convert-cad/scripts/kit_app_template_cad.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/convert-to-usd/references/usd-convert-cad/scripts/run.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/convert-to-usd/references/usd-convert-gsplat/scripts/check_dependencies.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/convert-to-usd/references/usd-convert-gsplat/scripts/run.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/convert-to-usd/scripts/check_dependencies.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/convert-to-usd/scripts/run.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/identify-asset-context/scripts/check_dependencies.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/identify-asset-context/scripts/run.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/nv-core-package-sample/scripts/check_dependencies.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/nv-core-package-sample/scripts/run.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/nv-core-package-sample-validation/scripts/check_dependencies.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/nv-core-package-sample-validation/scripts/run.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/omni-asset-validate/scripts/check_dependencies.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/omni-asset-validate/scripts/run.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/omni-asset-validate-geometry/scripts/check_dependencies.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/omni-asset-validate-geometry/scripts/run.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/omni-asset-validate-physics/scripts/check_dependencies.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/omni-asset-validate-physics/scripts/run.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/ovrtx-render-service/scripts/check_dependencies.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/ovrtx-render-service/scripts/run.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/ovrtx-render-service/scripts/stage_prep.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/ovrtx-render-service/scripts/turntable.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/preflight/scripts/preflight.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/simready-conform-profile/references/FET_000_CORE/scripts/check_dependencies.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/simready-conform-profile/references/FET_000_CORE/scripts/run.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/simready-conform-profile/references/FET_001_MINIMAL/scripts/check_dependencies.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/simready-conform-profile/references/FET_001_MINIMAL/scripts/run.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/simready-conform-profile/references/FET_004_SIMULATE_MULTI_BODY_PHYSICS/scripts/check_dependencies.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/simready-conform-profile/references/FET_004_SIMULATE_MULTI_BODY_PHYSICS/scripts/run.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/simready-conform-profile/references/FET_005_SIMULATE_GRASP_PHYSICS/scripts/author_grasp_line.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/simready-conform-profile/scripts/check_dependencies.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/simready-conform-profile/scripts/run.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/simready-validate/scripts/check_dependencies.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/simready-validate/scripts/run.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/validate-usd-minimum/scripts/check_dependencies.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/references/validate-usd-minimum/scripts/run.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/shared/preflight_manifest.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/shared/script_utils.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/shared/simready_package.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/shared/simready_package_check_dependencies.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-cad-to-simready/shared/usd_convert_cad_diagnostics.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-usd-performance-tuning/references/optimization-report/scripts/descent_convergence_common.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-usd-performance-tuning/references/optimization-report/scripts/test_validate_report_descent.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-usd-performance-tuning/references/optimization-report/scripts/validate_report.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-usd-performance-tuning/references/report-templates/render_preview.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-usd-performance-tuning/references/usd-optimize-run-operations/scripts/run_batch.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-usd-performance-tuning/references/usd-structure-assessment/references/usd-hierarchy-dedupe-candidates/scripts/instance_candidate_finder.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-usd-performance-tuning/references/usd-structure-assessment/references/usd-hierarchy-dedupe-candidates/scripts/select_frontier.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-usd-performance-tuning/references/usd-structure-assessment/references/usd-mesh-fragmentation-candidates/scripts/mesh_fragmentation_finder.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/omniverse-usd-performance-tuning/references/usd-validation-runner/scripts/usd_validation_executor.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/physical-ai-defect-image-generation/scripts/render_defect_spec.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/physical-ai-video-data-augmentation/scripts/generate_configs.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/physical-ai-video-data-augmentation/scripts/osmo_barrier.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/physical-ai-video-data-augmentation/scripts/pre_submit_guard.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/skill-card-generator/scripts/discover_assets.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/skill-card-generator/scripts/render_card.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/skill-card-generator/scripts/validate_submission.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tao-finetune-huggingface-model/examples/convnext-tiny-cifar10/infer.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tao-finetune-huggingface-model/examples/convnext-tiny-cifar10/prepare_data.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tao-finetune-huggingface-model/examples/convnext-tiny-cifar10/run_eval.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tao-finetune-huggingface-model/examples/convnext-tiny-cifar10/train.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tao-finetune-huggingface-model/examples/detr-resnet50-cppe5/infer.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tao-finetune-huggingface-model/examples/detr-resnet50-cppe5/prepare_data.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tao-finetune-huggingface-model/examples/detr-resnet50-cppe5/run_eval.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tao-finetune-huggingface-model/examples/detr-resnet50-cppe5/train.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tao-finetune-huggingface-model/examples/segformer-b0-foodseg103/infer.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tao-finetune-huggingface-model/examples/segformer-b0-foodseg103/prepare_data.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tao-finetune-huggingface-model/examples/segformer-b0-foodseg103/run_eval.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tao-finetune-huggingface-model/examples/segformer-b0-foodseg103/train.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tao-finetune-huggingface-model/examples/smolvlm-256m-vqav2/infer.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tao-finetune-huggingface-model/examples/smolvlm-256m-vqav2/merge_lora.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tao-finetune-huggingface-model/examples/smolvlm-256m-vqav2/prepare_data.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tao-finetune-huggingface-model/examples/smolvlm-256m-vqav2/run_eval.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tao-finetune-huggingface-model/examples/smolvlm-256m-vqav2/train.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tao-generate-video-reasoning-annotations/references/prompts_traffic.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tao-generate-video-reasoning-annotations/references/prompts_warehouse.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tao-run-deft-aoi/scripts/align_token_usage.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tao-run-deft-aoi/scripts/analyze_kpi.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tao-run-deft-aoi/scripts/changenet_data_pair_prepare.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tao-run-deft-aoi/scripts/init_deft_state.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tao-run-deft-aoi/scripts/log_stage.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tao-run-deft-aoi/scripts/prepare_inference_spec.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tao-run-deft-aoi/scripts/stage_backbone.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tao-run-deft-aoi/scripts/validate_training_csv.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-apply-udf/code/generate_data.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "10-skills/skills/accelerated-computing-cudf/evals/files/cudf-apply-udf/code/udf_pipeline.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "10-skills/skills/aiq-research/scripts/aiq.py",
+      "line": 2,
+      "end_line": 15,
+      "prose_kind": "comment",
+      "message": "10-skills/skills/aiq-research/scripts/aiq.py:2-15: TPX003 same explanation in 135 places: 10-skills/skills/cupynumeric-hdf5/assets/hdf5_batched_read.py:2-15, 10-skills/skills/cupynumeric-hdf5/assets/hdf5_roundtrip.py:2-15, 10-skills/skills/cupynumeric-migration-readiness/assets/examples/blocks_scaling.py:1-14, 10-skills/skills/cupynumeric-migration-readiness/assets/examples/needs_refactor.py:1-14, 10-skills/skills/cupynumeric-migration-readiness/assets/examples/scales_well.py:1-14, 10-skills/skills/cupynumeric-migration-readiness/evals/files/api_gap_hotpath.py:1-14, 10-skills/skills/cupynumeric-migration-readiness/evals/files/blocks_scaling.py:1-14, 10-skills/skills/cupynumeric-migration-readiness/evals/files/convergence_loop.py:1-14, 10-skills/skills/cupynumeric-migration-readiness/evals/files/cupy_mixed.py:1-14, 10-skills/skills/cupynumeric-migration-readiness/evals/files/dense_linalg.py:1-14 … and 124 more (weakest 10-skills/skills/dali-dynamic-mode/evals/files/pipeline_to_convert.py:1-13 ~ 10-skills/skills/earth2studio-create-datasource/evals/targets/eval_1_target.py:1-15, similarity 0.785)",
+      "locations": [
+        {
+          "path": "10-skills/skills/aiq-research/scripts/aiq.py",
+          "line": 2,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cupynumeric-hdf5/assets/hdf5_batched_read.py",
+          "line": 2,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cupynumeric-hdf5/assets/hdf5_roundtrip.py",
+          "line": 2,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cupynumeric-migration-readiness/assets/examples/blocks_scaling.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cupynumeric-migration-readiness/assets/examples/needs_refactor.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cupynumeric-migration-readiness/assets/examples/scales_well.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cupynumeric-migration-readiness/evals/files/api_gap_hotpath.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cupynumeric-migration-readiness/evals/files/blocks_scaling.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cupynumeric-migration-readiness/evals/files/convergence_loop.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cupynumeric-migration-readiness/evals/files/cupy_mixed.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cupynumeric-migration-readiness/evals/files/dense_linalg.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cupynumeric-migration-readiness/evals/files/dense_with_scipy_boundary.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cupynumeric-migration-readiness/evals/files/graph_workload.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cupynumeric-migration-readiness/evals/files/item_sync.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cupynumeric-migration-readiness/evals/files/jacobi_heat.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cupynumeric-migration-readiness/evals/files/many_blocks.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cupynumeric-migration-readiness/evals/files/monte_carlo_bs.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cupynumeric-migration-readiness/evals/files/monte_carlo_good.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cupynumeric-migration-readiness/evals/files/needs_refactor.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cupynumeric-migration-readiness/evals/files/scales_well.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cupynumeric-migration-readiness/evals/files/sequential_recurrence.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cupynumeric-migration-readiness/evals/files/sparse_sklearn.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cupynumeric-migration-readiness/evals/files/tiny_array.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cupynumeric-migration-readiness/evals/files/unlisted_api.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cupynumeric-migration-readiness/evals/files/view_mutation.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cupynumeric-migration-readiness/scripts/fetch_api_support.py",
+          "line": 3,
+          "end_line": 16,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cupynumeric-migration-readiness/scripts/tests/test_fetch_api_support.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cupynumeric-parallel-data-load/assets/examples/parallel_npy_load.py",
+          "line": 1,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/dali-dynamic-mode/evals/files/pipeline_to_convert.py",
+          "line": 1,
+          "end_line": 13,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/deepstream-generate-pipeline/scripts/generate_pipeline.py",
+          "line": 3,
+          "end_line": 16,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/deepstream-generate-pipeline/scripts/lint_data.py",
+          "line": 3,
+          "end_line": 16,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/deepstream-generate-pipeline/scripts/validate_pipeline.py",
+          "line": 3,
+          "end_line": 16,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/deepstream-generate-pipeline/tests/__init__.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/deepstream-generate-pipeline/tests/test_cli_format.py",
+          "line": 3,
+          "end_line": 16,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/deepstream-generate-pipeline/tests/test_golden.py",
+          "line": 3,
+          "end_line": 16,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/deepstream-generate-pipeline/tests/test_retriever.py",
+          "line": 3,
+          "end_line": 16,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/deepstream-generate-pipeline/tests/test_validator.py",
+          "line": 3,
+          "end_line": 16,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/deepstream-import-vision-model/scripts/model/inspect-onnx.py",
+          "line": 3,
+          "end_line": 16,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/deepstream-import-vision-model/scripts/model/make-static-batch-onnx.py",
+          "line": 3,
+          "end_line": 16,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/deepstream-import-vision-model/scripts/report/generate-benchmark-charts.py",
+          "line": 3,
+          "end_line": 16,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/deepstream-import-vision-model/scripts/report/md-to-html-pdf.py",
+          "line": 3,
+          "end_line": 16,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/deepstream-import-vision-model/scripts/report/render-mermaid-for-pdf.py",
+          "line": 3,
+          "end_line": 16,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/deepstream-profile-pipeline/scripts/capacity_report.py",
+          "line": 3,
+          "end_line": 16,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/deepstream-profile-pipeline/tests/__init__.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/deepstream-profile-pipeline/tests/test_capacity_report.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/deepstream-sop/references/ddm_net_reference.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/deepstream-sop/references/export_ddm_to_tensorrt_reference.py",
+          "line": 2,
+          "end_line": 17,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/deepstream-sop/references/messager_reference.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/deepstream-sop/references/missing_number_detector_reference.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/deepstream-sop/references/protos_init_reference.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/deepstream-sop/references/sop_step_checker_reference.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/deepstream-sop/references/test_api_endpoints_reference.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/deepstream-sop/references/triton_model_reference.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/deepstream-sop/references/utils_reference.py",
+          "line": 1,
+          "end_line": 16,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/deepstream-sop/references/vllm_inference_reference.py",
+          "line": 1,
+          "end_line": 16,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/dicom-metadata-extract/fixtures/generate_sample.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/dicom-metadata-extract/scripts/extract_metadata.py",
+          "line": 2,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/dicom-metadata-extract/tests/test_basic.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/dicom-series-preflight/fixtures/generate_fixtures.py",
+          "line": 2,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/dicom-series-preflight/scripts/preflight_series.py",
+          "line": 2,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/dicom-series-preflight/tests/test_preflight_series.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/dicom-series-to-volume/fixtures/generate_fixtures.py",
+          "line": 2,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/dicom-series-to-volume/scripts/series_to_volume.py",
+          "line": 2,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-datasource/evals/targets/eval_1_target.py",
+          "line": 1,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-datasource/evals/targets/eval_2_target.py",
+          "line": 1,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-datasource/evals/targets/eval_3_target.py",
+          "line": 1,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-datasource/evals/targets/eval_4_target.py",
+          "line": 1,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-datasource/evals/targets/test/eval_1_test_target.py",
+          "line": 1,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-datasource/evals/targets/test/eval_2_test_target.py",
+          "line": 1,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-datasource/evals/targets/test/eval_3_test_target.py",
+          "line": 1,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-datasource/evals/targets/test/eval_4_test_target.py",
+          "line": 1,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-datasource/references/implementation-guide.py",
+          "line": 1,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-datasource/references/testing-guide.py",
+          "line": 1,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_1_target.py",
+          "line": 1,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_2_target.py",
+          "line": 1,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_3_target.py",
+          "line": 1,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-diagnostic/evals/targets/test/eval_1_test_target.py",
+          "line": 1,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-diagnostic/evals/targets/test/eval_2_test_target.py",
+          "line": 1,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-diagnostic/evals/targets/test/eval_3_test_target.py",
+          "line": 1,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-diagnostic/references/method-templates.py",
+          "line": 1,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-diagnostic/references/skeleton-template.py",
+          "line": 1,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-diagnostic/references/testing-guide.py",
+          "line": 1,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_1_target.py",
+          "line": 1,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_2_target.py",
+          "line": 1,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/test/eval_1_test_target.py",
+          "line": 1,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/test/eval_2_test_target.py",
+          "line": 1,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-prognostic/references/method-templates.py",
+          "line": 1,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-prognostic/references/skeleton-template.py",
+          "line": 1,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-prognostic/references/testing-guide.py",
+          "line": 1,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-data-fetch/evals/targets/eval_1_target.py",
+          "line": 1,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-data-fetch/evals/targets/eval_4_target.py",
+          "line": 1,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-data-fetch/evals/targets/eval_7_target.py",
+          "line": 1,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-deterministic-forecast/evals/targets/eval_1_target.py",
+          "line": 1,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-deterministic-forecast/evals/targets/eval_2_target.py",
+          "line": 1,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-deterministic-forecast/evals/targets/eval_3_target.py",
+          "line": 1,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/hsb-flash/scripts/v2.0.0/local_manifest.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/hsb-flash/scripts/v2.0.0/make_manifest.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nemotron-asr-finetune/scripts/main.py",
+          "line": 3,
+          "end_line": 16,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nemotron-speech/scripts/main.py",
+          "line": 3,
+          "end_line": 16,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nv-generate-ct-rflow/scripts/_anatomy.py",
+          "line": 2,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nv-generate-ct-rflow/scripts/_summary_card.py",
+          "line": 2,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nv-generate-ct-rflow/scripts/list_anatomies.py",
+          "line": 2,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nv-generate-ct-rflow/scripts/run_ct_from_mask.py",
+          "line": 2,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nv-generate-ct-rflow/scripts/run_ct_image.py",
+          "line": 2,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nv-generate-ct-rflow/scripts/run_ct_mask.py",
+          "line": 2,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nv-generate-ct-rflow/scripts/run_rflow_ct.py",
+          "line": 2,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nv-generate-ct-rflow/scripts/wrapper_utils.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nv-generate-ct-rflow/tests/test_run_ct_from_mask.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nv-generate-ct-rflow/tests/test_run_ct_image.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nv-generate-ct-rflow/tests/test_run_ct_mask.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nv-generate-ct-rflow/tests/test_run_rflow_ct.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nv-generate-mr/scripts/run_mr.py",
+          "line": 2,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nv-generate-mr/tests/test_run_mr.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nv-generate-mr-brain/scripts/run_mr_brain.py",
+          "line": 2,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nv-generate-mr-brain/tests/test_run_mr_brain.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nv-generate-mr-brain-finetune/scripts/run_mr_brain_finetune.py",
+          "line": 2,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nv-generate-mr-brain-finetune/tests/test_run_mr_brain_finetune.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nv-generate-vae-finetune/scripts/run_vae_finetune.py",
+          "line": 2,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nv-generate-vae-finetune/tests/test_run_vae_finetune.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nv-reason-cxr/scripts/run_nv_reason_cxr.py",
+          "line": 2,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nv-reason-cxr/tests/test_nv_reason_cxr.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nv-segment-ct/fixtures/fetch_spleen_fixture.py",
+          "line": 2,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nv-segment-ct/fixtures/generate_preflight_fixture.py",
+          "line": 2,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nv-segment-ct/scripts/run_vista3d.py",
+          "line": 2,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nv-segment-ct/tests/test_run_vista3d.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nv-segment-ct-finetune/scripts/run_finetune.py",
+          "line": 2,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nv-segment-ct-finetune/tests/test_run_finetune.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nv-segment-ctmr/scripts/run_ctmr.py",
+          "line": 2,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nv-segment-ctmr/tests/test_run_ctmr.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/vss-deploy-detection-tracking-2d/scripts/calibration_manager.py",
+          "line": 3,
+          "end_line": 16,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/vss-manage-alerts/scripts/alert-notify/incident_utils.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/vss-manage-alerts/scripts/alert-notify/notifier_base.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/vss-manage-alerts/scripts/alert-notify/open_claw_dashboard_notifier.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/vss-manage-alerts/scripts/alert-notify/server.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/vss-manage-alerts/scripts/alert-notify/slack_notifier.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "10-skills/skills/dali-dynamic-mode/evals/files/pipeline_to_convert.py",
+          "line": 1,
+          "end_line": 13,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "10-skills/skills/earth2studio-create-datasource/evals/targets/eval_1_target.py",
+          "line": 1,
+          "end_line": 15,
+          "prose_kind": "comment"
+        },
+        "similarity": 0.7850467289719626
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "10-skills/skills/cuopt-numerical-optimization-api/assets/python/least_squares/model.py",
+      "line": 1,
+      "end_line": 2,
+      "prose_kind": "comment",
+      "message": "10-skills/skills/cuopt-numerical-optimization-api/assets/python/least_squares/model.py:1-2: TPX003 same explanation in 12 places: 10-skills/skills/cuopt-numerical-optimization-api/assets/python/lp_basic/model.py:1-2, 10-skills/skills/cuopt-numerical-optimization-api/assets/python/lp_warmstart/model.py:1-2, 10-skills/skills/cuopt-numerical-optimization-api/assets/python/maximization_workaround/model.py:1-2, 10-skills/skills/cuopt-numerical-optimization-api/assets/python/milp_basic/incumbent_callback.py:1-2, 10-skills/skills/cuopt-numerical-optimization-api/assets/python/milp_basic/model.py:1-2, 10-skills/skills/cuopt-numerical-optimization-api/assets/python/milp_production_planning/model.py:1-2, 10-skills/skills/cuopt-numerical-optimization-api/assets/python/portfolio/model.py:1-2, 10-skills/skills/cuopt-routing-api-python/assets/pdp_basic/model.py:1-2, 10-skills/skills/cuopt-routing-api-python/assets/vrp_basic/model.py:1-2, 10-skills/skills/nemo-evaluator-plugin/assets/examples/plugin_sdk_examples.py:1-2 … and 1 more (weakest 10-skills/skills/cuopt-numerical-optimization-api/assets/python/least_squares/model.py:1-2 ~ 10-skills/skills/cuopt-numerical-optimization-api/assets/python/lp_basic/model.py:1-2, similarity 1.000)",
+      "locations": [
+        {
+          "path": "10-skills/skills/cuopt-numerical-optimization-api/assets/python/least_squares/model.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cuopt-numerical-optimization-api/assets/python/lp_basic/model.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cuopt-numerical-optimization-api/assets/python/lp_warmstart/model.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cuopt-numerical-optimization-api/assets/python/maximization_workaround/model.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cuopt-numerical-optimization-api/assets/python/milp_basic/incumbent_callback.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cuopt-numerical-optimization-api/assets/python/milp_basic/model.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cuopt-numerical-optimization-api/assets/python/milp_production_planning/model.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cuopt-numerical-optimization-api/assets/python/portfolio/model.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cuopt-routing-api-python/assets/pdp_basic/model.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/cuopt-routing-api-python/assets/vrp_basic/model.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nemo-evaluator-plugin/assets/examples/plugin_sdk_examples.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/nemo-evaluator-plugin/scripts/generate_example_specs.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "10-skills/skills/cuopt-numerical-optimization-api/assets/python/least_squares/model.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "10-skills/skills/cuopt-numerical-optimization-api/assets/python/lp_basic/model.py",
+          "line": 1,
+          "end_line": 2,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "10-skills/skills/cupynumeric-migration-readiness/scripts/fetch_api_support.py",
+      "line": 18,
+      "end_line": 74,
+      "prose_kind": "docstring",
+      "message": "10-skills/skills/cupynumeric-migration-readiness/scripts/fetch_api_support.py:18-74: TPX002 docstring is 465 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 465,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX001",
+      "path": "10-skills/skills/cupynumeric-parallel-data-load/assets/examples/parallel_npy_load.py",
+      "line": 17,
+      "end_line": 91,
+      "prose_kind": "comment",
+      "message": "10-skills/skills/cupynumeric-parallel-data-load/assets/examples/parallel_npy_load.py:17-91: TPX001 comment is 575 words long, over the 150-word limit — shorten it, or mark it with `# !TPX001` on the line above it",
+      "words": 575,
+      "max_volume": 150
+    },
+    {
+      "code": "TPX001",
+      "path": "10-skills/skills/cupynumeric-parallel-data-load/assets/examples/parallel_npy_load.py",
+      "line": 354,
+      "end_line": 410,
+      "prose_kind": "comment",
+      "message": "10-skills/skills/cupynumeric-parallel-data-load/assets/examples/parallel_npy_load.py:354-410: TPX001 comment is 465 words long, over the 150-word limit — shorten it, or mark it with `# !TPX001` on the line above it",
+      "words": 465,
+      "max_volume": 150
+    },
+    {
+      "code": "TPX003",
+      "path": "10-skills/skills/data-designer/scripts/get_person_object_schema.py",
+      "line": 4,
+      "end_line": 12,
+      "prose_kind": "docstring",
+      "message": "10-skills/skills/data-designer/scripts/get_person_object_schema.py:4-12: TPX003 same explanation in 2 places: 10-skills/skills/nemo-data-designer-plugin/scripts/get_person_object_schema.py:4-12 (weakest 10-skills/skills/data-designer/scripts/get_person_object_schema.py:4-12 ~ 10-skills/skills/nemo-data-designer-plugin/scripts/get_person_object_schema.py:4-12, similarity 1.000)",
+      "locations": [
+        {
+          "path": "10-skills/skills/data-designer/scripts/get_person_object_schema.py",
+          "line": 4,
+          "end_line": 12,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "10-skills/skills/nemo-data-designer-plugin/scripts/get_person_object_schema.py",
+          "line": 4,
+          "end_line": 12,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "10-skills/skills/data-designer/scripts/get_person_object_schema.py",
+          "line": 4,
+          "end_line": 12,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "10-skills/skills/nemo-data-designer-plugin/scripts/get_person_object_schema.py",
+          "line": 4,
+          "end_line": 12,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX001",
+      "path": "10-skills/skills/deepstream-import-vision-model/scripts/report/render-mermaid-for-pdf.py",
+      "line": 117,
+      "end_line": 136,
+      "prose_kind": "comment",
+      "message": "10-skills/skills/deepstream-import-vision-model/scripts/report/render-mermaid-for-pdf.py:117-136: TPX001 comment is 156 words long, over the 150-word limit — shorten it, or mark it with `# !TPX001` on the line above it",
+      "words": 156,
+      "max_volume": 150
+    },
+    {
+      "code": "TPX002",
+      "path": "10-skills/skills/deepstream-profile-pipeline/scripts/capacity_report.py",
+      "line": 18,
+      "end_line": 44,
+      "prose_kind": "docstring",
+      "message": "10-skills/skills/deepstream-profile-pipeline/scripts/capacity_report.py:18-44: TPX002 docstring is 217 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 217,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "10-skills/skills/deepstream-sop/references/export_ddm_to_tensorrt_reference.py",
+      "line": 19,
+      "end_line": 63,
+      "prose_kind": "docstring",
+      "message": "10-skills/skills/deepstream-sop/references/export_ddm_to_tensorrt_reference.py:19-63: TPX002 docstring is 266 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 266,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "10-skills/skills/earth2studio-create-datasource/evals/targets/eval_4_target.py",
+      "line": 156,
+      "end_line": 170,
+      "prose_kind": "docstring",
+      "message": "10-skills/skills/earth2studio-create-datasource/evals/targets/eval_4_target.py:156-170: TPX003 same explanation in 2 places: 10-skills/skills/earth2studio-create-datasource/references/implementation-guide.py:238-251 (weakest 10-skills/skills/earth2studio-create-datasource/evals/targets/eval_4_target.py:156-170 ~ 10-skills/skills/earth2studio-create-datasource/references/implementation-guide.py:238-251, similarity 1.000)",
+      "locations": [
+        {
+          "path": "10-skills/skills/earth2studio-create-datasource/evals/targets/eval_4_target.py",
+          "line": 156,
+          "end_line": 170,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-datasource/references/implementation-guide.py",
+          "line": 238,
+          "end_line": 251,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "10-skills/skills/earth2studio-create-datasource/evals/targets/eval_4_target.py",
+          "line": 156,
+          "end_line": 170,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "10-skills/skills/earth2studio-create-datasource/references/implementation-guide.py",
+          "line": 238,
+          "end_line": 251,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "10-skills/skills/earth2studio-create-datasource/references/testing-guide.py",
+      "line": 17,
+      "end_line": 59,
+      "prose_kind": "docstring",
+      "message": "10-skills/skills/earth2studio-create-datasource/references/testing-guide.py:17-59: TPX002 docstring is 254 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 254,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_1_target.py",
+      "line": 52,
+      "end_line": 58,
+      "prose_kind": "docstring",
+      "message": "10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_1_target.py:52-58: TPX003 same explanation in 3 places: 10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_2_target.py:71-77, 10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_3_target.py:93-99 (weakest 10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_1_target.py:52-58 ~ 10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_2_target.py:71-77, similarity 1.000)",
+      "locations": [
+        {
+          "path": "10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_1_target.py",
+          "line": 52,
+          "end_line": 58,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_2_target.py",
+          "line": 71,
+          "end_line": 77,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_3_target.py",
+          "line": 93,
+          "end_line": 99,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_1_target.py",
+          "line": 52,
+          "end_line": 58,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_2_target.py",
+          "line": 71,
+          "end_line": 77,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_1_target.py",
+      "line": 70,
+      "end_line": 81,
+      "prose_kind": "docstring",
+      "message": "10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_1_target.py:70-81: TPX003 same explanation in 2 places: 10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_2_target.py:89-100 (weakest 10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_1_target.py:70-81 ~ 10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_2_target.py:89-100, similarity 1.000)",
+      "locations": [
+        {
+          "path": "10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_1_target.py",
+          "line": 70,
+          "end_line": 81,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_2_target.py",
+          "line": 89,
+          "end_line": 100,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_1_target.py",
+          "line": 70,
+          "end_line": 81,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_2_target.py",
+          "line": 89,
+          "end_line": 100,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_2_target.py",
+      "line": 119,
+      "end_line": 125,
+      "prose_kind": "docstring",
+      "message": "10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_2_target.py:119-125: TPX003 same explanation in 4 places: 10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_3_target.py:149-155, 10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_1_target.py:112-118, 10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_2_target.py:129-135 (weakest 10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_2_target.py:119-125 ~ 10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_3_target.py:149-155, similarity 1.000)",
+      "locations": [
+        {
+          "path": "10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_2_target.py",
+          "line": 119,
+          "end_line": 125,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_3_target.py",
+          "line": 149,
+          "end_line": 155,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_1_target.py",
+          "line": 112,
+          "end_line": 118,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_2_target.py",
+          "line": 129,
+          "end_line": 135,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_2_target.py",
+          "line": 119,
+          "end_line": 125,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "10-skills/skills/earth2studio-create-diagnostic/evals/targets/eval_3_target.py",
+          "line": 149,
+          "end_line": 155,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_1_target.py",
+      "line": 62,
+      "end_line": 68,
+      "prose_kind": "docstring",
+      "message": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_1_target.py:62-68: TPX003 same explanation in 3 places: 10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_2_target.py:79-85, 10-skills/skills/earth2studio-create-prognostic/references/skeleton-template.py:143-149 (weakest 10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_1_target.py:62-68 ~ 10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_2_target.py:79-85, similarity 1.000)",
+      "locations": [
+        {
+          "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_1_target.py",
+          "line": 62,
+          "end_line": 68,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_2_target.py",
+          "line": 79,
+          "end_line": 85,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-prognostic/references/skeleton-template.py",
+          "line": 143,
+          "end_line": 149,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_1_target.py",
+          "line": 62,
+          "end_line": 68,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_2_target.py",
+          "line": 79,
+          "end_line": 85,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_1_target.py",
+      "line": 81,
+      "end_line": 92,
+      "prose_kind": "docstring",
+      "message": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_1_target.py:81-92: TPX003 same explanation in 4 places: 10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_2_target.py:98-109, 10-skills/skills/earth2studio-create-prognostic/references/method-templates.py:115-131, 10-skills/skills/earth2studio-create-prognostic/references/skeleton-template.py:169-185 (weakest 10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_1_target.py:81-92 ~ 10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_2_target.py:98-109, similarity 1.000)",
+      "locations": [
+        {
+          "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_1_target.py",
+          "line": 81,
+          "end_line": 92,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_2_target.py",
+          "line": 98,
+          "end_line": 109,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-prognostic/references/method-templates.py",
+          "line": 115,
+          "end_line": 131,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-prognostic/references/skeleton-template.py",
+          "line": 169,
+          "end_line": 185,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_1_target.py",
+          "line": 81,
+          "end_line": 92,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_2_target.py",
+          "line": 98,
+          "end_line": 109,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_1_target.py",
+      "line": 123,
+      "end_line": 134,
+      "prose_kind": "docstring",
+      "message": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_1_target.py:123-134: TPX003 same explanation in 3 places: 10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_2_target.py:140-151, 10-skills/skills/earth2studio-create-prognostic/references/skeleton-template.py:246-257 (weakest 10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_1_target.py:123-134 ~ 10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_2_target.py:140-151, similarity 1.000)",
+      "locations": [
+        {
+          "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_1_target.py",
+          "line": 123,
+          "end_line": 134,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_2_target.py",
+          "line": 140,
+          "end_line": 151,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-prognostic/references/skeleton-template.py",
+          "line": 246,
+          "end_line": 257,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_1_target.py",
+          "line": 123,
+          "end_line": 134,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_2_target.py",
+          "line": 140,
+          "end_line": 151,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_1_target.py",
+      "line": 143,
+      "end_line": 156,
+      "prose_kind": "docstring",
+      "message": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_1_target.py:143-156: TPX003 same explanation in 4 places: 10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_2_target.py:192-205, 10-skills/skills/earth2studio-create-prognostic/references/method-templates.py:164-177, 10-skills/skills/earth2studio-create-prognostic/references/skeleton-template.py:317-330 (weakest 10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_1_target.py:143-156 ~ 10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_2_target.py:192-205, similarity 1.000)",
+      "locations": [
+        {
+          "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_1_target.py",
+          "line": 143,
+          "end_line": 156,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_2_target.py",
+          "line": 192,
+          "end_line": 205,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-prognostic/references/method-templates.py",
+          "line": 164,
+          "end_line": 177,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-prognostic/references/skeleton-template.py",
+          "line": 317,
+          "end_line": 330,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_1_target.py",
+          "line": 143,
+          "end_line": 156,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_2_target.py",
+          "line": 192,
+          "end_line": 205,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_1_target.py",
+      "line": 173,
+      "end_line": 186,
+      "prose_kind": "docstring",
+      "message": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_1_target.py:173-186: TPX003 same explanation in 3 places: 10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_2_target.py:225-238, 10-skills/skills/earth2studio-create-prognostic/references/skeleton-template.py:380-393 (weakest 10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_1_target.py:173-186 ~ 10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_2_target.py:225-238, similarity 1.000)",
+      "locations": [
+        {
+          "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_1_target.py",
+          "line": 173,
+          "end_line": 186,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_2_target.py",
+          "line": 225,
+          "end_line": 238,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-prognostic/references/skeleton-template.py",
+          "line": 380,
+          "end_line": 393,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_1_target.py",
+          "line": 173,
+          "end_line": 186,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_2_target.py",
+          "line": 225,
+          "end_line": 238,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_1_target.py",
+      "line": 202,
+      "end_line": 215,
+      "prose_kind": "docstring",
+      "message": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_1_target.py:202-215: TPX003 same explanation in 4 places: 10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_2_target.py:254-267, 10-skills/skills/earth2studio-create-prognostic/references/method-templates.py:278-291, 10-skills/skills/earth2studio-create-prognostic/references/skeleton-template.py:420-433 (weakest 10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_1_target.py:202-215 ~ 10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_2_target.py:254-267, similarity 1.000)",
+      "locations": [
+        {
+          "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_1_target.py",
+          "line": 202,
+          "end_line": 215,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_2_target.py",
+          "line": 254,
+          "end_line": 267,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-prognostic/references/method-templates.py",
+          "line": 278,
+          "end_line": 291,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "10-skills/skills/earth2studio-create-prognostic/references/skeleton-template.py",
+          "line": 420,
+          "end_line": 433,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_1_target.py",
+          "line": 202,
+          "end_line": 215,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "10-skills/skills/earth2studio-create-prognostic/evals/targets/eval_2_target.py",
+          "line": 254,
+          "end_line": 267,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "10-skills/skills/nv-generate-mr/scripts/run_mr.py",
+      "line": 17,
+      "end_line": 26,
+      "prose_kind": "docstring",
+      "message": "10-skills/skills/nv-generate-mr/scripts/run_mr.py:17-26: TPX003 same explanation in 2 places: 10-skills/skills/nv-generate-mr-brain/scripts/run_mr_brain.py:17-26 (weakest 10-skills/skills/nv-generate-mr/scripts/run_mr.py:17-26 ~ 10-skills/skills/nv-generate-mr-brain/scripts/run_mr_brain.py:17-26, similarity 0.841)",
+      "locations": [
+        {
+          "path": "10-skills/skills/nv-generate-mr/scripts/run_mr.py",
+          "line": 17,
+          "end_line": 26,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "10-skills/skills/nv-generate-mr-brain/scripts/run_mr_brain.py",
+          "line": 17,
+          "end_line": 26,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "10-skills/skills/nv-generate-mr/scripts/run_mr.py",
+          "line": 17,
+          "end_line": 26,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "10-skills/skills/nv-generate-mr-brain/scripts/run_mr_brain.py",
+          "line": 17,
+          "end_line": 26,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8412698412698413
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "10-skills/skills/omniverse-usd-performance-tuning/references/optimization-report/scripts/validate_report.py",
+      "line": 4,
+      "end_line": 69,
+      "prose_kind": "docstring",
+      "message": "10-skills/skills/omniverse-usd-performance-tuning/references/optimization-report/scripts/validate_report.py:4-69: TPX002 docstring is 537 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 537,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "10-skills/skills/omniverse-usd-performance-tuning/references/optimization-report/scripts/validate_report.py",
+      "line": 653,
+      "end_line": 676,
+      "prose_kind": "docstring",
+      "message": "10-skills/skills/omniverse-usd-performance-tuning/references/optimization-report/scripts/validate_report.py:653-676: TPX002 docstring is 228 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 228,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "10-skills/skills/omniverse-usd-performance-tuning/references/usd-optimize-run-operations/scripts/run_batch.py",
+      "line": 4,
+      "end_line": 32,
+      "prose_kind": "docstring",
+      "message": "10-skills/skills/omniverse-usd-performance-tuning/references/usd-optimize-run-operations/scripts/run_batch.py:4-32: TPX002 docstring is 250 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 250,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX001",
+      "path": "10-skills/skills/omniverse-usd-performance-tuning/references/usd-structure-assessment/references/usd-hierarchy-dedupe-candidates/scripts/instance_candidate_finder.py",
+      "line": 191,
+      "end_line": 206,
+      "prose_kind": "comment",
+      "message": "10-skills/skills/omniverse-usd-performance-tuning/references/usd-structure-assessment/references/usd-hierarchy-dedupe-candidates/scripts/instance_candidate_finder.py:191-206: TPX001 comment is 160 words long, over the 150-word limit — shorten it, or mark it with `# !TPX001` on the line above it",
+      "words": 160,
+      "max_volume": 150
+    },
+    {
+      "code": "TPX002",
+      "path": "10-skills/skills/omniverse-usd-performance-tuning/references/usd-structure-assessment/references/usd-hierarchy-dedupe-candidates/scripts/instance_candidate_finder.py",
+      "line": 919,
+      "end_line": 956,
+      "prose_kind": "docstring",
+      "message": "10-skills/skills/omniverse-usd-performance-tuning/references/usd-structure-assessment/references/usd-hierarchy-dedupe-candidates/scripts/instance_candidate_finder.py:919-956: TPX002 docstring is 356 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 356,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "10-skills/skills/omniverse-usd-performance-tuning/references/usd-structure-assessment/references/usd-hierarchy-dedupe-candidates/scripts/select_frontier.py",
+      "line": 4,
+      "end_line": 39,
+      "prose_kind": "docstring",
+      "message": "10-skills/skills/omniverse-usd-performance-tuning/references/usd-structure-assessment/references/usd-hierarchy-dedupe-candidates/scripts/select_frontier.py:4-39: TPX002 docstring is 290 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 290,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "10-skills/skills/omniverse-usd-performance-tuning/references/usd-structure-assessment/references/usd-mesh-fragmentation-candidates/scripts/mesh_fragmentation_finder.py",
+      "line": 3,
+      "end_line": 38,
+      "prose_kind": "docstring",
+      "message": "10-skills/skills/omniverse-usd-performance-tuning/references/usd-structure-assessment/references/usd-mesh-fragmentation-candidates/scripts/mesh_fragmentation_finder.py:3-38: TPX002 docstring is 312 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 312,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "10-skills/skills/omniverse-usd-performance-tuning/references/usd-validation-runner/scripts/usd_validation_executor.py",
+      "line": 3,
+      "end_line": 34,
+      "prose_kind": "docstring",
+      "message": "10-skills/skills/omniverse-usd-performance-tuning/references/usd-validation-runner/scripts/usd_validation_executor.py:3-34: TPX002 docstring is 259 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 259,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "10-skills/skills/tao-finetune-cosmos-reason/scripts/prepare_cosmos3_vlm_checkpoint.py",
+      "line": 2,
+      "end_line": 3,
+      "prose_kind": "comment",
+      "message": "10-skills/skills/tao-finetune-cosmos-reason/scripts/prepare_cosmos3_vlm_checkpoint.py:2-3: TPX003 same explanation in 32 places: 10-skills/skills/tilegym-converting-cutile-to-julia/examples/01_add/cutile_python.py:2-4, 10-skills/skills/tilegym-converting-cutile-to-julia/examples/02_matmul/cutile_python.py:2-4, 10-skills/skills/tilegym-converting-cutile-to-julia/examples/03_softmax/cutile_python.py:2-4, 10-skills/skills/tilegym-converting-cutile-to-julia/scripts/validate_cutile_jl.py:2-4, 10-skills/skills/tilegym-converting-cutile-to-triton/examples/01_vector_add/cutile_kernel.py:1-3, 10-skills/skills/tilegym-converting-cutile-to-triton/examples/01_vector_add/triton_kernel.py:1-3, 10-skills/skills/tilegym-converting-cutile-to-triton/examples/02_softmax/cutile_kernel.py:1-3, 10-skills/skills/tilegym-converting-cutile-to-triton/examples/02_softmax/triton_kernel.py:1-3, 10-skills/skills/tilegym-converting-cutile-to-triton/examples/03_layernorm/cutile_kernel.py:1-3, 10-skills/skills/tilegym-converting-cutile-to-triton/examples/03_layernorm/triton_kernel.py:1-3 … and 21 more (weakest 10-skills/skills/tao-finetune-cosmos-reason/scripts/prepare_cosmos3_vlm_checkpoint.py:2-3 ~ 10-skills/skills/tilegym-converting-cutile-to-julia/examples/01_add/cutile_python.py:2-4, similarity 1.000)",
+      "locations": [
+        {
+          "path": "10-skills/skills/tao-finetune-cosmos-reason/scripts/prepare_cosmos3_vlm_checkpoint.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tilegym-converting-cutile-to-julia/examples/01_add/cutile_python.py",
+          "line": 2,
+          "end_line": 4,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tilegym-converting-cutile-to-julia/examples/02_matmul/cutile_python.py",
+          "line": 2,
+          "end_line": 4,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tilegym-converting-cutile-to-julia/examples/03_softmax/cutile_python.py",
+          "line": 2,
+          "end_line": 4,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tilegym-converting-cutile-to-julia/scripts/validate_cutile_jl.py",
+          "line": 2,
+          "end_line": 4,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tilegym-converting-cutile-to-triton/examples/01_vector_add/cutile_kernel.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tilegym-converting-cutile-to-triton/examples/01_vector_add/triton_kernel.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tilegym-converting-cutile-to-triton/examples/02_softmax/cutile_kernel.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tilegym-converting-cutile-to-triton/examples/02_softmax/triton_kernel.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tilegym-converting-cutile-to-triton/examples/03_layernorm/cutile_kernel.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tilegym-converting-cutile-to-triton/examples/03_layernorm/triton_kernel.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tilegym-converting-cutile-to-triton/examples/04_matmul/cutile_kernel.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tilegym-converting-cutile-to-triton/examples/04_matmul/triton_kernel.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tilegym-converting-cutile-to-triton/examples/05_attention/cutile_kernel.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tilegym-converting-cutile-to-triton/examples/05_attention/triton_kernel.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tilegym-cutile-autotuning/assets/examples/01_rmsnorm_occupancy_only/autotuned_launch.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tilegym-cutile-autotuning/assets/examples/01_rmsnorm_occupancy_only/fixed_launch.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tilegym-cutile-autotuning/assets/examples/02_matmul_full_search/autotuned_launch.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tilegym-cutile-autotuning/assets/examples/02_matmul_full_search/fixed_launch.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tilegym-cutile-autotuning/assets/examples/03_rope_inplace_splitbuffer/autotuned_launch.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tilegym-cutile-autotuning/assets/examples/03_rope_inplace_splitbuffer/fixed_launch.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tilegym-cutile-python/examples/convolution/conv2d_with_bias_dilation_groups.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tilegym-cutile-python/examples/convolution/conv3d_with_bias_dilation_groups.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tilegym-cutile-python/examples/convolution/conv_transpose_2d.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tilegym-cutile-python/examples/convolution/conv_transpose_3d.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tilegym-cutile-python/examples/matmul/matmul_4d_tensors.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tilegym-cutile-python/examples/matmul/matrix_vector_multiplication.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tilegym-cutile-python/examples/matmul/split_k_gemm.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tilegym-cutile-python/examples/normalization/group_norm.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tilegym-cutile-python/examples/pooling/avgpool3d.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tilegym-cutile-python/examples/pooling/maxpool3d.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tilegym-cutile-python/examples/scan/cumsum_cumprod_blocking.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "10-skills/skills/tao-finetune-cosmos-reason/scripts/prepare_cosmos3_vlm_checkpoint.py",
+          "line": 2,
+          "end_line": 3,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "10-skills/skills/tilegym-converting-cutile-to-julia/examples/01_add/cutile_python.py",
+          "line": 2,
+          "end_line": 4,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "10-skills/skills/tao-run-deft-aoi/scripts/align_token_usage.py",
+      "line": 4,
+      "end_line": 53,
+      "prose_kind": "docstring",
+      "message": "10-skills/skills/tao-run-deft-aoi/scripts/align_token_usage.py:4-53: TPX002 docstring is 323 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 323,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "10-skills/skills/tao-run-deft-aoi/scripts/stage_backbone.py",
+      "line": 4,
+      "end_line": 34,
+      "prose_kind": "docstring",
+      "message": "10-skills/skills/tao-run-deft-aoi/scripts/stage_backbone.py:4-34: TPX002 docstring is 232 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 232,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX002",
+      "path": "10-skills/skills/tao-run-deft-aoi/scripts/validate_training_csv.py",
+      "line": 4,
+      "end_line": 37,
+      "prose_kind": "docstring",
+      "message": "10-skills/skills/tao-run-deft-aoi/scripts/validate_training_csv.py:4-37: TPX002 docstring is 250 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 250,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "10-skills/skills/tilegym-cutile-python/examples/convolution/conv2d_with_bias_dilation_groups.py",
+      "line": 6,
+      "end_line": 24,
+      "prose_kind": "docstring",
+      "message": "10-skills/skills/tilegym-cutile-python/examples/convolution/conv2d_with_bias_dilation_groups.py:6-24: TPX003 same explanation in 2 places: 10-skills/skills/tilegym-cutile-python/examples/convolution/conv3d_with_bias_dilation_groups.py:6-24 (weakest 10-skills/skills/tilegym-cutile-python/examples/convolution/conv2d_with_bias_dilation_groups.py:6-24 ~ 10-skills/skills/tilegym-cutile-python/examples/convolution/conv3d_with_bias_dilation_groups.py:6-24, similarity 0.912)",
+      "locations": [
+        {
+          "path": "10-skills/skills/tilegym-cutile-python/examples/convolution/conv2d_with_bias_dilation_groups.py",
+          "line": 6,
+          "end_line": 24,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "10-skills/skills/tilegym-cutile-python/examples/convolution/conv3d_with_bias_dilation_groups.py",
+          "line": 6,
+          "end_line": 24,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "10-skills/skills/tilegym-cutile-python/examples/convolution/conv2d_with_bias_dilation_groups.py",
+          "line": 6,
+          "end_line": 24,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "10-skills/skills/tilegym-cutile-python/examples/convolution/conv3d_with_bias_dilation_groups.py",
+          "line": 6,
+          "end_line": 24,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.9117647058823529
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "10-skills/skills/tilegym-cutile-python/examples/convolution/conv3d_with_bias_dilation_groups.py",
+      "line": 51,
+      "end_line": 57,
+      "prose_kind": "docstring",
+      "message": "10-skills/skills/tilegym-cutile-python/examples/convolution/conv3d_with_bias_dilation_groups.py:51-57: TPX003 same explanation in 3 places: 10-skills/skills/tilegym-cutile-python/examples/convolution/conv_transpose_2d.py:57-63, 10-skills/skills/tilegym-cutile-python/examples/convolution/conv_transpose_3d.py:58-64 (weakest 10-skills/skills/tilegym-cutile-python/examples/convolution/conv3d_with_bias_dilation_groups.py:51-57 ~ 10-skills/skills/tilegym-cutile-python/examples/convolution/conv_transpose_2d.py:57-63, similarity 1.000)",
+      "locations": [
+        {
+          "path": "10-skills/skills/tilegym-cutile-python/examples/convolution/conv3d_with_bias_dilation_groups.py",
+          "line": 51,
+          "end_line": 57,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "10-skills/skills/tilegym-cutile-python/examples/convolution/conv_transpose_2d.py",
+          "line": 57,
+          "end_line": 63,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "10-skills/skills/tilegym-cutile-python/examples/convolution/conv_transpose_3d.py",
+          "line": 58,
+          "end_line": 64,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "10-skills/skills/tilegym-cutile-python/examples/convolution/conv3d_with_bias_dilation_groups.py",
+          "line": 51,
+          "end_line": 57,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "10-skills/skills/tilegym-cutile-python/examples/convolution/conv_transpose_2d.py",
+          "line": 57,
+          "end_line": 63,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "10-skills/skills/tilegym-cutile-python/examples/convolution/conv3d_with_bias_dilation_groups.py",
+      "line": 72,
+      "end_line": 75,
+      "prose_kind": "comment",
+      "message": "10-skills/skills/tilegym-cutile-python/examples/convolution/conv3d_with_bias_dilation_groups.py:72-75: TPX003 same explanation in 3 places: 10-skills/skills/tilegym-cutile-python/examples/convolution/conv_transpose_2d.py:78-81, 10-skills/skills/tilegym-cutile-python/examples/convolution/conv_transpose_3d.py:79-82 (weakest 10-skills/skills/tilegym-cutile-python/examples/convolution/conv3d_with_bias_dilation_groups.py:72-75 ~ 10-skills/skills/tilegym-cutile-python/examples/convolution/conv_transpose_2d.py:78-81, similarity 1.000)",
+      "locations": [
+        {
+          "path": "10-skills/skills/tilegym-cutile-python/examples/convolution/conv3d_with_bias_dilation_groups.py",
+          "line": 72,
+          "end_line": 75,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tilegym-cutile-python/examples/convolution/conv_transpose_2d.py",
+          "line": 78,
+          "end_line": 81,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "10-skills/skills/tilegym-cutile-python/examples/convolution/conv_transpose_3d.py",
+          "line": 79,
+          "end_line": 82,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "10-skills/skills/tilegym-cutile-python/examples/convolution/conv3d_with_bias_dilation_groups.py",
+          "line": 72,
+          "end_line": 75,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "10-skills/skills/tilegym-cutile-python/examples/convolution/conv_transpose_2d.py",
+          "line": 78,
+          "end_line": 81,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "10-skills/skills/tilegym-cutile-python/examples/convolution/conv_transpose_2d.py",
+      "line": 6,
+      "end_line": 33,
+      "prose_kind": "docstring",
+      "message": "10-skills/skills/tilegym-cutile-python/examples/convolution/conv_transpose_2d.py:6-33: TPX002 docstring is 250 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 250,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "10-skills/skills/tilegym-cutile-python/examples/convolution/conv_transpose_2d.py",
+      "line": 6,
+      "end_line": 33,
+      "prose_kind": "docstring",
+      "message": "10-skills/skills/tilegym-cutile-python/examples/convolution/conv_transpose_2d.py:6-33: TPX003 same explanation in 2 places: 10-skills/skills/tilegym-cutile-python/examples/convolution/conv_transpose_3d.py:6-34 (weakest 10-skills/skills/tilegym-cutile-python/examples/convolution/conv_transpose_2d.py:6-33 ~ 10-skills/skills/tilegym-cutile-python/examples/convolution/conv_transpose_3d.py:6-34, similarity 0.819)",
+      "locations": [
+        {
+          "path": "10-skills/skills/tilegym-cutile-python/examples/convolution/conv_transpose_2d.py",
+          "line": 6,
+          "end_line": 33,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "10-skills/skills/tilegym-cutile-python/examples/convolution/conv_transpose_3d.py",
+          "line": 6,
+          "end_line": 34,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "10-skills/skills/tilegym-cutile-python/examples/convolution/conv_transpose_2d.py",
+          "line": 6,
+          "end_line": 33,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "10-skills/skills/tilegym-cutile-python/examples/convolution/conv_transpose_3d.py",
+          "line": 6,
+          "end_line": 34,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8194945848375451
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "10-skills/skills/tilegym-cutile-python/examples/convolution/conv_transpose_3d.py",
+      "line": 6,
+      "end_line": 34,
+      "prose_kind": "docstring",
+      "message": "10-skills/skills/tilegym-cutile-python/examples/convolution/conv_transpose_3d.py:6-34: TPX002 docstring is 274 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 274,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "10-skills/skills/tilegym-cutile-python/examples/pooling/avgpool3d.py",
+      "line": 6,
+      "end_line": 14,
+      "prose_kind": "docstring",
+      "message": "10-skills/skills/tilegym-cutile-python/examples/pooling/avgpool3d.py:6-14: TPX003 same explanation in 2 places: 10-skills/skills/tilegym-cutile-python/examples/pooling/maxpool3d.py:6-14 (weakest 10-skills/skills/tilegym-cutile-python/examples/pooling/avgpool3d.py:6-14 ~ 10-skills/skills/tilegym-cutile-python/examples/pooling/maxpool3d.py:6-14, similarity 0.838)",
+      "locations": [
+        {
+          "path": "10-skills/skills/tilegym-cutile-python/examples/pooling/avgpool3d.py",
+          "line": 6,
+          "end_line": 14,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "10-skills/skills/tilegym-cutile-python/examples/pooling/maxpool3d.py",
+          "line": 6,
+          "end_line": 14,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "10-skills/skills/tilegym-cutile-python/examples/pooling/avgpool3d.py",
+          "line": 6,
+          "end_line": 14,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "10-skills/skills/tilegym-cutile-python/examples/pooling/maxpool3d.py",
+          "line": 6,
+          "end_line": 14,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.8378378378378378
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "10-skills/skills/vss-deploy-profile/scripts/normalize_resolved_yml.py",
+      "line": 8,
+      "end_line": 50,
+      "prose_kind": "docstring",
+      "message": "10-skills/skills/vss-deploy-profile/scripts/normalize_resolved_yml.py:8-50: TPX002 docstring is 325 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 325,
+      "max_volume": 200
+    }
+  ]
+}

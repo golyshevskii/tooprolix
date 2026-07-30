@@ -1,0 +1,1631 @@
+{
+  "schema_version": "2",
+  "complete": false,
+  "skipped": [
+    {
+      "path": "06-claude-scientific-writer/extensions/docx-editor-zotero/zotero_docx_preserver.py",
+      "reason": "could not parse Python source: f-string: single `}` is not allowed at byte range 16950..16951"
+    }
+  ],
+  "excluded": [],
+  "findings": [
+    {
+      "code": "TPX002",
+      "path": "06-claude-scientific-writer/scientific_writer/api.py",
+      "line": 78,
+      "end_line": 127,
+      "prose_kind": "docstring",
+      "message": "06-claude-scientific-writer/scientific_writer/api.py:78-127: TPX002 docstring is 342 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 342,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "06-claude-scientific-writer/scripts/bump_version.py",
+      "line": 17,
+      "end_line": 24,
+      "prose_kind": "docstring",
+      "message": "06-claude-scientific-writer/scripts/bump_version.py:17-24: TPX003 same explanation in 3 places: 06-claude-scientific-writer/scripts/publish.py:21-28, 06-claude-scientific-writer/scripts/verify_package.py:17-24 (weakest 06-claude-scientific-writer/scripts/bump_version.py:17-24 ~ 06-claude-scientific-writer/scripts/publish.py:21-28, similarity 1.000)",
+      "locations": [
+        {
+          "path": "06-claude-scientific-writer/scripts/bump_version.py",
+          "line": 17,
+          "end_line": 24,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/scripts/publish.py",
+          "line": 21,
+          "end_line": 28,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/scripts/verify_package.py",
+          "line": 17,
+          "end_line": 24,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "06-claude-scientific-writer/scripts/bump_version.py",
+          "line": 17,
+          "end_line": 24,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "06-claude-scientific-writer/scripts/publish.py",
+          "line": 21,
+          "end_line": 28,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "06-claude-scientific-writer/scripts/bump_version.py",
+      "line": 29,
+      "end_line": 46,
+      "prose_kind": "docstring",
+      "message": "06-claude-scientific-writer/scripts/bump_version.py:29-46: TPX003 same explanation in 2 places: 06-claude-scientific-writer/scripts/publish.py:33-50 (weakest 06-claude-scientific-writer/scripts/bump_version.py:29-46 ~ 06-claude-scientific-writer/scripts/publish.py:33-50, similarity 1.000)",
+      "locations": [
+        {
+          "path": "06-claude-scientific-writer/scripts/bump_version.py",
+          "line": 29,
+          "end_line": 46,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/scripts/publish.py",
+          "line": 33,
+          "end_line": 50,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "06-claude-scientific-writer/scripts/bump_version.py",
+          "line": 29,
+          "end_line": 46,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "06-claude-scientific-writer/scripts/publish.py",
+          "line": 33,
+          "end_line": 50,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "06-claude-scientific-writer/skills/citation-management/scripts/format_bibtex.py",
+      "line": 28,
+      "end_line": 36,
+      "prose_kind": "docstring",
+      "message": "06-claude-scientific-writer/skills/citation-management/scripts/format_bibtex.py:28-36: TPX003 same explanation in 2 places: 06-claude-scientific-writer/skills/citation-management/scripts/validate_citations.py:44-52 (weakest 06-claude-scientific-writer/skills/citation-management/scripts/format_bibtex.py:28-36 ~ 06-claude-scientific-writer/skills/citation-management/scripts/validate_citations.py:44-52, similarity 1.000)",
+      "locations": [
+        {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/format_bibtex.py",
+          "line": 28,
+          "end_line": 36,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/validate_citations.py",
+          "line": 44,
+          "end_line": 52,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/format_bibtex.py",
+          "line": 28,
+          "end_line": 36,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/validate_citations.py",
+          "line": 44,
+          "end_line": 52,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic.py",
+      "line": 2,
+      "end_line": 20,
+      "prose_kind": "docstring",
+      "message": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic.py:2-20: TPX003 same explanation in 5 places: 06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic.py:2-20, 06-claude-scientific-writer/skills/literature-review/scripts/generate_schematic.py:2-20, 06-claude-scientific-writer/skills/scientific-schematics/scripts/generate_schematic.py:2-20, 06-claude-scientific-writer/skills/scientific-slides/scripts/generate_schematic.py:2-20 (weakest 06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic.py:2-20 ~ 06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic.py:2-20, similarity 1.000)",
+      "locations": [
+        {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic.py",
+          "line": 2,
+          "end_line": 20,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic.py",
+          "line": 2,
+          "end_line": 20,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/literature-review/scripts/generate_schematic.py",
+          "line": 2,
+          "end_line": 20,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-schematics/scripts/generate_schematic.py",
+          "line": 2,
+          "end_line": 20,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-slides/scripts/generate_schematic.py",
+          "line": 2,
+          "end_line": 20,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic.py",
+          "line": 2,
+          "end_line": 20,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic.py",
+          "line": 2,
+          "end_line": 20,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic.py",
+      "line": 28,
+      "end_line": 31,
+      "prose_kind": "comment",
+      "message": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic.py:28-31: TPX003 same explanation in 7 places: 06-claude-scientific-writer/skills/infographics/scripts/generate_infographic.py:41-44, 06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic.py:28-31, 06-claude-scientific-writer/skills/literature-review/scripts/generate_schematic.py:28-31, 06-claude-scientific-writer/skills/scientific-schematics/scripts/generate_schematic.py:28-31, 06-claude-scientific-writer/skills/scientific-slides/scripts/generate_schematic.py:28-31, 06-claude-scientific-writer/skills/scientific-slides/scripts/generate_slide_image.py:31-34 (weakest 06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic.py:28-31 ~ 06-claude-scientific-writer/skills/infographics/scripts/generate_infographic.py:41-44, similarity 1.000)",
+      "locations": [
+        {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic.py",
+          "line": 28,
+          "end_line": 31,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/infographics/scripts/generate_infographic.py",
+          "line": 41,
+          "end_line": 44,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic.py",
+          "line": 28,
+          "end_line": 31,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/literature-review/scripts/generate_schematic.py",
+          "line": 28,
+          "end_line": 31,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-schematics/scripts/generate_schematic.py",
+          "line": 28,
+          "end_line": 31,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-slides/scripts/generate_schematic.py",
+          "line": 28,
+          "end_line": 31,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-slides/scripts/generate_slide_image.py",
+          "line": 31,
+          "end_line": 34,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic.py",
+          "line": 28,
+          "end_line": 31,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "06-claude-scientific-writer/skills/infographics/scripts/generate_infographic.py",
+          "line": 41,
+          "end_line": 44,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic.py",
+      "line": 44,
+      "end_line": 50,
+      "prose_kind": "docstring",
+      "message": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic.py:44-50: TPX003 same explanation in 7 places: 06-claude-scientific-writer/skills/infographics/scripts/generate_infographic.py:57-63, 06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic.py:44-50, 06-claude-scientific-writer/skills/literature-review/scripts/generate_schematic.py:44-50, 06-claude-scientific-writer/skills/scientific-schematics/scripts/generate_schematic.py:44-50, 06-claude-scientific-writer/skills/scientific-slides/scripts/generate_schematic.py:44-50, 06-claude-scientific-writer/skills/scientific-slides/scripts/generate_slide_image.py:47-53 (weakest 06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic.py:44-50 ~ 06-claude-scientific-writer/skills/infographics/scripts/generate_infographic.py:57-63, similarity 1.000)",
+      "locations": [
+        {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic.py",
+          "line": 44,
+          "end_line": 50,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/infographics/scripts/generate_infographic.py",
+          "line": 57,
+          "end_line": 63,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic.py",
+          "line": 44,
+          "end_line": 50,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/literature-review/scripts/generate_schematic.py",
+          "line": 44,
+          "end_line": 50,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-schematics/scripts/generate_schematic.py",
+          "line": 44,
+          "end_line": 50,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-slides/scripts/generate_schematic.py",
+          "line": 44,
+          "end_line": 50,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-slides/scripts/generate_slide_image.py",
+          "line": 47,
+          "end_line": 53,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic.py",
+          "line": 44,
+          "end_line": 50,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "06-claude-scientific-writer/skills/infographics/scripts/generate_infographic.py",
+          "line": 57,
+          "end_line": 63,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+      "line": 2,
+      "end_line": 19,
+      "prose_kind": "docstring",
+      "message": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py:2-19: TPX003 same explanation in 5 places: 06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py:2-19, 06-claude-scientific-writer/skills/literature-review/scripts/generate_schematic_ai.py:2-19, 06-claude-scientific-writer/skills/scientific-schematics/scripts/generate_schematic_ai.py:2-19, 06-claude-scientific-writer/skills/scientific-slides/scripts/generate_schematic_ai.py:2-19 (weakest 06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py:2-19 ~ 06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py:2-19, similarity 1.000)",
+      "locations": [
+        {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+          "line": 2,
+          "end_line": 19,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py",
+          "line": 2,
+          "end_line": 19,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/literature-review/scripts/generate_schematic_ai.py",
+          "line": 2,
+          "end_line": 19,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-schematics/scripts/generate_schematic_ai.py",
+          "line": 2,
+          "end_line": 19,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-slides/scripts/generate_schematic_ai.py",
+          "line": 2,
+          "end_line": 19,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+          "line": 2,
+          "end_line": 19,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py",
+          "line": 2,
+          "end_line": 19,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+      "line": 37,
+      "end_line": 44,
+      "prose_kind": "docstring",
+      "message": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py:37-44: TPX003 same explanation in 7 places: 06-claude-scientific-writer/skills/infographics/scripts/generate_infographic_ai.py:40-47, 06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py:37-44, 06-claude-scientific-writer/skills/literature-review/scripts/generate_schematic_ai.py:37-44, 06-claude-scientific-writer/skills/scientific-schematics/scripts/generate_schematic_ai.py:37-44, 06-claude-scientific-writer/skills/scientific-slides/scripts/generate_schematic_ai.py:37-44, 06-claude-scientific-writer/skills/scientific-slides/scripts/generate_slide_image_ai.py:50-57 (weakest 06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py:37-44 ~ 06-claude-scientific-writer/skills/infographics/scripts/generate_infographic_ai.py:40-47, similarity 1.000)",
+      "locations": [
+        {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+          "line": 37,
+          "end_line": 44,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/infographics/scripts/generate_infographic_ai.py",
+          "line": 40,
+          "end_line": 47,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py",
+          "line": 37,
+          "end_line": 44,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/literature-review/scripts/generate_schematic_ai.py",
+          "line": 37,
+          "end_line": 44,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-schematics/scripts/generate_schematic_ai.py",
+          "line": 37,
+          "end_line": 44,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-slides/scripts/generate_schematic_ai.py",
+          "line": 37,
+          "end_line": 44,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-slides/scripts/generate_slide_image_ai.py",
+          "line": 50,
+          "end_line": 57,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+          "line": 37,
+          "end_line": 44,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "06-claude-scientific-writer/skills/infographics/scripts/generate_infographic_ai.py",
+          "line": 40,
+          "end_line": 47,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+      "line": 75,
+      "end_line": 80,
+      "prose_kind": "docstring",
+      "message": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py:75-80: TPX003 same explanation in 6 places: 06-claude-scientific-writer/skills/infographics/scripts/generate_infographic_ai.py:273-278, 06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py:75-80, 06-claude-scientific-writer/skills/literature-review/scripts/generate_schematic_ai.py:75-80, 06-claude-scientific-writer/skills/scientific-schematics/scripts/generate_schematic_ai.py:75-80, 06-claude-scientific-writer/skills/scientific-slides/scripts/generate_schematic_ai.py:75-80 (weakest 06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py:75-80 ~ 06-claude-scientific-writer/skills/infographics/scripts/generate_infographic_ai.py:273-278, similarity 0.756)",
+      "locations": [
+        {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+          "line": 75,
+          "end_line": 80,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/infographics/scripts/generate_infographic_ai.py",
+          "line": 273,
+          "end_line": 278,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py",
+          "line": 75,
+          "end_line": 80,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/literature-review/scripts/generate_schematic_ai.py",
+          "line": 75,
+          "end_line": 80,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-schematics/scripts/generate_schematic_ai.py",
+          "line": 75,
+          "end_line": 80,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-slides/scripts/generate_schematic_ai.py",
+          "line": 75,
+          "end_line": 80,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+          "line": 75,
+          "end_line": 80,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "06-claude-scientific-writer/skills/infographics/scripts/generate_infographic_ai.py",
+          "line": 273,
+          "end_line": 278,
+          "prose_kind": "docstring"
+        },
+        "similarity": 0.7555555555555555
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+      "line": 82,
+      "end_line": 83,
+      "prose_kind": "comment",
+      "message": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py:82-83: TPX003 same explanation in 5 places: 06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py:82-83, 06-claude-scientific-writer/skills/literature-review/scripts/generate_schematic_ai.py:82-83, 06-claude-scientific-writer/skills/scientific-schematics/scripts/generate_schematic_ai.py:82-83, 06-claude-scientific-writer/skills/scientific-slides/scripts/generate_schematic_ai.py:82-83 (weakest 06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py:82-83 ~ 06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py:82-83, similarity 1.000)",
+      "locations": [
+        {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+          "line": 82,
+          "end_line": 83,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py",
+          "line": 82,
+          "end_line": 83,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/literature-review/scripts/generate_schematic_ai.py",
+          "line": 82,
+          "end_line": 83,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-schematics/scripts/generate_schematic_ai.py",
+          "line": 82,
+          "end_line": 83,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-slides/scripts/generate_schematic_ai.py",
+          "line": 82,
+          "end_line": 83,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+          "line": 82,
+          "end_line": 83,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py",
+          "line": 82,
+          "end_line": 83,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+      "line": 142,
+      "end_line": 148,
+      "prose_kind": "docstring",
+      "message": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py:142-148: TPX003 same explanation in 6 places: 06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py:142-148, 06-claude-scientific-writer/skills/literature-review/scripts/generate_schematic_ai.py:142-148, 06-claude-scientific-writer/skills/scientific-schematics/scripts/generate_schematic_ai.py:142-148, 06-claude-scientific-writer/skills/scientific-slides/scripts/generate_schematic_ai.py:142-148, 06-claude-scientific-writer/skills/scientific-slides/scripts/generate_slide_image_ai.py:171-177 (weakest 06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py:142-148 ~ 06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py:142-148, similarity 1.000)",
+      "locations": [
+        {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+          "line": 142,
+          "end_line": 148,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py",
+          "line": 142,
+          "end_line": 148,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/literature-review/scripts/generate_schematic_ai.py",
+          "line": 142,
+          "end_line": 148,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-schematics/scripts/generate_schematic_ai.py",
+          "line": 142,
+          "end_line": 148,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-slides/scripts/generate_schematic_ai.py",
+          "line": 142,
+          "end_line": 148,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-slides/scripts/generate_slide_image_ai.py",
+          "line": 171,
+          "end_line": 177,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+          "line": 142,
+          "end_line": 148,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py",
+          "line": 142,
+          "end_line": 148,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+      "line": 164,
+      "end_line": 167,
+      "prose_kind": "comment",
+      "message": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py:164-167: TPX003 same explanation in 5 places: 06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py:164-167, 06-claude-scientific-writer/skills/literature-review/scripts/generate_schematic_ai.py:164-167, 06-claude-scientific-writer/skills/scientific-schematics/scripts/generate_schematic_ai.py:164-167, 06-claude-scientific-writer/skills/scientific-slides/scripts/generate_schematic_ai.py:164-167 (weakest 06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py:164-167 ~ 06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py:164-167, similarity 1.000)",
+      "locations": [
+        {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+          "line": 164,
+          "end_line": 167,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py",
+          "line": 164,
+          "end_line": 167,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/literature-review/scripts/generate_schematic_ai.py",
+          "line": 164,
+          "end_line": 167,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-schematics/scripts/generate_schematic_ai.py",
+          "line": 164,
+          "end_line": 167,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-slides/scripts/generate_schematic_ai.py",
+          "line": 164,
+          "end_line": 167,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+          "line": 164,
+          "end_line": 167,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py",
+          "line": 164,
+          "end_line": 167,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+      "line": 179,
+      "end_line": 189,
+      "prose_kind": "docstring",
+      "message": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py:179-189: TPX003 same explanation in 5 places: 06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py:179-189, 06-claude-scientific-writer/skills/literature-review/scripts/generate_schematic_ai.py:179-189, 06-claude-scientific-writer/skills/scientific-schematics/scripts/generate_schematic_ai.py:179-189, 06-claude-scientific-writer/skills/scientific-slides/scripts/generate_schematic_ai.py:179-189 (weakest 06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py:179-189 ~ 06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py:179-189, similarity 1.000)",
+      "locations": [
+        {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+          "line": 179,
+          "end_line": 189,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py",
+          "line": 179,
+          "end_line": 189,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/literature-review/scripts/generate_schematic_ai.py",
+          "line": 179,
+          "end_line": 189,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-schematics/scripts/generate_schematic_ai.py",
+          "line": 179,
+          "end_line": 189,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-slides/scripts/generate_schematic_ai.py",
+          "line": 179,
+          "end_line": 189,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+          "line": 179,
+          "end_line": 189,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py",
+          "line": 179,
+          "end_line": 189,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+      "line": 234,
+      "end_line": 245,
+      "prose_kind": "docstring",
+      "message": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py:234-245: TPX003 same explanation in 5 places: 06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py:234-245, 06-claude-scientific-writer/skills/literature-review/scripts/generate_schematic_ai.py:234-245, 06-claude-scientific-writer/skills/scientific-schematics/scripts/generate_schematic_ai.py:234-245, 06-claude-scientific-writer/skills/scientific-slides/scripts/generate_schematic_ai.py:234-245 (weakest 06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py:234-245 ~ 06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py:234-245, similarity 1.000)",
+      "locations": [
+        {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+          "line": 234,
+          "end_line": 245,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py",
+          "line": 234,
+          "end_line": 245,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/literature-review/scripts/generate_schematic_ai.py",
+          "line": 234,
+          "end_line": 245,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-schematics/scripts/generate_schematic_ai.py",
+          "line": 234,
+          "end_line": 245,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-slides/scripts/generate_schematic_ai.py",
+          "line": 234,
+          "end_line": 245,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+          "line": 234,
+          "end_line": 245,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py",
+          "line": 234,
+          "end_line": 245,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+      "line": 315,
+      "end_line": 323,
+      "prose_kind": "docstring",
+      "message": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py:315-323: TPX003 same explanation in 5 places: 06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py:315-323, 06-claude-scientific-writer/skills/literature-review/scripts/generate_schematic_ai.py:315-323, 06-claude-scientific-writer/skills/scientific-schematics/scripts/generate_schematic_ai.py:315-323, 06-claude-scientific-writer/skills/scientific-slides/scripts/generate_schematic_ai.py:315-323 (weakest 06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py:315-323 ~ 06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py:315-323, similarity 1.000)",
+      "locations": [
+        {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+          "line": 315,
+          "end_line": 323,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py",
+          "line": 315,
+          "end_line": 323,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/literature-review/scripts/generate_schematic_ai.py",
+          "line": 315,
+          "end_line": 323,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-schematics/scripts/generate_schematic_ai.py",
+          "line": 315,
+          "end_line": 323,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-slides/scripts/generate_schematic_ai.py",
+          "line": 315,
+          "end_line": 323,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+          "line": 315,
+          "end_line": 323,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py",
+          "line": 315,
+          "end_line": 323,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+      "line": 341,
+      "end_line": 349,
+      "prose_kind": "docstring",
+      "message": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py:341-349: TPX003 same explanation in 5 places: 06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py:341-349, 06-claude-scientific-writer/skills/literature-review/scripts/generate_schematic_ai.py:341-349, 06-claude-scientific-writer/skills/scientific-schematics/scripts/generate_schematic_ai.py:341-349, 06-claude-scientific-writer/skills/scientific-slides/scripts/generate_schematic_ai.py:341-349 (weakest 06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py:341-349 ~ 06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py:341-349, similarity 1.000)",
+      "locations": [
+        {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+          "line": 341,
+          "end_line": 349,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py",
+          "line": 341,
+          "end_line": 349,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/literature-review/scripts/generate_schematic_ai.py",
+          "line": 341,
+          "end_line": 349,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-schematics/scripts/generate_schematic_ai.py",
+          "line": 341,
+          "end_line": 349,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-slides/scripts/generate_schematic_ai.py",
+          "line": 341,
+          "end_line": 349,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+          "line": 341,
+          "end_line": 349,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py",
+          "line": 341,
+          "end_line": 349,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+      "line": 421,
+      "end_line": 436,
+      "prose_kind": "docstring",
+      "message": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py:421-436: TPX003 same explanation in 5 places: 06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py:421-436, 06-claude-scientific-writer/skills/literature-review/scripts/generate_schematic_ai.py:421-436, 06-claude-scientific-writer/skills/scientific-schematics/scripts/generate_schematic_ai.py:421-436, 06-claude-scientific-writer/skills/scientific-slides/scripts/generate_schematic_ai.py:421-436 (weakest 06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py:421-436 ~ 06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py:421-436, similarity 1.000)",
+      "locations": [
+        {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+          "line": 421,
+          "end_line": 436,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py",
+          "line": 421,
+          "end_line": 436,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/literature-review/scripts/generate_schematic_ai.py",
+          "line": 421,
+          "end_line": 436,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-schematics/scripts/generate_schematic_ai.py",
+          "line": 421,
+          "end_line": 436,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-slides/scripts/generate_schematic_ai.py",
+          "line": 421,
+          "end_line": 436,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+          "line": 421,
+          "end_line": 436,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py",
+          "line": 421,
+          "end_line": 436,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+      "line": 574,
+      "end_line": 584,
+      "prose_kind": "docstring",
+      "message": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py:574-584: TPX003 same explanation in 5 places: 06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py:574-584, 06-claude-scientific-writer/skills/literature-review/scripts/generate_schematic_ai.py:574-584, 06-claude-scientific-writer/skills/scientific-schematics/scripts/generate_schematic_ai.py:574-584, 06-claude-scientific-writer/skills/scientific-slides/scripts/generate_schematic_ai.py:574-584 (weakest 06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py:574-584 ~ 06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py:574-584, similarity 1.000)",
+      "locations": [
+        {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+          "line": 574,
+          "end_line": 584,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py",
+          "line": 574,
+          "end_line": 584,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/literature-review/scripts/generate_schematic_ai.py",
+          "line": 574,
+          "end_line": 584,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-schematics/scripts/generate_schematic_ai.py",
+          "line": 574,
+          "end_line": 584,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-slides/scripts/generate_schematic_ai.py",
+          "line": 574,
+          "end_line": 584,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+          "line": 574,
+          "end_line": 584,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py",
+          "line": 574,
+          "end_line": 584,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+      "line": 599,
+      "end_line": 614,
+      "prose_kind": "docstring",
+      "message": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py:599-614: TPX003 same explanation in 5 places: 06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py:599-614, 06-claude-scientific-writer/skills/literature-review/scripts/generate_schematic_ai.py:599-614, 06-claude-scientific-writer/skills/scientific-schematics/scripts/generate_schematic_ai.py:599-614, 06-claude-scientific-writer/skills/scientific-slides/scripts/generate_schematic_ai.py:599-614 (weakest 06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py:599-614 ~ 06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py:599-614, similarity 1.000)",
+      "locations": [
+        {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+          "line": 599,
+          "end_line": 614,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py",
+          "line": 599,
+          "end_line": 614,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/literature-review/scripts/generate_schematic_ai.py",
+          "line": 599,
+          "end_line": 614,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-schematics/scripts/generate_schematic_ai.py",
+          "line": 599,
+          "end_line": 614,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-slides/scripts/generate_schematic_ai.py",
+          "line": 599,
+          "end_line": 614,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "06-claude-scientific-writer/skills/citation-management/scripts/generate_schematic_ai.py",
+          "line": 599,
+          "end_line": 614,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "06-claude-scientific-writer/skills/latex-posters/scripts/generate_schematic_ai.py",
+          "line": 599,
+          "end_line": 614,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/helpers/pptx_chart.py",
+      "line": 1,
+      "end_line": 5,
+      "prose_kind": "docstring",
+      "message": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/helpers/pptx_chart.py:1-5: TPX003 same explanation in 3 places: 06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/helpers/pptx_chart.py:1-5, 06-claude-scientific-writer/skills/document-skills/xlsx/scripts/office/helpers/pptx_chart.py:1-5 (weakest 06-claude-scientific-writer/skills/document-skills/docx/scripts/office/helpers/pptx_chart.py:1-5 ~ 06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/helpers/pptx_chart.py:1-5, similarity 1.000)",
+      "locations": [
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/helpers/pptx_chart.py",
+          "line": 1,
+          "end_line": 5,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/helpers/pptx_chart.py",
+          "line": 1,
+          "end_line": 5,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/xlsx/scripts/office/helpers/pptx_chart.py",
+          "line": 1,
+          "end_line": 5,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/helpers/pptx_chart.py",
+          "line": 1,
+          "end_line": 5,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/helpers/pptx_chart.py",
+          "line": 1,
+          "end_line": 5,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/helpers/pptx_slide.py",
+      "line": 1,
+      "end_line": 5,
+      "prose_kind": "docstring",
+      "message": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/helpers/pptx_slide.py:1-5: TPX003 same explanation in 3 places: 06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/helpers/pptx_slide.py:1-5, 06-claude-scientific-writer/skills/document-skills/xlsx/scripts/office/helpers/pptx_slide.py:1-5 (weakest 06-claude-scientific-writer/skills/document-skills/docx/scripts/office/helpers/pptx_slide.py:1-5 ~ 06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/helpers/pptx_slide.py:1-5, similarity 1.000)",
+      "locations": [
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/helpers/pptx_slide.py",
+          "line": 1,
+          "end_line": 5,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/helpers/pptx_slide.py",
+          "line": 1,
+          "end_line": 5,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/xlsx/scripts/office/helpers/pptx_slide.py",
+          "line": 1,
+          "end_line": 5,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/helpers/pptx_slide.py",
+          "line": 1,
+          "end_line": 5,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/helpers/pptx_slide.py",
+          "line": 1,
+          "end_line": 5,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/helpers/pptx_theme.py",
+      "line": 1,
+      "end_line": 5,
+      "prose_kind": "docstring",
+      "message": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/helpers/pptx_theme.py:1-5: TPX003 same explanation in 3 places: 06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/helpers/pptx_theme.py:1-5, 06-claude-scientific-writer/skills/document-skills/xlsx/scripts/office/helpers/pptx_theme.py:1-5 (weakest 06-claude-scientific-writer/skills/document-skills/docx/scripts/office/helpers/pptx_theme.py:1-5 ~ 06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/helpers/pptx_theme.py:1-5, similarity 1.000)",
+      "locations": [
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/helpers/pptx_theme.py",
+          "line": 1,
+          "end_line": 5,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/helpers/pptx_theme.py",
+          "line": 1,
+          "end_line": 5,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/xlsx/scripts/office/helpers/pptx_theme.py",
+          "line": 1,
+          "end_line": 5,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/helpers/pptx_theme.py",
+          "line": 1,
+          "end_line": 5,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/helpers/pptx_theme.py",
+          "line": 1,
+          "end_line": 5,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/soffice.py",
+      "line": 1,
+      "end_line": 16,
+      "prose_kind": "docstring",
+      "message": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/soffice.py:1-16: TPX003 same explanation in 3 places: 06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/soffice.py:1-16, 06-claude-scientific-writer/skills/document-skills/xlsx/scripts/office/soffice.py:1-16 (weakest 06-claude-scientific-writer/skills/document-skills/docx/scripts/office/soffice.py:1-16 ~ 06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/soffice.py:1-16, similarity 1.000)",
+      "locations": [
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/soffice.py",
+          "line": 1,
+          "end_line": 16,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/soffice.py",
+          "line": 1,
+          "end_line": 16,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/xlsx/scripts/office/soffice.py",
+          "line": 1,
+          "end_line": 16,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/soffice.py",
+          "line": 1,
+          "end_line": 16,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/soffice.py",
+          "line": 1,
+          "end_line": 16,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/soffice.py",
+      "line": 29,
+      "end_line": 32,
+      "prose_kind": "comment",
+      "message": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/soffice.py:29-32: TPX003 same explanation in 3 places: 06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/soffice.py:29-32, 06-claude-scientific-writer/skills/document-skills/xlsx/scripts/office/soffice.py:29-32 (weakest 06-claude-scientific-writer/skills/document-skills/docx/scripts/office/soffice.py:29-32 ~ 06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/soffice.py:29-32, similarity 1.000)",
+      "locations": [
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/soffice.py",
+          "line": 29,
+          "end_line": 32,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/soffice.py",
+          "line": 29,
+          "end_line": 32,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/xlsx/scripts/office/soffice.py",
+          "line": 29,
+          "end_line": 32,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/soffice.py",
+          "line": 29,
+          "end_line": 32,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/soffice.py",
+          "line": 29,
+          "end_line": 32,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/soffice.py",
+      "line": 51,
+      "end_line": 55,
+      "prose_kind": "docstring",
+      "message": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/soffice.py:51-55: TPX003 same explanation in 3 places: 06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/soffice.py:51-55, 06-claude-scientific-writer/skills/document-skills/xlsx/scripts/office/soffice.py:51-55 (weakest 06-claude-scientific-writer/skills/document-skills/docx/scripts/office/soffice.py:51-55 ~ 06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/soffice.py:51-55, similarity 1.000)",
+      "locations": [
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/soffice.py",
+          "line": 51,
+          "end_line": 55,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/soffice.py",
+          "line": 51,
+          "end_line": 55,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/xlsx/scripts/office/soffice.py",
+          "line": 51,
+          "end_line": 55,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/soffice.py",
+          "line": 51,
+          "end_line": 55,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/soffice.py",
+          "line": 51,
+          "end_line": 55,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/soffice.py",
+      "line": 78,
+      "end_line": 83,
+      "prose_kind": "comment",
+      "message": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/soffice.py:78-83: TPX003 same explanation in 3 places: 06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/soffice.py:78-83, 06-claude-scientific-writer/skills/document-skills/xlsx/scripts/office/soffice.py:78-83 (weakest 06-claude-scientific-writer/skills/document-skills/docx/scripts/office/soffice.py:78-83 ~ 06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/soffice.py:78-83, similarity 1.000)",
+      "locations": [
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/soffice.py",
+          "line": 78,
+          "end_line": 83,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/soffice.py",
+          "line": 78,
+          "end_line": 83,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/xlsx/scripts/office/soffice.py",
+          "line": 78,
+          "end_line": 83,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/soffice.py",
+          "line": 78,
+          "end_line": 83,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/soffice.py",
+          "line": 78,
+          "end_line": 83,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/validate.py",
+      "line": 1,
+      "end_line": 14,
+      "prose_kind": "docstring",
+      "message": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/validate.py:1-14: TPX003 same explanation in 3 places: 06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/validate.py:1-14, 06-claude-scientific-writer/skills/document-skills/xlsx/scripts/office/validate.py:1-14 (weakest 06-claude-scientific-writer/skills/document-skills/docx/scripts/office/validate.py:1-14 ~ 06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/validate.py:1-14, similarity 1.000)",
+      "locations": [
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/validate.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/validate.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/xlsx/scripts/office/validate.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/validate.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/validate.py",
+          "line": 1,
+          "end_line": 14,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/validators/base.py",
+      "line": 1,
+      "end_line": 3,
+      "prose_kind": "docstring",
+      "message": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/validators/base.py:1-3: TPX003 same explanation in 3 places: 06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/validators/base.py:1-3, 06-claude-scientific-writer/skills/document-skills/xlsx/scripts/office/validators/base.py:1-3 (weakest 06-claude-scientific-writer/skills/document-skills/docx/scripts/office/validators/base.py:1-3 ~ 06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/validators/base.py:1-3, similarity 1.000)",
+      "locations": [
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/validators/base.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/validators/base.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/xlsx/scripts/office/validators/base.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/validators/base.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/validators/base.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/validators/docx.py",
+      "line": 1,
+      "end_line": 3,
+      "prose_kind": "docstring",
+      "message": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/validators/docx.py:1-3: TPX003 same explanation in 3 places: 06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/validators/docx.py:1-3, 06-claude-scientific-writer/skills/document-skills/xlsx/scripts/office/validators/docx.py:1-3 (weakest 06-claude-scientific-writer/skills/document-skills/docx/scripts/office/validators/docx.py:1-3 ~ 06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/validators/docx.py:1-3, similarity 1.000)",
+      "locations": [
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/validators/docx.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/validators/docx.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/xlsx/scripts/office/validators/docx.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/validators/docx.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/validators/docx.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/validators/pptx.py",
+      "line": 1,
+      "end_line": 3,
+      "prose_kind": "docstring",
+      "message": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/validators/pptx.py:1-3: TPX003 same explanation in 3 places: 06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/validators/pptx.py:1-3, 06-claude-scientific-writer/skills/document-skills/xlsx/scripts/office/validators/pptx.py:1-3 (weakest 06-claude-scientific-writer/skills/document-skills/docx/scripts/office/validators/pptx.py:1-3 ~ 06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/validators/pptx.py:1-3, similarity 1.000)",
+      "locations": [
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/validators/pptx.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/validators/pptx.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/xlsx/scripts/office/validators/pptx.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/validators/pptx.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/validators/pptx.py",
+          "line": 1,
+          "end_line": 3,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX003",
+      "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/validators/redlining.py",
+      "line": 1,
+      "end_line": 12,
+      "prose_kind": "docstring",
+      "message": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/validators/redlining.py:1-12: TPX003 same explanation in 3 places: 06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/validators/redlining.py:1-12, 06-claude-scientific-writer/skills/document-skills/xlsx/scripts/office/validators/redlining.py:1-12 (weakest 06-claude-scientific-writer/skills/document-skills/docx/scripts/office/validators/redlining.py:1-12 ~ 06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/validators/redlining.py:1-12, similarity 1.000)",
+      "locations": [
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/validators/redlining.py",
+          "line": 1,
+          "end_line": 12,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/validators/redlining.py",
+          "line": 1,
+          "end_line": 12,
+          "prose_kind": "docstring"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/document-skills/xlsx/scripts/office/validators/redlining.py",
+          "line": 1,
+          "end_line": 12,
+          "prose_kind": "docstring"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "06-claude-scientific-writer/skills/document-skills/docx/scripts/office/validators/redlining.py",
+          "line": 1,
+          "end_line": 12,
+          "prose_kind": "docstring"
+        },
+        "second": {
+          "path": "06-claude-scientific-writer/skills/document-skills/pptx/scripts/office/validators/redlining.py",
+          "line": 1,
+          "end_line": 12,
+          "prose_kind": "docstring"
+        },
+        "similarity": 1.0
+      }
+    },
+    {
+      "code": "TPX002",
+      "path": "06-claude-scientific-writer/skills/document-skills/pptx/scripts/add_slide.py",
+      "line": 1,
+      "end_line": 25,
+      "prose_kind": "docstring",
+      "message": "06-claude-scientific-writer/skills/document-skills/pptx/scripts/add_slide.py:1-25: TPX002 docstring is 213 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it",
+      "words": 213,
+      "max_volume": 200
+    },
+    {
+      "code": "TPX003",
+      "path": "06-claude-scientific-writer/skills/infographics/scripts/generate_infographic_ai.py",
+      "line": 355,
+      "end_line": 358,
+      "prose_kind": "comment",
+      "message": "06-claude-scientific-writer/skills/infographics/scripts/generate_infographic_ai.py:355-358: TPX003 same explanation in 2 places: 06-claude-scientific-writer/skills/scientific-slides/scripts/generate_slide_image_ai.py:192-195 (weakest 06-claude-scientific-writer/skills/infographics/scripts/generate_infographic_ai.py:355-358 ~ 06-claude-scientific-writer/skills/scientific-slides/scripts/generate_slide_image_ai.py:192-195, similarity 1.000)",
+      "locations": [
+        {
+          "path": "06-claude-scientific-writer/skills/infographics/scripts/generate_infographic_ai.py",
+          "line": 355,
+          "end_line": 358,
+          "prose_kind": "comment"
+        },
+        {
+          "path": "06-claude-scientific-writer/skills/scientific-slides/scripts/generate_slide_image_ai.py",
+          "line": 192,
+          "end_line": 195,
+          "prose_kind": "comment"
+        }
+      ],
+      "weakest": {
+        "first": {
+          "path": "06-claude-scientific-writer/skills/infographics/scripts/generate_infographic_ai.py",
+          "line": 355,
+          "end_line": 358,
+          "prose_kind": "comment"
+        },
+        "second": {
+          "path": "06-claude-scientific-writer/skills/scientific-slides/scripts/generate_slide_image_ai.py",
+          "line": 192,
+          "end_line": 195,
+          "prose_kind": "comment"
+        },
+        "similarity": 1.0
+      }
+    }
+  ]
+}
