@@ -1,10 +1,14 @@
 # Pre-registration — the anti-false-positive gate
 
-**Status: DRAFT. Not yet the pre-registration.** Two values below are decisions the owner has to
-make, and this file becomes the pre-registration only once they are filled in, committed and
-**pushed to `origin`**. AC2's proof is the commit order on the remote, not a sentence in a report:
-this file must land on `origin` **before `tooprolix check` is run against a single candidate
-repository**.
+**Status: PRE-REGISTERED.** Both owner decisions of §0 are closed, and the commits carrying them
+reached `origin` before `tooprolix check` was run against any candidate repository. AC2's proof is
+that commit order on the remote, not a sentence in a report.
+
+⚠️ **Two amendments have been made since, both append-only, both dated, and both written while only
+cluster *counts* were visible and no finding had been judged TP or FP:** Amendment 1 replaced a
+hand-assembled candidate pool with a pinned query (§3), and **Amendment 2 replaced the sampling
+design (§5.0)**. Superseded text is marked in place and kept. The threshold, the denominator, the
+annotation rule and the two-class rule have never been amended.
 
 Task: `close-anti-fp-gate-with-public-reference`. Rule of record: EPIC.md Decisions #16 (what counts
 as a finding) and #17 (what the gate measures).
@@ -118,6 +122,12 @@ knows where `TPX003` is weak would apply.
 | 4 | permissive OSI licence: SPDX id in `{MIT, Apache-2.0, BSD-3-Clause}` | `.license.spdx_id` | `NOASSERTION` / `null` excludes — an unidentified licence is not a permissive one |
 | 5 | actively maintained: `pushed_at` within 90 days of 2026-07-30 | `.pushed_at` | missing excludes |
 | 6 | at least **250** tracked `.py` files at the resolved SHA | `gh api repos/<o>/<n>/git/trees/<sha>?recursive=1`, counting blobs ending `.py`; `truncated == true` aborts | a tree that cannot be counted excludes |
+
+⚠️ **Arithmetic corrected 2026-07-30 (consilium, CONFIRMED): `72 / 840` is 0.086, not 0.076.** The
+figure was misstated when this section was written. It does not move the 250 floor materially — at
+0.086 a repository needs ≈ 465 `.py` files, which the floor never claimed to guarantee — and it does
+not touch the conclusion that `EverMind-AI/Raven` at 0.014 is roughly five times quieter than the
+quietest calibration repository. Recorded rather than silently patched.
 
 **Where 250 comes from — measured, not chosen.** Over the six corpus repositories the density of
 `TPX003` clusters per tracked `.py` file ranges from 0.076 (`openai-agents-python`: 72 / 840) to
@@ -320,6 +330,65 @@ not a reason to redefine the class.
 
 ---
 
+## 5.0 AMENDMENT 2 — the sampling design, replaced 2026-07-30 before any labelling
+
+🔴 **This section supersedes §5.2 and §5.3 below, which are kept visible and marked.** It was written
+after pool entry 1 was scanned and **before a single finding was judged TP or FP.** What was visible
+when it was written: cluster *counts* only. What was not: any verdict, and therefore any FP rate.
+
+**Why amend at all.** Entry 1 (`EverMind-AI/Raven`, 855 tracked `.py`) emits **12** `TPX003`
+clusters — 8 exact, 4 near — against a sample of 40 whose near half alone registers a minimum of 5.
+The registered walk would have filled 40 from roughly four repositories. An independent consilium
+(codex, gpt-5.6-sol) established two things that the original design did not account for:
+
+* **The nominal interval overstates precision.** Findings inside one repository are correlated by
+  house documentation style. With 40 findings over ~4 repositories the mean cluster size is 10, so
+  `DEFF = 1 + (10 − 1)ρ` gives an effective `n ≈ 21` at ρ = 0.10 and `n ≈ 14` at ρ = 0.20. The
+  advertised ±0.15 is really **±0.21 to ±0.25**.
+* **A count-dependent stopping rule is not neutral even though it never sees a verdict.** Yield is
+  detector output and a proxy for house style, and style may correlate with FP propensity. Counts
+  also decide the exact/near composition, and the two strata measured very differently in
+  calibration (0.450 against 0.200), so the composition alone carries information about the expected
+  combined rate.
+
+**The replacement design.**
+
+* **Scan the fixed first 10 entries** of the §3.0.1 ordered pool. Ten, decided in advance, not "as
+  many as it takes". `Raven` is entry 1 and cannot be dropped.
+* **Draw 30 exact and 10 near, round-robin across all ten repositories**, each repository's own
+  findings in `(path, line)` order. Round-robin is what `sample_clusters.round_robin` already does;
+  §5.3's prose said repositories were appended one after another, and **the code was right and the
+  prose was wrong** — that divergence is corrected here rather than papered over.
+* **No early stopping and no refill beyond entry 10.** The number of repositories is fixed before the
+  data, so nothing about the yield can change how much is collected.
+* If the ten together cannot supply a stratum, report that stratum on the clusters that exist with
+  `n` stated beside it, and never pad it from the other stratum. §5.3's rule for an exhausted pool
+  stands unchanged.
+
+**Reported beside the gate: a design-effect sensitivity.** The Wilson interval is still reported, and
+next to it the clustered interval at ρ = 0.10 and ρ = 0.20 so the correlation is visible instead of
+assumed away. **The gate comparison itself is unchanged: the combined main-reading rate against
+0.40.** The sensitivity is disclosure, not a second criterion.
+
+⚠️ **What this amendment deliberately does NOT do.** It does not touch the threshold, the
+denominator, the annotation rule, or the two-class rule. It changes only *how many repositories are
+scanned and how the 40 are spread across them* — the axis on which no verdict has been observed.
+
+### 5.0.1 The threshold stays 0.40, and here is the correction that makes it tighter
+
+**Disclosed 2026-07-30, owner's decision to leave the number alone.** The 0.40 was chosen against the
+calibration figure **0.367**, which was measured on a **20 exact / 10 near** mix. The operative
+holdout mix is **30 / 10**, and applying that mix to the calibration strata gives
+`0.75 × 0.450 + 0.25 × 0.200 = ` **0.3875** — materially closer to the bar than the number the bar
+was set against.
+
+The bar is **not** moved. Raising it now, in the direction that information just pointed, is exactly
+the move this whole file exists to prevent, and it would be indistinguishable from bar-moving no
+matter how well argued. The gate is simply tighter than it looked when it was set, and that is
+recorded here so nobody rediscovers it as a surprise after the result.
+
+---
+
 ## 5. The measurement — one denominator, one sample, one stopping rule
 
 ### 5.1 The primary numeric denominator
@@ -335,7 +404,13 @@ next repository in the §3.1 order. A repository that emits nothing can neither 
 gate — a rate over an empty denominator is reported as `unavailable`, never as `0.0`.
 `corpus/classification.py` returns `None` rather than `0.0` for exactly this reason.
 
-### 5.2 Sample size 40, allocated proportionally so the combined figure is a plain ratio
+### 5.2 SUPERSEDED by §5.0 — proportional allocation from the first repository
+
+⚠️ **Kept visible, no longer operative.** Applied to `Raven`'s own E=8 / N=4 this formula yields
+**27 exact / 13 near**, while `preregistration.json` — the operative half, and what `verify()`
+reads — pins 30 / 10. The JSON was written before any repository ran and so could not have applied
+the formula; the contradiction is real and §5.0 resolves it by fixing 30 / 10 across ten
+repositories. The text below is the superseded rule.
 
 Let `E` and `N` be the exact (`weakest.similarity == 1.0`) and near (`< 1.0`) cluster counts of the
 first repository's run, `T = E + N`.
@@ -356,7 +431,12 @@ enough of it.
 **combined point estimate is the gate**; the intervals are reported for honesty and are *not* a
 second criterion.
 
-### 5.3 The stopping rule
+### 5.3 SUPERSEDED by §5.0 — the walk-until-full stopping rule
+
+⚠️ **Kept visible, no longer operative.** Two defects, both found before any labelling: its walk
+**appends** repositories one after another while the code **interleaves** them round-robin, and a
+count-dependent stop makes how much is collected a function of detector output. §5.0 replaces it
+with a fixed ten repositories. The paragraph on an exhausted pool below still stands.
 
 * **More than 40 available in the first repository** — the truncation above *is* the rule: the first
   `n_exact` and first `n_near` by `(path, line)`. Nothing is chosen.

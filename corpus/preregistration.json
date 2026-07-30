@@ -65,25 +65,32 @@
       "is_gate": false
     },
     "holdout": {
-      "purpose": "the gate; one repository from the pre-registered pool, never seen by the detector",
+      "purpose": "the gate; the fixed first 10 entries of the pre-registered pool, none of which the detector had seen. Amendment 2, 2026-07-30, written before any finding was judged",
       "threshold": 0.4,
       "draws": [
         {
           "population": "exact",
           "per_repo": 40,
           "limit": 30,
-          "minimum": 5
+          "minimum": 0
         },
         {
           "population": "near",
           "per_repo": 40,
           "limit": 10,
-          "minimum": 5
+          "minimum": 0
         }
       ],
       "runs": {},
       "is_gate": true,
-      "threshold_reading": "main"
+      "threshold_reading": "main",
+      "repositories": 10,
+      "run_requirements": {
+        "schema_version": "2",
+        "complete": true,
+        "skipped": 0,
+        "excluded": 0
+      }
     }
   }
 }
