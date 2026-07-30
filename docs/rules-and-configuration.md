@@ -47,9 +47,9 @@ Discarded, and nothing else is:
 | Style | What is discarded |
 | --- | --- |
 | Google | a line that is exactly `Args:`, `Attributes:`, `Keyword Args:`, `Raises:`, `Returns:` or `Yields:`, plus the blank and deeper-indented lines under it |
-| Sphinx / reST | a line opening `:param …:`, `:type …:`, `:return:`, `:returns:`, `:rtype:`, `:raise…:`, `:key…:`, `:var…:`, `:except…:` or `:yield…:`, plus its deeper-indented continuation lines |
-| NumPy | `Parameters`, `Returns`, `Raises`, `Yields`, `Attributes` or `Keyword Arguments` **underlined by a row of three or more dashes** at the same indentation, plus its body up to the next underlined header |
-| Examples | a fenced ` ``` ` block through its closing fence, and a `>>>` doctest run together with the `>>>`/`...` lines that continue it |
+| Sphinx / reST | a line opening `:param …:`, `:type …:`, `:return:`, `:returns:`, `:rtype:`, `:raise…:`, `:key…:`, `:var…:`, `:except…:` or `:yield…:`, plus its deeper-indented continuation lines. The closing colon must be followed by whitespace or the end of the line, and the six names that take no argument (`:return:`, `:returns:`, `:rtype:`, `:vartype:`, `:yield:`, `:yields:`) must stand alone — `` :return:`x` `` is a role and `:return policy:` is an unlisted field, and both stay narrative |
+| NumPy | `Parameters`, `Returns`, `Raises`, `Yields`, `Attributes` or `Keyword Arguments` **underlined by a row of dashes exactly as long as the name** at the same indentation, plus its body up to the next underlined header. A mismatched underline is a malformed docstring, not a section, and the whole thing stays narrative |
+| Examples | a fenced ` ``` ` block through its closing fence, and a `>>>` doctest run together with the `>>>`/`...` lines that continue it. A prompt must be followed by whitespace or end the line — `>>>text` is what `doctest` itself refuses to parse, so it stays narrative. The example's **output** is narrative and is kept |
 
 Everything else stays narrative, on purpose and in this direction on purpose:
 
@@ -67,10 +67,18 @@ comparison. That bias is deliberate: an unrecognised construct can then only pre
 never invent one. The opposite bias would delete findings through a parser bug with nothing in the
 output to say so.
 
-A block whose narrative is **empty** — a docstring that is nothing but a parameter table — takes no
-part in `TPX003` at all: once the table is discarded there is no explanation left that could have
-been said twice. It still counts in full towards `TPX001` and `TPX002`, which measure volume rather
-than repetition.
+A block whose narrative is shorter than **three words** — a docstring that is nothing but a parameter
+table, or one left with a bare `Send.` — takes no part in `TPX003` at all: once the table is
+discarded there is not enough explanation left to have been said twice. Three is the shingle width,
+so it is also the point below which the two comparison paths could not agree: a shorter text produces
+no shingle at all. Such a block still counts in full towards `TPX001` and `TPX002`, which measure
+volume rather than repetition.
+
+⚠️ **What this floor does not do.** Two unrelated callables whose narratives are the *same* templated
+summary of three words or more are still reported as one finding. That is the templated-summary
+class described in `corpus/annotations.md` §1.5, and §1.5 records the measurement showing it cannot
+be separated by raising the similarity threshold either — a genuine finding sits at the same score.
+Closing it needs a rule about templated summary lines, which is a judgement rather than a grammar.
 
 The grammar lives in one function, `extract::narrative`, and its unit tests carry one case per style
 plus the fail-safe cases above.

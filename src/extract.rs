@@ -400,6 +400,21 @@ const SPHINX_FIELDS: [&str; 20] = [
     "yields",
 ];
 
+/// The [`SPHINX_FIELDS`] entries that take **no** argument, so `:name:` is their only legal form.
+///
+/// ⚠️ **Testing the name alone was a measured fail-open hole.** `sphinx_field` reads the first word
+/// between the colons, which is right for `:param buffer:` and wrong for everything here:
+/// `:return policy:` is not the `return` field, it is an *unlisted* field named `return policy`, and
+/// accepting it discarded the sentence after it. Measured on the real binary — a pair sharing that
+/// line scored 0.800 as prose and vanished once the field marker was added.
+///
+/// The split is docutils' own field-name grammar, not a guess: the argument-taking members name what
+/// they document (`:param x:`, `:type x:`, `:raises E:`), and these six document the callable's
+/// single return or its type, so there is nothing for an argument to name. An unrecognised shape
+/// stays narrative, which is the direction this whole module fails in.
+const SPHINX_FIELDS_WITHOUT_ARGUMENT: [&str; 6] =
+    ["return", "returns", "rtype", "vartype", "yield", "yields"];
+
 /// The block with its API-reference scaffolding removed, [`normalize`]d — what `TPX003` compares.
 ///
 /// # Why a block is compared on less than it says
@@ -499,14 +514,17 @@ pub fn narrative(text: &str) -> String {
 /// discarded, the output is kept as narrative. `>>>` marks input and nothing marks output, so
 /// classifying the output as part of the example would be a guess, and a guess here silences
 /// findings.
+///
+/// The prompt test is [`is_prompt`], not a bare `starts_with`: see its rustdoc for the sentence
+/// `doctest` refuses to parse and this function used to eat.
 fn doctest_run(lines: &[&str], start: usize) -> Option<(usize, usize)> {
-    if !lines[start].trim().starts_with(">>>") {
+    if !is_prompt(lines[start].trim(), ">>>") {
         return None;
     }
     let mut input_end = start + 1;
     while let Some(line) = lines.get(input_end) {
         let text = line.trim();
-        if !(text.starts_with(">>>") || text.starts_with("...")) {
+        if !(is_prompt(text, ">>>") || is_prompt(text, "...")) {
             break;
         }
         input_end += 1;
@@ -522,6 +540,22 @@ fn doctest_run(lines: &[&str], start: usize) -> Option<(usize, usize)> {
     Some((input_end, output_end))
 }
 
+/// Whether `trimmed` opens with `marker` used as a `doctest` prompt rather than as ordinary text.
+///
+/// The marker must be followed by **whitespace or the end of the line**, which is `doctest`'s own
+/// rule and not a tightening invented here: `DocTestParser` raises a `ValueError` reading
+/// "lacks blank after" the prompt when a line runs text straight into it, so such a line is
+/// definitionally not an example.
+///
+/// ⚠️ **`starts_with` alone was a measured fail-open hole.** A sentence beginning `>>>The caller
+/// keeps ownership…` was discarded as example input, and a pair sharing it went from a finding to
+/// silence — the tool deleting prose that Python itself refuses to read as a prompt.
+fn is_prompt(trimmed: &str, marker: &str) -> bool {
+    trimmed
+        .strip_prefix(marker)
+        .is_some_and(|rest| rest.is_empty() || rest.starts_with(char::is_whitespace))
+}
+
 /// Indentation width of a line — the depth the section grammars compare.
 ///
 /// A tab advances to the next multiple of **eight**, which is not a choice made here: it is what
@@ -533,10 +567,18 @@ fn doctest_run(lines: &[&str], start: usize) -> Option<(usize, usize)> {
 /// header, the section ended at its first line and the table stayed in the comparison — the
 /// update/delete docstring pair scored 0.933 with a tab-indented entry against 0.800 with the
 /// byte-identical eight-space one. The rule silently did not apply to tab-indented code.
+///
+/// ⚠️ **A form feed RESETS the column, and getting that wrong re-armed suppression in a new shape.**
+/// The tab fix above counted `\f` as one more column, so `\t\f` measured **9** against a four-space
+/// header and a genuine paragraph was absorbed into the section body — a finding that scored 0.800
+/// under the previous character-counting code and vanished under the fix. `CPython`'s tokenizer
+/// treats a form feed as a column reset, and so does this: the two rules come from the same place,
+/// and taking one without the other is what created the regression.
 fn indent_of(line: &str) -> usize {
     let mut width = 0;
     for character in line.chars() {
         match character {
+            '\x0c' => width = 0,
             '\t' => width += 8 - width % 8,
             _ if character.is_whitespace() => width += 1,
             _ => break,
@@ -660,7 +702,13 @@ fn sphinx_field(trimmed: &str) -> Option<&str> {
     if !(after.is_empty() || after.starts_with(char::is_whitespace)) {
         return None;
     }
-    let name = inside.split_whitespace().next()?;
+    let mut words = inside.split_whitespace();
+    let name = words.next()?;
+    // A field that takes no argument has to BE its name — see `SPHINX_FIELDS_WITHOUT_ARGUMENT`.
+    // Without this, `:return policy:` is read as the `return` field and its sentence is discarded.
+    if words.next().is_some() && SPHINX_FIELDS_WITHOUT_ARGUMENT.contains(&name) {
+        return None;
+    }
     SPHINX_FIELDS.contains(&name).then_some(name)
 }
 
@@ -1649,6 +1697,22 @@ mod tests {
                  :return:`the buffer` is handed back with ownership, which is the whole contract.\n\
                  \"\"\"",
             ),
+            // Rows 7-9 come from the SECOND review round, on the commit that fixed rows 4-6. Each
+            // was measured as a suppressed finding on the real binary, and row 8 was a regression
+            // that the row-6 fix introduced — which is why this table grows instead of being
+            // replaced: the shapes that are already closed have to stay closed.
+            (
+                "a `>>>` with no blank after it, which `doctest` itself rejects",
+                "\"\"\"Do the thing.\n\n\
+                 >>>The caller keeps ownership of the buffer, which is the whole contract here.\n\
+                 \"\"\"",
+            ),
+            (
+                "a field name carrying an argument the reST field does not take",
+                "\"\"\"Do the thing.\n\n\
+                 :return policy: the caller keeps ownership of the buffer, the whole contract here.\n\
+                 \"\"\"",
+            ),
         ];
 
         // Act — every row, not the first failing one. A table that stops at row four hides rows
@@ -1665,6 +1729,41 @@ mod tests {
             "the parser swallowed narrative on {} of {} shapes: {swallowed:#?}",
             swallowed.len(),
             cases.len()
+        );
+    }
+
+    /// A form feed ends the section body rather than deepening it, so the prose after it survives.
+    ///
+    /// 🔴 **This is the regression the tab fix introduced, and it is why it has its own test.** It
+    /// cannot join the "narrative unchanged" table next door: the fixture carries a *real* `Args:`
+    /// section, which is correctly discarded, so the invariant there does not apply and the
+    /// expectation has to be written out.
+    ///
+    /// Measured on the real binary across three revisions of this function: character-counting gave
+    /// the `\t\x0c` line width 2, below the four-space header, and the paragraph survived (0.800);
+    /// counting a tab as eight *and a form feed as one more* gave it 9, above the header, and the
+    /// paragraph was swallowed into the parameter table (silence); resetting the column at the form
+    /// feed, as `CPython`'s tokenizer does, restores it.
+    #[test]
+    fn a_form_feed_resets_the_column_so_the_paragraph_after_it_is_narrative() {
+        // Arrange — a genuine `Args:` section, then a paragraph indented with a tab and a form feed.
+        let text = "\"\"\"Do the thing.\n\n\
+                    \x20   Args:\n\
+                    \x20       buffer: a knob\n\n\
+                    \t\x0cThe caller keeps ownership of the buffer, which is the whole contract.\n\
+                    \"\"\"";
+
+        // Act
+        let narrative = narrative(text);
+
+        // Assert — the table goes, the paragraph stays.
+        assert!(
+            !narrative.contains("knob"),
+            "the parameter table survived: {narrative}"
+        );
+        assert!(
+            narrative.contains("the caller keeps ownership of the buffer"),
+            "the form-feed paragraph was swallowed into the section body: {narrative}"
         );
     }
 
