@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.8](https://github.com/golyshevskii/tooprolix/compare/v0.3.7...v0.3.8) - 2026-07-30
+
+### Other
+
+- close the AC3 line-rate budget on the adversarial near-duplicate case ([#26](https://github.com/golyshevskii/tooprolix/pull/26))
+
 ## [0.3.7](https://github.com/golyshevskii/tooprolix/compare/v0.3.6...v0.3.7) - 2026-07-29
 
 ### Other
