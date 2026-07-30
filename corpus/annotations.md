@@ -793,3 +793,141 @@ One row moves, `pydantic` 122 → 123. `TPX001`/`TPX002` byte-identical on all s
 `corpus/units.py --verify` still reproduces **173 volume findings exactly** — the counting/comparison
 split did not leak. The drawn sample of 30 is **unchanged**, so §5.4's rates stand: exact **0.450**
 (0.258 – 0.658), near **0.200** (0.057 – 0.510), combined **0.367** (0.219 – 0.545).
+
+---
+
+## 7. The held-out measurement — the gate (2026-07-30)
+
+🟢 **This section IS held-out evidence.** Unlike §§4–6 it is not calibration data: none of the ten
+repositories took part in tuning anything, and the sampling design, the threshold and the pool query
+were all on `origin` before the first of them was cloned.
+
+### 7.1 AC7 — the holdout took no part in calibration
+
+None of the ten is one of the six `corpus.lock` repositories, and none shares an owner with one
+(`openai`, `crewAIInc`, `langchain-ai`, `All-Hands-AI`, `pydantic`, `psf` are excluded by filter 1).
+The 150 / 200 word limits, `SIMILARITY_THRESHOLD` = 0.75 and `SHINGLE_K` = 3 were measured on the six
+corpus repositories and on nothing else (`corpus/REPORT.md`); no number in this section fed back into
+any of them.
+
+### 7.2 AC9 — what it was measured on
+
+Detector commit **`53585f5`**, working tree **clean**, binary
+`sha256 7538d48ab97e3c4fa22265440d5247e52c4508d21b5c48a398703d8a8bdaac01`, built from committed
+source (`git diff 12f3e9a HEAD -- src/ Cargo.toml` is empty). The artifact pins the commit — which
+`verify` requires to resolve in this repository — and the binary hash, which it checks whenever the
+binary is present.
+
+### 7.3 The blindness attestation, in both halves
+
+**What git proves:** the pool query, the ordered pool, the draw rule, the sample size, the annotation
+protocol and the threshold **0.40** were committed and pushed to `origin` before any repository was
+cloned — amendments 1–3 at `6242f30`, `b7b3d29`, `297661f`/`53585f5`, each pushed ahead of the scan
+it governs.
+
+**What git cannot prove:** that nobody ran the binary against any of these ten repositories locally
+beforehand. That half is an **attestation**, and it is called an attestation rather than a proof.
+What is removed by construction is the discretion: which repositories (a pinned query plus mechanical
+filters), which findings (the findings' own `(path, line)`), and what counts as a pass (a number
+frozen before the data).
+
+### 7.4 The ten runs
+
+| # | repository | SHA | `.py` walked | skipped | near | exact | total |
+|---|---|---|---|---|---|---|---|
+| 01 | EverMind-AI/Raven | `16bdca7d` | 855 | 0 | 4 | 8 | 12 |
+| 02 | GetStream/Vision-Agents | `9f2eba64` | 537 | 0 | 3 | 27 | 30 |
+| 03 | Graphify-Labs/graphify | `ecfcd160` | 274 | 0 | 3 | 20 | 23 |
+| 04 | HKUDS/DeepTutor | `740ec413` | 1027 | 0 | 3 | 6 | 9 |
+| 05 | HKUDS/nanobot | `6a1a45d0` | 617 | 0 | 0 | 3 | 3 |
+| 06 | K-Dense-AI/claude-scientific-writer | `43aaecd6` | 184 | 1 | 1 | 31 | 32 |
+| 07 | Klavis-AI/klavis | `45c9f7da` | 633 | 0 | 9 | 76 | 85 |
+| 08 | MemMachine/MemMachine | `a681abf9` | 475 | 0 | 6 | 24 | 30 |
+| 09 | MervinPraison/PraisonAI | `688d76a1` | 4255 | 5 | 53 | 288 | 341 |
+| 10 | NVIDIA/skills | `17d96f11` | 330 | 0 | 5 | 16 | 21 |
+| | **total** | | | 6 | **87** | **499** | **586** |
+
+Each run's SHA-256 is pinned in `corpus/preregistration.json` and re-checked by `verify`. Raven's run
+is byte-identical to the phase-3 run that preceded amendment 2, modulo the directory rename.
+
+### 7.5 🟢 The verdict
+
+| population | FP | n | rate | 95% Wilson | ρ=0.10 | ρ=0.20 |
+|---|---|---|---|---|---|---|
+| exact | 7 | 30 | **0.233** | 0.118 – 0.409 | 0.110 – 0.427 | 0.104 – 0.444 |
+| near | 4 | 10 | **0.400** | 0.168 – 0.687 | 0.167 – 0.689 | 0.167 – 0.690 |
+| **combined** | **11** | **40** | **0.275** | **0.161 – 0.428** | 0.149 – 0.451 | 0.139 – 0.471 |
+
+**`PASS: FP share 0.275 against the pre-registered threshold 0.400`, exit code 0.**
+
+**Under the strict reading, reported as a band and not as the gate:** exact 14/30 = 0.467, near
+4/10 = 0.400, combined **18/40 = 0.450**.
+
+🔴 **State this plainly rather than bury it: the strict reading would be RED.** 0.450 > 0.400. The
+gate is green because the owner fixed the **main** reading as primary — a byte-identical summary line
+counts as a finding when a canonical owner can be named — and that decision was frozen on `origin`
+before any of these ten repositories was cloned. Seven clusters separate the two readings (E6, E7,
+E12, E16, E17, E26, E27); every one is an override or a duplicated helper whose only surviving
+overlap is its summary line.
+
+### 7.6 Per-repository rates — the clustering, shown rather than asserted
+
+| repository | FP / n |
+|---|---|
+| 01-Raven | 0/5 = 0.000 |
+| 02-Vision-Agents | 0/4 = 0.000 |
+| 03-graphify | **3/4 = 0.750** |
+| 04-DeepTutor | 0/4 = 0.000 |
+| 05-nanobot | 0/3 = 0.000 |
+| 06-claude-scientific-writer | 1/4 = 0.250 |
+| 07-klavis | 1/4 = 0.250 |
+| 08-MemMachine | 2/4 = 0.500 |
+| 09-PraisonAI | 0/4 = 0.000 |
+| 10-skills | **4/4 = 1.000** |
+
+Six of ten repositories contribute **zero** false positives and two contribute **seven of the
+eleven**. The consilium's correlation concern is not hypothetical: it is the dominant structure in
+this result, and it is why the design effect is reported beside the nominal interval. The mean
+cluster size is 4 rather than the 10 the amendment assumed, so `DEFF = 1 + 3ρ` and the combined
+interval widens only to 0.139 – 0.471 at ρ = 0.20 — the conclusion does not change, but the
+precision was never what the nominal figure suggested.
+
+### 7.7 The false-positive shapes — three not previously named
+
+Eleven false positives, and the templated-summary class that supplied 7 of the dry run's 12 accounts
+for **one** of them here (N6). The holdout is dominated by shapes the calibration corpus never had.
+
+1. 🆕 **SPDX / licence headers** — E10 (**144 members**), E20 (12), N9 (135). Mandatory per file,
+   machine-read per file, and removing a copy is affirmatively wrong. Three of eleven FPs, and by
+   member count they dominate the run: one finding carrying 144 addresses.
+2. 🆕 **Upstream attribution notices** — E8, N7. "This is adapted from Mem0 (URL)…". Removing either
+   copy strips that file of its provenance. Related to §4.7's bare-cross-reference shape but distinct:
+   here the notice is substantive prose, not a bare link.
+3. 🆕 **A deliberately vendored copy of the repository's own source** — E3, E13, E23, all in
+   `graphify/worked/mixed-corpus/raw/`, a worked-example corpus the analyser runs on. Thinning its
+   prose defeats the fixture. This single vendored file produces graphify's 3/4.
+4. 🆕 **Self-contained distributable bundles** — E30, N5. A skill or plugin ships standalone, so each
+   bundle must carry its own copy of a helper. Same family as the dry run's self-contained examples,
+   but the constraint here is packaging rather than pedagogy.
+5. **Templated summary line** (§1.5) — N6 only.
+
+⚠️ **The single most useful thing this measurement says about the product** is not the rate. It is
+that on unseen repositories the dominant false positive is **licence and attribution boilerplate**,
+which the calibration corpus happened not to contain, and which no threshold can separate because it
+is byte-identical by design. Naming it is inside this task; fixing it is not.
+
+### 7.8 What this measurement does not claim
+
+**No recall claim is made or supported.** `tooprolix` does not read `.py` files under hidden
+directories — proved on a constructed fixture, and the reason `06` presents 184 of its 506 files to
+the detector. That policy applied identically to the calibration corpus and does not bias
+`FP / clusters emitted`, because a user running the tool sees exactly the same walk. It would matter
+to a claim about findings *missed*, and this gate makes none.
+
+### 7.9 Baseline — derived from the labels, after them
+
+`baseline_from` takes the classified artifact and returns the addresses classified `FP`, so it cannot
+be produced before the labels exist. **11 entries**, matching the numerator exactly. The order is
+the one Decisions #17 requires and it is enforced by the shape of the code, not by prose: the
+unsuppressed runs were saved and hashed first, every drawn finding then received exactly one class,
+and only then was the baseline derived.
