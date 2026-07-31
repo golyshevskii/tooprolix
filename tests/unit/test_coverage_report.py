@@ -117,7 +117,7 @@ class TestThePercentageComesFromTheCoverageTool:
     """
 
     def test_it_reads_total_line_coverage_from_a_cargo_llvm_cov_report(self, tmp_path: Path) -> None:
-        # Captured from `cargo llvm-cov --locked --features python --summary-only --json` via
+        # Captured from `cargo llvm-cov --locked --summary-only --json` via
         # `make rust.cov` on this repository, 2026-07-29 — the totals block verbatim, with the
         # per-file `files` list dropped. `lines.percent` is the figure the badge shows; every
         # sibling here is a plausible wrong answer that is NOT it — `regions` 97.95, `functions`

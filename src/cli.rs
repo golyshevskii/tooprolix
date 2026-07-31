@@ -2,12 +2,14 @@
 //!
 //! # Why all of this is in the library
 //!
-//! `src/main.rs` is a three-line wrapper around [`run`] and holds no logic at all. That is a
+//! `src/main.rs` is a three-line wrapper around [`run`] and holds no logic at all. It began as a
 //! requirement rather than a style preference: how this tool is *delivered* — a standalone binary,
-//! a pyo3 feature gate, or a console script that runs the CLI inside `CPython` — is a decision
-//! deferred to `package-python-distribution-and-publish-0-1-0`, and with the logic in the library
-//! this file is byte-identical under all three. `proj-lib-main-split` in rust-skills says the same
-//! thing for the same reason.
+//! a pyo3 feature gate, or a console script running the CLI inside `CPython` — was an open
+//! decision, and with the logic in the library this file was byte-identical under all three.
+//!
+//! **The decision landed on the standalone binary** (epic 2 Decisions #19.1), which the wheel now
+//! carries directly, so there is only one delivery left. The arrangement stays regardless:
+//! `proj-lib-main-split` in rust-skills says the same thing for its own reasons.
 //!
 //! # The exit contract
 //!

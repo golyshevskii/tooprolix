@@ -35,3 +35,11 @@ corpus/checkouts/
 # Python bytecode. `.venv/`, `.ruff_cache/` and `.pytest_cache/` need no entry —
 # uv and pytest each write their own `.gitignore` containing `*` inside them.
 __pycache__/
+
+# Build artifacts of the packaging matrix: `maturin sdist` / `maturin build` write here, and
+# `.github/workflows/build-artifacts.yml` reads back exactly one file per directory. A committed
+# wheel is not merely clutter — it made the linux and windows legs of run 30604813542 hand uv the
+# string "<macos wheel> <linux wheel>" as one path and fail with
+# "Distribution not found at: file:///...macosx_11_0_arm64.whl%20dist/...manylinux...whl".
+dist/
+dist-from-sdist/
