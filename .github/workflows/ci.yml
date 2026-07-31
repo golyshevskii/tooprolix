@@ -198,11 +198,9 @@ jobs:
         run: make rust.lint
 
       # The linkage guard: it reads the binary cargo just linked and fails on any dynamic dependency
-      # naming Python. It was `rust.build.nopython` and rode here as the only job that compiled the
-      # crate with the pyo3 feature OFF; the feature is gone and this is now simply
-      # the build, but the assertion is still worth its seconds — it is what says the executable the
-      # wheel ships runs where no interpreter does. It rides in this job rather than a new one
-      # because a new job would be a new required status check.
+      # naming Python. It is what says the executable the wheel ships runs where no interpreter
+      # does. It rides in this job rather than a new one because a new job would be a new required
+      # status check.
       - name: make rust.build
         run: make rust.build
 

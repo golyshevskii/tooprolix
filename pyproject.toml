@@ -97,8 +97,15 @@ bindings = "bin"
 # it.
 #
 # `strip = true` is deliberately NOT here: stripping is decided in `[profile.release]` in
-# Cargo.toml, where it was measured, so the standalone binary and the wheel's binary are the same
-# artifact rather than two builds that happen to agree.
+# Cargo.toml, where it was measured, so the standalone binary and the wheel's binary are built from
+# ONE profile rather than two settings that happen to agree.
+#
+# That is a claim about the profile, not about bytes. Measured 2026-07-31 at `72fda14` on
+# macOS/arm64: `maturin build --release` copies the cargo artifact unchanged (wheel executable and
+# `target/release/tooprolix` both sha256 `b771fe92…`), but the bytes move with the environment —
+# `SOURCE_DATE_EPOCH=1000000000` gives `004e52d1…` from identical source, because `build.rs` embeds
+# the date. CI builds each published wheel per platform with its own `SOURCE_DATE_EPOCH`, and
+# nothing compares a corpus binary's hash against wheel contents.
 #
 # # Third-party notices: NOT NEEDED, and here is the measurement behind that
 #

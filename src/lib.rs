@@ -14,10 +14,19 @@
 //! # There is no Python API, and that is a decision rather than an omission
 //!
 //! **The wheel carries the native executable** (`[tool.maturin] bindings = "bin"`, as ruff does),
-//! so `import tooprolix` raises `ModuleNotFoundError` and the delivered artifact is byte-for-byte
-//! the standalone binary every corpus number was measured on — `corpus/run_all.sh`,
-//! `corpus/determinism_check.sh` and `corpus/bench.py` all drive `target/release/tooprolix`. An
-//! extension module would be the one class of artifact no number here has been measured on.
+//! so `import tooprolix` raises `ModuleNotFoundError` and the delivered artifact is the *same kind
+//! of thing* every corpus number was measured on — `corpus/run_all.sh`,
+//! `corpus/determinism_check.sh` and `corpus/bench.py` all drive `target/release/tooprolix`, and
+//! that is a standalone binary from this source under `[profile.release]`, not an extension module.
+//!
+//! **It is NOT the same bytes, and nothing here checks that it is.** Measured 2026-07-31 at
+//! `72fda14` on macOS/arm64: `maturin build --release` copies the cargo artifact unchanged, so the
+//! wheel's `*.data/scripts/tooprolix` and `target/release/tooprolix` shared sha256
+//! `b771fe92…`; rebuilding with `SOURCE_DATE_EPOCH=1000000000` gave `004e52d1…` from identical
+//! source, because `build.rs` embeds the date. CI builds each published wheel per platform with
+//! `SOURCE_DATE_EPOCH` taken from the commit, so a published wheel's executable is a different
+//! build from any local corpus binary. Claiming otherwise would matter at publication time, where
+//! artifact identity is reasoned about.
 //!
 //! The guard that a wheel actually exports something is `scripts/install-smoke.sh`, which installs
 //! each built artifact into a clean environment and runs the *command*; it is mutation-proved

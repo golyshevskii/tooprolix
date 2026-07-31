@@ -93,9 +93,9 @@
 //! # What this module does not own
 //!
 //! Rule codes, exit codes, JSON, `--help`, the `# !TPX00N` marker and the
-//! `[tool.tooprolix]` keys that fill [`Limits`] all belong to
-//! `build-cli-with-exit-contract-and-rule-codes`. Nothing here reads a file or walks a directory.
-//! Two decisions are handed to that task and must not be re-decided there:
+//! `[tool.tooprolix]` keys that fill [`Limits`] all belong to [`crate::rules`], [`crate::finding`]
+//! and [`crate::cli`]. Nothing here reads a file or walks a directory. Two decisions belong to
+//! those modules and must not be re-decided there:
 //!
 //! * **one block can be both an overrun and a member of a `TPX003` cluster, and both findings must
 //!   reach the output.** Deduplicating by coordinate across rule codes would silently eat one of
