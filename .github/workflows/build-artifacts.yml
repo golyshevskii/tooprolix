@@ -133,17 +133,38 @@ jobs:
             --manifest-path from-sdist/tooprolix-*/Cargo.toml \
             --out dist-from-sdist --compatibility pypi
 
+      # 🔴 EXACTLY ONE FILE PER DIRECTORY, OR THIS FAILS. `$(echo dist/*.whl)` looks like "the
+      # wheel" and is really a space-joined list: run 30604813542 had a stray wheel in `dist/` and
+      # handed uv `<macos wheel> <linux wheel>` as one path, which then failed with a URL-encoded
+      # space in it. That is a guard failing open — the step before it had already "passed" on the
+      # same two-file string, because `basename` on it returns the last one. Counting first is what
+      # makes the later steps grade one named artifact instead of whatever the glob swept up.
+      - name: Resolve the artifacts, exactly one of each
+        run: |
+          set -euo pipefail
+          for pair in "SDIST:dist/*.tar.gz" "WHEEL_FROM_SDIST:dist-from-sdist/*.whl"; do
+            name="${pair%%:*}"
+            # shellcheck disable=SC2206
+            found=(${pair#*:})
+            if [ "${#found[@]}" -ne 1 ] || [ ! -f "${found[0]}" ]; then
+              echo "FAIL: expected exactly one ${pair#*:}, found ${#found[@]}: ${found[*]}" >&2
+              exit 1
+            fi
+            echo "$name=${found[0]}" >> "$GITHUB_ENV"
+            echo "$name = ${found[0]}"
+          done
+
       - name: twine check
-        run: uvx twine check --strict dist/* dist-from-sdist/*
+        run: uvx twine check --strict "$SDIST" "$WHEEL_FROM_SDIST"
 
       # AC4 for the source path: the artifact that carries no compiled binary is installed, built,
       # and the resulting COMMAND is run. This is where `unknown` would surface if the
       # SOURCE_DATE_EPOCH step above were ever dropped.
       - name: install-smoke the wheel built from the sdist
-        run: scripts/install-smoke.sh "$(echo dist-from-sdist/*.whl)"
+        run: scripts/install-smoke.sh "$WHEEL_FROM_SDIST"
 
       - name: install-smoke the sdist itself
-        run: scripts/install-smoke.sh "$(echo dist/*.tar.gz)"
+        run: scripts/install-smoke.sh "$SDIST"
 
       - name: Upload
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -217,13 +238,25 @@ jobs:
       # whose name says manylinux_2_17 while it was linked against a newer glibc is the failure this
       # catches; "it built on the runner" is not a floor and the platform tag is the only thing a
       # user's installer looks at.
+      #
+      # 🔴 The count comes FIRST, and it is not tidiness. `$(echo dist/*.whl)` is a space-joined
+      # list, and `basename` on such a list silently answers with the last entry — so in run
+      # 30604813542 this very check reported PASS on a directory holding a foreign macOS wheel
+      # beside the real one, and the failure only surfaced two steps later inside uv. A guard that
+      # grades whatever the glob swept up is not grading the artifact.
       - name: The wheel tag is the one the supported matrix promises
         shell: bash
         run: |
           set -euo pipefail
-          wheel="$(echo dist/*.whl)"
-          echo "built: $wheel"
-          case "$(basename "$wheel")" in
+          # shellcheck disable=SC2206
+          built=(dist/*.whl)
+          if [ "${#built[@]}" -ne 1 ] || [ ! -f "${built[0]}" ]; then
+            echo "FAIL: expected exactly one wheel in dist/, found ${#built[@]}: ${built[*]}" >&2
+            exit 1
+          fi
+          echo "WHEEL=${built[0]}" >> "$GITHUB_ENV"
+          echo "built: ${built[0]}"
+          case "$(basename "${built[0]}")" in
           "tooprolix-"*"-${{ matrix.platform.expect_tag }}.whl") ;;
           *)
             echo "FAIL: expected the tag ${{ matrix.platform.expect_tag }}" >&2
@@ -233,11 +266,11 @@ jobs:
 
       - name: twine check
         shell: bash
-        run: uvx twine check --strict dist/*
+        run: uvx twine check --strict "$WHEEL"
 
       - name: install-smoke
         shell: bash
-        run: scripts/install-smoke.sh "$(echo dist/*.whl)"
+        run: scripts/install-smoke.sh "$WHEEL"
 
       - name: Upload
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
