@@ -173,7 +173,15 @@ unwrap_used = "deny"
 # be justified by "a panic across the pyo3 boundary is a UB class" — there is no pyo3 boundary any
 # more (Decisions #19.1), and the ban survives on the exit contract alone. It is not left to this
 # comment: `tests/cli.rs::no_cargo_profile_aborts_on_panic` scans every `[profile…]` table in this
-# file, so the key cannot be smuggled into `[profile.bench]` either.
+# file, so the key cannot be smuggled into `[profile.bench]` either — and
+# `tests/cli.rs::a_panic_in_a_release_build_stays_a_code_and_keeps_its_output` runs a binary
+# compiled under THIS profile and watches it die, because "no `panic` key" is only a guarantee if
+# the default is `unwind` and the manifest check has to trust that. Measured, both ways:
+#
+#   | [profile.release]     | exit               | stdout buffered at the panic |
+#   |-----------------------|--------------------|------------------------------|
+#   | as committed          | 101                | survives                     |
+#   | + panic = "abort"     | 134 (SIGABRT)      | LOST                         |
 [profile.release]
 lto = "fat"
 codegen-units = 1

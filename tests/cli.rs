@@ -3136,6 +3136,75 @@ fn no_cargo_profile_aborts_on_panic() {
     );
 }
 
+/// A panic in a **release** build stays an exit code and does not take buffered output with it.
+///
+/// The runtime half of the `[profile.release]` guarantee. `no_cargo_profile_aborts_on_panic` above
+/// reads the manifest; this one runs a binary compiled under the profile and watches it die.
+///
+/// ⚠️ **Both halves are needed, and the reason is narrower than it first looks.** The manifest check
+/// asserts that no profile *sets* `panic` — which is only a guarantee if the DEFAULT is `unwind`.
+/// It trusts that. This one verifies it, by watching a binary compiled under the profile die.
+///
+/// 🔴 It does **not** cover `RUSTFLAGS`, and an earlier draft of this comment claimed it did. That
+/// claim was measured and is false: `RUSTFLAGS="-C panic=abort" cargo test` does not produce an
+/// aborting test binary, it refuses to build at all —
+/// `error: building tests with panic=abort is not supported without -Zpanic_abort_tests`. So that
+/// path is loud rather than silent, and neither test has to cover it. Corrected here rather than
+/// left standing, because an unmeasured sentence in a guard's own documentation is how a guard
+/// comes to be trusted for something it never did.
+///
+/// The two assertions are the two things `abort` destroys, measured on this repository 2026-07-31:
+///
+/// | `[profile.release]` | exit | stdout |
+/// |---|---|---|
+/// | as committed (`unwind`) | **101** | `buffered-before-the-panic` |
+/// | `+ panic = "abort"`     | **134** (SIGABRT) | **empty** |
+///
+/// The stdout half is the one worth spelling out: the example leaves 25 bytes inside an unflushed
+/// `BufWriter` and lets the panic unwind through it, so the flush happens in `Drop` during
+/// unwinding. `abort` runs no destructor, so the bytes never leave the process — the same way a
+/// real run would lose whatever `cli::emit` had buffered. 101 is *itself* outside the documented
+/// 0/1/2 contract and is a bug wherever it happens; the point is that it is a number, on a stream,
+/// beside a message, rather than a signal.
+///
+/// It shells out to cargo because the profile under test is not the one this test is compiled
+/// with — cargo forces unwinding for test harnesses, so nothing observable from inside this process
+/// says anything about `[profile.release]`.
+#[test]
+fn a_panic_in_a_release_build_stays_a_code_and_keeps_its_output() {
+    // Arrange / Act
+    let output = std::process::Command::new(env!("CARGO"))
+        .args([
+            "run",
+            "--release",
+            "--locked",
+            "--quiet",
+            "--example",
+            "panic_is_a_controlled_exit",
+        ])
+        .current_dir(repository_root())
+        .output()
+        .expect("cargo is on PATH: this test is running under it");
+
+    // Assert
+    assert_eq!(
+        output.status.code(),
+        Some(101),
+        "a panic must end in an exit CODE; `None` here means a signal, i.e. panic = \"abort\". \
+         stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert_eq!(
+        String::from_utf8_lossy(&output.stdout),
+        "buffered-before-the-panic",
+        "output buffered when the panic happened was lost, which is what abort does"
+    );
+    assert!(
+        String::from_utf8_lossy(&output.stderr).contains("panicked at"),
+        "the panic message has to reach stderr, not just the exit code"
+    );
+}
+
 /// [`git`], but only when the repository git discovers is **this package's own**.
 ///
 /// Without this the oracle is circular in the one layout that matters. Git's discovery walks
