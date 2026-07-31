@@ -145,12 +145,17 @@ by design and there is nothing to rebuild into `.venv`.
 ```bash
 make rust.build       # cargo build + prove the binary links no libpython -> CI job "cargo-clippy"
 uvx maturin==1.14.1 build --release --locked --out dist   # a wheel for this machine
-scripts/install-smoke.sh dist/tooprolix-*.whl              # install it and run the COMMAND
+# install it and run the COMMAND. The date is REQUIRED and is the oracle the check compares
+# against — without one it could only assert the SHAPE of a date, which accepted a binary built
+# from any other commit. Use `unknown` for an sdist built with no SOURCE_DATE_EPOCH.
+scripts/install-smoke.sh dist/tooprolix-*.whl "$(git log -1 --format=%cs)"
 ```
 
 `scripts/install-smoke.sh` is the guard that replaced the pyo3 boundary tests: it installs the
-artifact into a throwaway project and asserts the command exists, prints a real version and date,
-exits 1 with `TPX002` on a file with a finding and 0 on a clean one. `.github/workflows/build-artifacts.yml`
+artifact into a throwaway project and asserts the command exists, prints exactly the expected
+version and date, that `import tooprolix` raises `ModuleNotFoundError` (the wheel ships an
+executable, not a module), and that it exits 1 with `TPX002` on a file with a finding and 0 on a
+clean one. `.github/workflows/build-artifacts.yml`
 runs the same script on every artifact it builds.
 
 ## Coverage

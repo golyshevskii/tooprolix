@@ -45,6 +45,7 @@ from transform_readme import (
     BLOB,
     RAW,
     ReadmeNotInExpectedFormatError,
+    code_content,
     relative_addresses,
     rendered_addresses,
     transform,
@@ -87,6 +88,10 @@ class TestRelativeAddressesAreMadeAbsolute:
             "https://img.shields.io/badge/license-MIT-12130f.svg",
             "#quick-start",
             "mailto:someone@example.com",
+            # Protocol-relative. It resolves against the PAGE's scheme, not the repository, so
+            # rewriting it would break a working URL. `":" in ...` judged it relative — the same
+            # broken test that judged `1:missing.md` absolute, in the other direction.
+            "//img.shields.io/badge/x.svg",
         ],
     )
     def test_an_address_that_already_resolves_from_anywhere_is_left_alone(self, address: str) -> None:
@@ -184,6 +189,52 @@ class TestTheShapesTheSharedRegexWasBlindTo:
             transform("[real](LICENSE) <a href=docs/cli-contract.md>x</a>\n", root=REPO_ROOT)
 
 
+class TestTheTransformNeverChangesCode:
+    """
+    🔴 The direction the F1 split does NOT cover, and the reason it needed its own judge.
+
+    `rendered_addresses` catches addresses LEFT BEHIND. It is structurally incapable of catching
+    code the rewriter CORRUPTED: a link inside a fence renders as text, not as a link, so a
+    rewritten one and an untouched one look identical to it — no `href` either way.
+
+    Measured before the fix: a `~~~markdown` fence containing `[x](docs/cli-contract.md)` came out
+    with an absolute URL inside it and `transform` returned normally. The code-span regex knew only
+    backticks, and that surface had already been widened by one shape twice.
+
+    The guard is therefore not "also know about `~~~`". It renders the document BEFORE and AFTER and
+    requires every code block and code span to be byte-identical. That is blind to which fence
+    syntax was used, so `~~~`, indented blocks and anything else fall out without being enumerated.
+
+    ⚠️ **The cost, named:** `CODE` is deliberately NOT widened, so a README that grows a `~~~` fence
+    or an indented block holding a repo-relative address FAILS THE BUILD until somebody widens it.
+    That is friction, and it is the right direction of failure — the alternative this replaced was
+    silently publishing corrupted documentation. The guard is also what makes widening safe when it
+    is wanted: change `CODE`, and this check confirms the change was right.
+    """
+
+    def test_a_tilde_fence_stops_the_build_instead_of_being_corrupted(self) -> None:
+        # `CODE` still knows only backticks, on purpose — see the class docstring. What changed is
+        # that the corruption is now LOUD. Before the guard this returned normally with an absolute
+        # URL inside the fence and every other check passing.
+        text = "[real](LICENSE)\n\n~~~markdown\n[x](docs/cli-contract.md)\n~~~\n"
+
+        with pytest.raises(ReadmeNotInExpectedFormatError, match="changed code content"):
+            transform(text, root=REPO_ROOT)
+
+    def test_an_indented_code_block_stops_the_build_too(self) -> None:
+        # Never enumerated anywhere in this script — it falls out of comparing rendered code, which
+        # is the whole point: shapes nobody listed are covered.
+        text = "[real](LICENSE)\n\nAn example:\n\n    [x](docs/cli-contract.md)\n"
+
+        with pytest.raises(ReadmeNotInExpectedFormatError, match="changed code content"):
+            transform(text, root=REPO_ROOT)
+
+    def test_code_content_is_read_off_the_render_not_off_the_source(self) -> None:
+        # The mechanism itself: same code, three fence syntaxes, and the extractor sees the text of
+        # each without knowing any of them.
+        assert code_content("```\nA\n```\n") == code_content("~~~\nA\n~~~\n") == ["A\n"]
+
+
 class TestTheVerifierDoesNotShareTheRewritersEyes:
     """
     `rendered_addresses` is the independent half: it runs the markdown through the SAME renderer
@@ -222,6 +273,14 @@ class TestItFailsLoudRatherThanSilently:
     def test_a_relative_address_naming_a_missing_file_is_a_build_failure(self) -> None:
         with pytest.raises(ReadmeNotInExpectedFormatError, match="docs/moved-away.md"):
             transform("see [the contract](docs/moved-away.md).\n", root=REPO_ROOT)
+
+    @pytest.mark.parametrize("address", ["1:missing.md", "2024:notes.md", "9:x/y.md"])
+    def test_a_colon_that_is_not_a_url_scheme_is_still_a_relative_address(self, address: str) -> None:
+        # A URL scheme must start with a LETTER (RFC 3986). `1:missing.md` has a colon and no
+        # scheme, so a browser resolves it against the project page — it is a 404 in waiting, and
+        # `":" in address.split("/")[0]` waved it through as absolute.
+        with pytest.raises(ReadmeNotInExpectedFormatError, match="names no file"):
+            transform(f"[real](LICENSE) [bad]({address})\n", root=REPO_ROOT)
 
     def test_an_address_that_escapes_the_repository_is_a_build_failure(self) -> None:
         # `../` resolves to a file that exists on this machine and to nothing on GitHub. Compare

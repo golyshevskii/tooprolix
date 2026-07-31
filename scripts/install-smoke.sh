@@ -35,19 +35,25 @@
 #      `SOURCE_DATE_EPOCH` ships a binary that does not know what it was built from**. Measured
 #      2026-07-31: a wheel built from our own sdist without it prints `tooprolix 0.4.1 (unknown)`
 #      and passed every other assertion here.
-#   4. `tooprolix check <a file with a known finding>` exits **1** and names **TPX002** — the CLI is
+#   4. `import tooprolix` raises **ModuleNotFoundError** — the distribution carries an executable
+#      and no importable module (AC0). Until this was asserted, a wheel keeping the binary AND
+#      shipping a `tooprolix/` package passed everything else here.
+#   5. `tooprolix check <a file with a known finding>` exits **1** and names **TPX002** — the CLI is
 #      really wired to the linter. ⚠️ `tooprolix check .` cannot serve here: on a tree with no `.py`
 #      files it honestly exits 0 with `warning: no Python files` (measured 2026-07-27), i.e. it
 #      "passes" having checked nothing. An empty directory is the same trap.
-#   5. A clean fixture exits 0 — so assertion 4 is not passing because the tool fails on everything.
+#   6. A clean fixture exits 0 — so assertion 5 is not passing because the tool fails on everything.
 set -euo pipefail
 
-if [ $# -lt 1 ] || [ $# -gt 2 ]; then
-	echo "usage: $0 <install-source> [expected-date]" >&2
-	echo "  local wheel:   $0 /path/to/tooprolix-0.1.0-....whl" >&2
-	echo "  after the tag: $0 git+https://github.com/golyshevskii/tooprolix@v0.1.0" >&2
-	echo "  exact date:    $0 dist/x.whl \"\$(git log -1 --format=%cs)\"" >&2
-	echo "  offline sdist: $0 dist/x.tar.gz unknown" >&2
+if [ $# -ne 2 ]; then
+	echo "usage: $0 <install-source> <expected-date>" >&2
+	echo "  a matrix wheel: $0 dist/x.whl \"\$(git log -1 --format=%cs)\"" >&2
+	echo "  offline sdist:  $0 dist/x.tar.gz unknown" >&2
+	echo "  after the tag:  $0 git+https://github.com/golyshevskii/tooprolix@vX.Y.Z \\" >&2
+	echo "                     \"\$(git log -1 --format=%cs vX.Y.Z)\"" >&2
+	echo >&2
+	echo "  <expected-date> is REQUIRED — see the note on the oracle below. The publication task" >&2
+	echo "  reads it from the tag it is publishing: \`git log -1 --format=%cs <tag>\`." >&2
 	exit 2
 fi
 
@@ -58,10 +64,16 @@ source_spec="$1"
 # from a different commit was indistinguishable from the right one — the date was graded as a
 # self-report while the version beside it was cross-checked against METADATA.
 #
-# CI knows the answer (`git log -1 --format=%cs`) and passes it. `unknown` is a legal expected value
-# and is used deliberately: it is what an offline `pip install` from the sdist produces, and pinning
-# it is how that documented behaviour stops being an accident.
-expected_date="${2:-}"
+# 🔴 AND IT IS REQUIRED, because an optional oracle is a guard with a silent weak branch. It was
+# optional for one round: a caller who simply forgot the argument got the shape check and no
+# warning, which is the same class of failure — a check quietly grading less than it claims — that
+# has already bitten this task twice. There is no caller that cannot answer the question: CI knows
+# the commit, and the publication task knows the tag.
+#
+# `unknown` is a legal expected value and is used deliberately: it is what an offline
+# `pip install` from the sdist produces, and pinning it is how that documented behaviour stops
+# being something the matrix never exercises.
+expected_date="$2"
 # `-P` on every `pwd`: the checks below compare paths, and `./`, `..` and symlinks defeat a lexical
 # comparison. Resolve first, compare after.
 repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
@@ -236,6 +248,37 @@ elif ! printf '%s' "$version_output" |
 	echo "      expected 'tooprolix ${expected_version} (YYYY-MM-DD)'." >&2
 	echo "      A date of 'unknown' means the build did not export SOURCE_DATE_EPOCH: an sdist has" >&2
 	echo "      no .git, and build.rs will not borrow a surrounding repository's commit date." >&2
+	exit 1
+fi
+
+# 🔴 AC0, ASSERTED RATHER THAN OBSERVED ONCE BY HAND. `bindings = "bin"` means the distribution
+# carries an executable and NO importable module; until this check existed, a wheel that kept the
+# binary and also shipped a `tooprolix/` package passed every assertion here (measured: repacked
+# such a wheel, `install-smoke: OK`, exit 0). That is exactly how a provisional Python surface gets
+# published by accident, which is the thing epic 2 Decisions #19.1 removed on purpose.
+#
+# The probe reports what it FOUND rather than swallowing an exception, and it covers the case a
+# plain `try: import` would miss: a bare `tooprolix/` directory with no `__init__.py` is still
+# importable as a namespace package, and `find_spec` is what sees it.
+echo '$ python -c "import tooprolix"   (must raise ModuleNotFoundError)'
+import_probe="$(uv run python -c '
+import importlib.util
+spec = importlib.util.find_spec("tooprolix")
+if spec is not None:
+    print("IMPORTABLE:" + (spec.origin or "<namespace package>"))
+else:
+    try:
+        import tooprolix  # noqa: F401
+    except ModuleNotFoundError:
+        print("absent")
+    else:
+        print("IMPORTABLE:<no spec but imported>")
+')"
+printf '%s\n\n' "$import_probe"
+if [ "$import_probe" != "absent" ]; then
+	echo "FAIL: the distribution installed an importable module: $import_probe" >&2
+	echo '      The wheel ships a native executable and nothing else: `import tooprolix` must' >&2
+	echo "      raise ModuleNotFoundError. A module here is an accidental public API." >&2
 	exit 1
 fi
 

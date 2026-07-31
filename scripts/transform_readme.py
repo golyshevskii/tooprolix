@@ -50,6 +50,7 @@ import re
 import sys
 from html.parser import HTMLParser
 from pathlib import Path
+from urllib.parse import urlsplit
 
 REPOSITORY = "https://github.com/golyshevskii/tooprolix"
 # `main` and not the release tag: the sdist is built before the tag exists (this is the dry-run
@@ -92,10 +93,21 @@ class ReadmeNotInExpectedFormatError(ValueError):
 
 
 def _is_relative(address: str) -> bool:
-    """Whether `address` needs a repository to resolve against."""
-    # Anchors and `mailto:` resolve identically everywhere; anything with a scheme is already
-    # absolute. Rewriting either would turn a working link into a 404 — the opposite failure.
-    return not (address.startswith("#") or ":" in address.split("/", 1)[0])
+    """
+    Whether `address` needs a repository to resolve against.
+
+    🔴 **`":" in address` is not the question, and getting it wrong is wrong in both directions.**
+    That was the test here, and it judged `1:missing.md` ABSOLUTE — a browser resolves it against
+    the project page, so it is a 404 in waiting that the transformer walked past — while judging
+    `//img.shields.io/x.svg` RELATIVE, which would have rewritten a working protocol-relative URL
+    into a repository path. RFC 3986 says a scheme starts with a LETTER, and `urlsplit` implements
+    exactly that, so the answer comes from the standard's own parser rather than from a character
+    count. Digits are not special-cased; nothing is.
+    """
+    parsed = urlsplit(address)
+    # A scheme (`https:`, `mailto:`) or an authority (`//host/path`) both resolve without us, and so
+    # does a bare in-page anchor — `urlsplit("#x")` has neither, which is why it is named.
+    return not (parsed.scheme or parsed.netloc or address.startswith("#"))
 
 
 def _prose_spans(text: str) -> list[tuple[int, int]]:
@@ -141,6 +153,56 @@ class _Addresses(HTMLParser):
         self.handle_starttag(tag, attrs)
 
 
+class _CodeText(HTMLParser):
+    """Collects the text of every `<pre>` and `<code>` element in a rendered document."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.blocks: list[str] = []
+        self._depth = 0
+        self._current: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag in {"pre", "code"}:
+            self._depth += 1
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag not in {"pre", "code"}:
+            return
+        self._depth -= 1
+        # Only the OUTERMOST element is recorded: the renderer wraps highlighted fences in
+        # `<pre><code><span>…`, and counting the inner ones would report the same text twice.
+        if self._depth == 0:
+            self.blocks.append("".join(self._current))
+            self._current.clear()
+
+    def handle_data(self, data: str) -> None:
+        if self._depth:
+            self._current.append(data)
+
+
+def code_content(text: str) -> list[str]:
+    """
+    Return the text of every code block and code span `text` renders to, in document order.
+
+    The second independent judge, and it exists because the first one structurally cannot see this
+    direction. [`rendered_addresses`] catches addresses LEFT BEHIND; it can never catch code the
+    rewriter CORRUPTED, because a link inside a fence renders as text either way and produces no
+    `href` to compare. Measured: a `~~~markdown` fence containing `[x](docs/cli-contract.md)` came
+    out with an absolute URL inside it and every check here passed.
+
+    ⚠️ **The fix was NOT to teach [`CODE`] about `~~~`.** That surface had already been widened by
+    one shape twice, and the third time would have been the same defect one shape later. Comparing
+    the RENDERED code of the document before and after asks the question the enumeration was only
+    approximating — *did any code change?* — and is blind to which fence syntax produced it, so
+    `~~~`, indented blocks and anything else are covered without appearing anywhere in this file.
+    """
+    parser = _CodeText()
+    parser.feed(_render(text))
+    parser.close()
+    return parser.blocks
+
+
 def rendered_addresses(text: str) -> list[str]:
     """
     Every `href`/`src` the PyPI renderer produces for `text`, in document order.
@@ -158,11 +220,19 @@ def rendered_addresses(text: str) -> list[str]:
     reference-style links are resolved, quoting is normalised, and fenced blocks and inline code
     become text rather than links.
     """
+    parser = _Addresses()
+    parser.feed(_render(text))
+    parser.close()
+    return parser.found
+
+
+def _render(text: str) -> str:
+    """`text` as PyPI will render it, or raise — never a silent skip."""
     try:
         import readme_renderer.markdown
     except ImportError as error:  # pragma: no cover - exercised by the workflow, not by a unit test
-        # Fail CLOSED. Skipping the verification when the library is absent would turn the one guard
-        # that cannot be fooled into a guard that is simply off on the machine that lacks it.
+        # Fail CLOSED. Skipping the verification when the library is absent would turn the two
+        # guards that cannot be fooled into guards that are simply off on the machine that lacks it.
         message = (
             "readme_renderer is required to verify the transformed README (it is what PyPI renders "
             "with). Install it: uv run --with 'readme_renderer[md]' ..."
@@ -173,11 +243,7 @@ def rendered_addresses(text: str) -> list[str]:
     if html is None:
         message = "readme_renderer refused to render the README; PyPI would show it as plain text"
         raise ReadmeNotInExpectedFormatError(message)
-
-    parser = _Addresses()
-    parser.feed(html)
-    parser.close()
-    return parser.found
+    return html
 
 
 def _absolute(address: str, root: Path) -> str:
@@ -243,6 +309,18 @@ def transform(text: str, root: Path) -> str:
     # resulting `href`/`src`, so a syntax `ADDRESS` has never heard of still stops the build here.
     if survivors := [address for address in rendered_addresses(rewritten) if _is_relative(address)]:
         message = f"relative addresses survived the transformation: {survivors}"
+        raise ReadmeNotInExpectedFormatError(message)
+
+    # 🔴 AND THE OTHER DIRECTION, which the check above is structurally blind to: code the rewriter
+    # CORRUPTED. A link inside a fence renders as text whether or not it was rewritten, so no
+    # `href` ever differs. Comparing the rendered code before and after is what sees it, and it does
+    # not care which fence syntax was used — see [`code_content`].
+    if code_content(text) != code_content(rewritten):
+        message = (
+            "the transformation changed code content. A fenced block, an indented block or a code "
+            "span is literal text and must survive byte for byte; `CODE` did not recognise the "
+            "form used, so an address inside it was rewritten. Widen `CODE` to cover it."
+        )
         raise ReadmeNotInExpectedFormatError(message)
     return rewritten
 
