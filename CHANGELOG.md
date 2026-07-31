@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.3](https://github.com/golyshevskii/tooprolix/compare/v0.4.2...v0.4.3) - 2026-07-31
+
+### Added
+
+- install and run on Python 3.11+, keeping the corpus tooling on 3.12+ ([#36](https://github.com/golyshevskii/tooprolix/pull/36))
+
+### Fixed
+
+- key the artifact build's concurrency on the commit, not the branch ([#38](https://github.com/golyshevskii/tooprolix/pull/38))
+
 ## [0.4.2](https://github.com/golyshevskii/tooprolix/compare/v0.4.1...v0.4.2) - 2026-07-31
 
 ### Other
