@@ -57,8 +57,13 @@ on:
 permissions:
   contents: read
 
+# Keyed on the COMMIT, not the ref. This workflow runs on every push with no branch filter, so one
+# logical event can deliver two pushes to one new ref seconds apart — release-plz creates the branch
+# at the base tip and pushes the release commit. Keyed on the ref, the later run cancels the earlier
+# one, and on PR #37 that killed the release commit's build while the base tip's survived.
+# Enforced by test_an_artifact_build_is_only_cancelled_by... in tests/unit/test_workflow_contracts.py.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.sha }}
   cancel-in-progress: true
 
 env:
