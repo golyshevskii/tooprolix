@@ -181,8 +181,8 @@ def verify_report_measured_the_source_tree(data: Any, report_format: str, repo_r
     missing = expected - measured
     if missing and report_format not in _FORMATS_THAT_REPORT_UNEXECUTED_FILES:
         # llvm-cov reports what the compiler instrumented, so a source file with nothing to
-        # instrument is legitimately absent — `src/detect.rs` is 26 lines of module documentation
-        # and two `pub mod` declarations. That is the ONLY excuse, and it is checked rather than
+        # instrument is legitimately absent — `src/detect.rs` is module documentation and two
+        # `pub mod` declarations, nothing else. That is the ONLY excuse, and it is checked rather than
         # assumed: a file that defines functions and is still missing has left the denominator
         # silently, because it was orphaned from the module tree or gated behind a feature this run
         # does not enable. `cargo fmt`, `clippy` and `cargo test` all walk the module tree, so none

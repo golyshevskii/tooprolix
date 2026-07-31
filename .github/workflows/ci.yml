@@ -314,9 +314,11 @@ jobs:
   # the slowest job here.
   #
   # It is NOT a repeat of the whole `cargo-test` job: `cargo llvm-cov` does not run doctests
-  # without `--doctests`, which needs a nightly toolchain, so this job instruments 188 of the 194
-  # tests `make rust.test` runs. `cargo-test` above remains the only job that executes the 6
-  # doctests. Written down in the Makefile's coverage block too, next to the other exclusions.
+  # without `--doctests`, which needs a nightly toolchain, so the `Doc-tests tooprolix` target is
+  # absent from this job entirely and `cargo-test` above remains the only job that executes it. No
+  # count is given here on purpose — nothing enforces one, and the pair of numbers that used to
+  # stand here had drifted. Written down in the Makefile's coverage block too, next to the other
+  # exclusions.
   coverage:
     name: coverage
     runs-on: ubuntu-latest

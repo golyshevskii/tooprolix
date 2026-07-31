@@ -10,9 +10,11 @@ name = "tooprolix"
 # `package-python-distribution-and-publish-0-1-0` AC5 forbids.
 dynamic = ["version"]
 description = "A prose budget linter for Python."
-# The PyPI project page. It is NOT this file verbatim: `scripts/transform_readme.py` rewrites the
-# 10 relative addresses README.md carries into absolute GitHub URLs first, because a relative
-# address has no repository to resolve against on a project page and 404s. That script runs as a
+# The PyPI project page. It is NOT this file verbatim: `scripts/transform_readme.py` rewrites
+# EVERY relative address README.md carries into an absolute GitHub URL first, because a relative
+# address has no repository to resolve against on a project page and 404s. No count is written
+# down: `TestTheRealReadmeIsFullyResolved` pins that ZERO survive, which stays true as the README
+# grows links, and an exact number here would not. That script runs as a
 # step in `.github/workflows/build-artifacts.yml` before maturin reads this key, and it FAILS the
 # build rather than warning when the README is not the shape it expects.
 readme = "README.md"

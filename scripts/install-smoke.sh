@@ -3,8 +3,13 @@
 #
 # THIS SCRIPT IS THE ONLY GUARD AGAINST PUBLISHING A WHEEL THAT SHIPS NOTHING. The wheel carries
 # the compiled executable under `*.data/scripts/`; a wheel that exports nothing has passed every
-# other gate before. It is mutation-proved rather than merely present: a wheel with its executable
-# removed must FAIL here.
+# other gate before.
+#
+# What enforces it, named because nothing inside the repository can: the `sdist` and `wheels` jobs
+# of `.github/workflows/build-artifacts.yml` invoke this script on every artifact they build (three
+# steps — the wheel built from the sdist, the sdist offline, and each matrix wheel). No `make` or
+# `cargo` target reaches it, so a green local suite says nothing about it. Mutation-proved rather
+# than merely present: a wheel with its executable removed exits 1 here.
 #
 # Nothing inside the repository can see any of this: `make test` is `uv run --only-group test
 # pytest`, which deliberately does not build or install the project, and `cargo test` never produces

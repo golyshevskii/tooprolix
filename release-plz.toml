@@ -71,6 +71,10 @@ git_release_enable = true
 #      So `.github/workflows/release-plz.yml` still needs no Python step, and the reason is now
 #      structural rather than conditional: the warning about `[features] default` is void because
 #      there is no such feature to put anything in. What WOULD bring the trap back is adding pyo3 to
-#      `[dependencies]` again; `make rust.build` is the guard that notices, because it reads the
-#      linked binary and fails on any dynamic dependency naming Python.
+#      `[dependencies]` again — and NOTHING in this repository would catch it. Measured 2026-07-31
+#      with `pyo3 = "0.29.0"` declared and unused: on a PATH with no interpreter the build dies in
+#      pyo3-ffi's build script (`error: no Python 3.x interpreter found`), and with one present
+#      `make rust.build` prints `ok: ... links no libpython` and exits 0, because rustc links no
+#      crate nothing references. The interpreter requirement is back; the linkage guard cannot see
+#      it.
 git_only = true
