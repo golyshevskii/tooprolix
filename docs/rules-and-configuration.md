@@ -16,8 +16,8 @@ For output format, exit codes, and the JSON schema, see [cli-contract.md](cli-co
 
 `tooprolix --rules` prints these same three columns. The CLI renders them from one array in
 `src/rules.rs`; this table is written by hand, and `the_rules_listing_agrees_with_every_documented_table`
-in `tests/cli.rs` requires the rows above to be exactly what the binary printed, in order, so the two
-cannot drift apart unnoticed.
+in `tests/cli.rs` requires the rows above to carry the same codes, statuses, descriptions and order
+the binary printed, so the two cannot drift apart unnoticed.
 
 ### Volume boundaries
 

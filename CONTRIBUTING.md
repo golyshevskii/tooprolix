@@ -62,7 +62,8 @@ Neither registry receives anything today, and **the two are off for different re
   checks and attaches artifacts to the run, and opens with "THERE IS NO PUBLISH STEP IN THIS FILE,
   AND THAT IS THE POINT OF IT"; the publishing task adds that job.
 
-Flipping that one switch to `true` therefore turns on crates.io **alone** and leaves PyPI empty.
+Neither is a one-line flip: `release-plz.yml` also withholds `CARGO_REGISTRY_TOKEN` as a backstop,
+and PyPI has no publish job to enable.
 
 > **Do not add `publish = false` to `Cargo.toml`.** It reads like the obvious way to say "not
 > published yet", and it silently disables release-plz entirely — no version bump, no changelog, no
@@ -212,14 +213,13 @@ is the part worth keeping in mind when you touch coverage configuration. A perce
 raised by measuring less — dropping `branch = true`, orphaning a `.rs` file from the module tree,
 adding a `corpus/` subdirectory coverage.py cannot discover — and none of those leave any other
 trace. The script walks the source tree itself and compares it against what the report claims to
-have measured, so those edits fail the run with a message naming the file. If one fires, fix the
-denominator; do not silence the check.
-
-It has one ceiling, and the script states it at the line that implements it: a Rust file missing
-from the report is only reported if its text contains a literal `fn `. That is what lets
-`src/detect.rs` — module documentation and two `pub mod` lines — be legitimately absent. It also
-means a module whose functions all arrive from a macro expansion has instrumentable code, no literal
-`fn `, and can leave the denominator without a word.
+have measured, and fails the run with a message naming the file. Its one ceiling is stated in the
+script at the line that implements it: a missing Rust file is reported only if its text contains a
+literal `fn `. That is what lets `src/detect.rs` — module documentation and `pub mod` declarations,
+no functions — be legitimately absent, which
+`test_a_rust_source_file_with_no_instrumentable_code_may_be_absent` holds in place; it also means a
+module whose functions all arrive from a macro expansion clears the filter and leaves the
+denominator without a word. If the check fires, fix the denominator; do not silence it.
 
 Do not add a `--fail-under` threshold either: picking one before the code audits would be picking a
 number to match today's code.

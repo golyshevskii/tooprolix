@@ -41,12 +41,12 @@ package built from an archive rather than a checkout can carry a real date.
 
 ### `--rules`
 
-Three columns — code, status, description — separated by spaces, one rule per line, nothing else on
-stdout. The rows are not repeated here: their one documented owner is the table in
+Three columns — code, status, description — one rule per line, nothing else on stdout. The rows are
+not repeated here: their one documented owner is the table in
 [rules-and-configuration.md](rules-and-configuration.md), and
-`the_rules_listing_agrees_with_every_documented_table` in `tests/cli.rs` requires that table to be
-exactly the lines the binary prints, in order. `--help` embeds the same lines, and both come from
-one array in `src/rules.rs`.
+`the_rules_listing_agrees_with_every_documented_table` in `tests/cli.rs` requires that table to carry
+the same codes, statuses, descriptions and order the binary prints. `--help` embeds the same lines,
+and both come from one array in `src/rules.rs`.
 
 `TPX004` is listed as `Reserved` and is **not** an accepted code: `ignore = ["TPX004"]` is still a
 fatal configuration error and `# !TPX004` still warns and suppresses nothing. Being documented and
