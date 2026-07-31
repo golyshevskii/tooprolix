@@ -48,6 +48,48 @@ class ArtifactError(AssertionError):
     """The built artifact does not carry what the acceptance criteria promise."""
 
 
+def tag_set(compressed: str) -> frozenset[str]:
+    """
+    Expand a PEP 425 compressed tag set into every `{python}-{abi}-{platform}` triple it names.
+
+    🔴 **The two representations differ by construction, and comparing them as strings was the bug
+    this replaced.** A wheel's FILENAME carries the compressed set — platforms joined with `.` —
+    while `.dist-info/WHEEL` carries one `Tag:` line per tag. Joining those lines with any separator
+    and comparing strings fails on every multi-tag wheel, which is what run 30613111390 showed on
+    the linux leg:
+
+        FAIL: the archive declares 'py3-none-manylinux_2_17_x86_64+py3-none-manylinux2014_x86_64',
+              the matrix promises 'py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64'
+
+    macOS and Windows wheels are single-tag, so both stayed green and only CI could find it.
+    Normalising to a set makes the representation stop being part of the question.
+
+    Each component may itself be a `.`-joined list, and the expansion is their CROSS PRODUCT rather
+    than a zip: `cp39.cp310-abi3-linux_x86_64` names four tags, not two.
+    """
+    try:
+        pythons, abis, platforms = compressed.split("-")
+    except ValueError as error:
+        message = f"{compressed!r} is not a `{{python}}-{{abi}}-{{platform}}` tag set"
+        raise ArtifactError(message) from error
+    return frozenset(
+        f"{python}-{abi}-{platform}"
+        for python in pythons.split(".")
+        for abi in abis.split(".")
+        for platform in platforms.split(".")
+    )
+
+
+def _tags_from_filename(path: Path) -> frozenset[str]:
+    """Return the tag set a wheel's own filename declares: its last three `-`-separated fields."""
+    parts = path.name.removesuffix(".whl").split("-")
+    minimum_fields = 3
+    if len(parts) < minimum_fields:
+        message = f"{path.name} is not a wheel filename"
+        raise ArtifactError(message)
+    return tag_set("-".join(parts[-minimum_fields:]))
+
+
 def _wheel(path: Path) -> tuple[list[str], bytes]:
     """Return the wheel's member names and its `METADATA` bytes."""
     with zipfile.ZipFile(path) as archive:
@@ -57,6 +99,21 @@ def _wheel(path: Path) -> tuple[list[str], bytes]:
             message = f"{path.name} has no .dist-info/METADATA"
             raise ArtifactError(message)
         return names, archive.read(metadata)
+
+
+def _tags_inside(path: Path) -> frozenset[str]:
+    """Return the tag set `.dist-info/WHEEL` declares, which is what a resolver actually reads."""
+    with zipfile.ZipFile(path) as archive:
+        member = next((n for n in archive.namelist() if n.endswith(".dist-info/WHEEL")), None)
+        if member is None:
+            message = f"{path.name} has no .dist-info/WHEEL"
+            raise ArtifactError(message)
+        lines = archive.read(member).decode().splitlines()
+    declared = [line.split(":", 1)[1].strip() for line in lines if line.startswith("Tag:")]
+    if not declared:
+        message = f"{path.name}: .dist-info/WHEEL declares no Tag:"
+        raise ArtifactError(message)
+    return frozenset[str]().union(*(tag_set(tag) for tag in declared))
 
 
 def _sdist(path: Path) -> tuple[list[str], bytes]:
@@ -74,11 +131,34 @@ def _sdist(path: Path) -> tuple[list[str], bytes]:
         return names, handle.read()
 
 
-def _problems(path: Path, readme: Path) -> Iterator[str]:
+def _normalise(text: str) -> str:
+    """
+    Return `text` with line endings flattened and surrounding blank space removed.
+
+    ⚠️ **The one deliberate exception to "byte-identical", named because that was the promise.** Git
+    checks out CRLF on the Windows runner, so the description maturin embedded was byte-different
+    from the README on disk while being the same text — measured in run 30613111390:
+    `4927 vs 4827 characters` on a 99-line file, i.e. one carriage return per line plus the
+    payload's trailing newline. Nothing else is normalised: a difference in TEXT still fails.
+    """
+    return text.replace("\r\n", "\n").replace("\r", "\n").strip()
+
+
+def _problems(path: Path, readme: Path, expect_tag: str | None) -> Iterator[str]:
     """Yield one line per promise the artifact at `path` does not keep."""
     is_wheel = path.suffix == ".whl"
     names, raw = _wheel(path) if is_wheel else _sdist(path)
     message = email.message_from_bytes(raw)
+
+    # AC2. `expect_tag` comes from the matrix, so it is fixed independently of whatever the build
+    # produced; the archive and the filename are then both required to agree with it and therefore
+    # with each other. The in-archive read is the one a resolver honours — a filename is a label
+    # anybody can type — and the filename read is what catches a rename.
+    if expect_tag is not None and is_wheel:
+        promised = tag_set(expect_tag)
+        for source, actual in (("archive", _tags_inside(path)), ("filename", _tags_from_filename(path))):
+            if actual != promised:
+                yield f"the {source} declares {sorted(actual)}, the matrix promises {sorted(promised)}"
 
     for header, expected in REQUIRED_HEADERS.items():
         actual = message.get(header)
@@ -104,11 +184,12 @@ def _problems(path: Path, readme: Path) -> Iterator[str]:
     # comparison then measures the probe rather than the artifact.
     payload = message.get_payload(decode=True)
     shipped = payload.decode("utf-8") if isinstance(payload, bytes) else str(message.get_payload())
-    if shipped.strip() != readme.read_text(encoding="utf-8").strip():
+    wanted = readme.read_text(encoding="utf-8")
+    if _normalise(shipped) != _normalise(wanted):
         yield (
             f"the description in the archive is not {readme} — the transformed README is what "
-            f'`readme = "README.md"` is supposed to ship ({len(shipped)} vs '
-            f"{len(readme.read_text(encoding='utf-8'))} characters)"
+            f'`readme = "README.md"` is supposed to ship ({len(_normalise(shipped))} vs '
+            f"{len(_normalise(wanted))} characters, line endings already normalised)"
         )
 
 
@@ -119,6 +200,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "readme", nargs="?", default="README.md", type=Path, help="the transformed README the description must equal"
     )
+    parser.add_argument(
+        "--expect-tag", default=None, help="the compressed PEP 425 tag set the matrix promises, e.g. py3-none-win_amd64"
+    )
     arguments = parser.parse_args(argv)
 
     artifact: Path = arguments.artifact
@@ -127,7 +211,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     try:
-        problems = list(_problems(artifact, arguments.readme))
+        problems = list(_problems(artifact, arguments.readme, arguments.expect_tag))
     except (ArtifactError, OSError, tarfile.TarError, zipfile.BadZipFile) as error:
         print(f"error: {artifact.name}: {error}", file=sys.stderr)
         return 1

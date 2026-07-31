@@ -23,7 +23,7 @@ import zipfile
 from pathlib import Path
 
 import pytest
-from check_artifact import main
+from check_artifact import main, tag_set
 
 DESCRIPTION = "# tooprolix\n\nThe transformed README.\n"
 HEADERS = "Metadata-Version: 2.4\nName: tooprolix\nVersion: 0.0.0\nLicense-Expression: MIT\nLicense-File: LICENSE\n"
@@ -33,10 +33,26 @@ def _metadata(headers: str = HEADERS, description: str = DESCRIPTION) -> bytes:
     return f"{headers}\n{description}".encode()
 
 
-def _wheel(path: Path, *, metadata: bytes | None = None, licence: bool = True) -> Path:
-    wheel = path / "tooprolix-0.0.0-py3-none-any.whl"
+#: The real manylinux case, which is why C1 existed: the FILENAME carries PEP 425's compressed tag
+#: set (platforms joined with `.`) while `.dist-info/WHEEL` carries one `Tag:` line PER tag. The two
+#: are different representations of the same thing by construction, and comparing them as strings
+#: fails on every multi-tag wheel. macOS is single-tag, which is why only CI caught it.
+MANYLINUX_COMPRESSED = "py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64"
+MANYLINUX_WHEEL_LINES = "Wheel-Version: 1.0\nTag: py3-none-manylinux_2_17_x86_64\nTag: py3-none-manylinux2014_x86_64\n"
+
+
+def _wheel(
+    path: Path,
+    *,
+    metadata: bytes | None = None,
+    licence: bool = True,
+    compressed: str = "py3-none-any",
+    wheel_file: str | None = None,
+) -> Path:
+    wheel = path / f"tooprolix-0.0.0-{compressed}.whl"
     with zipfile.ZipFile(wheel, "w") as archive:
         archive.writestr("tooprolix-0.0.0.dist-info/METADATA", metadata or _metadata())
+        archive.writestr("tooprolix-0.0.0.dist-info/WHEEL", wheel_file or f"Wheel-Version: 1.0\nTag: {compressed}\n")
         archive.writestr("tooprolix-0.0.0.data/scripts/tooprolix", b"\x7fELF")
         if licence:
             archive.writestr("tooprolix-0.0.0.dist-info/licenses/LICENSE", "MIT\n")
@@ -116,6 +132,87 @@ class TestEachPromiseIsRefusedSeparately:
         archive = _wheel(tmp_path, metadata=metadata) if kind == "wheel" else _sdist(tmp_path, metadata=metadata)
 
         assert main([str(archive), str(readme)]) == 1
+
+
+class TestTheWheelTagIsComparedLikeWithLike:
+    """
+    🔴 C1, and it took a CI run to find because macOS wheels are single-tag.
+
+    A manylinux wheel's `.dist-info/WHEEL` carries **two** `Tag:` lines; its filename carries PEP
+    425's *compressed tag set*, where the platform components are joined with `.`. Joining the
+    `Tag:` lines with anything and comparing strings therefore fails on every multi-tag wheel:
+
+        FAIL: the archive declares 'py3-none-manylinux_2_17_x86_64+py3-none-manylinux2014_x86_64',
+              the matrix promises 'py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64'
+
+    Both are now expanded into the same normalised form — a SET of `{python}-{abi}-{platform}`
+    triples — before anything is compared, so the representation stops being part of the question.
+    """
+
+    def test_a_compressed_tag_set_expands_to_every_triple_it_names(self) -> None:
+        assert tag_set(MANYLINUX_COMPRESSED) == {"py3-none-manylinux_2_17_x86_64", "py3-none-manylinux2014_x86_64"}
+        # The cross product, not a zip: `cp39.cp310-abi3-linux_x86_64` is four tags, not two.
+        assert tag_set("py2.py3-none-any") == {"py2-none-any", "py3-none-any"}
+
+    def test_a_real_multi_tag_manylinux_wheel_passes(self, tmp_path: Path, readme: Path) -> None:
+        wheel = _wheel(tmp_path, compressed=MANYLINUX_COMPRESSED, wheel_file=MANYLINUX_WHEEL_LINES)
+
+        assert main([str(wheel), str(readme), "--expect-tag", MANYLINUX_COMPRESSED]) == 0
+
+    def test_a_wheel_renamed_to_claim_another_platform_is_rejected(self, tmp_path: Path, readme: Path) -> None:
+        # THE mutation the in-archive read exists for, and it must keep reddening after the fix: the
+        # filename says manylinux, the archive says macOS.
+        wheel = _wheel(
+            tmp_path,
+            compressed=MANYLINUX_COMPRESSED,
+            wheel_file="Wheel-Version: 1.0\nTag: py3-none-macosx_11_0_arm64\n",
+        )
+
+        assert main([str(wheel), str(readme), "--expect-tag", MANYLINUX_COMPRESSED]) == 1
+
+    def test_a_wheel_that_is_not_the_tag_the_matrix_promised_is_rejected(self, tmp_path: Path, readme: Path) -> None:
+        # Both the filename and the archive agree — with each other, and not with the matrix. That
+        # is a build that targeted the wrong platform, and `expect_tag` is declared in the matrix
+        # precisely so it is fixed independently of whatever came out.
+        wheel = _wheel(tmp_path, compressed="py3-none-macosx_11_0_arm64")
+
+        assert main([str(wheel), str(readme), "--expect-tag", MANYLINUX_COMPRESSED]) == 1
+
+    def test_a_wheel_missing_only_one_of_the_promised_platform_tags_is_rejected(
+        self, tmp_path: Path, readme: Path
+    ) -> None:
+        # A set comparison, not "is a subset": a wheel tagged manylinux_2_17 alone does not keep a
+        # promise that also named manylinux2014.
+        wheel = _wheel(
+            tmp_path,
+            compressed=MANYLINUX_COMPRESSED,
+            wheel_file="Wheel-Version: 1.0\nTag: py3-none-manylinux_2_17_x86_64\n",
+        )
+
+        assert main([str(wheel), str(readme), "--expect-tag", MANYLINUX_COMPRESSED]) == 1
+
+
+class TestLineEndingsAreNotADifferenceInTheDescription:
+    r"""
+    🔴 C2, also found only by CI. Git checks out CRLF on the Windows runner, so the description
+    maturin embedded was byte-different from the README on disk while being the same text —
+    `4927 vs 4827 characters` on a 99-line file: one `\r` per line, plus the payload's trailing
+    newline in the printed count.
+
+    "Byte-identical" was the promise and this is the one deliberate, named exception to it. Every
+    other respect stays exact, which the second test here is what proves.
+    """
+
+    def test_a_crlf_description_still_matches_an_lf_readme(self, tmp_path: Path, readme: Path) -> None:
+        crlf = _metadata(description=DESCRIPTION.replace("\n", "\r\n"))
+
+        assert main([str(_wheel(tmp_path, metadata=crlf)), str(readme)]) == 0
+
+    def test_normalising_line_endings_does_not_make_the_check_lenient(self, tmp_path: Path, readme: Path) -> None:
+        # The mutation that must still redden: different TEXT, not different line endings.
+        crlf_but_wrong = _metadata(description="Something else entirely.\r\n")
+
+        assert main([str(_wheel(tmp_path, metadata=crlf_but_wrong)), str(readme)]) == 1
 
 
 class TestItRefusesWhatItCannotGrade:

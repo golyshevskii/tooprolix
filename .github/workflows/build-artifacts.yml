@@ -271,27 +271,12 @@ jobs:
           # a default is not a promise, and this is the line that keeps the tag honest if it changes.
           MACOSX_DEPLOYMENT_TARGET: "11.0"
 
-      # AC2: the tag is compared against what the matrix promised, and `expect_tag` is declared up
-      # there rather than derived here — so it is fixed independently of whatever the build produced.
-      #
-      # 🔴 READ FROM INSIDE THE ARCHIVE, not from the filename. A filename is a label anybody can
-      # type; `.dist-info/WHEEL` is what a resolver actually reads, and the two can disagree — a
-      # renamed file is the trivial case, a repack the real one. Both are checked, and they must
-      # agree with each other as well as with the matrix.
-      #
-      # ⚠️ WHAT THIS DOES NOT CHECK, said plainly: no symbol versions are audited. Nothing here
-      # opens the ELF and compares its `GLIBC_*` requirements against the 2.17 the tag promises —
-      # **the manylinux build container IS the whole guarantee** for that, because it is a sysroot
-      # old enough that a newer symbol cannot be linked in the first place. If the linux leg ever
-      # stops going through `manylinux: 2_17`, this check keeps passing while the promise breaks,
-      # and `auditwheel` becomes the missing step.
-      #
       # 🔴 The count comes FIRST, and it is not tidiness. `$(echo dist/*.whl)` is a space-joined
       # list, and `basename` on such a list silently answers with the last entry — so in run
-      # 30604813542 this very check reported PASS on a directory holding a foreign macOS wheel
-      # beside the real one, and the failure only surfaced two steps later inside uv. A guard that
-      # grades whatever the glob swept up is not grading the artifact.
-      - name: The wheel tag is the one the supported matrix promises
+      # 30604813542 a check reported PASS on a directory holding a foreign macOS wheel beside the
+      # real one, and the failure only surfaced two steps later inside uv. A guard that grades
+      # whatever the glob swept up is not grading the artifact.
+      - name: Resolve the built wheel, exactly one
         shell: bash
         run: |
           set -euo pipefail
@@ -303,30 +288,35 @@ jobs:
           fi
           echo "WHEEL=${built[0]}" >> "$GITHUB_ENV"
           echo "built: ${built[0]}"
-          # zipfile rather than `unzip`: Git Bash on the Windows runner has no `unzip`.
-          inside="$(uv run --no-project python -c 'import sys, zipfile; z = zipfile.ZipFile(sys.argv[1]); n = next(k for k in z.namelist() if k.endswith(".dist-info/WHEEL")); print("+".join(l.split(":", 1)[1].strip() for l in z.read(n).decode().splitlines() if l.startswith("Tag:")))' "${built[0]}")"
-          echo "Tag: inside .dist-info/WHEEL = $inside"
-          if [ "$inside" != "${{ matrix.platform.expect_tag }}" ]; then
-            echo "FAIL: the archive declares '$inside', the matrix promises '${{ matrix.platform.expect_tag }}'" >&2
-            exit 1
-          fi
-          case "$(basename "${built[0]}")" in
-          "tooprolix-"*"-${{ matrix.platform.expect_tag }}.whl") ;;
-          *)
-            echo "FAIL: the filename does not carry the tag ${{ matrix.platform.expect_tag }}" >&2
-            exit 1
-            ;;
-          esac
 
       - name: twine check
         shell: bash
         run: uvx twine check --strict "$WHEEL"
 
-      # Same gate as in the sdist job — see the note there. Every published artifact is graded, not
-      # just the one that happened to be looked at.
-      - name: The wheel carries MIT, its LICENSE, and the transformed README
+      # AC2 and AC3/AC8 in one committed gate — `scripts/check_artifact.py`, which the sdist job
+      # runs too and which has its own tests.
+      #
+      # `expect_tag` is declared in the matrix above rather than derived here, so it is fixed
+      # independently of whatever the build produced. The script requires BOTH the archive's
+      # `.dist-info/WHEEL` and the filename to agree with it: the in-archive read is what a resolver
+      # honours, the filename read is what catches a rename.
+      #
+      # ⚠️ It compares TAG SETS, not strings. `.dist-info/WHEEL` carries one `Tag:` line per tag
+      # while the filename carries PEP 425's compressed set, and run 30613111390 went red on the
+      # linux leg for exactly that difference in representation. macOS and Windows wheels are
+      # single-tag, which is why only CI could find it.
+      #
+      # ⚠️ WHAT THIS DOES NOT CHECK, said plainly: no symbol versions are audited. Nothing opens the
+      # ELF to compare its `GLIBC_*` requirements against the 2.17 the tag promises — **the
+      # manylinux build container IS the whole guarantee** for that, being a sysroot old enough that
+      # a newer symbol cannot be linked in the first place. If the linux leg ever stops going
+      # through `manylinux: 2_17`, this keeps passing while the promise breaks, and `auditwheel`
+      # becomes the missing step.
+      - name: The wheel is the promised tag and carries MIT, its LICENSE, and the transformed README
         shell: bash
-        run: uv run --no-project python scripts/check_artifact.py "$WHEEL" README.md
+        run: |
+          uv run --no-project python scripts/check_artifact.py "$WHEEL" README.md \
+            --expect-tag "${{ matrix.platform.expect_tag }}"
 
       - name: install-smoke
         shell: bash
