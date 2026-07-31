@@ -27,6 +27,10 @@ Run: make test    (or: uv run --only-group test pytest)
 
 from __future__ import annotations
 
+import logging
+import re
+import sys
+import tomllib
 from pathlib import Path
 
 import measure
@@ -34,6 +38,10 @@ import pytest
 
 # corpus/fixtures/sample.py, reached from tests/unit/
 FIXTURE: Path = Path(__file__).parents[2] / "corpus" / "fixtures" / "sample.py"
+#: The second oracle, and the only one that can tell the interpreters apart. See its own test.
+FSTRING_FIXTURE: Path = Path(__file__).parents[2] / "corpus" / "fixtures" / "fstring_identifiers.py"
+PYPROJECT: Path = Path(__file__).parents[2] / "pyproject.toml"
+CI_WORKFLOW: Path = Path(__file__).parents[2] / ".github" / "workflows" / "ci.yml"
 
 # --- hand counts on corpus/fixtures/sample.py ------------------------------------------
 # docstrings: lines 1-4 (module), 12 (class), 15-17 (method)
@@ -46,6 +54,128 @@ EXPECTED_BLANK_LINES: int = 4  # lines 5, 9, 10, 13 — 2 and 16 are blank INSID
 EXPECTED_CODE_LINES: int = 4  # lines 8, 11, 14, 19
 EXPECTED_TOTAL_LINES: int = 19
 EXPECTED_BLOCK_COUNT: int = 5  # 3 docstrings + 2 comment blocks
+
+
+def test_the_corpus_floor_stays_above_the_floor_the_distribution_promises() -> None:
+    """
+    The two floors are SEPARATE contracts and must not be collapsed back into one value.
+
+    `requires-python` is what an installer reads: the wheel is `py3-none-<platform>`, carrying a
+    native executable and no Python at all, so the distribution runs wherever it is installed.
+    `MIN_INTERPRETER` is a MEASURED floor for this script alone — PEP 701 changed what `tokenize`
+    reports inside f-strings, so a 3.11 run emits different constants into REPORT.md. Raising
+    `requires-python` back to the corpus floor would lock installers out of an interpreter the
+    distribution supports; lowering `MIN_INTERPRETER` to the distribution floor would let the
+    research oracle answer with numbers no downstream constant was derived from.
+
+    The exact spelling is asserted before it is parsed, and both halves are load-bearing. AC5
+    promises `>=3.11` and nothing narrower OR broader: `>=3.10` would satisfy the separation below
+    while advertising an interpreter nothing installs on, and `>=3.11,<4` or `~=3.11` would mean
+    something this test's parser cannot read. Pinning the string makes the parse total.
+    """
+    declared: str = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))["project"]["requires-python"]
+
+    assert declared == ">=3.11"
+    distribution_floor: tuple[int, ...] = tuple(int(part) for part in declared.removeprefix(">=").split("."))
+    assert distribution_floor < measure.MIN_INTERPRETER
+
+
+def test_ci_runs_above_the_corpus_floor_so_the_open_upper_bound_is_exercised() -> None:
+    """
+    `requires-python = ">=3.11"` has no upper bound, and an unexercised upper bound is a claim.
+
+    CI must therefore run STRICTLY ABOVE the corpus floor, not on it: pinned to the floor, every job
+    in the repository sits at the bottom of a range the package advertises as open, and a break on
+    any newer interpreter passes everything. This is what makes "the upper bound is open" a measured
+    statement rather than a comment.
+
+    Reading the `env:` value alone would assert the first regex match rather than the workflow: a
+    job or step setting `python-version: "3.12"` directly leaves the global value untouched and runs
+    on the floor anyway. So every `python-version:` in the file is required to route through
+    `${{ env.PYTHON_VERSION }}`, and the file must declare that variable exactly once — absent or
+    duplicated, this fails rather than picking one.
+
+    `build-artifacts.yml` is deliberately NOT covered: its 3.11 pin is the distribution floor, a
+    different contract, exercised on purpose.
+    """
+    text: str = CI_WORKFLOW.read_text(encoding="utf-8")
+
+    # Quote-agnostic on purpose: YAML accepts "3.12", '3.12' and bare 3.12 alike, so a pattern that
+    # knew only double quotes would miss a job-level `env:` override and then happily assert the
+    # workflow-level value it did match. Every declaration is counted, whatever its spelling.
+    pattern = r"""^\s*PYTHON_VERSION:\s*["']?([^"'\s#]+)["']?\s*(?:#.*)?$"""
+    declared: list[str] = re.findall(pattern, text, re.MULTILINE)
+    assert len(declared) == 1, f"ci.yml must declare PYTHON_VERSION exactly once, found {declared}"
+
+    literal: list[str] = [
+        value
+        for value in re.findall(r"^\s*python-version:\s*(.+?)\s*$", text, re.MULTILINE)
+        if value != "${{ env.PYTHON_VERSION }}"
+    ]
+    assert literal == [], f"ci.yml pins python-version outside PYTHON_VERSION: {literal}"
+
+    ci_interpreter: tuple[int, ...] = tuple(int(part) for part in declared[0].split("."))
+    assert ci_interpreter > measure.MIN_INTERPRETER
+
+
+def test_the_corpus_tool_refuses_an_interpreter_below_its_own_floor(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture, tmp_path: Path
+) -> None:
+    """
+    On 3.11 the script must REFUSE before measuring, and say which floor it wants.
+
+    The message is asserted, not only the exit code: every other early failure in `main` also
+    returns 2, so a test reading the code alone would stay green with the guard deleted — which is
+    precisely the fail-open shape the guard exists to prevent. The lock is deliberately absent, so
+    a run that got past the guard reports `cannot read` instead and reddens here.
+    """
+    monkeypatch.setattr(sys, "version_info", (3, 11, 9, "final", 0))
+
+    with caplog.at_level(logging.ERROR, logger="measure"):
+        code = measure.main(["--lock", str(tmp_path / "corpus.lock")])
+
+    assert code == 2
+    assert "need CPython >= 3.12, got 3.11" in caplog.text
+
+
+def test_identifiers_interpolated_in_an_fstring_are_seen_by_the_restatement_probe() -> None:
+    """
+    The PEP 701 difference itself, which every other test in this suite is blind to.
+
+    `MIN_INTERPRETER`, the CI pin and the whole two-floor split rest on one measured fact: before
+    3.12 an f-string is ONE STRING token, so `counter` and `limit` inside
+    `f"{counter} of {limit}"` are invisible to the probe and the comment above it scores 0 instead
+    of 1.0. `sample.py` contains no interpolated identifier, so the entire suite passes identically
+    on 3.11 and 3.14 — and a developer whose venv is 3.11 (buildable at all only because the
+    distribution floor was lowered) gets a green run that agrees with them.
+
+    So this test is DESIGNED to go red on 3.11. That is not a flaw in it: it is the only thing in
+    the repository that tells such a developer the interpreter is wrong instead of quietly
+    producing different numbers. Hand-counted on the 6-line fixture: the block on line 5 is the one
+    hit, and its target is the f-string on line 6.
+    """
+    stats: measure.FileStats = measure.measure_file(FSTRING_FIXTURE)
+
+    assert [hit.line for hit in stats.restatement_hits] == [5]
+    assert stats.restatement_hits[0].code_line == 'message = f"{counter} of {limit}"'
+
+
+def test_no_corpus_number_can_be_born_below_the_floor(monkeypatch: pytest.MonkeyPatch) -> None:
+    """
+    One guard, on the function that CREATES every corpus number, instead of one per consumer.
+
+    Guarding consumers is a losing game: `main` was guarded, then `measure_repo`, then `render`, and
+    `inspect_findings` was still open — each round found the next one. `measure_file` is where the
+    counts are born, so guarding it means every consumer that exists or is written later inherits
+    the refusal and cannot emit numbers PEP 701 would have shifted.
+
+    That the hand-counted oracle tests now raise on 3.11 is the point, not a casualty: their
+    expected values were counted on 3.12+, so on 3.11 they assert numbers nobody derived.
+    """
+    monkeypatch.setattr(sys, "version_info", (3, 11, 9, "final", 0))
+
+    with pytest.raises(RuntimeError, match=r"3\.12"):
+        measure.measure_file(FSTRING_FIXTURE)
 
 
 @pytest.fixture

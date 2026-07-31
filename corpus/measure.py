@@ -42,6 +42,17 @@ LOG: logging.Logger = logging.getLogger("measure")
 # 3.11 run quietly emit different constants into REPORT.md, refuse to run at all.
 MIN_INTERPRETER: tuple[int, int] = (3, 12)
 
+
+def _require_corpus_interpreter() -> None:
+    """Refuse to measure or emit below `MIN_INTERPRETER`. Guards `measure_repo` and `render`."""
+    if sys.version_info[:2] < MIN_INTERPRETER:
+        message = (
+            f"need CPython >= {MIN_INTERPRETER[0]}.{MIN_INTERPRETER[1]}, "
+            f"got {sys.version_info[0]}.{sys.version_info[1]} (see MIN_INTERPRETER)"
+        )
+        raise RuntimeError(message)
+
+
 # --- denominator hygiene ----------------------------------------------------
 # Any path containing one of these directory components is not this repo's own
 # prose: it is a virtualenv, a build artefact, vendored or generated code. A
@@ -495,7 +506,15 @@ def measure_file(path: Path, rel_path: str | None = None) -> FileStats:
 
     Raises SyntaxError / UnicodeDecodeError / tokenize.TokenError on input the
     stdlib parser rejects; the caller counts those files instead of guessing.
+
+    Also refuses below `MIN_INTERPRETER`, and this is the ONLY place that check
+    lives besides `main`'s early exit. Every corpus number is born here, so
+    every consumer — `measure_repo`, `render`, `inspect_findings`, and whatever
+    is written next — inherits the refusal instead of needing a guard of its
+    own. Guarding consumers one at a time is how three rounds of review each
+    found the next unguarded one.
     """
+    _require_corpus_interpreter()
     rel: str = rel_path if rel_path is not None else path.name
     with tokenize.open(path) as handle:
         source: str = handle.read()
@@ -961,7 +980,11 @@ def checkout_is_pinned(dest: Path, sha: str) -> bool:
 
 
 def measure_repo(url: str, sha: str, root: Path) -> RepoStats:
-    """Walk every eligible `.py` file of a checked-out repo."""
+    """
+    Walk every eligible `.py` file of a checked-out repo.
+
+    No interpreter guard here: `measure_file` carries it, so this inherits it.
+    """
     stats = RepoStats(name=repo_name(url), url=url, sha=sha, available=True)
     for path in iter_python_files(root):
         rel: str = path.relative_to(root).as_posix()
@@ -994,7 +1017,12 @@ def _fmt_pct(value: float) -> str:
 
 
 def render(repos: list[RepoStats], duplicates: dict[str, DuplicateStats]) -> list[str]:
-    """Render the whole report as lines. Pure function of the inputs — AC4 lives here."""
+    """
+    Render the whole report as lines. Pure function of the inputs — AC4 lives here.
+
+    No interpreter guard here either: on a wrong interpreter there are no stats
+    to render, because `measure_file` refuses to produce any.
+    """
     out: list[str] = []
     out.append("# tooprolix corpus measurement")
     out.append("")

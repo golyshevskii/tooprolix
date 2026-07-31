@@ -23,10 +23,13 @@ import zipfile
 from pathlib import Path
 
 import pytest
-from check_artifact import main, tag_set
+from check_artifact import MULTI_USE_HEADERS, REQUIRED_HEADERS, main, tag_set
 
 DESCRIPTION = "# tooprolix\n\nThe transformed README.\n"
-HEADERS = "Metadata-Version: 2.4\nName: tooprolix\nVersion: 0.0.0\nLicense-Expression: MIT\nLicense-File: LICENSE\n"
+HEADERS = (
+    "Metadata-Version: 2.4\nName: tooprolix\nVersion: 0.0.0\n"
+    "License-Expression: MIT\nLicense-File: LICENSE\nRequires-Python: >=3.11\n"
+)
 
 
 def _metadata(headers: str = HEADERS, description: str = DESCRIPTION) -> bytes:
@@ -120,6 +123,78 @@ class TestEachPromiseIsRefusedSeparately:
     def test_an_sdist_without_the_documents_the_readme_links_to_fails(self, tmp_path: Path, readme: Path) -> None:
         # The measured exploit: `exclude = ["corpus/", "docs/"]`, twine PASSED.
         assert main([str(_sdist(tmp_path, docs=False)), str(readme)]) == 1
+
+    @pytest.mark.parametrize("kind", ["wheel", "sdist"])
+    def test_a_python_floor_that_is_not_the_one_the_project_promises_fails(
+        self, tmp_path: Path, readme: Path, kind: str
+    ) -> None:
+        # `>=3.12` is the floor this project shipped BEFORE the distribution floor was split from
+        # the corpus tooling's own 3.12 floor, so it is exactly the value a regression drifts back
+        # to — and the wheel is `py3-none-<platform>`, carrying a native executable and no Python,
+        # so nothing else in the archive would notice. `Requires-Python` is what an installer reads
+        # to refuse the wheel on 3.11; a narrower floor locks out the interpreters AC1 promises.
+        metadata = _metadata(HEADERS.replace("Requires-Python: >=3.11", "Requires-Python: >=3.12"))
+        archive = _wheel(tmp_path, metadata=metadata) if kind == "wheel" else _sdist(tmp_path, metadata=metadata)
+
+        assert main([str(archive), str(readme)]) == 1
+
+    @pytest.mark.parametrize("kind", ["wheel", "sdist"])
+    @pytest.mark.parametrize("header", sorted(set(REQUIRED_HEADERS) - MULTI_USE_HEADERS))
+    def test_a_header_stated_twice_fails_even_when_the_first_value_is_right(
+        self, tmp_path: Path, readme: Path, kind: str, header: str
+    ) -> None:
+        # `email.message.get` returns only the FIRST occurrence, so a second, contradicting line is
+        # invisible to it — while an installer may honour the last. The archive is then ambiguous
+        # and the guard reports success, which is the fail-open shape it exists to prevent.
+        # Parameterised over every SINGLE-USE required header — derived, so a header added later
+        # cannot skip the refusal — because it belongs to the shared loop, not to whichever header
+        # somebody remembered to special-case. `License-File` is excluded: it is multiple-use.
+        metadata = _metadata(f"{HEADERS}{header}: something else\n")
+        archive = _wheel(tmp_path, metadata=metadata) if kind == "wheel" else _sdist(tmp_path, metadata=metadata)
+
+        assert main([str(archive), str(readme)]) == 1
+
+    @pytest.mark.parametrize("kind", ["wheel", "sdist"])
+    def test_a_declared_licence_file_that_is_not_in_the_archive_fails(
+        self, tmp_path: Path, readme: Path, kind: str
+    ) -> None:
+        # Accepting `License-File` by MEMBERSHIP made the header a self-report again: `LICENSE` is
+        # there, so the check passed, and nothing ever asked about the `NOTICE` the archive also
+        # promised. Both specifications require every declared licence file to be present at its
+        # declared path — so the archive is graded against its own declaration, which is also what
+        # makes the old basename-only `LICENSE` check redundant.
+        metadata = _metadata(f"{HEADERS}License-File: NOTICE\n")
+        archive = _wheel(tmp_path, metadata=metadata) if kind == "wheel" else _sdist(tmp_path, metadata=metadata)
+
+        assert main([str(archive), str(readme)]) == 1
+
+    def test_a_second_license_file_is_accepted_when_its_file_is_in_the_archive(
+        self, tmp_path: Path, readme: Path
+    ) -> None:
+        # Core metadata makes `License-File` MULTIPLE-USE: `LICENSE` plus `NOTICE` is a valid
+        # Metadata 2.4 document, and this project will ship one the day a copyleft crate enters the
+        # graph (see `[tool.maturin]` in pyproject.toml). Refusing it would be a guard enforcing a
+        # rule the spec does not have — so only PRESENCE is required here, while the genuinely
+        # single-use headers above still have to appear exactly once.
+        wheel = _wheel(tmp_path, metadata=_metadata(f"{HEADERS}License-File: NOTICE\n"))
+        with zipfile.ZipFile(wheel, "a") as archive:
+            archive.writestr("tooprolix-0.0.0.dist-info/licenses/NOTICE", "third-party notices\n")
+
+        assert main([str(wheel), str(readme)]) == 0
+
+    @pytest.mark.parametrize("kind", ["wheel", "sdist"])
+    def test_metadata_that_did_not_parse_cleanly_fails_however_well_its_values_read(
+        self, tmp_path: Path, readme: Path, kind: str
+    ) -> None:
+        # Every value check below reads what `email` RECOVERED from a malformed document, and a
+        # recovery is a guess. Without the blank line that ends the headers, `email` still hands
+        # back the right `Requires-Python`, the right licence and the right description — and
+        # records `MissingHeaderBodySeparatorDefect`. No installer is obliged to guess the same way,
+        # so the parse itself is graded, which covers every defect class and not only this one.
+        metadata = f"{HEADERS}{DESCRIPTION}".encode()  # note: no blank line between the two
+        archive = _wheel(tmp_path, metadata=metadata) if kind == "wheel" else _sdist(tmp_path, metadata=metadata)
+
+        assert main([str(archive), str(readme)]) == 1
 
     @pytest.mark.parametrize("kind", ["wheel", "sdist"])
     def test_a_description_that_is_not_the_transformed_readme_fails(

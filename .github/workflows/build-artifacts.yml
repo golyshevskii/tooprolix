@@ -62,7 +62,10 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PYTHON_VERSION: "3.12"
+  # The distribution floor, so every install-smoke below exercises the lowest interpreter
+  # `requires-python` promises. Not a matrix: the wheel is `py3-none-<platform>`, so only the
+  # installing interpreter is worth moving.
+  PYTHON_VERSION: "3.11"
   # Pinned, exactly as ruff pins it. maturin decides the wheel tag and the archive layout, so an
   # unpinned "latest" would let the shape of the published artifact change without a commit here.
   MATURIN_VERSION: v1.14.1
