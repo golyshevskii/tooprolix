@@ -41,9 +41,10 @@ Cargo SemVer for `0.x`.
 Recorded so it is not rediscovered as a bug. `v0.3.4` should have been `v0.4.0`; the tag, the GitHub
 release and the CHANGELOG entry are live and all say patch. It is deliberately **not** retagged and
 neither `Cargo.toml` nor `CHANGELOG.md` is hand-edited — the rule above forbids exactly that, and the
-rule stands. Nothing is user-facing while the project is unpublished, so the entire cost is
-bookkeeping. **Owner: the `flip-public-and-publish-to-pypi` task**, which chooses the first
-*published* version deliberately.
+rule stands. The cost is bookkeeping only for as long as the repository is **private** — the tag and
+its GitHub release become user-facing the moment visibility flips, which is before anything is
+published. **Owner: the `flip-public-and-publish-to-pypi` task**, which chooses the first *published*
+version deliberately.
 
 ## Never edit versions or the changelog by hand
 
@@ -53,8 +54,15 @@ bookkeeping. **Owner: the `flip-public-and-publish-to-pypi` task**, which choose
   so there is exactly one number to bump and no way for the two to disagree.
 
 Merging the Release PR that release-plz opens is what creates the tag and the GitHub release.
-Publishing to PyPI and crates.io is **off** until the packaging task turns it on. There is exactly
-one switch for that: `[workspace] publish = false` in `release-plz.toml`.
+Neither registry receives anything today, and **the two are off for different reasons**:
+
+- **crates.io is off by a switch** — `[workspace] publish = false` in `release-plz.toml` keeps
+  release-plz to version, changelog, tag and GitHub release, never `cargo publish`;
+- **PyPI is off because nothing uploads to it** — there is no switch. `build-artifacts.yml` builds,
+  checks and attaches artifacts to the run, and opens with "THERE IS NO PUBLISH STEP IN THIS FILE,
+  AND THAT IS THE POINT OF IT"; the publishing task adds that job.
+
+Flipping that one switch to `true` therefore turns on crates.io **alone** and leaves PyPI empty.
 
 > **Do not add `publish = false` to `Cargo.toml`.** It reads like the obvious way to say "not
 > published yet", and it silently disables release-plz entirely — no version bump, no changelog, no
@@ -165,11 +173,8 @@ scripts/install-smoke.sh dist/tooprolix-*.whl "$(git log -1 --format=%cs)"
 uv run --no-project python scripts/check_artifact.py dist/tooprolix-*.whl README.md
 ```
 
-`make rust.build` grades exactly one artifact and no more: `cargo build --locked` carries no
-`--release`, and its CI job is `runs-on: ubuntu-latest`, so it reads a Linux x86_64 **debug**
-executable while the shipped wheels are release builds for three platforms. A linkage appearing only
-under `--release`, or only on macOS or Windows, passes it and still reaches a wheel. What exercises
-the shipped artifacts is `scripts/install-smoke.sh`, which `build-artifacts.yml` runs on each one.
+`make rust.build` is **not** a guard on the shipped wheels: it inspects the binary cargo just linked
+on the machine running it, not the release artifacts `build-artifacts.yml` produces.
 
 `scripts/install-smoke.sh` is the guard that replaced the pyo3 boundary tests: it installs the
 artifact into a throwaway project and asserts the command exists, prints exactly the expected
@@ -181,8 +186,7 @@ runs the same script on every artifact it builds.
 ## Coverage
 
 Coverage is measured and printed; it is **not** published. There is no badge and no committed
-artifact — the repository is private until the PyPI flip, so no badge host can read one. Revisit at
-publication.
+artifact — while the repository is private, no badge host can read one. Revisit when it goes public.
 
 ```bash
 make rust.cov         # cargo llvm-cov -> prints "rust coverage: NN.N%"
@@ -210,6 +214,12 @@ adding a `corpus/` subdirectory coverage.py cannot discover — and none of thos
 trace. The script walks the source tree itself and compares it against what the report claims to
 have measured, so those edits fail the run with a message naming the file. If one fires, fix the
 denominator; do not silence the check.
+
+It has one ceiling, and the script states it at the line that implements it: a Rust file missing
+from the report is only reported if its text contains a literal `fn `. That is what lets
+`src/detect.rs` — module documentation and two `pub mod` lines — be legitimately absent. It also
+means a module whose functions all arrive from a macro expansion has instrumentable code, no literal
+`fn `, and can leave the denominator without a word.
 
 Do not add a `--fail-under` threshold either: picking one before the code audits would be picking a
 number to match today's code.

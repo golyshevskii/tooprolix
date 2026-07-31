@@ -26,8 +26,8 @@ allowed — a block of exactly the limit is silent, one word over is a finding.
 
 A block must also span at least two physical lines to be considered at all. That threshold is why
 one-line prose never produces a finding: on the reference corpus, one-line blocks like
-`"""Initialize the class."""` are 98.83%–99.99% of all exact duplicate pairs
-(`corpus/REPORT.md` §6.4), and counting them would bury every real result.
+`"""Initialize the class."""` are 98.83%–99.99% of all exact duplicate pairs (`corpus/REPORT.md`,
+*Minimum prose-block size*), and counting them would bury every real result.
 
 ### What `TPX003` compares: narrative prose, not the reference scaffolding
 
