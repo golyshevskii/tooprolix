@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1](https://github.com/golyshevskii/tooprolix/compare/v0.4.0...v0.4.1) - 2026-07-31
+
+### Fixed
+
+- anchor detector provenance to a commit a squash merge cannot delete ([#32](https://github.com/golyshevskii/tooprolix/pull/32))
+- close the anti-false-positive gate on a held-out reference, and repair the operator rule it exposed ([#30](https://github.com/golyshevskii/tooprolix/pull/30))
+
 ## [0.4.0](https://github.com/golyshevskii/tooprolix/compare/v0.3.8...v0.4.0) - 2026-07-30
 
 ### Added
