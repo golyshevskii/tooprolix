@@ -36,7 +36,14 @@ from collections.abc import Iterator
 from pathlib import Path
 
 #: Metadata the project promises and PyPI shows. PEP 639 spellings, which is what maturin emits.
-REQUIRED_HEADERS: dict[str, str] = {"License-Expression": "MIT", "License-File": "LICENSE"}
+#:
+#: `Requires-Python` is the DISTRIBUTION floor and is graded here for the same reason as the licence:
+#: it is the header an installer reads to refuse the wheel, and nothing else in a `py3-none-<platform>`
+#: archive — which carries a native executable and no Python — would notice it narrowing. It is
+#: deliberately NOT `MIN_INTERPRETER` from `corpus/measure.py`: that is a separate, measured floor for
+#: the corpus tooling (PEP 701 moves the restatement counts below 3.12), and
+#: `tests/unit/test_measure.py` keeps the two from being collapsed back into one value.
+REQUIRED_HEADERS: dict[str, str] = {"License-Expression": "MIT", "License-File": "LICENSE", "Requires-Python": ">=3.11"}
 
 #: Documents `README.md` links to that must travel with the source. The README's own links are
 #: rewritten to GitHub URLs for the project page, so the sdist is the only place a consumer without

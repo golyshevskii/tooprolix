@@ -27,6 +27,9 @@ Run: make test    (or: uv run --only-group test pytest)
 
 from __future__ import annotations
 
+import logging
+import sys
+import tomllib
 from pathlib import Path
 
 import measure
@@ -34,6 +37,7 @@ import pytest
 
 # corpus/fixtures/sample.py, reached from tests/unit/
 FIXTURE: Path = Path(__file__).parents[2] / "corpus" / "fixtures" / "sample.py"
+PYPROJECT: Path = Path(__file__).parents[2] / "pyproject.toml"
 
 # --- hand counts on corpus/fixtures/sample.py ------------------------------------------
 # docstrings: lines 1-4 (module), 12 (class), 15-17 (method)
@@ -46,6 +50,44 @@ EXPECTED_BLANK_LINES: int = 4  # lines 5, 9, 10, 13 — 2 and 16 are blank INSID
 EXPECTED_CODE_LINES: int = 4  # lines 8, 11, 14, 19
 EXPECTED_TOTAL_LINES: int = 19
 EXPECTED_BLOCK_COUNT: int = 5  # 3 docstrings + 2 comment blocks
+
+
+def test_the_corpus_floor_stays_above_the_floor_the_distribution_promises() -> None:
+    """
+    The two floors are SEPARATE contracts and must not be collapsed back into one value.
+
+    `requires-python` is what an installer reads: the wheel is `py3-none-<platform>`, carrying a
+    native executable and no Python at all, so the distribution runs wherever it is installed.
+    `MIN_INTERPRETER` is a MEASURED floor for this script alone — PEP 701 changed what `tokenize`
+    reports inside f-strings, so a 3.11 run emits different constants into REPORT.md. Raising
+    `requires-python` back to the corpus floor would lock installers out of an interpreter the
+    distribution supports; lowering `MIN_INTERPRETER` to the distribution floor would let the
+    research oracle answer with numbers no downstream constant was derived from.
+    """
+    declared: str = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))["project"]["requires-python"]
+    distribution_floor: tuple[int, ...] = tuple(int(part) for part in declared.removeprefix(">=").split("."))
+
+    assert distribution_floor < measure.MIN_INTERPRETER
+
+
+def test_the_corpus_tool_refuses_an_interpreter_below_its_own_floor(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture, tmp_path: Path
+) -> None:
+    """
+    On 3.11 the script must REFUSE before measuring, and say which floor it wants.
+
+    The message is asserted, not only the exit code: every other early failure in `main` also
+    returns 2, so a test reading the code alone would stay green with the guard deleted — which is
+    precisely the fail-open shape the guard exists to prevent. The lock is deliberately absent, so
+    a run that got past the guard reports `cannot read` instead and reddens here.
+    """
+    monkeypatch.setattr(sys, "version_info", (3, 11, 9, "final", 0))
+
+    with caplog.at_level(logging.ERROR, logger="measure"):
+        code = measure.main(["--lock", str(tmp_path / "corpus.lock")])
+
+    assert code == 2
+    assert "need CPython >= 3.12, got 3.11" in caplog.text
 
 
 @pytest.fixture

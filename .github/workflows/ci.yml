@@ -19,7 +19,9 @@ concurrency:
 env:
   # corpus/measure.py hard-exits below CPython 3.12 (pre-PEP-701 tokenize hides
   # identifiers inside f-strings), so the gates must run on 3.12+. Pinned
-  # explicitly rather than relying on the runner default or requires-python.
+  # explicitly, and DELIBERATELY NOT `requires-python`: that is the distribution
+  # floor (>=3.11), which `build-artifacts.yml` install-smokes on 3.11. The two
+  # floors are separate contracts and `tests/unit/test_measure.py` keeps them so.
   PYTHON_VERSION: "3.12"
   # Fail if uv.lock is stale relative to pyproject.toml instead of silently
   # re-resolving it. Verified locally with `UV_LOCKED=1 make <target>` for all

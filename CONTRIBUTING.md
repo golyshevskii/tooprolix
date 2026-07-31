@@ -134,7 +134,18 @@ and becomes a barrier when the publication task registers required checks.
 - Rust is pinned in `rust-toolchain.toml` (**1.97.0**, with `clippy` and `rustfmt`). Do not run the
   gates on `stable` — the pinned `ruff_*@0.0.6` crates require rustc ≥ 1.95, and an older `stable`
   fails before compiling any of this crate.
-- Python comes from `uv` (≥ 3.12). Use `uv run python3`, never a bare `python3`.
+- Python comes from `uv`. **Two floors, and they are not the same number:**
+  - the **distribution** installs and runs on **≥ 3.11** (`requires-python`). It is a
+    `py3-none-<platform>` wheel carrying a native executable and no Python, so nothing in it cares
+    which interpreter installs it — `.github/workflows/build-artifacts.yml` smokes every artifact on
+    3.11, and `scripts/check_artifact.py` fails a build whose `Requires-Python` header says anything
+    narrower.
+  - **development** needs **≥ 3.12**: `corpus/measure.py` refuses to start below it
+    (`MIN_INTERPRETER`, PEP 701 — pre-3.12 `tokenize` hides identifiers inside f-strings and lowers
+    the restatement counts), so `ci.yml`, ruff's `target-version` and ty's `python-version` all stay
+    on 3.12. `tests/unit/test_measure.py` reddens if either floor swallows the other.
+
+  Use `uv run python3`, never a bare `python3`.
 
 ## Building and smoking the distribution
 

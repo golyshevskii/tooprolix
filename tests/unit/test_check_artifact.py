@@ -26,7 +26,10 @@ import pytest
 from check_artifact import main, tag_set
 
 DESCRIPTION = "# tooprolix\n\nThe transformed README.\n"
-HEADERS = "Metadata-Version: 2.4\nName: tooprolix\nVersion: 0.0.0\nLicense-Expression: MIT\nLicense-File: LICENSE\n"
+HEADERS = (
+    "Metadata-Version: 2.4\nName: tooprolix\nVersion: 0.0.0\n"
+    "License-Expression: MIT\nLicense-File: LICENSE\nRequires-Python: >=3.11\n"
+)
 
 
 def _metadata(headers: str = HEADERS, description: str = DESCRIPTION) -> bytes:
@@ -120,6 +123,20 @@ class TestEachPromiseIsRefusedSeparately:
     def test_an_sdist_without_the_documents_the_readme_links_to_fails(self, tmp_path: Path, readme: Path) -> None:
         # The measured exploit: `exclude = ["corpus/", "docs/"]`, twine PASSED.
         assert main([str(_sdist(tmp_path, docs=False)), str(readme)]) == 1
+
+    @pytest.mark.parametrize("kind", ["wheel", "sdist"])
+    def test_a_python_floor_that_is_not_the_one_the_project_promises_fails(
+        self, tmp_path: Path, readme: Path, kind: str
+    ) -> None:
+        # `>=3.12` is the floor this project shipped BEFORE the distribution floor was split from
+        # the corpus tooling's own 3.12 floor, so it is exactly the value a regression drifts back
+        # to — and the wheel is `py3-none-<platform>`, carrying a native executable and no Python,
+        # so nothing else in the archive would notice. `Requires-Python` is what an installer reads
+        # to refuse the wheel on 3.11; a narrower floor locks out the interpreters AC1 promises.
+        metadata = _metadata(HEADERS.replace("Requires-Python: >=3.11", "Requires-Python: >=3.12"))
+        archive = _wheel(tmp_path, metadata=metadata) if kind == "wheel" else _sdist(tmp_path, metadata=metadata)
+
+        assert main([str(archive), str(readme)]) == 1
 
     @pytest.mark.parametrize("kind", ["wheel", "sdist"])
     def test_a_description_that_is_not_the_transformed_readme_fails(
