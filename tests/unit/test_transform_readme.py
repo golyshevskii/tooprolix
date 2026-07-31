@@ -4,8 +4,6 @@ maturin reads `readme = "README.md"`.
 
 `README.md` is written for GitHub, where a relative address resolves against the repository. On the
 PyPI project page there is no repository to resolve against, so every relative address 404s.
-Measured on this README 2026-07-31: **10** of them — 8 relative markdown links, the
-`assets/tooprolix.gif` image, and the `<a href="LICENSE">` behind the licence badge.
 
 The four ways this script can leave the shop window broken are the four things tested here:
 
@@ -21,12 +19,12 @@ The four ways this script can leave the shop window broken are the four things t
      `twine check` cannot see and the reason ruff's own transformer raises rather than warns: a
      README with no relative addresses at all means the document was restructured and this script
      has stopped doing anything. That is a build failure, not a no-op.
-  4. 🔴 **it can grade its own output.** The verification used to re-run the rewriting regex, so it
-     was blind exactly where the rewriter was blind — a reference-style definition and a
-     single-quoted `href` both survived a run that reported success. `TestTheShapesTheSharedRegexWasBlindTo`
-     pins those shapes and `TestTheVerifierDoesNotShareTheRewritersEyes` pins the split itself:
-     the verifier renders the markdown the way PyPI does and reads the HTML, sharing no pattern
-     with the rewriter.
+  4. **it can grade its own output.** A verification that re-runs the rewriting regex is blind
+     exactly where the rewriter is blind — a reference-style definition and a single-quoted `href`
+     both survive a run that reports success. `TestTheShapesTheSharedRegexWasBlindTo` pins those
+     shapes and `TestTheVerifierDoesNotShareTheRewritersEyes` pins the split itself: the verifier
+     renders the markdown the way PyPI does and reads the HTML, sharing no pattern with the
+     rewriter.
 
 `TestTheGuardIsWiredIntoTheEntryPoint` runs the script the way the workflow runs it, so a check
 deleted from `main()` fails a test rather than nothing at all.
@@ -139,7 +137,7 @@ class TestTheRealReadmeIsFullyResolved:
 
 class TestTheShapesTheSharedRegexWasBlindTo:
     """
-    🔴 The verifier used to be `relative_addresses` — **the same regex the rewriter runs**. So it was
+    The verifier used to be `relative_addresses` — **the same regex the rewriter runs**. So it was
     blind exactly where the rewriter was blind and reported success on its own output: the defect
     this epic keeps finding, one layer up.
 
@@ -191,7 +189,7 @@ class TestTheShapesTheSharedRegexWasBlindTo:
 
 class TestTheTransformNeverChangesCode:
     """
-    🔴 The direction the F1 split does NOT cover, and the reason it needed its own judge.
+    The direction the F1 split does NOT cover, and the reason it needed its own judge.
 
     `rendered_addresses` catches addresses LEFT BEHIND. It is structurally incapable of catching
     code the rewriter CORRUPTED: a link inside a fence renders as text, not as a link, so a
@@ -205,7 +203,7 @@ class TestTheTransformNeverChangesCode:
     requires every code block and code span to be byte-identical. That is blind to which fence
     syntax was used, so `~~~`, indented blocks and anything else fall out without being enumerated.
 
-    ⚠️ **The cost, named:** `CODE` is deliberately NOT widened, so a README that grows a `~~~` fence
+    **The cost, named:** `CODE` is deliberately NOT widened, so a README that grows a `~~~` fence
     or an indented block holding a repo-relative address FAILS THE BUILD until somebody widens it.
     That is friction, and it is the right direction of failure — the alternative this replaced was
     silently publishing corrupted documentation. The guard is also what makes widening safe when it

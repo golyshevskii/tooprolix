@@ -9,10 +9,8 @@ plausible — drop `branch = true`, let a source file fall out of discovery, orp
 itself; the denominator is what moved. So the report is graded before the number is read out of it,
 and the run fails rather than printing a figure that flatters the code.
 
-This is the instrument the three audit tasks measure against, not decoration. There is no badge:
-the repository is private until the PyPI flip, so no badge host can read it, and the projects worth
-comparing against (ruff, uv, tokio, ripgrep, cargo, maturin, polars, httpx, starlette) publish no
-coverage badge either. The number is printed for a human and written to `target/coverage/`.
+There is no badge: the repository is private until the PyPI flip, so no badge host can read it. The
+number is printed for a human and written to `target/coverage/`.
 
 Three properties, each tested in `tests/unit/test_coverage_report.py` as a function AND — in
 `TestTheGuardIsWiredIntoTheEntryPoint` — by running this script the way the Makefile runs it,
@@ -72,7 +70,7 @@ def percent_from_report(report: Path, report_format: str) -> float:
     defaulting to 0.0: a printed `0.0%` is a claim about the code, and a schema change is a fact
     about the parser. The two must not look the same.
 
-    ⚠️ The two numbers are NOT the same measure, and they are reported separately for exactly this
+    The two numbers are NOT the same measure, and they are reported separately for exactly this
     reason: the Rust figure is line coverage, while coverage.py's `percent_covered` folds branches
     in (`branch = true`). Do not add them together or describe them as comparable.
     """

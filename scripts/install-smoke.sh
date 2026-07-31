@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
 # Install-smoke for the `tooprolix` COMMAND, run against a real installed distribution.
 #
-# 🔴 THIS SCRIPT IS THE GUARD THAT REPLACED THE PYO3 BOUNDARY TESTS (epic 2 Decisions #19.1). Until
-# then the wheel carried an extension module and 5 Rust tests plus a `compile_error!` stood between
-# us and publishing a wheel that exported nothing — a thing that had already happened once and
-# passed every gate. The wheel now carries the compiled executable under `*.data/scripts/`, those
-# 5 tests are gone with the boundary, and this script is what stands in their place. It is
-# mutation-proved rather than merely present: a wheel with its executable removed must FAIL here.
+# THIS SCRIPT IS THE ONLY GUARD AGAINST PUBLISHING A WHEEL THAT SHIPS NOTHING. The wheel carries
+# the compiled executable under `*.data/scripts/`; a wheel that exports nothing has passed every
+# other gate before. It is mutation-proved rather than merely present: a wheel with its executable
+# removed must FAIL here.
 #
 # Nothing inside the repository can see any of this: `make test` is `uv run --only-group test
 # pytest`, which deliberately does not build or install the project, and `cargo test` never produces
@@ -39,7 +37,7 @@
 #      and no importable module (AC0). Until this was asserted, a wheel keeping the binary AND
 #      shipping a `tooprolix/` package passed everything else here.
 #   5. `tooprolix check <a file with a known finding>` exits **1** and names **TPX002** — the CLI is
-#      really wired to the linter. ⚠️ `tooprolix check .` cannot serve here: on a tree with no `.py`
+#      really wired to the linter. `tooprolix check .` cannot serve here: on a tree with no `.py`
 #      files it honestly exits 0 with `warning: no Python files` (measured 2026-07-27), i.e. it
 #      "passes" having checked nothing. An empty directory is the same trap.
 #   6. A clean fixture exits 0 — so assertion 5 is not passing because the tool fails on everything.
@@ -58,13 +56,13 @@ if [ $# -ne 2 ]; then
 fi
 
 source_spec="$1"
-# 🔴 THE DATE IS AN ORACLE THE CALLER SUPPLIES, AND WITHOUT IT THIS CHECK IS A SHAPE CHECK.
+# THE DATE IS AN ORACLE THE CALLER SUPPLIES, AND WITHOUT IT THIS CHECK IS A SHAPE CHECK.
 # Measured 2026-07-31 on a wheel repacked around a shim: `tooprolix 0.4.1 (2000-01-01)` printed
 # `install-smoke: OK` and exited 0. Any `YYYY-MM-DD` passed, so a wheel assembled around a binary
 # from a different commit was indistinguishable from the right one — the date was graded as a
 # self-report while the version beside it was cross-checked against METADATA.
 #
-# 🔴 AND IT IS REQUIRED, because an optional oracle is a guard with a silent weak branch. It was
+# AND IT IS REQUIRED, because an optional oracle is a guard with a silent weak branch. It was
 # optional for one round: a caller who simply forgot the argument got the shape check and no
 # warning, which is the same class of failure — a check quietly grading less than it claims — that
 # has already bitten this task twice. There is no caller that cannot answer the question: CI knows
@@ -100,7 +98,7 @@ fi
 #      earlier under a different environment. See the note beside it.
 unset UV_PROJECT_ENVIRONMENT UV_NO_SYNC VIRTUAL_ENV
 
-# 🔴 LAYER 3, AND IT WAS FOUND THE HARD WAY. uv caches the wheel it BUILDS from an sdist, and the
+# LAYER 3, AND IT WAS FOUND THE HARD WAY. uv caches the wheel it BUILDS from an sdist, and the
 # cache key does not include the build environment — so the same tarball installed twice answers
 # with the first build's binary. Measured 2026-07-31: with `SOURCE_DATE_EPOCH` correctly exported,
 # this script reported `tooprolix 0.4.1 (unknown)` and FAILED, because an earlier cache-filling run
@@ -125,7 +123,7 @@ work="$(cd "$(mktemp -d "${TMPDIR:-/tmp}/tooprolix-smoke.XXXXXX")" && pwd -P)"
 trap 'rm -rf "$work"' EXIT HUP INT TERM PIPE
 
 # The scratch project must live outside this repository AND outside every checkout enclosing it: a
-# parent `.gitignore` silently swallowed a scratch install once already (epic 1 Decisions #7.3), and
+# parent `.gitignore` silently swallowed a scratch install once already, and
 # that trap is live — `/Users/vgolyshevskii/dwh/.gitignore:17` is `lib/`, one level above this repo.
 # Comparing against `$repo` alone therefore did NOT check what this comment claims: measured, a
 # `TMPDIR` one level up passed the guard and landed straight in the trap.
@@ -251,11 +249,10 @@ elif ! printf '%s' "$version_output" |
 	exit 1
 fi
 
-# 🔴 AC0, ASSERTED RATHER THAN OBSERVED ONCE BY HAND. `bindings = "bin"` means the distribution
-# carries an executable and NO importable module; until this check existed, a wheel that kept the
-# binary and also shipped a `tooprolix/` package passed every assertion here (measured: repacked
-# such a wheel, `install-smoke: OK`, exit 0). That is exactly how a provisional Python surface gets
-# published by accident, which is the thing epic 2 Decisions #19.1 removed on purpose.
+# ASSERTED RATHER THAN OBSERVED ONCE BY HAND. `bindings = "bin"` means the distribution carries an
+# executable and NO importable module; without this check a wheel that keeps the binary and ALSO
+# ships a `tooprolix/` package passes every other assertion here (measured: repacked such a wheel,
+# `install-smoke: OK`, exit 0). That is how a Python surface nobody promised gets published.
 #
 # The probe reports what it FOUND rather than swallowing an exception, and it covers the case a
 # plain `try: import` would miss: a bare `tooprolix/` directory with no `__init__.py` is still

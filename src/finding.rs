@@ -129,18 +129,15 @@ impl fmt::Display for Location {
     ///
     /// # This is a break for some consumers, taken deliberately
     ///
-    /// The claim that used to stand here — "a range suffix is ignored by a parser that stops at the
-    /// first number, so nothing that worked on 0.3.0 stops working" — is **false**, and it was
-    /// checked rather than reasoned about. A consumer that reads `path:line` as a prefix and stops
-    /// at the first integer is indeed unaffected. A consumer that splits on `:` and parses the
-    /// second field strictly as an integer accepted `api.py:1:` and **rejects** `api.py:1-26:`, and
-    /// that is the ordinary shape of an editor jump-to-line integration.
+    /// The range suffix is **not** a backwards-compatible superset, and that was checked rather
+    /// than reasoned about. A consumer that reads `path:line` as a prefix and stops at the first
+    /// integer is unaffected. A consumer that splits on `:` and parses the second field strictly as
+    /// an integer accepted `api.py:1:` and **rejects** `api.py:1-26:` — the ordinary shape of an
+    /// editor jump-to-line integration.
     ///
-    /// So this is a break, not a superset, and it is taken because the consumer count is provably
-    /// zero: nothing is published, `PyPI` answers 404, and the repository is private. The price of
-    /// the same change after publication is a major version. Recorded plainly instead of defended
-    /// with a compatibility story that does not hold — this crate has already shipped one comment
-    /// justifying a decision with a figure that measured false, and one is enough.
+    /// So this is a break, and it is taken because the consumer count is provably zero: nothing is
+    /// published, `PyPI` answers 404, and the repository is private. The price of the same change
+    /// after publication is a major version.
     ///
     /// # Why the end is worth the two characters
     ///
@@ -252,11 +249,10 @@ impl Finding {
     ///
     /// # Why the message is in the key
     ///
-    /// It was `(address, code)` alone, and `sort_by` is **stable**, so two findings equal on both
-    /// kept whatever order they arrived in — the output would not have been a function of its input.
-    /// That is the same defect this crate has now shipped three times in three different modules,
-    /// and the resolution is the one task 4 arrived at: put the thing that distinguishes them into
-    /// the key, rather than tie-breaking on a float or trusting the caller's order.
+    /// On `(address, code)` alone, and with `sort_by` **stable**, two findings equal on both would
+    /// keep whatever order they arrived in — the output would not be a function of its input. The
+    /// resolution is to put the thing that distinguishes them into the key, rather than tie-breaking
+    /// on a float or trusting the caller's order.
     ///
     /// The message is enough, and *totality* is the claim, so here is the argument rather than the
     /// assertion. Two findings that tie on all three are byte-identical in **both** output formats:
@@ -423,7 +419,7 @@ pub struct Skipped {
 /// field that appears only when it is `false` makes its absence mean "fully measured" to every
 /// consumer that has never seen it, which is the silence the bump to `"2"` exists to prevent.
 ///
-/// # ⚠️ `TPX003` over an incomplete set is a DIFFERENT graph, not the same clusters minus a file
+/// # `TPX003` over an incomplete set is a DIFFERENT graph, not the same clusters minus a file
 ///
 /// `TPX003` is cross-file by construction: a cluster is a connected component over the whole input.
 /// Drop one file and the answer is not a smaller true answer — the missing block may have been the
@@ -487,13 +483,11 @@ impl Report {
     ///
     /// # Panics
     ///
-    /// It cannot, and the reason recorded here used to be wrong. It said the only failure mode was
-    /// a non-finite `f64`; **measured**, `serde_json::to_string(&f64::NAN)` returns `Ok("null")`
-    /// rather than an error, so that was never a failure mode at all. What actually holds is
-    /// stronger: every field of this type serialises through a derive over `String`, `usize`,
-    /// `f64`, `Vec` and `&'static str`, none of which can fail, and there is no map with
-    /// non-string keys anywhere in the schema. The `expect` documents an impossibility rather than
-    /// handling a risk.
+    /// It cannot. Every field of this type serialises through a derive over `String`, `usize`,
+    /// `f64`, `Vec` and `&'static str`, none of which can fail, and there is no map with non-string
+    /// keys anywhere in the schema. Not even a non-finite `f64` is a failure mode: **measured**,
+    /// `serde_json::to_string(&f64::NAN)` returns `Ok("null")` rather than an error. The `expect`
+    /// documents an impossibility rather than handling a risk.
     #[must_use]
     pub fn to_json(&self) -> String {
         let mut rendered =

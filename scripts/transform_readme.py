@@ -1,42 +1,28 @@
 """
 Rewrite the relative addresses in README.md into absolute GitHub URLs, for the PyPI project page.
 
-`readme = "README.md"` in `[project]` makes this file the description PyPI renders. README.md is
-written for GitHub, where `docs/cli-contract.md` resolves against the repository; on the project
-page there is no repository to resolve against and every such address is a 404. Measured on this
-README 2026-07-31: **10** of them — 8 relative markdown links, `assets/tooprolix.gif`, and the
-`<a href="LICENSE">` behind the licence badge. `twine check` sees none of this: it validates the
-METADATA envelope, never the links inside the description.
-
-The technique is ruff's (`scripts/transform_readme.py` at a2635fd8): a committed transformer run
-before every build, which **raises** rather than warns when the input is not the shape it expects.
-The logic is not ruff's — their script swaps one `<picture>` block for one `<img>` and knows nothing
-about links.
+`readme = "README.md"` in `[project]` makes this file the description PyPI renders, where there is
+no repository for a relative address to resolve against and every one of them is a 404. `twine
+check` validates the METADATA envelope, never the links inside the description.
 
 # What makes this a guard rather than a best effort
 
 Three refusals, and the third is the one that matters:
 
-  1. a relative address naming a file that is not in the checkout is a build failure — the link is
-     already broken on GitHub, and rewriting it would only move the 404;
-  2. a relative address that escapes the repository (`../`) is a build failure — it resolves on the
-     author's machine and nowhere else. **The check is on the resolved path, never on the text**:
-     `./`, `..` and symlinks defeat any lexical prefix test;
-  3. a README with **no** relative address at all is a build failure. That is the silent case: the
-     document was restructured, this script now does nothing, and without this refusal every gate
-     stays green while the transformer has quietly stopped being wired to anything.
+  1. an address naming a file not in the checkout — already broken on GitHub, and rewriting it
+     would only move the 404;
+  2. an address escaping the repository (`../`) — it resolves on the author's machine and nowhere
+     else. **The check is on the resolved path, never on the text**: `./`, `..` and symlinks defeat
+     any lexical prefix test;
+  3. **no** relative address at all. That is the silent case: the document was restructured, this
+     script now does nothing, and without this refusal every gate stays green while the transformer
+     has quietly stopped being wired to anything.
 
-🔴 **And the verification does not share the rewriter's eyes.** It used to: the check at the end of
-`transform` re-ran the rewriting regex, so it was blind exactly where the rewriter was blind and
-could only confirm that the rewriter had done what the rewriter could see. Measured on a real tree
-2026-07-31 — a reference-style `[g]: docs/cli-contract.md` definition and a single-quoted
-`href='docs/rules-and-configuration.md'` BOTH survived a run that printed `rewrote 11 relative
-addresses` and exited **0**, while a link inside a fenced block was wrongly rewritten.
-
-The output is now verified by `rendered_addresses`, which renders the markdown with the library PyPI
-itself uses and reads the `href`/`src` of the resulting HTML. It shares no pattern with the rewriter,
-so a syntax `ADDRESS` has never heard of still stops the build. `ADDRESS` is the rewriter's reach;
-the renderer is the judge.
+**The verification must not share the rewriter's eyes.** Re-running the rewriting regex would be
+blind exactly where the rewriter is blind. So `rendered_addresses` renders the markdown with the
+library PyPI itself uses and reads the `href`/`src` of the resulting HTML: `ADDRESS` is the
+rewriter's reach, the renderer is the judge, and a syntax `ADDRESS` has never heard of still stops
+the build.
 
 Usage (the workflow step, run from the repository root, before maturin reads the README):
 
@@ -75,7 +61,7 @@ CODE = re.compile(r"(?ms)^```.*?^```|`[^`\n]*`")
 #     by the first version and survived a run that reported success.
 #   * reference-style definitions  `[g]: x` on its own line, whose target lives nowhere near a `](`.
 #
-# ⚠️ This list is not the guard, and must never be treated as one. It is the rewriter's reach;
+# This list is not the guard, and must never be treated as one. It is the rewriter's reach;
 # [`rendered_addresses`] is what decides whether the reach was enough, and it shares nothing with
 # this pattern. A fourth syntax (an unquoted attribute, say) reaches the verifier and fails the
 # build — which is what `test_a_shape_the_rewriter_misses_is_a_build_failure_not_a_silent_pass`
@@ -96,7 +82,7 @@ def _is_relative(address: str) -> bool:
     """
     Whether `address` needs a repository to resolve against.
 
-    🔴 **`":" in address` is not the question, and getting it wrong is wrong in both directions.**
+    **`":" in address` is not the question, and getting it wrong is wrong in both directions.**
     That was the test here, and it judged `1:missing.md` ABSOLUTE — a browser resolves it against
     the project page, so it is a 404 in waiting that the transformer walked past — while judging
     `//img.shields.io/x.svg` RELATIVE, which would have rewritten a working protocol-relative URL
@@ -125,7 +111,7 @@ def relative_addresses(text: str) -> list[str]:
     """
     Every address the REWRITER can see that only resolves inside a checkout, in document order.
 
-    ⚠️ **Not the verifier.** This is what [`transform`] rewrites, so it is blind to any syntax
+    **Not the verifier.** This is what [`transform`] rewrites, so it is blind to any syntax
     [`ADDRESS`] does not carry — which is precisely why the check at the end of [`transform`] is
     [`rendered_addresses`] instead. Kept public because "did the shape of the README change?" is a
     question about the rewriter's reach, and the tests ask it directly.
@@ -191,7 +177,7 @@ def code_content(text: str) -> list[str]:
     `href` to compare. Measured: a `~~~markdown` fence containing `[x](docs/cli-contract.md)` came
     out with an absolute URL inside it and every check here passed.
 
-    ⚠️ **The fix was NOT to teach [`CODE`] about `~~~`.** That surface had already been widened by
+    **The fix was NOT to teach [`CODE`] about `~~~`.** That surface had already been widened by
     one shape twice, and the third time would have been the same defect one shape later. Comparing
     the RENDERED code of the document before and after asks the question the enumeration was only
     approximating — *did any code change?* — and is blind to which fence syntax produced it, so
@@ -207,7 +193,7 @@ def rendered_addresses(text: str) -> list[str]:
     """
     Every `href`/`src` the PyPI renderer produces for `text`, in document order.
 
-    🔴 **This is the independent half of the guard and it must stay independent.** Verifying with
+    **This is the independent half of the guard and it must stay independent.** Verifying with
     [`relative_addresses`] — the rewriter's own regex — is what the first version of this script did,
     and it meant the verifier was blind exactly where the rewriter was blind: it graded its own
     output. Measured on a real tree 2026-07-31, before this function existed: a reference-style
@@ -303,7 +289,7 @@ def transform(text: str, root: Path) -> str:
     pieces.append(text[cursor:])
     rewritten = "".join(pieces)
 
-    # 🔴 GRADE THE ARTIFACT, AND WITH DIFFERENT EYES. This used to re-run `relative_addresses` — the
+    # GRADE THE ARTIFACT, AND WITH DIFFERENT EYES. This used to re-run `relative_addresses` — the
     # rewriter's own regex — so it could only ever confirm that the rewriter had done what the
     # rewriter could see. `rendered_addresses` renders the markdown the way PyPI does and reads the
     # resulting `href`/`src`, so a syntax `ADDRESS` has never heard of still stops the build here.
@@ -311,7 +297,7 @@ def transform(text: str, root: Path) -> str:
         message = f"relative addresses survived the transformation: {survivors}"
         raise ReadmeNotInExpectedFormatError(message)
 
-    # 🔴 AND THE OTHER DIRECTION, which the check above is structurally blind to: code the rewriter
+    # AND THE OTHER DIRECTION, which the check above is structurally blind to: code the rewriter
     # CORRUPTED. A link inside a fence renders as text whether or not it was rewritten, so no
     # `href` ever differs. Comparing the rendered code before and after is what sees it, and it does
     # not care which fence syntax was used — see [`code_content`].

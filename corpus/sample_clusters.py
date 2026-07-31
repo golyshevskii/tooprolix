@@ -1,9 +1,8 @@
 """
-Draw the AC1 annotation sample of `TPX003` clusters and print it with the prose to be judged.
+Draw the annotation sample of `TPX003` clusters and print it with the prose to be judged.
 
-AC1 is "precision >= 0.8 on a hand-annotated sample of at least 20 `TPX003` findings", and this
-script owns the two decisions that make that number mean anything. Both are recorded decisions of
-the epic, not choices made here:
+The precision figure the sample produces means nothing without the two decisions below, so this
+script owns both:
 
 * **Near clusters only, by default.** A cluster whose weakest edge is exactly 1.0 holds
   definitionally identical text; asking whether one of two identical explanations should be merged
@@ -13,11 +12,9 @@ the epic, not choices made here:
   Measured on the runs in `corpus/runs/`, the population is large enough that the conservatism costs
   nothing.
 
-  ⚠️ **This is AC1's population and a default, not a ceiling.** `--population exact|all` exists for
-  the anti-false-positive gate of `close-anti-fp-gate-with-public-reference`, whose AC8 requires the
-  exact clusters to be measured too: at `v0.4.0` they are **457 of 617**, and every precision number
-  this epic owns was drawn near-only. The population actually used is printed in the sample's own
-  heading, so a number can never be read under the wrong one.
+  **This is a default, not a ceiling.** `--population exact|all` exists because the exact clusters
+  need measuring too — at `v0.4.0` they are **457 of 617**. The population actually used is printed
+  in the sample's own heading, so a number can never be read under the wrong one.
 * **Round-robin over repositories.** A global prefix over `(repo, path, line)` in ASCII order lies
   entirely inside `OpenHands` and never reaches `langgraph` or `pydantic`.
 
@@ -80,7 +77,7 @@ def validate_run(name: str, report: Mapping[str, Any]) -> None:
     """
     Refuse a run document that is not shaped like one, naming the file.
 
-    🔴 **The container, not one more key.** A previous round made a missing `weakest` fatal, and the
+    **The container, not one more key.** A previous round made a missing `weakest` fatal, and the
     document around it was left unvalidated — so renaming the top-level `findings` to `findings_v2`
     dropped the sampled population from **586 to 501** and made `07-klavis` vanish entirely, with no
     error, no warning and no exit code. Hardening the key that was exploited leaves its container
@@ -161,7 +158,7 @@ def tpx003_clusters(repo: str, report: Mapping[str, Any], population: Population
 
     `MalformedFinding` if a `TPX003` finding carries no readable `weakest.similarity`.
 
-    🔴 **This used to be `if weakest is None: continue`, and that is a guard a rename switches
+    **This used to be `if weakest is None: continue`, and that is a guard a rename switches
     off.** Measured on a copy of the corpus: renaming `weakest` to `weakest_v2` on six findings
     dropped the sampled population from 618 to 612 with no error, no warning and no exit code — the
     clusters simply stopped existing, and every rate computed from them would have been quietly

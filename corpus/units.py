@@ -1,11 +1,10 @@
 """
-AC1b — compare the four candidate units of "prose volume" at an equal alert volume.
+Compare the four candidate units of "prose volume" at an equal alert volume.
 
-The unit that ships is **words of the normalised text**. The council that chose it (codex + Fable
-+ Opus, 2026-07-26) was unanimous and said so itself: what had been measured was how far the units
-*agree* with one another, and agreement is structurally incapable of showing which one is more
-precise. No true positive of a volume rule has ever been annotated. This script produces the
-material for that annotation, and it is built around four constraints:
+The unit that ships is **words of the normalised text**. What the earlier comparison measured was
+how far the units *agree* with one another, and agreement is structurally incapable of showing which
+one is more precise. This script produces the material for annotating a true positive instead, and
+it is built around four constraints:
 
 1. **The blocks come from the shipped extractor.** `tooprolix.prose_blocks(path, source)` is the
    pyo3 export of `extract()` — the same function the rule reads, including its `>= 2 lines AND
@@ -401,7 +400,7 @@ def verify(blocks: Sequence[Block], runs_dir: Path) -> bool:
     word count off these blocks, so a silent disagreement would mean the comparison is about a
     different quantity from the one the rule uses.
 
-    ⚠️ **What this does and does not constrain.** It compares *finding addresses*, so it pins the
+    **What this does and does not constrain.** It compares *finding addresses*, so it pins the
     ~3% of blocks that carry a volume finding in both directions — a lost one disappears from the
     replay, an invented one appears. It says **nothing** about the other ~97%: dropping a
     finding-free file leaves this green while moving every calibrated threshold and the whole

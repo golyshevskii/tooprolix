@@ -123,7 +123,7 @@ jobs:
           # would be a guard that fails open, disabled by the checkout depth of whoever runs it,
           # and this gate has already had two review findings of exactly that shape.
           #
-          # ⚠️ EVERY job that runs the Python tests needs this, not just this one. `coverage` runs
+          # EVERY job that runs the Python tests needs this, not just this one. `coverage` runs
           # them too, through `make cov` -> `py.cov`, and it went red for the identical reason after
           # this job was fixed alone. Found by grepping the workflow for the jobs that actually run
           # them rather than by assuming; `grep -n 'run: make' .github/workflows/ci.yml` is the check.
@@ -168,7 +168,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     # No uv and no `UV_MANAGED_PYTHON` here, and their absence is the point: with the pyo3 boundary
-    # gone (Decisions #19.1) `make rust.lint` compiles nothing that looks for an interpreter, so a
+    # gone `make rust.lint` compiles nothing that looks for an interpreter, so a
     # Python setup step would only be a step that can fail for a reason this gate does not care
     # about. Same for `cargo-doc` below, which only documents.
     #
@@ -199,7 +199,7 @@ jobs:
 
       # The linkage guard: it reads the binary cargo just linked and fails on any dynamic dependency
       # naming Python. It was `rust.build.nopython` and rode here as the only job that compiled the
-      # crate with the pyo3 feature OFF; the feature is gone (Decisions #19.1) and this is now simply
+      # crate with the pyo3 feature OFF; the feature is gone and this is now simply
       # the build, but the assertion is still worth its seconds — it is what says the executable the
       # wheel ships runs where no interpreter does. It rides in this job rather than a new one
       # because a new job would be a new required status check.
@@ -226,7 +226,7 @@ jobs:
       # KEEP THIS. It was deleted with the pyo3 boundary and this job went red on PR #34 —
       # `uv run python3 is available in this environment: Os { code: 2, kind: NotFound }`.
       #
-      # The deletion was reasoned from the build: with pyo3 gone (Decisions #19.1) nothing here
+      # The deletion was reasoned from the build: with pyo3 gone nothing here
       # *compiles* against an interpreter, which is true. But two TESTS shell out to `uv`, for
       # reasons that have nothing to do with pyo3 and predate this task:
       #
@@ -313,7 +313,7 @@ jobs:
   # It re-runs the Rust tests under instrumentation and the Python tests under coverage, so it is
   # the slowest job here.
   #
-  # ⚠️ It is NOT a repeat of the whole `cargo-test` job: `cargo llvm-cov` does not run doctests
+  # It is NOT a repeat of the whole `cargo-test` job: `cargo llvm-cov` does not run doctests
   # without `--doctests`, which needs a nightly toolchain, so this job instruments 188 of the 194
   # tests `make rust.test` runs. `cargo-test` above remains the only job that executes the 6
   # doctests. Written down in the Makefile's coverage block too, next to the other exclusions.

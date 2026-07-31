@@ -86,7 +86,7 @@ class TestTheBenchmarkStopsWhenARunFails:
         header always prints, so the distinguishing evidence is the *absence of a data row* — with
         `continue` both assertions below flip.
 
-        ⚠️ **The binary arrives through `TOOPROLIX_BIN`, and that is load-bearing.** It used to be
+        **The binary arrives through `TOOPROLIX_BIN`, and that is load-bearing.** It used to be
         passed as `main([str(binary)])`, and deleting the positional channel turned this test
         VACUOUS without turning it red: `main` began returning 2 before printing anything, so
         `code != 0` and `"ms" not in out` both held for a reason that has nothing to do with the
@@ -382,7 +382,7 @@ class TestTheShellRunnersAreProvedByRunningThem:
         cannot — it verifies every pin in `corpus.lock` against a real git checkout first and exits
         1 long before the binary is touched.
 
-        ⚠️ **That gap is measured, not assumed, and it is an accepted residual.** Applying this
+        **That gap is measured, not assumed, and it is an accepted residual.** Applying this
         exact rewrite to each script: on `determinism_check.sh` **this test fails**; on
         `run_all.sh` the suite comes back **229 passed** — nothing notices. So `run_all.sh`'s
         reachable proof stops at the guard, and closing it needs the 773 MB corpus, which is out of

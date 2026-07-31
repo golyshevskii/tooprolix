@@ -239,12 +239,12 @@ type Shingle<'a> = [&'a str; SHINGLE_K];
 /// share no gram under either definition. Empty is also the safe side: it can only withhold a
 /// finding, never invent one.
 ///
-/// ⚠️ **The empty set is REACHABLE, and used to be documented here as impossible.** The claim was
-/// that [`crate::extract::MIN_BLOCK_WORDS`] is 8, so no extracted block can be shorter than a
-/// shingle — true of the *whole* block, which is what that constant counts, and false of the
-/// [`crate::extract::ProseBlock::narrative`] this function is now handed. A docstring that is
-/// nothing but a parameter table is 8 words or more and has an empty narrative, so it lands here
-/// and gets an empty set, which is exactly how it takes no part in the rule.
+/// **The empty set is REACHABLE, and it is tempting to document it as impossible.** The reasoning
+/// that fails is "[`crate::extract::MIN_BLOCK_WORDS`] is 8, so no extracted block can be shorter
+/// than a shingle": true of the *whole* block, which is what that constant counts, and false of the
+/// [`crate::extract::ProseBlock::narrative`] this function is handed. A docstring that is nothing
+/// but a parameter table is 8 words or more and has an empty narrative, so it lands here and gets
+/// an empty set, which is exactly how it takes no part in the rule.
 fn shingles(normalized: &str) -> Vec<Shingle<'_>> {
     let words: Vec<&str> = normalized.split_whitespace().collect();
     // `collect` sizes itself exactly here, unlike the `HashSet` this replaced: `Windows` is an
@@ -624,7 +624,7 @@ pub fn duplicates(blocks: &[ProseBlock]) -> Report<'_> {
 /// nothing left. `exclude-reference-scaffolding-from-tpx003` had to choose a floor, and the choice
 /// was measured on the six pinned checkouts rather than argued:
 ///
-/// ⚠️ **This section previously carried a comparison table that does not reproduce, and it is
+/// **This section previously carried a comparison table that does not reproduce, and it is
 /// removed rather than patched.** It claimed an eight-word floor yields corpus `TPX003` **543**
 /// against non-empty's **617**. Re-measured by the supervisor 2026-07-30 against *this* code, by
 /// changing the constant below to [`crate::extract::MIN_BLOCK_WORDS`], rebuilding, and running
@@ -643,23 +643,22 @@ pub fn duplicates(blocks: &[ProseBlock]) -> Report<'_> {
 /// the two paths already agree. A larger floor is a **recall** decision that this task's Out-of-scope
 /// forbids taking on a hunch, and the measurement that would justify one does not exist yet.
 ///
-/// # Why [`SHINGLE_K`] and not "non-empty", which is what this used to say
+/// # Why [`SHINGLE_K`] and not "non-empty"
 ///
-/// Non-empty left the two edge paths disagreeing about the population, and the review measured the
-/// false positive that follows. The **near** path already refuses a narrative of fewer than
+/// Non-empty leaves the two edge paths disagreeing about the population, and a measured false
+/// positive follows. The **near** path already refuses a narrative of fewer than
 /// [`SHINGLE_K`] words: such a text has no shingle, so the inverted index never proposes it and
 /// `jaccard` never sees it. The **exact** path had no floor, so a one-word residue could only ever
 /// be *matched*, never *scored* — and no threshold could reach it. Two unrelated callables both
 /// summarised `"""Send.` above different `Args:` tables came out as one finding at similarity 1.000.
 ///
-/// ⚠️ **This function has ONE caller — `exact_groups`.** An earlier revision of this comment said
-/// "both paths now ask this one function, so the population is one decision in one place"; `grep -n
-/// 'is_compared('` returns the definition and that single call site, so the sentence described an
-/// intention rather than the code. The near path reaches the same population by a different
-/// mechanism (no shingle below [`SHINGLE_K`] words), which is why the *effect* matches and the
-/// *claim* did not. Anyone raising this floor must change both places; this one will not do it alone.
+/// **This function has ONE caller — `exact_groups`.** It is NOT the one place the population is
+/// decided: `grep -n 'is_compared('` returns the definition and that single call site. The near
+/// path reaches the same population by a different mechanism (no shingle below [`SHINGLE_K`]
+/// words), so the *effect* matches while the ownership does not. Anyone raising this floor must
+/// change both places; this one will not do it alone.
 ///
-/// 🔵 **Known residual, and it is the same class the task set out to remove rather than a new one.**
+/// **Known residual.**
 /// Two unrelated callables whose narratives are the *same* templated summary of at least
 /// [`SHINGLE_K`] words still form a finding at similarity 1.000 — measured on a constructed pair
 /// sharing `"""Sends the prepared request now.` above different `Args:` tables. This is the
@@ -1235,7 +1234,7 @@ preserve_existing_api_key: bool = False
         }
     }
 
-    /// 🔴 **Two unrelated callables that happen to share a one-word summary are not a finding** —
+    /// **Two unrelated callables that happen to share a one-word summary are not a finding** —
     /// the false positive this task's own first cut introduced.
     ///
     /// `send_email` and `send_packet` document different parameters, do different things and share
@@ -1281,7 +1280,7 @@ preserve_existing_api_key: bool = False
         );
     }
 
-    /// 🔴 **Two logically opposite statements are not one explanation.**
+    /// **Two logically opposite statements are not one explanation.**
     ///
     /// The end-to-end form of the [`crate::extract::normalize`] defect that
     /// `close-anti-fp-gate-with-public-reference` measured on the pinned corpus
@@ -1299,7 +1298,7 @@ preserve_existing_api_key: bool = False
     ///
     /// # What this pins, and what it deliberately does not
     ///
-    /// 🔴 **It pins that the score is no longer 1.000. It does not pin that nothing is reported.**
+    /// **It pins that the score is no longer 1.000. It does not pin that nothing is reported.**
     /// The first draft of this test asserted an empty cluster list and failed after the fix at
     /// **0.769** — and that failure is the test being wrong, not the code. Two 24-word sentences
     /// differing in one token *are* near-duplicates by any Jaccard measure, and suppressing them is

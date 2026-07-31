@@ -43,10 +43,9 @@ classifiers = [
 # `tests/unit/test_measure.py` pins this string and requires MIN_INTERPRETER to stay above it.
 requires-python = ">=3.11"
 
-# ⚠️ THERE IS DELIBERATELY NO `[project.scripts]` HERE, and its absence is load-bearing.
+# THERE IS DELIBERATELY NO `[project.scripts]` HERE, and its absence is load-bearing.
 #
-# It used to read `tooprolix = "tooprolix:main"`, pointing at a `#[pyfunction]` inside the pyo3
-# extension module. With `bindings = "bin"` below, maturin puts the compiled executable into
+# With `bindings = "bin"` below, maturin puts the compiled executable into
 # `tooprolix-<version>.data/scripts/tooprolix` and the installer copies it onto PATH itself — a
 # console script would be a second, conflicting `tooprolix` in the same place. ruff has no
 # `[project.scripts]` either, for the same reason.
@@ -71,19 +70,17 @@ Issues = "https://github.com/golyshevskii/tooprolix/issues"
 # equally not this repository's prose: `dup-corpus/` is duplicated on purpose so TPX003 has
 # something to find, and measuring it would report our own test data as a defect in our own source.
 #
-# ⚠️ This prunes a directory during a WALK. `tooprolix check tests/fixtures/broken` still checks that
+# This prunes a directory during a WALK. `tooprolix check tests/fixtures/broken` still checks that
 # tree and still exits 2 — the walker never sees `tests/fixtures` as an entry to prune when the walk
 # starts below it, and a path named directly on the command line is checked regardless. That is
 # ruff's default and it is what keeps the fixture tests honest.
 exclude = ["tests/fixtures"]
 
 [tool.maturin]
-# The wheel carries the NATIVE EXECUTABLE, not an importable module — epic 2 Decisions #19.1, which
-# explicitly overturns epic 1's "our wheel must carry an importable module". That rule was written
-# while a Python API was still promised; the API is gone, and with it the reason for the rule.
+# The wheel carries the NATIVE EXECUTABLE, not an importable module.
 #
-# It is ruff's line, but the argument is this repository's own measurement: every number in two
-# epics was taken on the standalone binary `target/release/tooprolix` (`corpus/run_all.sh:53`,
+# It is ruff's line, but the argument is this repository's own measurement: every corpus number was
+# taken on the standalone binary `target/release/tooprolix` (`corpus/run_all.sh:53`,
 # `corpus/determinism_check.sh:38`, `corpus/bench.py:55`). Shipping the extension module instead
 # would publish the single class of artifact on which nothing here has ever been measured.
 #
@@ -121,7 +118,7 @@ bindings = "bin"
 #      offers `LGPL-2.1-or-later` — `r-efi 6.0.0`, a UEFI target dependency — is **not in the
 #      shipped graph at all** and does not appear in the SBOM.
 #
-# ⚠️ Revisit when a copyleft licence enters the graph, or when the first corporate consumer asks
+# Revisit when a copyleft licence enters the graph, or when the first corporate consumer asks
 # for a NOTICE. The SBOM is the artifact to answer them from; it is generated from the real build,
 # so it cannot go stale the way a checked-in notice file would.
 

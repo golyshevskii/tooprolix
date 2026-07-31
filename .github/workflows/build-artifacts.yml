@@ -1,8 +1,8 @@
 name: Build artifacts
 
-# 🔴 THERE IS NO PUBLISH STEP IN THIS FILE, AND THAT IS THE POINT OF IT.
+# THERE IS NO PUBLISH STEP IN THIS FILE, AND THAT IS THE POINT OF IT.
 #
-# This is the reversible half of publication (epic 2 Decisions #2): it builds every artifact the
+# This is the reversible half of publication: it builds every artifact the
 # supported matrix promises, installs each one and runs it, and uploads the results as run
 # artifacts. Nothing is uploaded to PyPI, TestPyPI or crates.io, no tag is created, and no
 # credential is read — `permissions: contents: read` and no `id-token`, so even an OIDC exchange is
@@ -13,7 +13,7 @@ name: Build artifacts
 # GitHub reads the dispatch definition from the default branch, so on a feature branch that adds
 # this file manual dispatch is not available at all.
 #
-# 🔴 THE `paths:` FILTER WAS REMOVED, AND ITS REMOVAL IS THE FIX. It listed five files —
+# THE `paths:` FILTER WAS REMOVED, AND ITS REMOVAL IS THE FIX. It listed five files —
 # `Cargo.toml`, `pyproject.toml`, this workflow, and the two scripts — under a header claiming those
 # five "decide what an artifact contains". They do not: `README.md` is the description PyPI renders,
 # `build.rs` decides the date, `src/**` and `Cargo.lock` are the binary, `LICENSE` and `docs/**` ride
@@ -96,7 +96,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           enable-cache: true
 
-      # 🔴 THE ONLY WAY A RELEASE ARTIFACT LEARNS WHAT IT WAS BUILT FROM.
+      # THE ONLY WAY A RELEASE ARTIFACT LEARNS WHAT IT WAS BUILT FROM.
       #
       # `tooprolix --version` prints the COMMIT date, resolved by build.rs as SOURCE_DATE_EPOCH ->
       # git -> `unknown`. An sdist carries no `.git`, and since `add-version-and-rules-commands` it
@@ -127,7 +127,7 @@ jobs:
       # directory with no `.git` and no repository around it, is the only honest test of that — a
       # `cargo package --list` shows what is inside but not whether it builds.
       #
-      # 🔴 THE WHEEL THIS STEP PRODUCES IS EVIDENCE, NOT A PUBLISHABLE ARTIFACT, and its own tag says
+      # THE WHEEL THIS STEP PRODUCES IS EVIDENCE, NOT A PUBLISHABLE ARTIFACT, and its own tag says
       # so: measured in run 30605245528 it came out `py3-none-manylinux_2_34_x86_64`, because it is
       # built directly on the runner rather than in the manylinux 2_17 container the matrix leg uses.
       # glibc 2.34 is a far higher floor than the one this project promises. It lives in
@@ -142,7 +142,7 @@ jobs:
             --manifest-path from-sdist/tooprolix-*/Cargo.toml \
             --out dist-from-sdist --compatibility pypi
 
-      # 🔴 EXACTLY ONE FILE PER DIRECTORY, OR THIS FAILS. `$(echo dist/*.whl)` looks like "the
+      # EXACTLY ONE FILE PER DIRECTORY, OR THIS FAILS. `$(echo dist/*.whl)` looks like "the
       # wheel" and is really a space-joined list: run 30604813542 had a stray wheel in `dist/` and
       # handed uv `<macos wheel> <linux wheel>` as one path, which then failed with a URL-encoded
       # space in it. That is a guard failing open — the step before it had already "passed" on the
@@ -166,7 +166,7 @@ jobs:
       - name: twine check
         run: uvx twine check --strict "$SDIST" "$WHEEL_FROM_SDIST"
 
-      # 🔴 AC3 AND AC8, GATED IN CODE RATHER THAN OBSERVED IN A REPORT. `twine check --strict`
+      # AC3 AND AC8, GATED IN CODE RATHER THAN OBSERVED IN A REPORT. `twine check --strict`
       # validates the METADATA envelope and the description's markup; it never asks what the licence
       # says, whether a LICENSE file is actually in the archive, whether the sdist carries the two
       # documents the README links to, or which file the shipped description came from. All three
@@ -184,7 +184,7 @@ jobs:
       - name: install-smoke the wheel built from the sdist
         run: scripts/install-smoke.sh "$WHEEL_FROM_SDIST" "$(git log -1 --format=%cs)"
 
-      # 🔴 THE NON-CIRCULAR HALF, AND IT PINS AN ACCEPTED LIMITATION RATHER THAN HIDING ONE.
+      # THE NON-CIRCULAR HALF, AND IT PINS AN ACCEPTED LIMITATION RATHER THAN HIDING ONE.
       #
       # Every other step here runs with SOURCE_DATE_EPOCH exported, so "the sdist produces a dated
       # binary" was only ever proved in an environment that handed it the date. A real
@@ -263,7 +263,7 @@ jobs:
           target: ${{ matrix.platform.target }}
           manylinux: ${{ matrix.platform.manylinux }}
           args: --release --locked --out dist --compatibility pypi
-          # 🔴 THE MANYLINUX WHEEL BUILDS INSIDE A DOCKER CONTAINER, AND THE JOB'S ENVIRONMENT DOES
+          # THE MANYLINUX WHEEL BUILDS INSIDE A DOCKER CONTAINER, AND THE JOB'S ENVIRONMENT DOES
           # NOT FOLLOW IT IN. Found by the smoke rather than by reading the action: run 30605047058
           # was green through `Build wheel`, the tag check and `twine check`, and then
           #
@@ -279,7 +279,7 @@ jobs:
           # a default is not a promise, and this is the line that keeps the tag honest if it changes.
           MACOSX_DEPLOYMENT_TARGET: "11.0"
 
-      # 🔴 The count comes FIRST, and it is not tidiness. `$(echo dist/*.whl)` is a space-joined
+      # The count comes FIRST, and it is not tidiness. `$(echo dist/*.whl)` is a space-joined
       # list, and `basename` on such a list silently answers with the last entry — so in run
       # 30604813542 a check reported PASS on a directory holding a foreign macOS wheel beside the
       # real one, and the failure only surfaced two steps later inside uv. A guard that grades
@@ -309,12 +309,12 @@ jobs:
       # `.dist-info/WHEEL` and the filename to agree with it: the in-archive read is what a resolver
       # honours, the filename read is what catches a rename.
       #
-      # ⚠️ It compares TAG SETS, not strings. `.dist-info/WHEEL` carries one `Tag:` line per tag
+      # It compares TAG SETS, not strings. `.dist-info/WHEEL` carries one `Tag:` line per tag
       # while the filename carries PEP 425's compressed set, and run 30613111390 went red on the
       # linux leg for exactly that difference in representation. macOS and Windows wheels are
       # single-tag, which is why only CI could find it.
       #
-      # ⚠️ WHAT THIS DOES NOT CHECK, said plainly: no symbol versions are audited. Nothing opens the
+      # WHAT THIS DOES NOT CHECK, said plainly: no symbol versions are audited. Nothing opens the
       # ELF to compare its `GLIBC_*` requirements against the 2.17 the tag promises — **the
       # manylinux build container IS the whole guarantee** for that, being a sysroot old enough that
       # a newer symbol cannot be linked in the first place. If the linux leg ever stops going

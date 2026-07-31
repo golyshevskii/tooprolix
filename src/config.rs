@@ -39,7 +39,7 @@
 //! limits to the same file, and a CI job that changed directory would silently change the
 //! thresholds it was enforcing.
 //!
-//! ⚠️ **The path is canonicalised before anything is compared or walked.** `..` components and
+//! **The path is canonicalised before anything is compared or walked.** `..` components and
 //! symlinks defeat every lexical answer to "which directory is this in", and that is a recorded
 //! defect of this project rather than a hypothesis. [`std::fs::canonicalize`] resolves both, which
 //! is why the search starts from its result and not from the string the user typed. (The *output*

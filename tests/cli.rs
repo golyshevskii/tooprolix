@@ -2715,7 +2715,7 @@ fn an_unreadable_directory_inside_the_tree_is_skipped_rather_than_fatal() {
 /// | `outsider.py`, a symlink out of this tree | **yes** | same |
 /// | `dead.py`, a symlink that dangles | **yes** | same |
 ///
-/// # 🔴 The middle two rows used to read **no**, and deleting that exception is the point
+/// # The middle two rows used to read **no**, and deleting that exception is the point
 ///
 /// This table was a discrimination three times over, and each version was wrong in a way the next
 /// one only narrowed:
@@ -2743,7 +2743,7 @@ fn an_unreadable_directory_inside_the_tree_is_skipped_rather_than_fatal() {
 /// six pinned checkouts (crewAI 0, langgraph 0, openai-agents-python 0, `OpenHands` 0, pydantic 0,
 /// requests 0) and zero in this repository.
 ///
-/// ⚠️ Naming a symlink directly — `tooprolix check alias.py` — still **measures** it, and that is
+/// Naming a symlink directly — `tooprolix check alias.py` — still **measures** it, and that is
 /// not an inconsistency. An explicit argument is an instruction about one file, not a claim about a
 /// tree's completeness; ruff resolves explicit arguments past its own exclusions for the same
 /// reason. `a_single_file_is_checked_and_the_help_says_what_that_misses` and the direct-FIFO half
@@ -2879,7 +2879,7 @@ fn a_path_named_python_that_is_not_a_regular_file_is_not_counted_as_measured() {
 /// otherwise-clean tree, one link, and `All checks passed!` with exit **0** over a `TPX001` nobody
 /// had read.
 ///
-/// 🔴 **The link deliberately resolves to a file inside this very tree**, which is the case that
+/// **The link deliberately resolves to a file inside this very tree**, which is the case that
 /// was silent through all three previous versions of the guard and the one the `fable` review
 /// finally broke: the target is `notes.txt`, under the walk root, resolvable — and never walked,
 /// because it is not named `*.py`. A hidden directory, a gitignored path and an `exclude`d path all
@@ -3089,7 +3089,7 @@ fn the_version_is_the_one_in_cargo_toml_and_carries_a_build_date() {
 /// bug when it happens — but it is a *number*, on stderr, with the panic message beside it, which
 /// is the difference between a diagnosable failure and a signal.
 ///
-/// ⚠️ **Two things this test deliberately does NOT do.**
+/// **Two things this test deliberately does NOT do.**
 ///
 /// It does not assert `cfg!(panic = "unwind")`. Cargo forces unwinding for test harnesses and warns
 /// that `panic` is ignored for the test profile, so that assertion is true no matter what
@@ -3141,11 +3141,11 @@ fn no_cargo_profile_aborts_on_panic() {
 /// The runtime half of the `[profile.release]` guarantee. `no_cargo_profile_aborts_on_panic` above
 /// reads the manifest; this one runs a binary compiled under the profile and watches it die.
 ///
-/// ⚠️ **Both halves are needed, and the reason is narrower than it first looks.** The manifest check
+/// **Both halves are needed, and the reason is narrower than it first looks.** The manifest check
 /// asserts that no profile *sets* `panic` — which is only a guarantee if the DEFAULT is `unwind`.
 /// It trusts that. This one verifies it, by watching a binary compiled under the profile die.
 ///
-/// 🔴 It does **not** cover `RUSTFLAGS`, and an earlier draft of this comment claimed it did. That
+/// It does **not** cover `RUSTFLAGS`, and an earlier draft of this comment claimed it did. That
 /// claim was measured and is false: `RUSTFLAGS="-C panic=abort" cargo test` does not produce an
 /// aborting test binary, it refuses to build at all —
 /// `error: building tests with panic=abort is not supported without -Zpanic_abort_tests`. So that
@@ -3215,7 +3215,7 @@ fn a_panic_in_a_release_build_stays_a_code_and_keeps_its_output() {
 /// passed. The containment has to be here as well as in `build.rs`; checking only the build script
 /// would leave a test that cannot fail for the thing it exists to check.
 ///
-/// ⚠️ **Both sides are canonicalised before they are compared.** On macOS `/tmp` is a symlink to
+/// **Both sides are canonicalised before they are compared.** On macOS `/tmp` is a symlink to
 /// `/private/tmp`, so `--show-toplevel` and `CARGO_MANIFEST_DIR` name the same directory with
 /// different strings whenever the checkout is reached through one — including in this epic's own
 /// scratch directories. A string comparison would fail closed on a perfectly good repository and

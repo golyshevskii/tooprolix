@@ -234,7 +234,7 @@ pub struct Documented {
 
 /// Every `TPX` number that has been spoken for, shipping or not, with its one-line description.
 ///
-/// 🔴 **This is not the registry of rules that exist — [`Rule::ALL`] is, and it stays three long.**
+/// **This is not the registry of rules that exist — [`Rule::ALL`] is, and it stays three long.**
 /// The distinction is load-bearing: `Rule::ALL` answers "which codes does this tool accept", and
 /// three separate consumers read it for that ([`Rule::from_code`], `ignore` validation in
 /// [`crate::config`], and marker parsing below). Adding a `TPX004` variant so that `--rules` could
@@ -703,7 +703,7 @@ mod tests {
         // mapping this module already owns, so a description is checked against the detector that
         // actually runs under that code rather than against nothing.
         //
-        // ⚠️ **This covers TPX001 and TPX002 and nothing else, deliberately.** Swapping the TPX003
+        // **This covers TPX001 and TPX002 and nothing else, deliberately.** Swapping the TPX003
         // and TPX004 descriptions still passes every test in this repository — measured. There is
         // no oracle to build for those two: TPX004 has no detector at all, and TPX003's would be a
         // keyword match of exactly the weak kind that reads as coverage without being any. The gap
@@ -1069,7 +1069,8 @@ mod tests {
     /// **Why 129 tests missed it, which is the part worth keeping:** the panic needs a **3-byte**
     /// lead. 2-byte (Cyrillic, Latin-1) and 4-byte (most emoji) characters both land byte 4 on a
     /// boundary and pass. So CJK, Devanagari and most of the BMP above U+0800 crashed while
-    /// `привет` and `🙂` did not — and every string in this module's tests was ASCII. The cases
+    /// `привет` and the 4-byte emoji below did not — and every string in this module's tests was
+    /// ASCII. The cases
     /// below therefore span all three widths deliberately: a fixture set that is "some non-ASCII"
     /// would have missed it too.
     ///
