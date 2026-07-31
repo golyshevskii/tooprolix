@@ -170,7 +170,12 @@ jobs:
     # No uv and no `UV_MANAGED_PYTHON` here, and their absence is the point: with the pyo3 boundary
     # gone (Decisions #19.1) `make rust.lint` compiles nothing that looks for an interpreter, so a
     # Python setup step would only be a step that can fail for a reason this gate does not care
-    # about. Same for `cargo-test` and `cargo-doc` below.
+    # about. Same for `cargo-doc` below, which only documents.
+    #
+    # It is NOT the same for `cargo-test`, and the first version of this comment said it was —
+    # which is what made deleting uv there look safe. It went red on PR #34. Compiling against an
+    # interpreter and *executing* something that shells out to one are different questions: two
+    # tests run `uv` for reasons unrelated to pyo3. See the note on that job.
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -217,6 +222,35 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      # KEEP THIS. It was deleted with the pyo3 boundary and this job went red on PR #34 —
+      # `uv run python3 is available in this environment: Os { code: 2, kind: NotFound }`.
+      #
+      # The deletion was reasoned from the build: with pyo3 gone (Decisions #19.1) nothing here
+      # *compiles* against an interpreter, which is true. But two TESTS shell out to `uv`, for
+      # reasons that have nothing to do with pyo3 and predate this task:
+      #
+      #   * `tests/cli.rs:559` runs `uv run python3` to prove the `schema_version: "2"` JSON
+      #     document is genuinely consumable by a Python consumer — the whole point of the schema
+      #     bump in `make-check-graceful-on-unreadable-files`;
+      #   * `tests/ruff_compatibility.rs:51` runs `uv run --only-group lint ruff` to prove the
+      #     `# !TPX00N` marker grammar stays invisible to ruff (`rename-noqa-marker-to-drop-prefix`).
+      #     It carries no `#[ignore]`; on PR #34 it simply never ran, because the run aborted at
+      #     `tests/cli.rs` first.
+      #
+      # The measurement that settles it, from the same workflow: `coverage` kept its `uv` and stayed
+      # GREEN while running the identical tests through `cargo llvm-cov`. Two jobs, same tests, one
+      # difference. So the rule for this job is **"does anything it executes shell out to `uv`?"**,
+      # not "does anything it builds need an interpreter?" — `git grep 'Command::new("uv")'` is the
+      # check, and it currently returns two hits.
+      #
+      # `cargo-clippy` and `cargo-doc` are correctly WITHOUT uv: they compile and document, they run
+      # no tests, and neither `make rust.lint` nor `make rust.doc` shells out.
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
 
       - name: Show the pinned toolchain
         run: rustup show
