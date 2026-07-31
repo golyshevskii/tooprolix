@@ -240,7 +240,7 @@ class TestTheArtifactCannotDefineWhatItIsGradedAgainst:
         30, so the coverage check fires first — and neither can `verify`, which hashes the run files
         before it draws. So the draw is exercised directly.
 
-        ⚠️ **Why the guard exists even though `round_robin` also refuses a short draw.** That refusal
+        **Why the guard exists even though `round_robin` also refuses a short draw.** That refusal
         is driven by the pre-registered `minimum`, so a profile registering `minimum: 0` slips past
         it. This is the backstop for exactly that case, and "the gate passed because it measured
         nothing" is the outcome it exists to prevent.
@@ -269,7 +269,7 @@ class TestTheArtifactCannotDefineWhatItIsGradedAgainst:
         measurement that can only pass. Refused at retrieval rather than at load, so that an
         undecided threshold does not also block a non-gate profile in the same file.
 
-        ⚠️ **The placeholder is CONSTRUCTED here rather than read from the real file.** This test
+        **The placeholder is CONSTRUCTED here rather than read from the real file.** This test
         used to assert that the live `holdout` profile refuses — which passed only while the owner
         had not yet chosen a number, and went red the moment they did. That is a test pinned to a
         transient state of the project instead of to the guarantee, and the guarantee is what has to
@@ -337,7 +337,7 @@ class TestDetectorProvenanceIsCheckedAgainstSomethingReal:
     """
     Review round 1, finding B4. `detector_tag` was free text that changed no outcome.
 
-    ⚠️ **Stated rather than overclaimed: none of this proves which binary produced a given JSON.**
+    **Stated rather than overclaimed: none of this proves which binary produced a given JSON.**
     Only re-running it does. What it rules out is a commit that does not exist, a dirty tree that
     does not say so, and a binary on disk that is not the one the artifact names.
     """

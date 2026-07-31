@@ -1,13 +1,11 @@
 //! The public API, exercised from OUTSIDE the crate.
 //!
 //! `Cargo.toml` carries `crate-type = ["rlib"]` precisely so this file can link the library, and
-//! until it existed nothing used that. It read `["cdylib", "rlib"]` until epic 2 Decisions #19.1 —
-//! `cdylib` was the pyo3 extension module and went with it; the `rlib` is what this file needs and
-//! is the reason the list is not simply deleted. Everything public was reachable only from
-//! `mod tests` *inside* `src/extract.rs`, where privacy cannot fail — so narrowing any item to
-//! `pub(crate)`, or dropping the `pub use crate::extract::Error` re-export, left fmt, clippy, every
-//! unit test, the doctest and all three Python gates green while breaking the CLI task that has to
-//! consume this contract.
+//! this file is the only reason that entry is not simply deleted. Without it everything public is
+//! reachable only from `mod tests` *inside* `src/extract.rs`, where privacy cannot fail — so
+//! narrowing any item to `pub(crate)`, or dropping the `pub use crate::extract::Error` re-export,
+//! leaves fmt, clippy, every unit test, the doctest and all three Python gates green while breaking
+//! any consumer of this contract.
 //!
 //! This test therefore touches **each public item once**. It is a compile-time guard first and a
 //! behaviour test second: if it stops compiling, the API surface moved.

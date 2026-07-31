@@ -1,16 +1,22 @@
 """
-AC1b — compare the four candidate units of "prose volume" at an equal alert volume.
+Compare the four candidate units of "prose volume" at an equal alert volume.
 
-The unit that ships is **words of the normalised text**. The council that chose it (codex + Fable
-+ Opus, 2026-07-26) was unanimous and said so itself: what had been measured was how far the units
-*agree* with one another, and agreement is structurally incapable of showing which one is more
-precise. No true positive of a volume rule has ever been annotated. This script produces the
-material for that annotation, and it is built around four constraints:
+The unit that ships is **words of the normalised text**. What the earlier comparison measured was
+how far the units *agree* with one another, and agreement is structurally incapable of showing which
+one is more precise. This script produces the material for annotating a true positive instead, and
+it is built around four constraints:
 
-1. **The blocks come from the shipped extractor.** `tooprolix.prose_blocks(path, source)` is the
-   pyo3 export of `extract()` — the same function the rule reads, including its `>= 2 lines AND
-   >= 8 words` filter. Nothing here re-implements block finding; a probe that re-implements the
-   thing it is measuring measures the probe.
+1. **The blocks come from the shipped extractor.** `load_blocks` calls
+   `tooprolix.prose_blocks(path, source)` — the same function the rule reads, including its
+   `>= 2 lines AND >= 8 words` filter. Nothing here re-implements block finding; a probe that
+   re-implements the thing it is measuring measures the probe.
+
+   **THIS SCRIPT DOES NOT CURRENTLY RUN.** `prose_blocks` was a pyo3 export, and the pyo3 boundary
+   is gone: `pyproject.toml` ships `bindings = "bin"` and `scripts/install-smoke.sh` asserts that
+   `import tooprolix` MUST raise. So `load_blocks` dies at its `import_module("tooprolix")` —
+   measured, `CORPUS_ROOT=/tmp python corpus/units.py --verify` →
+   `ModuleNotFoundError: No module named 'tooprolix'`. The numbers this file produced are recorded
+   in `corpus/REPORT.md`; reproducing them needs the extraction re-routed through the CLI first.
 2. **The word count is checked against the CLI before anything is built on it.** `--verify` replays
    the shipped limits (200 docstring / 150 comment, strictly greater) over these blocks and
    compares the resulting addresses with the `TPX001`/`TPX002` findings in `corpus/runs/`. If they
@@ -348,9 +354,14 @@ def check_population(counts: Mapping[str, int]) -> None:
 
 
 def load_blocks(corpus_root: Path, runs_dir: Path) -> list[Block]:
-    """Extract every prose block of every measured run through the shipped pyo3 export."""
-    # The wheel is a compiled extension, so its exports are invisible to a static checker; the
-    # import is by name for that reason and the boundary is typed `Any` here and nowhere else.
+    """
+    Extract every prose block of every measured run through the `tooprolix` Python export.
+
+    **Raises `ModuleNotFoundError` as it stands**: that export was the pyo3 extension module, which
+    the distribution no longer carries (`bindings = "bin"`). See the module docstring.
+    """
+    # The import is by name because a compiled extension's exports are invisible to a static
+    # checker; the boundary is typed `Any` here and nowhere else.
     tooprolix: Any = importlib.import_module("tooprolix")
     blocks: list[Block] = []
     counts: dict[str, int] = {}
@@ -401,7 +412,7 @@ def verify(blocks: Sequence[Block], runs_dir: Path) -> bool:
     word count off these blocks, so a silent disagreement would mean the comparison is about a
     different quantity from the one the rule uses.
 
-    ⚠️ **What this does and does not constrain.** It compares *finding addresses*, so it pins the
+    **What this does and does not constrain.** It compares *finding addresses*, so it pins the
     ~3% of blocks that carry a volume finding in both directions — a lost one disappears from the
     replay, an invented one appears. It says **nothing** about the other ~97%: dropping a
     finding-free file leaves this green while moving every calibrated threshold and the whole

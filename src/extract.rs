@@ -1,13 +1,8 @@
 //! Prose block extraction — the contract both detectors consume.
 //!
 //! This module is the single owner of the answer to "what is one prose block?". Both shipped
-//! detectors — [`crate::detect::duplicate`] (`implement-duplicate-prose-detector`) and
-//! [`crate::detect::volume`] (`implement-prose-volume-detectors`) — consume that answer; they do
-//! not redefine it. Extraction compares nothing: no similarity, no scoring.
-//!
-//! The third consumer this line used to name, `implement-code-restatement-detector`, **does not
-//! exist and will not**: that task closed NO-SHIP. It is named here only so the next reader does
-//! not go looking for it, and so the count above reads as measured rather than as forgotten.
+//! detectors — [`crate::detect::duplicate`] and [`crate::detect::volume`] — consume that answer;
+//! they do not redefine it. Extraction compares nothing: no similarity, no scoring.
 //!
 //! # The contract
 //!
@@ -246,7 +241,7 @@ pub struct ProseBlock {
     /// docstrings. Where scaffolding is what differs, the difference is exactly the text a duplicate
     /// finding could not have asked anyone to delete.
     ///
-    /// ⚠️ **The operator clause is the second reason the two can differ, and it is newer.** The two
+    /// **The operator clause is the second reason the two can differ, and it is newer.** The two
     /// fields are produced by two normalisers: this one keeps `<`, `>` and `=` as words because
     /// erasing them made opposite statements compare identical, while [`Self::normalized`] erases
     /// them because it is the unit the 150 / 200 volume limits were calibrated in. So
@@ -315,7 +310,7 @@ pub(crate) type Coordinates<'a> = (&'a Path, usize, usize, ProseKind);
 
 /// Relational operators, which survive normalisation as words of their own.
 ///
-/// 🔴 **The exception to "every non-alphanumeric character becomes a space", and it exists because
+/// **The exception to "every non-alphanumeric character becomes a space", and it exists because
 /// that rule erased meaning.** Measured on the pinned corpus by
 /// `close-anti-fp-gate-with-public-reference` (`corpus/annotations.md` §4.7, record 18):
 /// `requests`' `test_requests.py:2252` and `:2264` assert **opposite** things about a byte stream —
@@ -337,7 +332,7 @@ pub(crate) type Coordinates<'a> = (&'a Path, usize, usize, ProseKind);
 /// would close the instance and leave the class open. `=` is here because without it `>=` and `>`
 /// normalise alike, which is the same defect one character over.
 ///
-/// # 🔴 The corpus count picked this set and the corpus count was the wrong instrument
+/// # The corpus count picked this set and the corpus count was the wrong instrument
 ///
 /// The first version of this rule was `['<', '>', '=']` and nothing else, justified by the frequency
 /// count above. Review found the class still open, and the reason is the warning task 13 carried
@@ -381,7 +376,7 @@ const OPERATOR_TOKENS: [char; 5] = ['<', '>', '=', '!', '-'];
 /// whether any alphanumeric has already appeared on the current line, and `line_has_alnum` is
 /// whether the line contains one **anywhere**.
 ///
-/// # 🔴 A rule line carries no operators at all, and this is a recall fix
+/// # A rule line carries no operators at all, and this is a recall fix
 ///
 /// `<` and `=` were unconditional while `>`, `!` and `-` were contextual, and that asymmetry was a
 /// **recall regression this task introduced**. A reST or Markdown heading underline is a line of
@@ -436,7 +431,7 @@ fn is_operator_here(
 /// quotes and all punctuation without a rule per marker. Unicode letters survive, so Russian prose
 /// normalises too.
 ///
-/// 🔴 **This is the unit [`MIN_BLOCK_WORDS`] and the 150 / 200 volume limits were measured in, and
+/// **This is the unit [`MIN_BLOCK_WORDS`] and the 150 / 200 volume limits were measured in, and
 /// that is why the relational operators `<`, `>` and `=` are *not* kept here.**
 /// `close-anti-fp-gate-with-public-reference` first applied the operator rule in this function and
 /// measured the result on the pinned corpus: `TPX001` on `OpenHands` went **3 → 35** and `TPX002` on
@@ -601,7 +596,7 @@ const SPHINX_FIELDS: [&str; 20] = [
 
 /// The [`SPHINX_FIELDS`] entries that take **no** argument, so `:name:` is their only legal form.
 ///
-/// ⚠️ **Testing the name alone was a measured fail-open hole.** `sphinx_field` reads the first word
+/// **Testing the name alone was a measured fail-open hole.** `sphinx_field` reads the first word
 /// between the colons, which is right for `:param buffer:` and wrong for everything here:
 /// `:return policy:` is not the `return` field, it is an *unlisted* field named `return policy`, and
 /// accepting it discarded the sentence after it. Measured on the real binary — a pair sharing that
@@ -748,7 +743,7 @@ fn doctest_run(lines: &[&str], start: usize) -> Option<(usize, usize)> {
 /// "lacks blank after" the prompt when a line runs text straight into it, so such a line is
 /// definitionally not an example.
 ///
-/// ⚠️ **`starts_with` alone was a measured fail-open hole.** A sentence beginning `>>>The caller
+/// **`starts_with` alone was a measured fail-open hole.** A sentence beginning `>>>The caller
 /// keeps ownership…` was discarded as example input, and a pair sharing it went from a finding to
 /// silence — the tool deleting prose that Python itself refuses to read as a prompt.
 fn is_prompt(trimmed: &str, marker: &str) -> bool {
@@ -763,13 +758,13 @@ fn is_prompt(trimmed: &str, marker: &str) -> bool {
 /// `str.expandtabs()` and the `CPython` tokenizer do, so it is the width the Python source itself is
 /// written against.
 ///
-/// ⚠️ **Counting characters instead was a measured defect, in the fail-closed direction.** A `\t`
+/// **Counting characters instead was a measured defect, in the fail-closed direction.** A `\t`
 /// read as one column, so a tab-indented `Args:` entry measured *shallower* than its own four-space
 /// header, the section ended at its first line and the table stayed in the comparison — the
 /// update/delete docstring pair scored 0.933 with a tab-indented entry against 0.800 with the
 /// byte-identical eight-space one. The rule silently did not apply to tab-indented code.
 ///
-/// ⚠️ **A form feed RESETS the column, and getting that wrong re-armed suppression in a new shape.**
+/// **A form feed RESETS the column, and getting that wrong re-armed suppression in a new shape.**
 /// The tab fix above counted `\f` as one more column, so `\t\f` measured **9** against a four-space
 /// header and a genuine paragraph was absorbed into the section body — a finding that scored 0.800
 /// under the previous character-counting code and vanished under the fix. `CPython`'s tokenizer
@@ -863,7 +858,7 @@ fn numpy_body(lines: &[&str], from: usize, header_indent: usize) -> usize {
 /// The dashes are the grammar: without them `Returns` is an English word, and this function is the
 /// only thing that stops the `NumPy` branch from eating one.
 ///
-/// ⚠️ **The length must match, and accepting any run of three or more was a measured fail-open
+/// **The length must match, and accepting any run of three or more was a measured fail-open
 /// hole.** `numpydoc` underlines a section with exactly as many dashes as the name has characters,
 /// and `pydocstyle` D409 checks that; a mismatched row is a malformed docstring, not a section.
 /// Under the loose test, `Parameters` over three dashes was read as a section and swallowed the
@@ -888,7 +883,7 @@ fn underlined_header<'a>(lines: &[&'a str], start: usize) -> Option<&'a str> {
 /// `:param url: …` and `:rtype: …` are entries; `` :class:`Request` `` is a cross-reference inside a
 /// sentence and returns `None`, because `class` is not in [`SPHINX_FIELDS`].
 ///
-/// ⚠️ **The closed list is not enough on its own, and assuming it was is a measured fail-open
+/// **The closed list is not enough on its own, and assuming it was is a measured fail-open
 /// hole.** Six of the names here are *also* interpreted-text roles — `` :return:`the buffer` ``
 /// reads as the field `return` under a name test alone, and the whole sentence after it was
 /// swallowed as a field body. Measured: a shared explanation written that way scored 0.760 as plain
@@ -1275,7 +1270,7 @@ mod tests {
         assert_ne!(from_flat[0].raw, from_wrapped[0].raw);
     }
 
-    /// 🔴 **The guard that can say "these two must stay DIFFERENT", and the reason it exists.**
+    /// **The guard that can say "these two must stay DIFFERENT", and the reason it exists.**
     ///
     /// `a_malformed_or_unrecognised_construct_leaves_the_narrative_unchanged` cannot protect this
     /// class and never could: it asserts `narrative(text) == normalize_comparable(text)`, so both
@@ -1387,7 +1382,7 @@ mod tests {
                 "the payload is decoded as utf-8 before the adapter inspects it",
                 "the payload is decoded as utf 8 before the adapter inspects it",
             ),
-            // 🔴 The recall regression this task introduced and then fixed. `<` and `=` were kept
+            // The recall regression this task introduced and then fixed. `<` and `=` were kept
             // unconditionally while `>`, `!` and `-` were contextual, so a heading underline became
             // content tokens. Measured on the released binary: with `# =====` the two blocks below
             // stopped matching altogether — `All checks passed!` — while the identical construct
@@ -1960,7 +1955,7 @@ mod tests {
                        \x20   CheckpointTuple(...)\n\
                        \"\"\"";
 
-        // 🔴 The regression the review measured: doctest output was handed back to the section
+        // The regression the review measured: doctest output was handed back to the section
         // grammar, so an example that PRINTS something reading `Args:` turned the explanation under
         // it into a parameter table and the finding disappeared. This case cannot live in the
         // "narrative unchanged" table next door, because the `>>>` line itself is scaffolding and is
@@ -1987,7 +1982,7 @@ mod tests {
         );
     }
 
-    /// 🔴 **The invariant, stated once for every shape that could break it: a construct the grammar
+    /// **The invariant, stated once for every shape that could break it: a construct the grammar
     /// does not recognise — or recognises as malformed — leaves the narrative unchanged.**
     ///
     /// This is a *class* test and it is deliberately table-driven. The first review round of
@@ -2096,7 +2091,7 @@ mod tests {
 
     /// A form feed ends the section body rather than deepening it, so the prose after it survives.
     ///
-    /// 🔴 **This is the regression the tab fix introduced, and it is why it has its own test.** It
+    /// **This is the regression the tab fix introduced, and it is why it has its own test.** It
     /// cannot join the "narrative unchanged" table next door: the fixture carries a *real* `Args:`
     /// section, which is correctly discarded, so the invariant there does not apply and the
     /// expectation has to be written out.

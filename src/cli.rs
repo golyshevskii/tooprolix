@@ -2,14 +2,8 @@
 //!
 //! # Why all of this is in the library
 //!
-//! `src/main.rs` is a three-line wrapper around [`run`] and holds no logic at all. It began as a
-//! requirement rather than a style preference: how this tool is *delivered* — a standalone binary,
-//! a pyo3 feature gate, or a console script running the CLI inside `CPython` — was an open
-//! decision, and with the logic in the library this file was byte-identical under all three.
-//!
-//! **The decision landed on the standalone binary** (epic 2 Decisions #19.1), which the wheel now
-//! carries directly, so there is only one delivery left. The arrangement stays regardless:
-//! `proj-lib-main-split` in rust-skills says the same thing for its own reasons.
+//! `src/main.rs` is a three-line wrapper around [`run`] and holds no logic at all, so the whole
+//! command line is reachable — and testable — as a library rather than only through a process.
 //!
 //! # The exit contract
 //!
@@ -26,38 +20,24 @@
 //! fully read could look green, none of the rest would be worth having. Everything else about the
 //! change is a convenience; this is the invariant.
 //!
-//! ## Code 2 used to mean more than it does now, and the narrowing is breaking
+//! ## Code 2 means only that the run could not start
 //!
-//! Until 0.2.1, a file that did not parse took the whole run down: exit 2, **zero** findings, and
-//! the findings of every file that *did* parse withheld on the reasoning that a partial list is
-//! read by a human as the state of the repository. That was ours, deliberately, and against ruff —
-//! executed against the pinned reference, on a directory holding one unparsable file and one
-//! lintable one:
-//!
-//! ```text
-//! $ uvx ruff@0.16.0 check --isolated --select F <dir>
-//! invalid-syntax: Expected a parameter or the end of the parameter list  --> bad.py:1:12
-//! F401 [*] `os` imported but unused                                      --> good.py:1:8
-//! Found 3 errors.
-//! ```
-//!
-//! Ruff reports the syntax error **as a diagnostic** and lints the rest of the tree. The cost of not
-//! doing so was measured on the pinned ruff checkout (`a2635fd8`), 374 of whose files are
-//! deliberately-unparsable parser fixtures: **exit 2, 0 findings, 375 stderr lines**. A first
-//! adopter whose repository contains a parser corpus had no way to run this tool over it except one
-//! invocation per subdirectory, and a permanently red CI until they configured `exclude`.
-//!
-//! So code 2 now means only **the run could not start** — nothing was read because nothing could be.
-//! A file that cannot be read is a diagnostic on stderr, a `skipped` entry in the JSON, and exit 1.
+//! An unparsable file does **not** take the run down: it is a diagnostic on stderr, a `skipped`
+//! entry in the JSON, and exit 1. Failing the whole run instead is the tempting simplification, and
+//! it was measured on the pinned ruff checkout (`a2635fd8`), 374 of whose files are
+//! deliberately-unparsable parser fixtures: **exit 2, 0 findings, 375 stderr lines**. An adopter
+//! whose repository contains a parser corpus would have no way to run this tool over it except one
+//! invocation per subdirectory, and a permanently red CI until they configured `exclude`. Ruff
+//! reports a syntax error as a diagnostic and lints the rest of the tree; so does this.
 //!
 //! ## What that costs, and where the cost was put
 //!
-//! The exit code no longer distinguishes "the prose is bad" from "the measurement is incomplete":
+//! The exit code does not distinguish "the prose is bad" from "the measurement is incomplete":
 //! both are 1. Completeness therefore has to live somewhere a machine can read it, and the only such
 //! place is the document — [`crate::finding::Report::complete`], with the failures beside it in
 //! `skipped`. That is what took the JSON schema to version 2.
 //!
-//! ⚠️ **`TPX003` over an incomplete set is a different graph, not the same clusters minus a file.**
+//! **`TPX003` over an incomplete set is a different graph, not the same clusters minus a file.**
 //! It is cross-file by construction, so a missing block can be the bridge that held two components
 //! together. A partial run says so on stderr, once, and the document says so by being marked
 //! incomplete.
@@ -128,13 +108,11 @@ use crate::rules::{self, Rule, Suppression, parse_marker};
 
 /// The `--help` text, and the only place the command grammar is written down.
 ///
-/// A function rather than the `const HELP: &str` this used to be, and the reason is
-/// [`rules::CATALOGUE`]: the Rules block below is rendered from the same array `--rules` prints, so
-/// the two cannot say different things about `TPX002`. A `const` cannot concatenate a rendered
-/// block, and the alternative — the same three sentences written out here *and* in the catalogue,
-/// pinned by a test — is two owners with a tripwire rather than one owner, which is what the task
-/// this shipped in refused. Nothing outside the crate ever read the constant; the `--help` **text**
-/// is the contract, and it is unchanged apart from the two new options and the rules wording.
+/// A function rather than a `const`, and the reason is [`rules::CATALOGUE`]: the Rules block below
+/// is rendered from the same array `--rules` prints, so the two cannot say different things about
+/// `TPX002`. A `const` cannot concatenate a rendered block, and writing the same three sentences
+/// out here *and* in the catalogue with a test to pin them is two owners with a tripwire rather
+/// than one owner. The `--help` **text** is the contract, not this signature.
 #[must_use]
 pub fn help() -> String {
     let mut text = String::from(HELP_BEFORE_RULES);
@@ -365,10 +343,9 @@ enum Invocation {
 
 /// Everything that stops a run — all but one of them a failure to *start*.
 ///
-/// There used to be a sixth, `Unreadable`, carrying every file that would not parse. It is gone
-/// rather than unused: a file that cannot be read is no longer a reason to refuse the run, so
-/// keeping the variant would have left a way to spell an outcome the contract no longer has. What
-/// replaces it is [`crate::finding::Skipped`], which is a *report* and not an error.
+/// There is deliberately **no** variant for a file that would not parse: that is not a reason to
+/// refuse the run, and a variant for it would be a way to spell an outcome the contract does not
+/// have. It is carried by [`crate::finding::Skipped`], which is a *report* and not an error.
 ///
 /// [`Output`](Error::Output) is the one variant that is **not** a failure to start — the run did
 /// everything right and could not hand the answer over. It is also the only variant that does not
@@ -450,18 +427,16 @@ pub fn run<I: IntoIterator<Item = OsString>>(arguments: I) -> ExitCode {
 
 /// [`run`] with the answer still an [`ExitStatus`], the failure already written to stderr.
 ///
-/// The two entry points — `src/main.rs` and the `tooprolix` console script in `src/lib.rs` — differ
-/// only in the *type* of the exit code they return, never in how a failure is reported. Rendering
-/// it in each of them would have been two lines duplicated and one place for the wording to drift,
-/// so the rendering lives here and both go through it. [`execute`] is the same run with the failure
-/// still a value, for a caller that wants to handle it rather than print it.
+/// Rendering a failure lives here, once, so that any entry point returning an exit code reports it
+/// identically. [`execute`] is the same run with the failure still a value, for a caller that wants
+/// to handle it rather than print it.
 pub(crate) fn status<I: IntoIterator<Item = OsString>>(arguments: I) -> ExitStatus {
     execute(arguments).unwrap_or_else(|error| {
         // A reader that stopped reading is not a failure of this tool, and it is the ONE error that
-        // is not reported. `tooprolix check big/ | head -5` used to exit **101** with
-        // `failed printing to stdout: Broken pipe` on stderr — the Rust default, because `println!`
-        // panics on a write error and nothing here caught it. That is outside the documented 0/1/2
-        // contract entirely, and `| head` is an ordinary thing to do with a linter.
+        // is not reported. Uncaught, `tooprolix check big/ | head -5` exits **101** with
+        // `failed printing to stdout: Broken pipe` — the Rust default, because `println!` panics on
+        // a write error. That is outside the documented 0/1/2 contract entirely, and `| head` is an
+        // ordinary thing to do with a linter.
         //
         // Exit **0**, which is what ruff answers to the same pipeline (measured). The findings that
         // were written are correct and the ones that were not are output nobody asked for; a
@@ -478,9 +453,8 @@ pub(crate) fn status<I: IntoIterator<Item = OsString>>(arguments: I) -> ExitStat
         //     gives exit 2 and `... Bad file descriptor (os error 9)`, for `check` and for all
         //     three discovery commands.
         //
-        // The second of those only became true when `emit` stopped writing through
-        // `std::io::stdout()`, which silently discards `EBADF`; before that this comment promised
-        // an exit 2 that did not happen. See `emit` for the measurement and the mechanism.
+        // The second of those holds only because `emit` does not write through
+        // `std::io::stdout()`, which silently discards `EBADF`. See `emit` for the mechanism.
         //
         // A handler that treated any `Error::Output` as a clean stop would turn "the answer never
         // reached the file" into a green run, which is exactly the class this epic keeps finding.
@@ -638,11 +612,10 @@ pub fn execute<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<ExitSta
         skipped: unwalkable,
     } = python_files(&path, &config)?;
     let excluded_measurable = excluded.len();
-    // `unwalkable.is_empty()` as well, and for the same reason the sentence below no longer claims
-    // the tree was unmeasured: this line blames an *absence* of Python, and when the walk found a
-    // `.py` it could not read, absence is not what happened. The skip is already reported, with the
-    // path and the reason, so saying "no Python files" beside it is a second answer that contradicts
-    // the first.
+    // `unwalkable.is_empty()` as well: this line blames an *absence* of Python, and when the walk
+    // found a `.py` it could not read, absence is not what happened. The skip is already reported,
+    // with the path and the reason, so saying "no Python files" beside it is a second answer that
+    // contradicts the first.
     if files.is_empty() && unwalkable.is_empty() {
         // A walk that visited nothing scores every repository clean. Saying so is the difference
         // between "no findings" and "no measurement".
@@ -659,19 +632,20 @@ pub fn execute<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<ExitSta
         //
         // The count is also the entire content of the sentence — and it is `excluded.len()`, the
         // length of the very list the JSON reports, never a second number derived beside it. Two
-        // numbers that "should" agree is the defect this line already shipped once. Naming the
-        // globs is what went wrong the time before: the list came from the configuration, so a glob
-        // that never fired was reported as having removed paths, and it cannot be fixed by naming
-        // them from the walk instead — `ignore::overrides::Glob` is an opaque newtype with a
-        // private field and no accessors, so per-glob attribution is not reachable through that
-        // crate's public API. The paths the walk observed are, and they are in `excluded`.
+        // numbers that "should" agree is one of them going wrong alone.
+        //
+        // Naming the globs instead is the tempting version and it is not reachable: taken from the
+        // configuration, a glob that never fired reads as having removed paths, and taking them
+        // from the walk is impossible because `ignore::overrides::Glob` is an opaque newtype with a
+        // private field and no accessors. The paths the walk observed are reachable; they are in
+        // `excluded`.
         if excluded_measurable > 0 {
             eprintln!(
-                // Says what the walk did and stops there. It used to end "an excluded tree is not
-                // a measured one", which reads as a completeness claim and contradicts the
-                // document for the same run — where `complete` is `true`, correctly: `exclude` is
-                // a boundary the project drew, and inside it the tree really was measured whole.
-                // Only `skipped` moves `complete`, and no excluded path is ever in `skipped`.
+                // Says what the walk did and stops there. It must NOT read as a completeness claim
+                // — that would contradict the document for the same run, where `complete` is
+                // `true`, correctly: `exclude` is a boundary the project drew, and inside it the
+                // tree really was measured whole. Only `skipped` moves `complete`, and no excluded
+                // path is ever in `skipped`.
                 "warning: `exclude` in {} removed {excluded_measurable} path(s) that could have \
                  been measured; nothing outside the excluded set was left to check",
                 config.source.as_ref().map_or_else(
@@ -737,7 +711,7 @@ pub fn execute<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<ExitSta
                 .iter()
                 .map(|path| path.display().to_string())
                 .collect();
-            // ⚠️ What a consumer sees if the pipe closes mid-document: a TRUNCATED one. The bytes
+            // What a consumer sees if the pipe closes mid-document: a TRUNCATED one. The bytes
             // written are a prefix of valid JSON and not a valid document, so a reader that stops
             // reading must not then parse what it got — `| head -c 200 | jq` is a parse error by
             // construction, not a bug here. There is no honest alternative: the document is larger
@@ -771,16 +745,14 @@ const SUCCESS_LINE: &str = "All checks passed!";
 
 /// [`SUCCESS_LINE`] on stdout, green when the terminal wants colour.
 ///
-/// # Why a successful run stopped being silent
+/// # Why a successful run is not silent
 ///
-/// It printed **zero bytes**, and zero bytes is what a crashed run, a walk that visited nothing and
-/// a clean repository all look like. The exit code told them apart and nothing on the screen did,
-/// so the one outcome a user most wants confirmed was the one the tool refused to confirm.
+/// Zero bytes is what a crashed run, a walk that visited nothing and a clean repository all look
+/// like: the exit code tells them apart and nothing on the screen would.
 ///
 /// It is on **stdout**, beside the findings, because it is the answer to the question that was
 /// asked — not a diagnostic about the run. That does mean `tooprolix check . | wc -l` answers 1 on
-/// a clean tree where it used to answer 0; `--format json`, which is the interface for machines,
-/// never prints it at all.
+/// a clean tree; `--format json`, which is the interface for machines, never prints it at all.
 ///
 /// # Errors
 ///
@@ -856,11 +828,10 @@ fn report_skipped(skipped: &[Skipped], config: &Config) {
 /// one option, so a derive-macro argument parser would be a dependency tree and a second home for
 /// the help text that [`help`] already owns.
 ///
-/// **`arguments` does NOT include the program name.** It used to, silently — this function opened
-/// with `.skip(1)` while [`run`]'s parameter was documented as "the command line", so a caller
-/// building the arguments by hand (which the packaging task will) would pass `["check", "."]` and
-/// be told that `.` is an unknown subcommand. The `.skip(1)` now lives in `src/main.rs`, where
-/// turning `argv` into arguments is the caller's own convention rather than a hidden one here.
+/// **`arguments` does NOT include the program name.** A `.skip(1)` hidden here would silently eat
+/// the first argument of any caller that builds its arguments by hand — `["check", "."]` would be
+/// told that `.` is an unknown subcommand. It lives in `src/main.rs` instead, where turning `argv`
+/// into arguments is the caller's own convention.
 fn parse<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<Invocation, Error> {
     let mut arguments = arguments.into_iter().map(|argument| {
         argument
@@ -1042,11 +1013,9 @@ fn python_files(root: &Path, config: &Config) -> Result<Walked, Error> {
     //   * `.gitignore` still has its say — its layers run first and this filter runs after, so a
     //     path is walked only if BOTH allow it. Identical to `overrides` here because we only ever
     //     build exclusions, never re-inclusions.
-    // A list and no longer a count, because the document has to NAME what was excluded and not
-    // only how much of it there was. The invariant the count was introduced for is kept exactly:
-    // this one value is both the gate for the stderr warning and the whole of its content, and now
-    // also the whole of the JSON field — `excluded.len()` at the call site, never a second number
-    // derived alongside it.
+    // A list rather than a count, because the document has to NAME what was excluded. One value
+    // serves as the gate for the stderr warning, the whole of its content and the whole of the JSON
+    // field — `excluded.len()` at the call site, never a second number derived alongside it.
     //
     // `Mutex` rather than the `AtomicUsize` it replaces because a `Vec` has no atomic form;
     // `Arc<Mutex<…>>` and not a `Cell` because `filter_entry` demands `Send + Sync + 'static`.
@@ -1134,7 +1103,7 @@ fn python_files(root: &Path, config: &Config) -> Result<Walked, Error> {
             // it did not read this entry, so the tree it belongs to was not read whole. No
             // resolution, no containment test, no question to get wrong.
             //
-            // 🔴 Three adversarial rounds produced three CRITICALs on one seam here, and the seam
+            // Three adversarial rounds produced three CRITICALs on one seam here, and the seam
             // was an exception that tried to decide when silence was safe:
             //
             //   1. silent whenever the target `exists()` — a target OUTSIDE the walked tree
@@ -1163,7 +1132,7 @@ fn python_files(root: &Path, config: &Config) -> Result<Walked, Error> {
             // at all — it belongs to `follow_links` on a symlinked *directory*, which this arm never
             // sees, since `is_python_source` has already returned true.
             //
-            // ⚠️ Naming a symlink DIRECTLY — `tooprolix check alias.py` — still measures it, and
+            // Naming a symlink DIRECTLY — `tooprolix check alias.py` — still measures it, and
             // that is deliberate rather than an inconsistency. This arm answers "is this tree whole",
             // where an unfollowed link is a hole; an explicit argument is an instruction about one
             // file and carries no claim about a tree. Ruff resolves explicit arguments past its own
@@ -1176,9 +1145,9 @@ fn python_files(root: &Path, config: &Config) -> Result<Walked, Error> {
                 reason: "symlinks are not followed, so this file was not measured".to_owned(),
             }),
             // What is left is a FIFO, a socket or a device that happens to end in `.py`. It passes
-            // the extension test and fails `is_file()`, so it used to be dropped into neither
-            // channel — and the document then claimed `complete: true` about a tree holding a `.py`
-            // nobody opened. Reading it is not the answer (a FIFO blocks forever); saying so is.
+            // the extension test and fails `is_file()`, so dropping it into neither channel would
+            // claim `complete: true` about a tree holding a `.py` nobody opened. Reading it is not
+            // the answer (a FIFO blocks forever); saying so is.
             //
             // `None` — which the crate produces only for a stdin entry this tool never asks for —
             // lands here too, because an entry whose kind cannot be established is exactly the one

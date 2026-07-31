@@ -1,6 +1,6 @@
 //! Resolves the date `tooprolix --version` prints, and nothing else.
 //!
-//! ⚠️ **This file used to have a second job and no longer does.** It put an rpath to libpython on
+//! **This file used to have a second job and no longer does.** It put an rpath to libpython on
 //! the binaries this crate builds, behind the `CARGO_FEATURE_PYTHON` environment variable. Epic 2
 //! Decisions #19.1 removed the pyo3 boundary outright — the wheel now carries the native executable
 //! (`[tool.maturin] bindings = "bin"`) instead of an extension module — so no target this crate
@@ -14,7 +14,7 @@
 //! # The date `--version` prints
 //!
 //! `TOOPROLIX_COMMIT_DATE` is the other half of `tooprolix --version`, and it is the **commit**
-//! date rather than the wall clock (epic 2, Decisions #14): a binary whose `--version` changes
+//! date rather than the wall clock: a binary whose `--version` changes
 //! because an hour passed is not reproducible, and two builds of one commit would disagree about
 //! what they are. There are three sources, in this order, and the order is the whole design:
 //!
@@ -28,7 +28,7 @@
 //!    else's commit date: substituting the wall clock is the thing being avoided, and a build that
 //!    cannot know its provenance should say so rather than borrow one.
 //!
-//! ⚠️ **Emitting the `rerun-if` lines is what makes the answer true rather than merely printed.**
+//! **Emitting the `rerun-if` lines is what makes the answer true rather than merely printed.**
 //! Cargo's default is to re-run a build script whenever any file in the package changes; the moment
 //! this file emits one `rerun-if-changed`, that default is **replaced** by exactly what is listed.
 //! So every line below is load-bearing: `build.rs` itself (or editing this file would not re-run
@@ -63,14 +63,14 @@ fn main() {
 
 /// Whether the repository git discovers is **this package's own**, rather than one enclosing it.
 ///
-/// 🔴 **Git's discovery walks upward, and without this the date is silently borrowed.** A tree with
+/// **Git's discovery walks upward, and without this the date is silently borrowed.** A tree with
 /// no `.git` of its own — an unpacked sdist, an extracted `cargo package` archive, a `cargo vendor`
 /// directory — inherits whatever repository happens to sit above it. Reproduced: a copy of this
 /// package with no git history at all, placed inside an unrelated checkout, stamped that host's
 /// `2020-01-01` into `--version` and called it this package's commit date. Task 13 builds the wheel
 /// from an sdist, so this is on the publication path rather than in a corner.
 ///
-/// ⚠️ **Both paths are canonicalised before they are compared, and that is not tidying.** On macOS
+/// **Both paths are canonicalised before they are compared, and that is not tidying.** On macOS
 /// `/tmp` is a symlink to `/private/tmp`, so `--show-toplevel` answers `/private/tmp/…` for a tree
 /// reached as `/tmp/…` — the same directory, two strings. Comparing them raw would refuse a
 /// perfectly good repository and print `unknown` for every build under such a path, which is a
@@ -139,7 +139,7 @@ fn source_date_epoch() -> Option<String> {
 /// attached branch `HEAD` is the constant text `ref: refs/heads/<branch>` and does **not** change
 /// when you commit.
 ///
-/// ⚠️ **Every path here comes from `git rev-parse --git-path`, and joining onto a git directory by
+/// **Every path here comes from `git rev-parse --git-path`, and joining onto a git directory by
 /// hand is the bug this replaced.** In a linked worktree the two halves live in *different*
 /// directories: `HEAD` is per-worktree (`<main>/.git/worktrees/<name>/HEAD`) while
 /// `refs/heads/<branch>` is in the **common** directory (`<main>/.git/refs/heads/<branch>`).

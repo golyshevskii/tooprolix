@@ -275,7 +275,7 @@ class TestTheReportIsGradedNotJustRead:
         """
         The other half deliberately does NOT hold for llvm-cov, and this test is the reason.
 
-        `src/detect.rs` is 26 lines of module documentation and two `pub mod` declarations — no
+        `src/detect.rs` is module documentation and two `pub mod` declarations — no
         functions, nothing to instrument — so `cargo llvm-cov` emits no entry for it and is right
         not to. Requiring every `.rs` on disk to appear made `make rust.cov` fail on the real
         repository: `never measured 1 source file(s) that exist on disk: src/detect.rs`.

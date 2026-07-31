@@ -211,7 +211,7 @@ class TestEachPromiseIsRefusedSeparately:
 
 class TestTheWheelTagIsComparedLikeWithLike:
     """
-    🔴 C1, and it took a CI run to find because macOS wheels are single-tag.
+    C1, and it took a CI run to find because macOS wheels are single-tag.
 
     A manylinux wheel's `.dist-info/WHEEL` carries **two** `Tag:` lines; its filename carries PEP
     425's *compressed tag set*, where the platform components are joined with `.`. Joining the
@@ -269,7 +269,7 @@ class TestTheWheelTagIsComparedLikeWithLike:
 
 class TestLineEndingsAreNotADifferenceInTheDescription:
     r"""
-    🔴 C2, also found only by CI. Git checks out CRLF on the Windows runner, so the description
+    C2, also found only by CI. Git checks out CRLF on the Windows runner, so the description
     maturin embedded was byte-different from the README on disk while being the same text —
     `4927 vs 4827 characters` on a 99-line file: one `\r` per line, plus the payload's trailing
     newline in the printed count.

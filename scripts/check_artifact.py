@@ -1,7 +1,7 @@
 """
 Grade a built wheel or sdist by opening it, not by re-reading the configuration that produced it.
 
-🔴 **This exists because three acceptance criteria were true only because somebody looked once.**
+**This exists because three acceptance criteria were true only because somebody looked once.**
 AC3 (MIT metadata, a physical `LICENSE`, `docs/` in the sdist) and AC8 (the shipped description is
 the *transformed* README) were verified by hand and written into a report, and nothing in the
 repository asserted any of it. `twine check --strict` validates the METADATA envelope and the
@@ -11,7 +11,7 @@ Measured 2026-07-31, all three exploits green under every gate that existed:
 
   * `license-files = []` in `pyproject.toml` -> a wheel with **no** `License-File` header and **no**
     `LICENSE` inside it. `twine check --strict`: PASSED. `install-smoke.sh`: OK.
-    ⚠️ The obvious exploit, *deleting* `license-files`, does NOT reproduce — maturin 1.14.1 finds
+    The obvious exploit, *deleting* `license-files`, does NOT reproduce — maturin 1.14.1 finds
     `LICENSE` on its own. The empty list is what actually strips it, which is precisely why the
     check has to grade the archive rather than trust a key's presence in a manifest.
   * `exclude = ["corpus/", "docs/"]` in `Cargo.toml` -> an sdist with 0 files under `docs/`.
@@ -56,7 +56,7 @@ def tag_set(compressed: str) -> frozenset[str]:
     """
     Expand a PEP 425 compressed tag set into every `{python}-{abi}-{platform}` triple it names.
 
-    🔴 **The two representations differ by construction, and comparing them as strings was the bug
+    **The two representations differ by construction, and comparing them as strings was the bug
     this replaced.** A wheel's FILENAME carries the compressed set — platforms joined with `.` —
     while `.dist-info/WHEEL` carries one `Tag:` line per tag. Joining those lines with any separator
     and comparing strings fails on every multi-tag wheel, which is what run 30613111390 showed on
@@ -139,7 +139,7 @@ def _normalise(text: str) -> str:
     """
     Return `text` with line endings flattened and surrounding blank space removed.
 
-    ⚠️ **The one deliberate exception to "byte-identical", named because that was the promise.** Git
+    **The one deliberate exception to "byte-identical", named because that was the promise.** Git
     checks out CRLF on the Windows runner, so the description maturin embedded was byte-different
     from the README on disk while being the same text — measured in run 30613111390:
     `4927 vs 4827 characters` on a 99-line file, i.e. one carriage return per line plus the

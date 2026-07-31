@@ -93,13 +93,13 @@ done
 # all-or-nothing contract of 2026-07-26 turned the full run into exit 2 with zero findings, and
 # `corpus/runs/crewAI-full.json` was **0 bytes** on disk for exactly that reason.
 #
-# 🔴 **The `crewAI-full` row is a first measurement, not a corrected one.** Its old `2|1269|0|0|0`
+# **The `crewAI-full` row is a first measurement, not a corrected one.** Its old `2|1269|0|0|0`
 # recorded what the refusal printed, not what the repository contains — the 1264 readable files had
 # never been measured by anything. The numbers here were produced by running this script on
 # 2026-07-28, after the graceful contract landed, and read out of the regenerated artifact.
 #
 # Keeping the row pins that the five templates are still the only thing lost. `crewAI/lib/crewai` is
-# the narrowed root the owner chose (EPIC.md Decisions #7.2); the 515 `.py` files outside it are
+# the narrowed root the owner chose; the 515 `.py` files outside it are
 # recorded in REPORT.md §7.2. A union of per-subdirectory runs was rejected: `TPX003` is cross-file,
 # so that is a different answer, not a more complete one — which is also why `crewAI-full` and
 # `crewAI` do not add up and are not supposed to.
@@ -108,7 +108,7 @@ done
 # rows over the six checkouts `corpus/corpus.lock` pins.
 # name | walk root | checkout | exit | .py walked | skipped | TPX001 | TPX002 | TPX003
 #
-# 🔴 The TPX003 column moved with `exclude-reference-scaffolding-from-tpx003` and the old numbers
+# The TPX003 column moved with `exclude-reference-scaffolding-from-tpx003` and the old numbers
 # are kept here so the change is legible rather than merely applied. TPX003 now compares the
 # NARRATIVE remainder of a block, so a docstring that repeats only its parameter table is no longer
 # a finding, and two docstrings whose summaries match once their tables are gone become an *exact*
@@ -155,11 +155,11 @@ done
 # `TPX001`/`TPX002` still byte-identical on all seven rows, and `corpus/units.py --verify` still
 # reproduces 173 volume findings exactly.
 #
-# 🔴 **The near/exact columns are pinned from this round on.** The total alone hid exactly the kind
+# **The near/exact columns are pinned from this round on.** The total alone hid exactly the kind
 # of movement this epic measures: the previous round moved a cluster from exact to near with the
 # total unchanged, and nothing here would have said so.
 #
-# 🔴 **`TPX001` and `TPX002` are byte-identical on all seven rows, and that is the load-bearing
+# **`TPX001` and `TPX002` are byte-identical on all seven rows, and that is the load-bearing
 # check rather than a footnote.** The first version of this fix applied the operator rule inside
 # `normalize` itself, which is the unit `size_words` counts in — and `OpenHands` `TPX001` went
 # **3 -> 35** and `langgraph` `TPX002` **74 -> 79**, because an operator that survives is an operator

@@ -1,9 +1,8 @@
 """
-Guards for `corpus/sample_clusters.py`, the AC1 sampling rule.
+Guards for `corpus/sample_clusters.py`, the sampling rule.
 
-AC1 asks for precision on a hand-annotated sample of `TPX003` findings, and the whole value of
-that number lives in HOW the sample is drawn. Three ways of drawing it were measured to be
-worthless, and this file is one test per way:
+Precision over a hand-annotated sample of `TPX003` findings is worth only as much as HOW the sample
+is drawn. Three ways of drawing it were measured to be worthless, and this file is one test per way:
 
   1. **Sampling the whole pool measures a tautology.** 398 of the corpus's 646 clusters have every
      edge at similarity 1.0 — definitionally identical text. Asking "should one of these copies be
@@ -11,12 +10,11 @@ worthless, and this file is one test per way:
      the detector was tuned around never enters the answer. The blocking number is precision over
      NEAR clusters only, so an exact cluster must never reach the sample **by default**.
 
-     ⚠️ **Amended by `close-anti-fp-gate-with-public-reference` AC8, 2026-07-30.** The anti-FP gate
-     measures a *false-positive* share, not AC1's precision, and its population explicitly includes
-     exact clusters — at `v0.4.0` they are 457 of 617. So the exact population is reachable, but
-     only when asked for by name: `TestTheExactPopulationIsReachable` below pins that it is opt-in,
-     that the near default above is untouched, and that an unrecognised population is fatal rather
-     than silently near.
+     The anti-false-positive gate is the exception: it measures a *false-positive* share, not
+     precision, and its population includes exact clusters — at `v0.4.0` they are 457 of 617. So
+     the exact population is reachable, but only when asked for by name.
+     `TestTheExactPopulationIsReachable` below pins that it is opt-in, that the near default above
+     is untouched, and that an unrecognised population is fatal rather than silently near.
   2. **A global prefix over `(repo, path, line)` never leaves the first repository.** In ASCII
      order the whole prefix lies inside `OpenHands` and reaches neither `langgraph` nor `pydantic`.
      Round-robin by repository is just as deterministic and covers the corpus.

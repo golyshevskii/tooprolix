@@ -12,7 +12,7 @@ CARGO ?= cargo
 # Paths the Python gates run on. This is a Rust project with two Python corners: the throwaway
 # corpus measurement, and `scripts/coverage_report.py`, which reads the coverage reports.
 #
-# ⚠️ These are LINT paths and they are deliberately NOT the coverage denominator, which is
+# These are LINT paths and they are deliberately NOT the coverage denominator, which is
 # `[tool.coverage.run] source` in pyproject.toml and lists `corpus` alone. The overlap is a
 # coincidence of two tools looking at the same directory for different reasons: lint asks "is this
 # file well formed", coverage asks "how much of this file did the tests run". Putting `tests/unit`
@@ -65,31 +65,12 @@ corpus.measure: ## Measure the pinned prose corpus and print the distributions
 # The four Rust gates below are one CI job each (cargo-fmt / cargo-clippy / cargo-test /
 # cargo-doc) and are what every later task has to keep green. `--locked` everywhere: Cargo.lock
 # is committed, so a gate that silently re-resolved it would not be testing the code CI builds.
-#
-# ⚠️ `FIND_PYTHON` used to live here and is GONE with the pyo3 boundary (epic 2 Decisions #19.1).
-# It resolved an interpreter with `uv python find` because pyo3-ffi's build script located CPython
-# by scanning PATH, so every cargo command that compiled the crate silently depended on whichever
-# `python3` came first. No cargo command here compiles against an interpreter any more — `cargo
-# tree | grep -c pyo3` is 0 — so the lookup would only be a step that can fail for a reason no gate
-# cares about. The CI steps that installed a managed Python for it went in the same change.
 
 rust.fmt: ## Format the Rust code with rustfmt
 	@$(CARGO) fmt
 
 rust.fmt.check: ## Check Rust formatting without writing (CI mode)
 	@$(CARGO) fmt --check
-
-# 🔴 NO `--features python` ON EITHER, and the reason the flag existed is worth keeping.
-# Until epic 2 Decisions #19.1 the pyo3 boundary sat behind an off-by-default feature, and with the
-# feature off `cargo test` compiled none of the 5 boundary tests in src/lib.rs: measured 2026-07-27,
-# `make rust.test` stayed **exit 0** and reported **128 passed** where it had been 133 — green by
-# testing less, with no other signal. The flag plus a `compile_error!` in src/lib.rs held that line.
-#
-# The feature, the boundary, the 5 tests and the `compile_error!` are all gone now, so there is no
-# flag left to forget. The count drops from 218 to 213 in the same change, and that drop is the
-# 5 boundary tests and nothing else. What replaces the guard is `scripts/install-smoke.sh`, which
-# installs each built artifact and runs the command — mutation-proved against a wheel with its
-# executable removed, because "the guard changed shape" is exactly where this epic has been bitten.
 
 rust.lint: ## Lint the Rust code with clippy, warnings are errors
 	@$(CARGO) clippy --all-targets --locked -- -D warnings
@@ -117,23 +98,13 @@ rust.doc: ## Build the rustdoc and fail on any warning (broken or private intra-
 # The linkage guard on the shipped binary. It is what proves `tooprolix` runs where no interpreter
 # does — the promise the wheel makes by carrying a native executable instead of an extension module.
 #
-# ⚠️ It used to be called `rust.build.nopython`, the "other half" of a pyo3 feature gate that no
-# longer exists: with `--features python` on every other Rust gate, this was the only thing in CI
-# that ever compiled the crate with the feature OFF. Epic 2 Decisions #19.1 deleted the feature, so
-# there is no longer another half — this is now simply THE build.
+# IT ASSERTS THE LINKAGE, NOT THE COMPILATION, and the difference is the whole guard. `cargo
+# build` alone cannot tell "it compiles" from "it needs no interpreter": a build that links
+# libpython exits 0 just the same, and only `otool -L`/`ldd` on the artifact can say so.
 #
-# 🔴 IT ASSERTS THE LINKAGE, NOT THE COMPILATION, and the difference is the whole guard. `cargo
-# build` alone cannot tell "it compiles" from "it needs no interpreter". Measured 2026-07-27, back
-# when the feature existed: with `default = ["python"]` and an interpreter on PATH the build step
-# exits **0** and blesses a binary whose `otool -L` reads
-#
-#     /opt/homebrew/opt/python@3.14/Frameworks/Python.framework/Versions/3.14/Python
-#
-# 🔴 AND THE MUTATION THAT PROVES IT IS NOT THE OBVIOUS ONE. Adding `pyo3 = "0.29.0"` back to
+# AND THE MUTATION THAT PROVES IT IS NOT THE OBVIOUS ONE. Adding `pyo3 = "0.29.0"` back to
 # `[dependencies]` leaves this target **GREEN** — measured 2026-07-31, `otool -L` still lists only
-# `libSystem.B.dylib`, because rustc links no crate nothing references. The comment here claimed
-# that declaration was the mutation, and the claim was false; it is corrected rather than quietly
-# dropped, because a guard whose stated mutation passes is a guard nobody has actually tested.
+# `libSystem.B.dylib`, because rustc links no crate nothing references.
 #
 # The mutation that DOES turn it red is the declaration plus a real `use`: with `pyo3` in
 # `[dependencies]` and a `pyo3::Python::attach(...)` in `src/lib.rs`, this target fails with
@@ -147,14 +118,12 @@ rust.doc: ## Build the rustdoc and fail on any warning (broken or private intra-
 # runs it). Deliberately NOT a `cargo tree`/feature-graph check: that grades a proxy for the
 # artifact rather than the artifact.
 #
-# 🔴 THE PATH COMES FROM CARGO, and hardcoding it was an instance of the very defect this target
-# exists to close. `target/debug/tooprolix` is not where cargo necessarily writes: both
-# `CARGO_TARGET_DIR` and `build.target-dir` in `.cargo/config.toml` move it. Measured 2026-07-27
-# with `default = ["python"]` and `CARGO_TARGET_DIR` set elsewhere — cargo compiled a
-# libpython-linked binary into the alternate directory while this recipe read a stale clean binary
-# left over at `target/debug/`, printed `ok: ... links no libpython` and exited 0. The stale file is
-# what made it silent. `--message-format=json` makes cargo name the executable it just linked, so
-# the guard reads the artifact it actually produced and no reconstruction can drift from it.
+# THE PATH COMES FROM CARGO, and hardcoding it fails silently. `target/debug/tooprolix` is not
+# where cargo necessarily writes — both `CARGO_TARGET_DIR` and `build.target-dir` in
+# `.cargo/config.toml` move it — so with the target directory moved this recipe inspected a stale
+# clean binary left at `target/debug/` and printed `ok: ... links no libpython` while cargo had just
+# linked a libpython-carrying one elsewhere. `--message-format=json` makes cargo name the executable
+# it just linked, so the guard reads the artifact it actually produced.
 #
 # An empty listing is treated as a FAILURE, not a pass, and so is cargo reporting no executable at
 # all. A missing or renamed `otool`/`ldd` would otherwise make the grep match nothing and the guard
@@ -197,14 +166,12 @@ rust.build: ## Build the binary and prove it links no libpython (it must run wit
 # The value here is not the percentage, it is `scripts/coverage_report.py` refusing a report that
 # measured less than it claims: drop `branch = true`, orphan a module from the `mod` tree, or let a
 # file fall out of coverage.py's discovery, and the number goes UP with nothing else to show for it.
-# Tasks 9-11 audit against these figures, so a silently shrinking denominator is the failure that
-# matters.
+# A silently shrinking denominator is the failure that matters.
 #
-# There is deliberately NO `--fail-under` / threshold on either target. A threshold before those
-# audits would be a number picked to match today's code rather than a decision, and picking it is
-# the user's call once the audits have said what the uncovered surface actually is.
+# There is deliberately NO `--fail-under` / threshold on either target: a threshold would be a
+# number picked to match today's code rather than a decision.
 #
-# ⚠️ What these numbers do NOT cover, said out loud because a percentage implies it measured
+# What these numbers do NOT cover, said out loud because a percentage implies it measured
 # everything it could:
 #   - `build.rs` is a BUILD SCRIPT. cargo compiles and runs it on the host before the crate exists,
 #     so `cargo llvm-cov` does not instrument it and it appears in no row of the Rust report. Its
@@ -214,24 +181,19 @@ rust.build: ## Build the binary and prove it links no libpython (it must run wit
 #     truth about a test that does not run in CI, and un-ignoring it here would be buying coverage
 #     with a gate that cannot run.
 #   - `tests/adversarial_bench.rs`'s `adversarial_headers_stay_within_the_line_rate_budget` is the
-#     SECOND `#[ignore]`d test, added 2026-07-30, and it takes the `ignored` count from 1 to 2. Said
-#     out loud rather than absorbed: a rising `ignored` is a finding by this epic's own verification
-#     policy. It is ignored because it is a wall-clock instrument — it needs `--release` to mean
+#     second `#[ignore]`d test. It is a wall-clock instrument — it needs `--release` to mean
 #     anything (a debug build measures the profile, not the algorithm) and it writes 2 000 files
-#     twice over. It PASSES: 2.59-2.87 s against a 5.000 s budget at 100 000 lines. It did not before
-#     the `shingles` change in the same commit, which is the measurement that motivated that change.
-#     Its two non-ignored halves, `the_generated_headers_are_adversarial_by_construction` and
+#     twice over. Its two non-ignored halves,
+#     `the_generated_headers_are_adversarial_by_construction` and
 #     `the_timed_trees_are_the_ones_the_recorded_numbers_were_measured_on`, DO run in CI, so neither
 #     the fixture nor the timed trees can rot unnoticed while only the timed half is skipped.
-#   - 🔴 THE COVERAGE RUN IS NOT THE TEST RUN. `cargo llvm-cov` skips doctests unless `--doctests`
-#     is passed, so `make rust.cov` instruments **188 of the 194 tests** `make rust.test` runs — the
-#     6 doctests (`test result: ok. 6 passed`, the `Doc-tests tooprolix` target) are absent from it
-#     entirely, and code reached only by a doctest is reported uncovered.
+#   - THE COVERAGE RUN IS NOT THE TEST RUN. `cargo llvm-cov` skips doctests unless `--doctests` is
+#     passed, so the `Doc-tests tooprolix` target is absent from `make rust.cov` entirely and code
+#     reached only by a doctest is reported uncovered.
 #     `--doctests` is NOT available here, and that is measured rather than assumed: on the pinned
 #     stable 1.97.0 it fails with `error: 2 nightly options were parsed`, because cargo-llvm-cov
-#     drives rustdoc with `-Z unstable-options --persist-doctests`. Getting those 6 into the number
-#     would mean moving the whole repository to a nightly toolchain, which is a far larger decision
-#     than a coverage figure. So they stay out, stated rather than silent.
+#     drives rustdoc with `-Z unstable-options --persist-doctests`. Getting the doctests into the
+#     number would mean moving the whole repository to a nightly toolchain.
 #   - Rust BRANCH coverage is not reported at all: the `Branches` column of llvm-cov reads `-` on
 #     the pinned stable 1.97.0 (it needs a nightly-only flag). The Rust number is LINE coverage. The
 #     Python number has `branch = true` and folds branches into its figure — the two are reported

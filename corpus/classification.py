@@ -1,12 +1,11 @@
 """
 The classification artifact of the anti-false-positive gate, and the checker that grades it.
 
-AC5 of `close-anti-fp-gate-with-public-reference` asks for a baseline that is reproducible — "a
-`--verify` mechanism **or an analogue**" — and that carries the **class** of every finding rather
-than only its address. `tooprolix` has neither a `--verify` flag nor a baseline feature, and adding
-one is a linter feature, not a measurement. So the analogue is built here, on the corpus side: a
-JSON artifact of one record per classified finding, plus `verify`, which re-reads the run the
-artifact claims to describe and fails if the two disagree.
+A reproducible baseline that carries the **class** of every finding, not only its address.
+`tooprolix` has no `--verify` flag and no baseline feature, and adding one is a linter feature
+rather than a measurement, so the analogue is built here: a JSON artifact of one record per
+classified finding, plus `verify`, which re-reads the run the artifact claims to describe and fails
+if the two disagree.
 
 # What makes this an artifact rather than a self-report
 
@@ -18,28 +17,23 @@ Everything `verify` checks comes from **outside** the artifact:
 * each record's similarity, near/exact half and member list are compared against the finding the
   run actually emitted.
 
-This is the epic's recurring defect #6 — *a validator that grades a self-report is not a validator*
-— at the annotation layer. The one number `verify` cannot check is whether a verdict is *right*;
-that is what the named proposed fix in each record is for, and why a `TP` without one is refused.
+The one number `verify` cannot check is whether a verdict is *right*; that is what the named
+proposed fix in each record is for, and why a `TP` without one is refused.
 
 # Exactly two classes
 
-EPIC.md Decisions #17: a finding that was rejected while its prose stayed in place is a **false
-positive**. It may carry `intentional` in `attributes`, but it may not become a third class, because
-a third class removes it from the numerator and turns every failed gate into a pass by renaming.
-[`Record`] therefore accepts `TP` and `FP` and nothing else, and it refuses a `TP` that names no fix
-— Decisions #16's "these words are similar is not a basis" enforced at parse time rather than
-promised in prose.
+A finding that was rejected while its prose stayed in place is a **false positive**. It may carry
+`intentional` in `attributes`, but it may not become a third class, because a third class removes it
+from the numerator and turns every failed gate into a pass by renaming. [`Record`] therefore accepts
+`TP` and `FP` and nothing else, and it refuses a `TP` that names no fix — "these words are similar"
+is not a basis, enforced at parse time rather than promised in prose.
 
 # Stdlib only, and that is a deliberate deviation
 
 `AGENTS.md` asks for Pydantic v2 models for data structures. This module does not use them, for the
 same reason `corpus/measure.py`, `corpus/units.py` and `corpus/sample_clusters.py` do not: the whole
 corpus tooling is stdlib-only so that a measurement cannot move because a dependency resolved
-differently, and `make test` runs `uv run --only-group test pytest`, a group that carries pytest and
-nothing else. Adding Pydantic would put a resolver between the artifact and the number it produces.
-The conflict is recorded rather than averaged; validation is explicit instead, and every failure
-path is tested.
+differently. Validation is explicit instead, and every failure path is tested.
 
 Usage:
     uv run python3 corpus/classification.py --artifact corpus/dry_run_classification.json
@@ -92,7 +86,7 @@ class RunExpectation:
     """
     What the pre-registration says a run must look like before anything may be read out of it.
 
-    🔴 **`sha256` is the authoritative one and it is checked against the file on disk.** It used to
+    **`sha256` is the authoritative one and it is checked against the file on disk.** It used to
     be pinned here and never loaded, while `verify` compared the file against
     `artifact.runs[].sha256` — another field of the very artifact being graded. Measured: rewrite a
     run, update the artifact's own hash to match, and the forged population verified clean with
@@ -114,7 +108,7 @@ class RunRequirements:
     """
     What every run of a profile must satisfy, when it cannot be predicted in advance.
 
-    🔴 **The answer to a chicken-and-egg the first version of `RunExpectation` created.** For the
+    **The answer to a chicken-and-egg the first version of `RunExpectation` created.** For the
     corpus, the per-run numbers were already measured and could simply be pinned. For a holdout they
     cannot be — nobody has run it, which is the entire point — so pinning them would either be
     impossible or would have to be filled in *after* the run, which is the post-hoc self-report this
@@ -245,7 +239,7 @@ class Artifact:
     """
     A whole classification: the detector it was taken on, the runs it covers, and the records.
 
-    🔴 **It deliberately does NOT carry the draw parameters, and that is the point.** It used to,
+    **It deliberately does NOT carry the draw parameters, and that is the point.** It used to,
     and `verify` re-drew the expected population from them — so the artifact defined the population
     it was then graded against. Measured: an artifact declaring `limit: 0` with zero records
     verified clean and reported `unavailable`, i.e. the gate passed with nothing labelled. The draws
@@ -467,7 +461,7 @@ def _check_run_health(
     """
     Grade a run's own metadata before any finding is read out of it.
 
-    🔴 **The walked-file count is the whole reason this exists.** A run truncated by the parent
+    **The walked-file count is the whole reason this exists.** A run truncated by the parent
     `.gitignore` trap reports `complete: true` with an empty `skipped[]` and a plausible-looking
     finding list — the count is the only place it becomes visible, and the run JSON cannot carry it.
     `corpus/run_all.sh` writes it to `<name>.files`, and it is compared against the count pinned in
@@ -522,21 +516,19 @@ def _check_detector(artifact: Artifact, repo_root: Path, binary: Path | None) ->
     artifact that an outside fact can contradict. `binary_sha256` is checked whenever the binary is
     available; when it is not, the caller says so explicitly rather than the check quietly passing.
 
-    🔴 **`detector_commit` must name a DURABLE commit, and that was learned the hard way.** This
-    check first pinned the branch commit a measurement was taken on. Ordinary pull requests here are
-    **squash-merged** (`CONTRIBUTING.md`), so every one of those commits became unreachable from
-    `main` the moment the work merged, and CI on `main` went red on artifacts whose provenance was
-    entirely truthful. `fetch-depth` cannot fix that and never could: the commits are gone, not
-    unfetched. A provenance anchored to an identifier the merge strategy deletes is a check that
-    fails on honest data.
+    **`detector_commit` must name a DURABLE commit.** Pull requests here are **squash-merged**
+    (`CONTRIBUTING.md`), so pinning the branch commit a measurement was taken on reddens `main` the
+    moment the work merges — the commit is unreachable, and `fetch-depth` cannot help because it is
+    gone, not unfetched. A provenance anchored to an identifier the merge strategy deletes is a
+    check that fails on honest data.
 
-    So the field now names the commit on `main` the runs are valid for, and the original branch
-    commit is preserved beside it in `measured_at_commit` — recorded, deliberately **not** resolved,
+    So the field names the commit on `main` the runs are valid for, and the original branch commit
+    is preserved beside it in `measured_at_commit` — recorded, deliberately **not** resolved,
     because after a squash it cannot be. What licenses the substitution is measured rather than
     assumed: every run these artifacts describe is byte-identical under the merged detector, which
     `TestTheHoldoutPopulationIsPinned` and the corpus `EXPECTED` table both hold to.
 
-    ⚠️ **Stated rather than overclaimed: nothing here proves which binary produced a given JSON.**
+    **Stated rather than overclaimed: nothing here proves which binary produced a given JSON.**
     Only re-running it does. What this rules out is a provenance string naming a commit that does
     not exist, a tree that was dirty without saying so, and a binary on disk that is not the one the
     artifact claims.
@@ -592,7 +584,7 @@ def verify(
             "is not, because the number of repositories was decided before the data.",
         )
 
-    # 🔴 The directory separation is load-bearing and is checked rather than remembered. `load_runs`
+    # The directory separation is load-bearing and is checked rather than remembered. `load_runs`
     # globs a directory, so a holdout run dropped into `corpus/runs/` silently joins the calibration
     # population — measured: five `Raven` clusters entered the *dry-run* draw that way, and the only
     # symptom was a coverage error nobody would have read as contamination. Every run the artifact
@@ -676,7 +668,7 @@ def baseline_from(artifact: Artifact) -> tuple[str, ...]:
     """
     Derive the baseline from the labels, so it cannot exist before them.
 
-    🔴 **This is EPIC.md Decisions #17's ordering made structural instead of described.** The rule
+    **This is EPIC.md Decisions #17's ordering made structural instead of described.** The rule
     is: save and hash the first *unsuppressed* run, label every drawn finding, and only then build a
     baseline — because a baseline taken first is a filter that decides what gets annotated. Prose
     saying so is not enforcement; a function whose only input is the labelled records is, because

@@ -45,11 +45,10 @@ rust-version = "1.97"
 
 [lib]
 name = "tooprolix"
-# `rlib` alone since epic 2 Decisions #19.1. `cdylib` was here for the maturin/pyo3 extension
-# module, and the wheel now carries the native executable instead (`[tool.maturin] bindings = "bin"`
-# in pyproject.toml), so nothing loads this crate as a shared object any more. `rlib` STAYS and is
-# not optional: every `tests/*.rs` integration target links the crate through it, and with `cdylib`
-# alone — maturin's default — they cannot.
+# `rlib` alone: the wheel carries the native executable (`[tool.maturin] bindings = "bin"` in
+# pyproject.toml), so nothing loads this crate as a shared object. `rlib` STAYS and is not optional:
+# every `tests/*.rs` integration target links the crate through it, and with `cdylib` alone —
+# maturin's default — they cannot.
 crate-type = ["rlib"]
 
 [dependencies]
@@ -167,11 +166,9 @@ unwrap_used = "deny"
 # So `strip` is taken for the wheel size, `lto`/`codegen-units` for the further 14% on top of it,
 # and no runtime claim is made in either direction.
 #
-# 🔴 `panic = "abort"` IS FORBIDDEN HERE, and it is the one knob this measurement may not reach for.
+# `panic = "abort"` IS FORBIDDEN HERE, and it is the one knob this measurement may not reach for.
 # The deliverable is the 0/1/2 exit contract; abort is `SIGABRT`, which is not a number, does not
-# run destructors, and drops whatever `cli::emit`'s `BufWriter` was holding. The prohibition used to
-# be justified by "a panic across the pyo3 boundary is a UB class" — there is no pyo3 boundary any
-# more (Decisions #19.1), and the ban survives on the exit contract alone. It is not left to this
+# run destructors, and drops whatever `cli::emit`'s `BufWriter` was holding. It is not left to this
 # comment: `tests/cli.rs::no_cargo_profile_aborts_on_panic` scans every `[profile…]` table in this
 # file, so the key cannot be smuggled into `[profile.bench]` either — and
 # `tests/cli.rs::a_panic_in_a_release_build_stays_a_code_and_keeps_its_output` runs a binary

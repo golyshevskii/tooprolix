@@ -18,6 +18,6 @@ channel = "1.97.0"
 # listed here is installed by rustup on the first `cargo` call, so `make rust.cov` works identically
 # on a fresh clone and on a runner, with nothing to keep in sync between the two.
 #
-# ⚠️ The component is only half the requirement. `cargo llvm-cov` is a separate cargo subcommand
+# The component is only half the requirement. `cargo llvm-cov` is a separate cargo subcommand
 # crate and is NOT installed by this file — see CONTRIBUTING.md.
 components = ["clippy", "rustfmt", "llvm-tools"]

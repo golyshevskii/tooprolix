@@ -33,7 +33,7 @@ semver_check = true
 git_tag_enable = true
 git_release_enable = true
 
-# 🔴 THE VERSION COMES FROM THE GIT TAG, NOT FROM crates.io. Without this line the promise that a
+# THE VERSION COMES FROM THE GIT TAG, NOT FROM crates.io. Without this line the promise that a
 # `!` commit produces 0.2.0 is simply false, and breaking changes would ship as patches.
 #
 # By default release-plz asks the registry what the last released version was. This crate is never
@@ -61,31 +61,22 @@ git_release_enable = true
 #      "No release tag found matching pattern `^v(\d+\.\d+\.\d+)$`. Package tooprolix will be
 #      treated as initial release" and answers 0.1.0 in under a second. That is the state `main` is
 #      in today, so merging this changes nothing about the pending Release PR.
-#   2. That `cargo package` build is the reason the epic audit expected this line to need a Python
-#      interpreter in CI. **It does not, and the reason is no longer the one this comment used to
-#      give.**
-#
-#      🔴 REWRITTEN 2026-07-31 (epic 2 Decisions #19.1), because the old explanation described a
-#      mechanism that has been deleted. It said: the verification build takes default features,
-#      `python` is not one, so pyo3-ffi is never compiled — measured at the time, in one shell whose
-#      `python3` refused to run:
-#
-#        crate at fc77b75 (pyo3 unconditional):  Compiling pyo3-ffi v0.29.0
-#                                                error: no Python 3.x interpreter found
-#                                                error: failed to verify package tarball
-#                                                Error: failed to determine next versions
-#        crate with `python` optional:           tooprolix: next version is 0.2.0
-#
-#      That escape hatch was a FEATURE FLAG, and it came with a warning that the trap returns the
-#      moment anyone makes pyo3 non-optional. The wheel now carries the native executable
-#      (`[tool.maturin] bindings = "bin"`) rather than an extension module, so **pyo3,
-#      `pyo3-build-config` and the `python` feature are gone from `Cargo.toml` entirely**. The
-#      verification build cannot compile pyo3-ffi because there is no pyo3 in the dependency graph
-#      to compile — `cargo tree | grep -c pyo3` is 0.
+#   2. That `cargo package` build compiles the crate, so a dependency needing a Python interpreter
+#      at build time would need one in CI here. None does: the wheel carries the native executable
+#      (`[tool.maturin] bindings = "bin"`) rather than a pyo3 extension module, so there is no pyo3
+#      in the dependency graph to compile — `cargo tree | grep -c pyo3` was 0 at `72fda14`,
+#      2026-07-31, and `Cargo.lock` is what would have to change for that to stop being true.
+#      Re-introducing pyo3
+#      re-introduces that requirement even if nothing uses it, and no gate here checks for it:
+#      `make rust.build` grades the linked binary, which an unused dependency does not change.
 #
 #      So `.github/workflows/release-plz.yml` still needs no Python step, and the reason is now
 #      structural rather than conditional: the warning about `[features] default` is void because
 #      there is no such feature to put anything in. What WOULD bring the trap back is adding pyo3 to
-#      `[dependencies]` again; `make rust.build` is the guard that notices, because it reads the
-#      linked binary and fails on any dynamic dependency naming Python.
+#      `[dependencies]` again — and NOTHING in this repository would catch it. Measured 2026-07-31
+#      with `pyo3 = "0.29.0"` declared and unused: on a PATH with no interpreter the build dies in
+#      pyo3-ffi's build script (`error: no Python 3.x interpreter found`), and with one present
+#      `make rust.build` prints `ok: ... links no libpython` and exits 0, because rustc links no
+#      crate nothing references. The interpreter requirement is back; the linkage guard cannot see
+#      it.
 git_only = true

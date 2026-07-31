@@ -1,10 +1,9 @@
 """
 The evidence behind the no-ship verdict on detector 2 (code restatement).
 
-`implement-code-restatement-detector` carries a ship/no-ship gate: the heuristic ships only if
-both mandatory fixtures pass deterministically. They DO — and the detector still does not ship,
-because the setting that passes them is the same setting that fires 117 times on the repo the
-issue's AC5 requires every shipped detector to be silent on.
+The heuristic was gated on both mandatory fixtures passing deterministically. They DO — and the
+detector still does not ship, because the setting that passes them is the same setting that fires
+117 times on the repository every shipped detector is required to be silent on.
 
 That verdict is only worth the numbers under it, and one of those numbers is a boundary nobody
 would notice by reading: the positive fixture scores EXACTLY the shipped threshold and carries
@@ -19,16 +18,16 @@ pinned:**
 
 * `_stem` replaced by the identity function -> 117 becomes 100 (see the stemmer test);
 * `looks_like_code` loosened, e.g. `or "(" in raw` -> 117 becomes 111 — the filter that produces
-  the subtracted 20. It used to be nailed down only at its two extremes, so that loosening left all
-  201 tests green; measured 2026-07-29 by inserting `if "(" in body: return True`.
+  the subtracted 20. Pinning only its two extremes leaves that loosening green (measured by
+  inserting `if "(" in body: return True`), so
   `test_a_prose_restatement_carrying_parentheses_stays_in_the_117` is the middle case that closes
   it, together with the bracket rows of
   `test_measure.py::test_looks_like_code_separates_commented_out_code_from_prose`.
 
 So a green suite means "the setting the verdict was argued from is still that setting", not "the
 reference count is still 117". The count is reproduced by `make corpus.measure` and recorded in
-`corpus/REPORT.md`: on an audited repository restate=137, commented=20, i.e. 117
-after the commented-out-code filter the task's ToDo 1a requires.
+`corpus/REPORT.md`: on an audited repository restate=137, commented=20, i.e. 117 after the
+commented-out-code filter.
 
 Run: make test
 """
