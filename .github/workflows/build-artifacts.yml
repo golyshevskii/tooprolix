@@ -9,22 +9,22 @@ name: Build artifacts
 # not available to a step that tried. `flip-public-and-publish-to-pypi` owns the irreversible half
 # and will add a publish job of its own.
 #
-# Manual dispatch, plus a narrow `push:` filter on the five files that decide what an artifact
-# contains. Two reasons, and the second is why the filter is not simply dropped:
+# Manual dispatch, plus `push:` with NO path filter. `workflow_dispatch` alone is not enough:
+# GitHub reads the dispatch definition from the default branch, so on a feature branch that adds
+# this file manual dispatch is not available at all.
 #
-#   1. it is ruff's own practice — their `build-binaries.yml` carries a `pull_request: paths:` on
-#      `pyproject.toml` and the workflow itself, "so that the maturin builds still work". The
-#      packaging path is otherwise exercised only at release time, which is the worst moment to
-#      discover it rotted;
-#   2. `workflow_dispatch` **cannot be triggered on a branch whose workflow is not yet on the
-#      default branch** — GitHub reads the dispatch definition from the default branch. So on a
-#      feature branch that adds this file, manual dispatch is not available and `push:` is the only
-#      trigger that can produce the green run with artifacts this task has to show.
+# 🔴 THE `paths:` FILTER WAS REMOVED, AND ITS REMOVAL IS THE FIX. It listed five files —
+# `Cargo.toml`, `pyproject.toml`, this workflow, and the two scripts — under a header claiming those
+# five "decide what an artifact contains". They do not: `README.md` is the description PyPI renders,
+# `build.rs` decides the date, `src/**` and `Cargo.lock` are the binary, `LICENSE` and `docs/**` ride
+# in the archives. A README-only change — **precisely the change that breaks the transformer** —
+# skipped this workflow entirely, so not one of its checks could go red on it.
 #
-# It is deliberately NOT unfiltered: the jobs compile the crate three more times than `ci.yml`
-# already does, on three runner families. ⚠️ A `paths:` filter is safe HERE and would not be on
-# `ci.yml` — a skipped check does not satisfy a required status check, and none of these jobs is
-# registered as one.
+# Replacing the list with a longer list would only move the boundary: the next file nobody thought
+# of has the same effect, and the list rots silently because nothing tells you it is short. An
+# unfiltered trigger cannot be wrong about what matters. The cost is named rather than hidden: four
+# more jobs per push, roughly doubling the compile work `ci.yml` already does. Buy the filter back
+# only with a measurement showing that cost is real.
 #
 # # The supported matrix, and why it is three platforms rather than seventeen
 #
@@ -53,12 +53,6 @@ name: Build artifacts
 on:
   workflow_dispatch:
   push:
-    paths:
-      - Cargo.toml
-      - pyproject.toml
-      - .github/workflows/build-artifacts.yml
-      - scripts/install-smoke.sh
-      - scripts/transform_readme.py
 
 permissions:
   contents: read
@@ -112,7 +106,7 @@ jobs:
       # into absolute GitHub URLs and FAILS THE BUILD if the README is not the shape it expects —
       # `twine check` validates the METADATA envelope and never the links inside the description.
       - name: Rewrite the README for the PyPI project page
-        run: uv run --no-project python scripts/transform_readme.py README.md
+        run: uv run --no-project --with 'readme_renderer[md]' python scripts/transform_readme.py README.md
 
       - name: Build sdist
         uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b # v1.51.0
@@ -164,14 +158,27 @@ jobs:
       - name: twine check
         run: uvx twine check --strict "$SDIST" "$WHEEL_FROM_SDIST"
 
-      # AC4 for the source path: the artifact that carries no compiled binary is installed, built,
-      # and the resulting COMMAND is run. This is where `unknown` would surface if the
-      # SOURCE_DATE_EPOCH step above were ever dropped.
+      # AC4 for the source path, with an ORACLE rather than a shape check: the expected date is
+      # `git log -1 --format=%cs`, computed here from the checkout, so a binary built from any other
+      # commit fails. Without it the smoke accepted `tooprolix 0.4.1 (2000-01-01)` — measured.
       - name: install-smoke the wheel built from the sdist
-        run: scripts/install-smoke.sh "$WHEEL_FROM_SDIST"
+        run: scripts/install-smoke.sh "$WHEEL_FROM_SDIST" "$(git log -1 --format=%cs)"
 
-      - name: install-smoke the sdist itself
-        run: scripts/install-smoke.sh "$SDIST"
+      # 🔴 THE NON-CIRCULAR HALF, AND IT PINS AN ACCEPTED LIMITATION RATHER THAN HIDING ONE.
+      #
+      # Every other step here runs with SOURCE_DATE_EPOCH exported, so "the sdist produces a dated
+      # binary" was only ever proved in an environment that handed it the date. A real
+      # `pip install tooprolix` from the sdist — what a user on a platform outside the matrix gets —
+      # has no such environment and no `.git`, so `build.rs` falls through to `unknown`.
+      #
+      # Measured, and ACCEPTED: `unknown` is what `build.rs` was designed to say when it cannot know
+      # its provenance, in preference to borrowing a surrounding repository's date (the bug task #7
+      # fixed). `--help` documents it to users. So the behaviour is pinned as an expectation instead
+      # of being left as something the matrix quietly never exercises: `env -u SOURCE_DATE_EPOCH`
+      # plus the literal expected date `unknown`. The day an offline sdist starts printing something
+      # else — a wall clock, a borrowed commit — this step goes red.
+      - name: install-smoke the sdist offline, where the date is honestly unknown
+        run: env -u SOURCE_DATE_EPOCH scripts/install-smoke.sh "$SDIST" unknown
 
       - name: Upload
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -227,7 +234,7 @@ jobs:
 
       - name: Rewrite the README for the PyPI project page
         shell: bash
-        run: uv run --no-project python scripts/transform_readme.py README.md
+        run: uv run --no-project --with 'readme_renderer[md]' python scripts/transform_readme.py README.md
 
       - name: Build wheel
         uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b # v1.51.0
@@ -252,10 +259,20 @@ jobs:
           # a default is not a promise, and this is the line that keeps the tag honest if it changes.
           MACOSX_DEPLOYMENT_TARGET: "11.0"
 
-      # AC2: the tag is READ OFF THE BUILT FILE and compared with what the matrix promised. A wheel
-      # whose name says manylinux_2_17 while it was linked against a newer glibc is the failure this
-      # catches; "it built on the runner" is not a floor and the platform tag is the only thing a
-      # user's installer looks at.
+      # AC2: the tag is compared against what the matrix promised, and `expect_tag` is declared up
+      # there rather than derived here — so it is fixed independently of whatever the build produced.
+      #
+      # 🔴 READ FROM INSIDE THE ARCHIVE, not from the filename. A filename is a label anybody can
+      # type; `.dist-info/WHEEL` is what a resolver actually reads, and the two can disagree — a
+      # renamed file is the trivial case, a repack the real one. Both are checked, and they must
+      # agree with each other as well as with the matrix.
+      #
+      # ⚠️ WHAT THIS DOES NOT CHECK, said plainly: no symbol versions are audited. Nothing here
+      # opens the ELF and compares its `GLIBC_*` requirements against the 2.17 the tag promises —
+      # **the manylinux build container IS the whole guarantee** for that, because it is a sysroot
+      # old enough that a newer symbol cannot be linked in the first place. If the linux leg ever
+      # stops going through `manylinux: 2_17`, this check keeps passing while the promise breaks,
+      # and `auditwheel` becomes the missing step.
       #
       # 🔴 The count comes FIRST, and it is not tidiness. `$(echo dist/*.whl)` is a space-joined
       # list, and `basename` on such a list silently answers with the last entry — so in run
@@ -274,10 +291,17 @@ jobs:
           fi
           echo "WHEEL=${built[0]}" >> "$GITHUB_ENV"
           echo "built: ${built[0]}"
+          # zipfile rather than `unzip`: Git Bash on the Windows runner has no `unzip`.
+          inside="$(uv run --no-project python -c 'import sys, zipfile; z = zipfile.ZipFile(sys.argv[1]); n = next(k for k in z.namelist() if k.endswith(".dist-info/WHEEL")); print("+".join(l.split(":", 1)[1].strip() for l in z.read(n).decode().splitlines() if l.startswith("Tag:")))' "${built[0]}")"
+          echo "Tag: inside .dist-info/WHEEL = $inside"
+          if [ "$inside" != "${{ matrix.platform.expect_tag }}" ]; then
+            echo "FAIL: the archive declares '$inside', the matrix promises '${{ matrix.platform.expect_tag }}'" >&2
+            exit 1
+          fi
           case "$(basename "${built[0]}")" in
           "tooprolix-"*"-${{ matrix.platform.expect_tag }}.whl") ;;
           *)
-            echo "FAIL: expected the tag ${{ matrix.platform.expect_tag }}" >&2
+            echo "FAIL: the filename does not carry the tag ${{ matrix.platform.expect_tag }}" >&2
             exit 1
             ;;
           esac
@@ -288,7 +312,7 @@ jobs:
 
       - name: install-smoke
         shell: bash
-        run: scripts/install-smoke.sh "$WHEEL"
+        run: scripts/install-smoke.sh "$WHEEL" "$(git log -1 --format=%cs)"
 
       - name: Upload
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

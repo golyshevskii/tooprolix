@@ -26,8 +26,10 @@
 #      `bindings = "bin"` that file comes from `tooprolix-<version>.data/scripts/tooprolix` in the
 #      wheel, so this is the assertion that goes red on a wheel with no binary in it.
 #   2. `tooprolix --help` exits 0 — the command not only exists but runs.
-#   3. `tooprolix --version` prints the version the distribution's own METADATA declares, AND a real
-#      `YYYY-MM-DD` date rather than `unknown`. The date comes from `build.rs`, which resolves
+#   3. `tooprolix --version` prints ONE line: the version the distribution's own METADATA declares,
+#      and the date. The date is compared against the value the CALLER supplies when it has one —
+#      a shape check alone accepted `tooprolix 0.4.1 (2000-01-01)`, i.e. a wheel assembled around a
+#      binary from another commit (measured). The date comes from `build.rs`, which resolves
 #      `SOURCE_DATE_EPOCH` -> git -> `unknown`; an sdist carries no `.git` and (since task #7) will
 #      not borrow a surrounding repository's, so **a release build that forgets to export
 #      `SOURCE_DATE_EPOCH` ships a binary that does not know what it was built from**. Measured
@@ -40,14 +42,26 @@
 #   5. A clean fixture exits 0 — so assertion 4 is not passing because the tool fails on everything.
 set -euo pipefail
 
-if [ $# -ne 1 ]; then
-	echo "usage: $0 <install-source>" >&2
-	echo "  local wheel:  $0 /path/to/tooprolix-0.1.0-....whl" >&2
+if [ $# -lt 1 ] || [ $# -gt 2 ]; then
+	echo "usage: $0 <install-source> [expected-date]" >&2
+	echo "  local wheel:   $0 /path/to/tooprolix-0.1.0-....whl" >&2
 	echo "  after the tag: $0 git+https://github.com/golyshevskii/tooprolix@v0.1.0" >&2
+	echo "  exact date:    $0 dist/x.whl \"\$(git log -1 --format=%cs)\"" >&2
+	echo "  offline sdist: $0 dist/x.tar.gz unknown" >&2
 	exit 2
 fi
 
 source_spec="$1"
+# 🔴 THE DATE IS AN ORACLE THE CALLER SUPPLIES, AND WITHOUT IT THIS CHECK IS A SHAPE CHECK.
+# Measured 2026-07-31 on a wheel repacked around a shim: `tooprolix 0.4.1 (2000-01-01)` printed
+# `install-smoke: OK` and exited 0. Any `YYYY-MM-DD` passed, so a wheel assembled around a binary
+# from a different commit was indistinguishable from the right one — the date was graded as a
+# self-report while the version beside it was cross-checked against METADATA.
+#
+# CI knows the answer (`git log -1 --format=%cs`) and passes it. `unknown` is a legal expected value
+# and is used deliberately: it is what an offline `pip install` from the sdist produces, and pinning
+# it is how that documented behaviour stops being an accident.
+expected_date="${2:-}"
 # `-P` on every `pwd`: the checks below compare paths, and `./`, `..` and symlinks defeat a lexical
 # comparison. Resolve first, compare after.
 repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
@@ -65,12 +79,27 @@ fi
 # graded a different artifact and said the wrong thing. That is not only adversarial: a developer
 # with `UV_PROJECT_ENVIRONMENT` exported globally gets the same false pass.
 #
-# Two layers, because unsetting names is a blocklist and blocklists rot:
+# Three layers, because unsetting names is a blocklist and blocklists rot:
 #   1. the three variables that redirect the environment are cleared here, and
 #   2. after the install, the console script is required to EXIST inside the scratch project's own
 #      venv (below). No environment variable, present or future, survives that check — it grades the
-#      file that the install was supposed to produce.
+#      file that the install was supposed to produce;
+#   3. `UV_NO_CACHE=1`, so an sdist is rebuilt here rather than answered from a wheel uv built
+#      earlier under a different environment. See the note beside it.
 unset UV_PROJECT_ENVIRONMENT UV_NO_SYNC VIRTUAL_ENV
+
+# 🔴 LAYER 3, AND IT WAS FOUND THE HARD WAY. uv caches the wheel it BUILDS from an sdist, and the
+# cache key does not include the build environment — so the same tarball installed twice answers
+# with the first build's binary. Measured 2026-07-31: with `SOURCE_DATE_EPOCH` correctly exported,
+# this script reported `tooprolix 0.4.1 (unknown)` and FAILED, because an earlier cache-filling run
+# had built the same sdist without it. With `UV_NO_CACHE=1` the same command answers
+# `(2026-07-31)`, and without the epoch it answers `(unknown)` — both as designed.
+#
+# So the cache made the smoke grade a build that did not happen, which is the same defect as
+# grading a self-report one layer down. A wheel install is a copy and pays nothing for this; an
+# sdist install rebuilds the crate, and that cost is the price of the answer being about THIS
+# artifact.
+export UV_NO_CACHE=1
 
 work="$(cd "$(mktemp -d "${TMPDIR:-/tmp}/tooprolix-smoke.XXXXXX")" && pwd -P)"
 # Immediately, and BEFORE the boundary check below — not after it. The check's whole job is to keep
@@ -175,15 +204,35 @@ run_check 0 'tooprolix check <path>' uv run tooprolix --help
 # rustc bakes `CARGO_PKG_VERSION` in at compile time). A wheel assembled around a binary from some
 # other build disagrees here, and nothing else in this script would notice.
 expected_version="$(uv run python -c 'import importlib.metadata as m; print(m.version("tooprolix"))')"
-printf '$ tooprolix --version   (expecting version %s and a real date)\n' "$expected_version"
-version_line="$(uv run tooprolix --version)"
-printf '%s\n\n' "$version_line"
+printf '$ tooprolix --version   (expecting version %s and date %s)\n' \
+	"$expected_version" "${expected_date:-<any YYYY-MM-DD>}"
+version_output="$(uv run tooprolix --version)"
+printf '%s\n\n' "$version_output"
 
-# `tooprolix <version> (<YYYY-MM-DD>)`, anchored at both ends. A substring match would accept
-# `tooprolix 0.4.1 (unknown) trailing junk`, and `[0-9]` alone would accept a nine-digit year.
-if ! printf '%s' "$version_line" |
+# ONE line, counted before anything is matched. `grep -E "^…$"` matches per LINE, so a two-line
+# `--version` carrying `(unknown)` on the first and a valid date on the second satisfied the old
+# anchored pattern and printed `install-smoke: OK` — measured 2026-07-31 on a repacked wheel. The
+# contract is a single line, so that is what is asserted, and it is asserted first: every check
+# below is only meaningful once there is exactly one thing to check.
+if [ "$(printf '%s\n' "$version_output" | wc -l | tr -d ' ')" != "1" ]; then
+	echo "FAIL: --version printed more than one line:" >&2
+	printf '%s\n' "$version_output" >&2
+	exit 1
+fi
+
+# With an oracle, the whole line must match exactly — that is what makes a binary from another
+# commit fail. Without one, the shape is all that can honestly be asserted, and `unknown` still
+# fails because it is not a date.
+if [ -n "$expected_date" ]; then
+	if [ "$version_output" != "tooprolix ${expected_version} (${expected_date})" ]; then
+		echo "FAIL: --version printed '$version_output'" >&2
+		echo "      expected exactly 'tooprolix ${expected_version} (${expected_date})'." >&2
+		echo "      The binary was built from a different commit than the one that was packaged." >&2
+		exit 1
+	fi
+elif ! printf '%s' "$version_output" |
 	grep -Eq "^tooprolix ${expected_version} \([0-9]{4}-[0-9]{2}-[0-9]{2}\)$"; then
-	echo "FAIL: --version printed '$version_line'" >&2
+	echo "FAIL: --version printed '$version_output'" >&2
 	echo "      expected 'tooprolix ${expected_version} (YYYY-MM-DD)'." >&2
 	echo "      A date of 'unknown' means the build did not export SOURCE_DATE_EPOCH: an sdist has" >&2
 	echo "      no .git, and build.rs will not borrow a surrounding repository's commit date." >&2
