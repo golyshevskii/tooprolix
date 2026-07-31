@@ -142,8 +142,10 @@ and becomes a barrier when the publication task registers required checks.
     narrower.
   - **development** needs **≥ 3.12**: `corpus/measure.py` refuses to start below it
     (`MIN_INTERPRETER`, PEP 701 — pre-3.12 `tokenize` hides identifiers inside f-strings and lowers
-    the restatement counts), so `ci.yml`, ruff's `target-version` and ty's `python-version` all stay
-    on 3.12. `tests/unit/test_measure.py` reddens if either floor swallows the other.
+    the restatement counts), so ruff's `target-version` and ty's `python-version` are pinned to
+    3.12. `ci.yml` runs **3.14** — above that floor, so `requires-python`'s open upper bound is
+    actually exercised. `tests/unit/test_measure.py` reddens if either floor swallows the other or
+    if CI drops back onto the floor.
 
   Use `uv run python3`, never a bare `python3`.
 

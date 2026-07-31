@@ -961,7 +961,18 @@ def checkout_is_pinned(dest: Path, sha: str) -> bool:
 
 
 def measure_repo(url: str, sha: str, root: Path) -> RepoStats:
-    """Walk every eligible `.py` file of a checked-out repo."""
+    """
+    Walk every eligible `.py` file of a checked-out repo.
+
+    Refuses below `MIN_INTERPRETER`: `main`'s check covers only the command line, and this is the
+    path every counted repository goes through. `measure_file` is deliberately not guarded.
+    """
+    if sys.version_info[:2] < MIN_INTERPRETER:
+        message = (
+            f"need CPython >= {MIN_INTERPRETER[0]}.{MIN_INTERPRETER[1]}, "
+            f"got {sys.version_info[0]}.{sys.version_info[1]} (see MIN_INTERPRETER)"
+        )
+        raise RuntimeError(message)
     stats = RepoStats(name=repo_name(url), url=url, sha=sha, available=True)
     for path in iter_python_files(root):
         rel: str = path.relative_to(root).as_posix()

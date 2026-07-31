@@ -62,20 +62,9 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # 🔴 THE FLOOR, NOT THE CURRENT RELEASE, AND THAT IS WHY IT IS LOWER THAN `ci.yml`'s.
-  #
-  # `pyproject.toml` promises `requires-python = ">=3.11"`, and a promise no job exercises is a
-  # promise nobody has checked. Every install-smoke in this file therefore runs on the LOWEST
-  # interpreter the distribution claims: the wheel is `py3-none-<platform>` carrying a native
-  # executable, so it is the *installer* — resolving `Requires-Python`, unpacking
-  # `*.data/scripts/`, putting the command on PATH — that has to answer for 3.11, and this is the
-  # only place that question is asked.
-  #
-  # ⚠️ NOT a matrix, and NOT a second wheel build. The archive is interpreter-independent by
-  # construction, so building it twice would produce the same bytes and prove nothing; the only
-  # variable worth moving is the interpreter that installs it. The upper bound is open and is kept
-  # honest by `ci.yml`, which stays on 3.12+ because it runs `corpus/measure.py` — that script has
-  # its own, higher, MEASURED floor (`MIN_INTERPRETER`, PEP 701). Two floors, two jobs, on purpose.
+  # The distribution floor, so every install-smoke below exercises the lowest interpreter
+  # `requires-python` promises. Not a matrix: the wheel is `py3-none-<platform>`, so only the
+  # installing interpreter is worth moving.
   PYTHON_VERSION: "3.11"
   # Pinned, exactly as ruff pins it. maturin decides the wheel tag and the archive layout, so an
   # unpinned "latest" would let the shape of the published artifact change without a commit here.

@@ -23,7 +23,7 @@ import zipfile
 from pathlib import Path
 
 import pytest
-from check_artifact import main, tag_set
+from check_artifact import REQUIRED_HEADERS, main, tag_set
 
 DESCRIPTION = "# tooprolix\n\nThe transformed README.\n"
 HEADERS = (
@@ -134,6 +134,21 @@ class TestEachPromiseIsRefusedSeparately:
         # so nothing else in the archive would notice. `Requires-Python` is what an installer reads
         # to refuse the wheel on 3.11; a narrower floor locks out the interpreters AC1 promises.
         metadata = _metadata(HEADERS.replace("Requires-Python: >=3.11", "Requires-Python: >=3.12"))
+        archive = _wheel(tmp_path, metadata=metadata) if kind == "wheel" else _sdist(tmp_path, metadata=metadata)
+
+        assert main([str(archive), str(readme)]) == 1
+
+    @pytest.mark.parametrize("kind", ["wheel", "sdist"])
+    @pytest.mark.parametrize("header", sorted(REQUIRED_HEADERS))
+    def test_a_header_stated_twice_fails_even_when_the_first_value_is_right(
+        self, tmp_path: Path, readme: Path, kind: str, header: str
+    ) -> None:
+        # `email.message.get` returns only the FIRST occurrence, so a second, contradicting line is
+        # invisible to it — while an installer may honour the last. The archive is then ambiguous
+        # and the guard reports success, which is the fail-open shape it exists to prevent.
+        # Parameterised over every required header: the refusal belongs to the shared loop, not to
+        # whichever header somebody remembered to special-case.
+        metadata = _metadata(f"{HEADERS}{header}: something else\n")
         archive = _wheel(tmp_path, metadata=metadata) if kind == "wheel" else _sdist(tmp_path, metadata=metadata)
 
         assert main([str(archive), str(readme)]) == 1

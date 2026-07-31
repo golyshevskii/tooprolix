@@ -28,6 +28,7 @@ Run: make test    (or: uv run --only-group test pytest)
 from __future__ import annotations
 
 import logging
+import re
 import sys
 import tomllib
 from pathlib import Path
@@ -38,6 +39,7 @@ import pytest
 # corpus/fixtures/sample.py, reached from tests/unit/
 FIXTURE: Path = Path(__file__).parents[2] / "corpus" / "fixtures" / "sample.py"
 PYPROJECT: Path = Path(__file__).parents[2] / "pyproject.toml"
+CI_WORKFLOW: Path = Path(__file__).parents[2] / ".github" / "workflows" / "ci.yml"
 
 # --- hand counts on corpus/fixtures/sample.py ------------------------------------------
 # docstrings: lines 1-4 (module), 12 (class), 15-17 (method)
@@ -70,6 +72,22 @@ def test_the_corpus_floor_stays_above_the_floor_the_distribution_promises() -> N
     assert distribution_floor < measure.MIN_INTERPRETER
 
 
+def test_ci_runs_above_the_corpus_floor_so_the_open_upper_bound_is_exercised() -> None:
+    """
+    `requires-python = ">=3.11"` has no upper bound, and an unexercised upper bound is a claim.
+
+    CI must therefore run STRICTLY ABOVE the corpus floor, not on it: pinned to the floor, every job
+    in the repository sits at the bottom of a range the package advertises as open, and a break on
+    any newer interpreter passes everything. This is what makes "the upper bound is open" a measured
+    statement rather than a comment.
+    """
+    matched = re.search(r'^\s*PYTHON_VERSION:\s*"(\d+)\.(\d+)"', CI_WORKFLOW.read_text(encoding="utf-8"), re.MULTILINE)
+    assert matched is not None, "ci.yml declares no PYTHON_VERSION"
+    ci_interpreter: tuple[int, int] = (int(matched[1]), int(matched[2]))
+
+    assert ci_interpreter > measure.MIN_INTERPRETER
+
+
 def test_the_corpus_tool_refuses_an_interpreter_below_its_own_floor(
     monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture, tmp_path: Path
 ) -> None:
@@ -88,6 +106,26 @@ def test_the_corpus_tool_refuses_an_interpreter_below_its_own_floor(
 
     assert code == 2
     assert "need CPython >= 3.12, got 3.11" in caplog.text
+
+
+def test_measuring_a_repo_below_the_corpus_floor_raises_instead_of_emitting_numbers(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """
+    The floor belongs on the EMITTING path, not only on the CLI.
+
+    `main`'s check protects `uv run python3 corpus/measure.py`. It protects nothing that imports
+    `measure` — and lowering `requires-python` to the distribution floor is exactly what made a 3.11
+    environment buildable in the first place. `measure_repo` is where every counted repository goes
+    through, so a wrong-interpreter run stops there rather than returning numbers that look right.
+
+    `measure_file` is deliberately NOT guarded: it is the unit under test above, called directly on
+    `corpus/fixtures/` by the hand-counted tests.
+    """
+    monkeypatch.setattr(sys, "version_info", (3, 11, 9, "final", 0))
+
+    with pytest.raises(RuntimeError, match=r"3\.12"):
+        measure.measure_repo("https://example.invalid/repo", "0" * 40, tmp_path)
 
 
 @pytest.fixture

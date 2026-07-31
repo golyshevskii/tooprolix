@@ -25,10 +25,7 @@ license-files = ["LICENSE"]
 # No `Programming Language :: Python :: 3.x` rows. The wheel is `py3-none-<platform>`: it carries a
 # native executable and no Python code at all, so it neither knows nor cares which interpreter
 # installs it. Listing versions would advertise a compatibility matrix nothing here tests.
-# `requires-python` below is the only floor a CONSUMER sees, and it means exactly "the lowest
-# interpreter we install and smoke" — 3.11. It is not the only floor in the repository: the corpus
-# tooling keeps a separate, higher one (see the note beside `requires-python`), which no classifier
-# and no installer should ever hear about, because it is not a property of the distribution.
+# `requires-python` below is the only floor a consumer sees: "the lowest interpreter we smoke".
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: Console",
@@ -39,27 +36,11 @@ classifiers = [
     "Programming Language :: Rust",
     "Topic :: Software Development :: Quality Assurance",
 ]
-# The DISTRIBUTION floor, and nothing else. It is what an installer reads before unpacking a
-# `py3-none-<platform>` wheel that carries a native executable and no Python at all, so it means
-# exactly "the lowest interpreter we install and smoke" -- 3.11, which is the interpreter
-# `.github/workflows/build-artifacts.yml` runs `scripts/install-smoke.sh` on. There is no upper
-# bound: the archive is interpreter-independent, and enumerating future versions would advertise a
-# matrix nothing here tests. `scripts/check_artifact.py` grades the built archive's
-# `Requires-Python` header against this value rather than trusting this line.
-#
-# ⚠️ THIS IS NOT THE CORPUS-TOOLING FLOOR, and the two were the same value for exactly one epic.
-# `corpus/measure.py` keeps its own, higher, MEASURED floor: `MIN_INTERPRETER = (3, 12)`, because
-# pre-3.12 `tokenize` hides identifiers inside f-strings (PEP 701) and silently lowers the
-# restatement counts from 137 to 133 on an audited repository. It REFUSES to run below 3.12 rather
-# than emit different constants into REPORT.md. `tests/unit/test_measure.py` requires
-# `MIN_INTERPRETER` to stay strictly above this line, so neither floor can quietly swallow the
-# other. Ordinary CI (`.github/workflows/ci.yml`) therefore stays on 3.12+: it runs that tooling.
-#
-# ruff's `target-version` and ty's `python-version` are NOT inferred from this line any more, for
-# the same reason -- see `[tool.ruff]` and `[tool.ty.environment]` below. The only Python in this
-# repository is the corpus tooling and its tests, so they are pinned to the floor that code
-# actually runs on; inferring them from the distribution floor would lint 3.12-only research code
-# against an interpreter it refuses to start on.
+# The distribution floor: the lowest interpreter `build-artifacts.yml` install-smokes, graded on the
+# built archive by `scripts/check_artifact.py`. NOT the corpus-tooling floor — `corpus/measure.py`
+# keeps its own, higher `MIN_INTERPRETER = (3, 12)`, because pre-3.12 `tokenize` hides identifiers
+# inside f-strings (PEP 701) and lowers the restatement counts from 137 to 133 on an audited
+# repository. `tests/unit/test_measure.py` requires it to stay strictly above this line.
 requires-python = ">=3.11"
 
 # ⚠️ THERE IS DELIBERATELY NO `[project.scripts]` HERE, and its absence is load-bearing.
@@ -168,12 +149,8 @@ type = [
 
 [tool.ruff]
 line-length = 120
-# 🔴 PINNED, NOT INFERRED, and the inference is exactly what went wrong once already. ruff reads
-# `requires-python` when this key is absent — that is now the DISTRIBUTION floor (>=3.11), while the
-# only Python in this repository is `corpus/` + `tests/unit/`, which `MIN_INTERPRETER` refuses to run
-# below 3.12. Inferring would lint 3.12-only research code against an interpreter it will not start
-# on. The two floors are separate contracts (see the note beside `requires-python`); this line is the
-# one the linter is supposed to follow, and `[tool.ty.environment] python-version` says the same.
+# Pinned, not inferred: `requires-python` is the distribution floor (>=3.11), and the only Python
+# here is the corpus tooling, which refuses to run below 3.12.
 target-version = "py312"
 # exclude: ruff's default list is a superset of what we'd write — keep the default.
 # Fixture trees are test DATA and can never be lint-clean by construction:
@@ -274,8 +251,7 @@ split-on-trailing-comma = false # If a comma is placed after the last member in 
                                 # then the imports will never be folded into one line.
 
 [tool.ty.environment]
-# Pinned for the same reason as ruff's `target-version`: `requires-python` is the distribution
-# floor (>=3.11) and this code is the corpus tooling, which refuses to run below 3.12.
+# Pinned for the same reason as ruff's `target-version` above.
 python-version = "3.12"
 # Same reason as pytest's `pythonpath`: `measure.py` is a loose script in corpus/, not an
 # installed package, so tests/unit/ imports it as a top-level module. ty needs the same search

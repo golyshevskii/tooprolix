@@ -39,9 +39,8 @@ The size of the effect was 133 candidates instead of 137 on the audited reposito
 identical block counts. **That pair of counts is NOT reproducible with the shipped script**: it
 was measured during development, before the guard existed, and `measure.py` now exits 2 below
 3.12. It is quoted only to show the magnitude (~3%) behind the floor, and no constant depends on
-it. `measure.py` refuses to run below 3.12 (`MIN_INTERPRETER`), which is this script's own floor and
-NOT `requires-python` — that is the distribution floor and is `>=3.11`, because the shipped wheel
-carries a native executable and no Python. Everything else — prose share, block sizes,
+it. `measure.py` refuses to run below 3.12 (`MIN_INTERPRETER`); that is this script's own floor, not
+`requires-python`, which is the distribution's `>=3.11`. Everything else — prose share, block sizes,
 duplicate counts — is identical across 3.11 and 3.14.
 
 First run clones the pinned corpus into `corpus/checkouts/` (git-ignored, disposable). The user's
@@ -355,11 +354,9 @@ What was fixed:
    `corpus/checkouts/` changed stdout while the pin still "matched". A clean worktree with no
    untracked `.py` is now required, and a dirty one fails loud.
 7. **`requires-python` said 3.11 while the script refuses to run below 3.12.** Latent only because
-   uv happened to select 3.14. The defect was the INFERENCE, not the number: ruff's
-   `target-version` and ty's `python-version` were being read off a version the script rejects.
-   Both are now pinned to `py312`/`3.12` explicitly, and `requires-python` is back to `>=3.11` —
-   where it belongs, as the floor the distribution installs on rather than the floor this script
-   measures on. `tests/unit/test_measure.py` is what keeps the two apart.
+   uv happened to select 3.14; now `>=3.12`, so ruff's `target-version` and ty's `python-version`
+   are no longer inferred from a version the script rejects. (Superseded: the two floors were later
+   split — see residual 3 below.)
 8. **The near-duplicate conjunction loop was never guarded, and this document claimed it was.**
    Found by a third review after the fixes above. Changing `and` to `or` in the near-duplicate
    size test left all 57 tests green: every conjunction test built *identical* blocks, which form
@@ -396,9 +393,8 @@ What was fixed:
    (1470 pairs at the decided cutoff). My 0.63-1.00 range at n=8 is an unblinded reading, not a
    result.
 3. **The measurement is interpreter-sensitive** (restatement probe only, ~3%). Guarded by
-   `MIN_INTERPRETER = (3, 12)` alone. `requires-python` is deliberately NOT in step with it: it is
-   `>=3.11`, the floor the *distribution* installs on, and `tests/unit/test_measure.py` requires
-   `MIN_INTERPRETER` to stay strictly above it so neither floor can quietly swallow the other.
+   `MIN_INTERPRETER = (3, 12)` alone; `requires-python` is the separate distribution floor (`>=3.11`)
+   and `tests/unit/test_measure.py` keeps the two apart.
 4. **Candidate generation is still capped for NEAR duplicates.** Exact duplicates are now exempt
    from the cap, but a shingle shared by more than 40 blocks is still skipped when generating
    *near*-duplicate candidates (`capped_sh` 0-92 shingles, `capped_bl` 0-4937 blocks per repo).
