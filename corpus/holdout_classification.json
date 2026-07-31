@@ -1,6 +1,6 @@
 {
   "detector_tag": "v0.4.0 + contextual operator rule (post review round 1)",
-  "detector_commit": "53585f5a1825851cf0396a4ea260e8332e7f044e",
+  "detector_commit": "32dfb82f78c7c6479a0bbccf64e58664f236b029",
   "detector_dirty": false,
   "binary_sha256": "7538d48ab97e3c4fa22265440d5247e52c4508d21b5c48a398703d8a8bdaac01",
   "protocol": "EPIC.md Decisions #16; sampling design corpus/PREREGISTRATION.md 5.0 (amendment 2), runs pinned by amendment 3",
@@ -79,7 +79,7 @@
         "02-Vision-Agents/agents-core/vision_agents/core/agents/agents.py:626-632"
       ],
       "classification": "TP",
-      "reason": "`AgentSession.on_call_for` and `Agent.on_call_for` document the same quantity, and after the `Returns:` entry is discarded a substantive caveat survives identically — that the value is 0.0 before the agent joins.",
+      "reason": "`AgentSession.on_call_for` and `Agent.on_call_for` document the same quantity, and after the `Returns:` entry is discarded a substantive caveat survives identically \u2014 that the value is 0.0 before the agent joins.",
       "proposed_fix": "`Agent.on_call_for` owns the definition; `AgentSession.on_call_for` cites it.",
       "shape": "",
       "attributes": {
@@ -178,7 +178,7 @@
       ],
       "classification": "TP",
       "reason": "`DiscordBotContext.get_thread_id` and `SlackBotContext.get_thread_id` both override the same abstract `BotContext`, repeating its docstring verbatim.",
-      "proposed_fix": "`BotContext.get_thread_id` owns it; delete both overrides' copies — `inspect.getdoc` inherits along the MRO.",
+      "proposed_fix": "`BotContext.get_thread_id` owns it; delete both overrides' copies \u2014 `inspect.getdoc` inherits along the MRO.",
       "shape": "",
       "attributes": {
         "boundary": true,
@@ -218,7 +218,7 @@
       ],
       "classification": "TP",
       "reason": "The same example file exists twice in the tree, at `examples/acp/` and at `src/praisonai/examples/acp/`, module docstring included. The overlap is not a shared explanation but a duplicated file.",
-      "proposed_fix": "Keep one tree as the source — the packaged `src/praisonai/examples/` — and have the top-level `examples/` reference it rather than copy it.",
+      "proposed_fix": "Keep one tree as the source \u2014 the packaged `src/praisonai/examples/` \u2014 and have the top-level `examples/` reference it rather than copy it.",
       "shape": "",
       "attributes": {
         "tag": "E9",
@@ -380,7 +380,7 @@
       "classification": "FP",
       "reason": "A 144-member cluster whose whole content is the SPDX licence header. Every file is required to carry it, tooling reads it per file, and removing a copy is affirmatively wrong.",
       "proposed_fix": "",
-      "shape": "SPDX / licence header — mandatory per-file boilerplate that must not be deduplicated",
+      "shape": "SPDX / licence header \u2014 mandatory per-file boilerplate that must not be deduplicated",
       "attributes": {
         "new_shape": true,
         "members": 144,
@@ -537,7 +537,7 @@
         "08-MemMachine/evaluation/retrieval_agent/beam/beam_search.py:96-106"
       ],
       "classification": "TP",
-      "reason": "`load_beam_chat_data` is defined twice in one package, and the surviving narrative — that it supports both the nested plan-X format and the flat 10M format — is a behaviour statement, not scaffolding.",
+      "reason": "`load_beam_chat_data` is defined twice in one package, and the surviving narrative \u2014 that it supports both the nested plan-X format and the flat 10M format \u2014 is a behaviour statement, not scaffolding.",
       "proposed_fix": "One module owns the function; the other imports it.",
       "shape": "",
       "attributes": {
@@ -587,7 +587,7 @@
       "classification": "FP",
       "reason": "A 12-member cluster of the SPDX licence header, the 2025-2026 variant.",
       "proposed_fix": "",
-      "shape": "SPDX / licence header — mandatory per-file boilerplate that must not be deduplicated",
+      "shape": "SPDX / licence header \u2014 mandatory per-file boilerplate that must not be deduplicated",
       "attributes": {
         "members": 12,
         "tag": "E20",
@@ -817,7 +817,7 @@
         "02-Vision-Agents/agents-core/vision_agents/core/runner/http/api.py:158-162"
       ],
       "classification": "TP",
-      "reason": "`close_session` and `close_session_beacon` in one module. After the templated summary — which differs exactly by `via sendBeacon` — the mechanism paragraph survives byte-identically.",
+      "reason": "`close_session` and `close_session_beacon` in one module. After the templated summary \u2014 which differs exactly by `via sendBeacon` \u2014 the mechanism paragraph survives byte-identically.",
       "proposed_fix": "`close_session_beacon` cites `close_session` for the shared close-flag mechanism.",
       "shape": "",
       "attributes": {
@@ -878,7 +878,7 @@
         "06-claude-scientific-writer/skills/scientific-slides/scripts/generate_schematic_ai.py:75-80"
       ],
       "classification": "FP",
-      "reason": "Six generators across three skill bundles share a refinement-policy paragraph, but the bundles are distributed standalone — `ScientificSchematicGenerator` is duplicated into `citation-management` and `latex-posters` for exactly that reason. Same self-containment constraint as E30.",
+      "reason": "Six generators across three skill bundles share a refinement-policy paragraph, but the bundles are distributed standalone \u2014 `ScientificSchematicGenerator` is duplicated into `citation-management` and `latex-posters` for exactly that reason. Same self-containment constraint as E30.",
       "proposed_fix": "",
       "shape": "a self-contained distributable bundle (skill/plugin) that must carry its own copy of a helper",
       "attributes": {
@@ -898,7 +898,7 @@
         "07-klavis/mcp-clients/src/mcp_clients/streamable_http_client.py:1-9"
       ],
       "classification": "FP",
-      "reason": "Two MCP client modules whose docstrings differ by transport in the summary and by filename in the usage block — both callable-specific. What survives the strip is the single filler sentence `It is useful for simple testing of MCP servers`, which asserts nothing either module owns.",
+      "reason": "Two MCP client modules whose docstrings differ by transport in the summary and by filename in the usage block \u2014 both callable-specific. What survives the strip is the single filler sentence `It is useful for simple testing of MCP servers`, which asserts nothing either module owns.",
       "proposed_fix": "",
       "shape": "templated summary plus a callable-specific example, leaving only a generic filler sentence (the class of annotations.md 1.5)",
       "attributes": {
@@ -936,7 +936,7 @@
         "09-PraisonAI/examples/routing/routellm_workflow.py:1-13"
       ],
       "classification": "TP",
-      "reason": "Two routing examples in one directory whose summary lines differ but whose nine-line RouteLLM prerequisites block — install, key, and the exact server command — is repeated verbatim.",
+      "reason": "Two routing examples in one directory whose summary lines differ but whose nine-line RouteLLM prerequisites block \u2014 install, key, and the exact server command \u2014 is repeated verbatim.",
       "proposed_fix": "`examples/routing/README.md` owns the prerequisites; both examples cite it.",
       "shape": "",
       "attributes": {
@@ -1091,7 +1091,7 @@
       "classification": "FP",
       "reason": "A 135-member cluster of the full Apache-2.0 licence header. Mandatory per file, and removing a copy is affirmatively wrong.",
       "proposed_fix": "",
-      "shape": "SPDX / licence header — mandatory per-file boilerplate that must not be deduplicated",
+      "shape": "SPDX / licence header \u2014 mandatory per-file boilerplate that must not be deduplicated",
       "attributes": {
         "members": 135,
         "tag": "N9",
@@ -1117,5 +1117,7 @@
         "strict_reading": "TP"
       }
     }
-  ]
+  ],
+  "measured_at_commit": "53585f5a1825851cf0396a4ea260e8332e7f044e",
+  "measured_at_note": "measured on branch commit 53585f5a1825851cf0396a4ea260e8332e7f044e; that commit was squashed away by the merge of PR #30 and is unreachable from main. The runs this artifact describes are byte-identical under the merged detector, which is why detector_commit names the durable commit instead."
 }

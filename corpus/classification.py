@@ -522,6 +522,20 @@ def _check_detector(artifact: Artifact, repo_root: Path, binary: Path | None) ->
     artifact that an outside fact can contradict. `binary_sha256` is checked whenever the binary is
     available; when it is not, the caller says so explicitly rather than the check quietly passing.
 
+    🔴 **`detector_commit` must name a DURABLE commit, and that was learned the hard way.** This
+    check first pinned the branch commit a measurement was taken on. Ordinary pull requests here are
+    **squash-merged** (`CONTRIBUTING.md`), so every one of those commits became unreachable from
+    `main` the moment the work merged, and CI on `main` went red on artifacts whose provenance was
+    entirely truthful. `fetch-depth` cannot fix that and never could: the commits are gone, not
+    unfetched. A provenance anchored to an identifier the merge strategy deletes is a check that
+    fails on honest data.
+
+    So the field now names the commit on `main` the runs are valid for, and the original branch
+    commit is preserved beside it in `measured_at_commit` — recorded, deliberately **not** resolved,
+    because after a squash it cannot be. What licenses the substitution is measured rather than
+    assumed: every run these artifacts describe is byte-identical under the merged detector, which
+    `TestTheHoldoutPopulationIsPinned` and the corpus `EXPECTED` table both hold to.
+
     ⚠️ **Stated rather than overclaimed: nothing here proves which binary produced a given JSON.**
     Only re-running it does. What this rules out is a provenance string naming a commit that does
     not exist, a tree that was dirty without saying so, and a binary on disk that is not the one the
