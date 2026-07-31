@@ -9,6 +9,33 @@ name = "tooprolix"
 # places is how they drift, and hand-editing either one is exactly what
 # `package-python-distribution-and-publish-0-1-0` AC5 forbids.
 dynamic = ["version"]
+description = "A prose budget linter for Python."
+# The PyPI project page. It is NOT this file verbatim: `scripts/transform_readme.py` rewrites the
+# 10 relative addresses README.md carries into absolute GitHub URLs first, because a relative
+# address has no repository to resolve against on a project page and 404s. That script runs as a
+# step in `.github/workflows/build-artifacts.yml` before maturin reads this key, and it FAILS the
+# build rather than warning when the README is not the shape it expects.
+readme = "README.md"
+keywords = ["comments", "docstrings", "linter", "prose", "python"]
+# PEP 639: an SPDX expression plus the file, not the retired `License ::` trove classifiers —
+# `license-files` is what puts `License-File: LICENSE` in METADATA and the file itself in both
+# archives, which is what AC3 grades by listing the archives.
+license = "MIT"
+license-files = ["LICENSE"]
+# No `Programming Language :: Python :: 3.x` rows. The wheel is `py3-none-<platform>`: it carries a
+# native executable and no Python code at all, so it neither knows nor cares which interpreter
+# installs it. Listing versions would advertise a compatibility matrix nothing here tests.
+# `requires-python` below is the only floor, and it means "the lowest interpreter we smoke".
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Rust",
+    "Topic :: Software Development :: Quality Assurance",
+]
 # Floor for the CORPUS TOOLING ONLY (corpus/measure.py + tests/unit/). 3.12, and this line must
 # agree with `MIN_INTERPRETER` in measure.py, which REFUSES to run below 3.12: pre-3.12
 # `tokenize` hides identifiers inside f-strings (PEP 701) and silently lowers the restatement
@@ -24,22 +51,23 @@ dynamic = ["version"]
 # Do not read a packaging decision into this line.
 requires-python = ">=3.12"
 
-# The `tooprolix` command, and the only thing that creates it: before this key the wheel installed
-# an importable module and no executable, so `uv add git+...` gave `Failed to spawn: tooprolix`
-# (measured on a wheel built at fc77b75).
+# ⚠️ THERE IS DELIBERATELY NO `[project.scripts]` HERE, and its absence is load-bearing.
 #
-# The target is a `#[pyfunction]` in the extension module itself, not a Python file: there is no
-# Python source in this distribution, and adding one would mean a second package layout, a second
-# import path and a second place for the argument handling to live. `tooprolix:main` reads
-# `sys.argv[1:]`, calls `cli::status` and returns the exit code as an `int`, which is what the
-# generated console script's `sys.exit(main())` wants. See `src/lib.rs`.
+# It used to read `tooprolix = "tooprolix:main"`, pointing at a `#[pyfunction]` inside the pyo3
+# extension module. With `bindings = "bin"` below, maturin puts the compiled executable into
+# `tooprolix-<version>.data/scripts/tooprolix` and the installer copies it onto PATH itself — a
+# console script would be a second, conflicting `tooprolix` in the same place. ruff has no
+# `[project.scripts]` either, for the same reason.
 #
-# The wheel is therefore the CLI running *inside* CPython — the third of the three delivery options
-# weighed in epic 1, chosen because it costs no second artifact. The standalone `cargo build` binary
-# still exists and is now interpreter-free (the `python` feature is off by default), but it is not
-# what this distribution ships and it carries no promise here.
-[project.scripts]
-tooprolix = "tooprolix:main"
+# What checks it: `scripts/install-smoke.sh` requires `.venv/bin/tooprolix` to EXIST after the
+# install, so "the command is on PATH" is asserted against the filesystem of a real install rather
+# than inferred from this file.
+
+[project.urls]
+Repository = "https://github.com/golyshevskii/tooprolix"
+Changelog = "https://github.com/golyshevskii/tooprolix/blob/main/CHANGELOG.md"
+Documentation = "https://github.com/golyshevskii/tooprolix/blob/main/docs/cli-contract.md"
+Issues = "https://github.com/golyshevskii/tooprolix/issues"
 
 [tool.tooprolix]
 # The tool run on itself. Until this key existed `tooprolix check .` on this repository was exit 2
@@ -58,33 +86,28 @@ tooprolix = "tooprolix:main"
 exclude = ["tests/fixtures"]
 
 [tool.maturin]
-# pyo3 EXTENSION bindings, i.e. an importable `tooprolix` module. Stated explicitly rather than left
-# to maturin's auto-detection because ruff — our reference for everything else — has
-# `bindings = "bin"` here: ruff ships a *binary* wheel. Copying that line would produce a wheel with
-# no importable module and break AC3.
-bindings = "pyo3"
-module-name = "tooprolix"
-# Turns the crate's `python` feature on for the wheel. It is OFF by default so the standalone binary
-# links no libpython, so without this line there is no `#[pymodule]` to build a wheel around.
+# The wheel carries the NATIVE EXECUTABLE, not an importable module — epic 2 Decisions #19.1, which
+# explicitly overturns epic 1's "our wheel must carry an importable module". That rule was written
+# while a Python API was still promised; the API is gone, and with it the reason for the rule.
 #
-# Measured by deleting this line (2026-07-27) — and the answer was NOT the predicted one, so the
-# prediction is not what is written here. The expectation was a wheel that builds and exports
-# nothing, failing at `import tooprolix`. What actually happens is that `make py.build` fails one
-# step earlier and louder:
+# It is ruff's line, but the argument is this repository's own measurement: every number in two
+# epics was taken on the standalone binary `target/release/tooprolix` (`corpus/run_all.sh:53`,
+# `corpus/determinism_check.sh:38`, `corpus/bench.py:55`). Shipping the extension module instead
+# would publish the single class of artifact on which nothing here has ever been measured.
 #
-#   The build backend returned an error
-#     Caused by: unknown binding type
+# What it produces, and what the smoke checks: `tooprolix-<version>.data/scripts/tooprolix` inside
+# a `py3-none-<platform>` wheel — no `.so`, no Python source, no `__init__.py`. `import tooprolix`
+# raises `ModuleNotFoundError`, on purpose.
+bindings = "bin"
+# NO `python-source` and therefore no shim. ruff ships `python/ruff/{__init__,__main__,
+# _find_ruff}.py` alongside the binary; we ship the binary alone. The cost is named rather than
+# hidden: `python -m tooprolix` does not work and integrators get no `find_tooprolix_bin`. Revisit
+# when the pre-commit integration in the epic backlog lands — that is the consumer that would need
+# it.
 #
-# maturin resolves `bindings = "pyo3"` against the dependency graph, and with the `python` feature
-# off pyo3 is not in it, so no broken wheel is ever produced. Through that same mutation `make test`
-# stays green at 120 passed — which is the point: this guard is `make py.build` plus the import
-# check, and it is deliberately NOT a pytest, because `make test` is
-# `uv run --only-group test pytest` and never builds the project at all (Makefile:27-31).
-features = ["python"]
-# Deliberately no `features = ["pyo3/extension-module"]`: maturin already adds that feature itself
-# for pyo3 bindings. Verified on a throwaway `maturin new --bindings pyo3` project — the built
-# `.so` has no `libpython` in `otool -L`, so extension-module was on. Setting it in
-# `[dependencies]` instead would break `cargo test`, which has to link libpython.
+# `strip = true` is deliberately NOT here: stripping is decided in `[profile.release]` in
+# Cargo.toml, where it was measured, so the standalone binary and the wheel's binary are the same
+# artifact rather than two builds that happen to agree.
 
 [dependency-groups]
 lint = [

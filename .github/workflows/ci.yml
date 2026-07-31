@@ -167,28 +167,15 @@ jobs:
     name: cargo-clippy
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    env:
-      # Make `uv python find` (used by `make rust.lint`) resolve ONLY a uv-managed CPython, never a
-      # system one the runner image happens to provide. Deliberate over incidental.
-      UV_MANAGED_PYTHON: "1"
+    # No uv and no `UV_MANAGED_PYTHON` here, and their absence is the point: with the pyo3 boundary
+    # gone (Decisions #19.1) `make rust.lint` compiles nothing that looks for an interpreter, so a
+    # Python setup step would only be a step that can fail for a reason this gate does not care
+    # about. Same for `cargo-test` and `cargo-doc` below.
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          enable-cache: true
-
-      # `make rust.lint` resolves the interpreter with `uv python find`; this step is what guarantees
-      # there is one to find. The action's `python-version` input only sets UV_PYTHON (its README says
-      # so) and installs nothing, so without this the lookup would fall back to whatever the runner
-      # image happens to ship. UV_MANAGED_PYTHON then pins it to the uv-managed build.
-      - name: Install a managed Python for the pyo3 build script
-        run: uv python install "${PYTHON_VERSION}"
 
       - name: Show the pinned toolchain
         run: rustup show
@@ -205,20 +192,20 @@ jobs:
       - name: make rust.lint
         run: make rust.lint
 
-      # `make rust.lint` and `make rust.test` both carry `--features python`, so without this step
-      # NOTHING in CI compiles the crate with the feature OFF — which is the configuration the
-      # standalone binary of AC1 is built in. A `use pyo3::…` that escaped the `#[cfg]` would then
-      # break `cargo build` for every consumer while all eight checks stayed green. It rides in this
-      # job rather than a new one because a new job would be a new required status check.
-      - name: make rust.build.nopython
-        run: make rust.build.nopython
+      # The linkage guard: it reads the binary cargo just linked and fails on any dynamic dependency
+      # naming Python. It was `rust.build.nopython` and rode here as the only job that compiled the
+      # crate with the pyo3 feature OFF; the feature is gone (Decisions #19.1) and this is now simply
+      # the build, but the assertion is still worth its seconds — it is what says the executable the
+      # wheel ships runs where no interpreter does. It rides in this job rather than a new one
+      # because a new job would be a new required status check.
+      - name: make rust.build
+        run: make rust.build
 
   cargo-test:
     name: cargo-test
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      UV_MANAGED_PYTHON: "1"
       # An insta snapshot that is NEW or CHANGED must FAIL this job, never be written. This is the
       # setting rust-skills `test-snapshot-testing` names for CI. Verified by deleting a committed
       # `.snap` and re-running: with it, `make rust.test` fails with "snapshot assertion for
@@ -230,26 +217,6 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          enable-cache: true
-
-      # Same reason as in cargo-clippy, and it matters more here: `cargo test` builds a test binary
-      # that both LINKS and then LOADS libpython (maturin adds pyo3's `extension-module` feature only
-      # for the wheel), so the interpreter must exist, must carry a shared library, and must still be
-      # findable by the dynamic loader when the test binary runs. The uv-managed build satisfies all
-      # three; `build.rs` is what supplies the third by putting its lib dir on the binary's RUNPATH.
-      #
-      # This combination is what makes the job independent of the runner image, and that is measured,
-      # not assumed: in `rust:1.97` with NO system libpython at all (`ldconfig -p | grep -c
-      # libpython3.12.so.1.0` -> 0) `make rust.test` exits 0. Delete `build.rs` and the same container
-      # fails at exit 127 with "error while loading shared libraries: libpython3.12.so.1.0", which is
-      # how a green `ubuntu-latest` used to be hiding a dependency on the image's python3-dev.
-      - name: Install a managed Python for the pyo3 build script
-        run: uv python install "${PYTHON_VERSION}"
 
       - name: Show the pinned toolchain
         run: rustup show
@@ -269,7 +236,7 @@ jobs:
   # `src/`; it had been renamed and the doc was never followed.
   #
   # It is its OWN job rather than a step inside cargo-clippy, which is the opposite of the choice
-  # `make rust.build.nopython` made. The reason that choice was made there — "a new job would be a
+  # `make rust.build` made. The reason that choice was made there — "a new job would be a
   # new required status check" — is not true of this repository today: it is private without GitHub
   # Pro, so `branches/main/protection` is 404 and no check is required at all. A separate job is
   # therefore free right now, and it is the shape task #14 will want once protection exists, because
@@ -277,31 +244,15 @@ jobs:
   #
   # No `paths:` and no `if:`, like every other job in this file: a SKIPPED check does not satisfy a
   # required status check, so a filter added today wedges the PR on the day protection is enabled.
-  #
-  # It needs a managed Python for exactly the reason cargo-clippy does — `make rust.doc` carries
-  # `--features python`, so the build script for pyo3-ffi runs and must find an interpreter.
-  # Without it the run dies inside pyo3-ffi before rustdoc emits a single diagnostic, which would be
-  # a gate that fails for the wrong reason rather than a gate that passes.
   cargo-doc:
     name: cargo-doc
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    env:
-      UV_MANAGED_PYTHON: "1"
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          enable-cache: true
-
-      - name: Install a managed Python for the pyo3 build script
-        run: uv python install "${PYTHON_VERSION}"
 
       - name: Show the pinned toolchain
         run: rustup show
@@ -337,7 +288,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      UV_MANAGED_PYTHON: "1"
       INSTA_UPDATE: "no"
     steps:
       - name: Checkout
@@ -353,11 +303,6 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           enable-cache: true
-
-      # Same reason as in cargo-test: `make rust.cov` runs the test binaries, which link and load
-      # libpython.
-      - name: Install a managed Python for the pyo3 build script
-        run: uv python install "${PYTHON_VERSION}"
 
       # `llvm-tools` comes from rust-toolchain.toml, so this also proves the pin resolves.
       - name: Show the pinned toolchain

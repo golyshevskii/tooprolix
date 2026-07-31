@@ -62,9 +62,13 @@ git_release_enable = true
 #      treated as initial release" and answers 0.1.0 in under a second. That is the state `main` is
 #      in today, so merging this changes nothing about the pending Release PR.
 #   2. That `cargo package` build is the reason the epic audit expected this line to need a Python
-#      interpreter in CI — and **it no longer does, because of the pyo3 feature gate in this same
-#      task**. Isolated in one shell whose `python3` refuses to run, same tag, same commit, same
-#      `git_only = true`, the only difference being the feature gate:
+#      interpreter in CI. **It does not, and the reason is no longer the one this comment used to
+#      give.**
+#
+#      🔴 REWRITTEN 2026-07-31 (epic 2 Decisions #19.1), because the old explanation described a
+#      mechanism that has been deleted. It said: the verification build takes default features,
+#      `python` is not one, so pyo3-ffi is never compiled — measured at the time, in one shell whose
+#      `python3` refused to run:
 #
 #        crate at fc77b75 (pyo3 unconditional):  Compiling pyo3-ffi v0.29.0
 #                                                error: no Python 3.x interpreter found
@@ -72,10 +76,16 @@ git_release_enable = true
 #                                                Error: failed to determine next versions
 #        crate with `python` optional:           tooprolix: next version is 0.2.0
 #
-#      The verification build takes default features, and `python` is not one, so pyo3-ffi is never
-#      compiled. **`.github/workflows/release-plz.yml` therefore needs no Python step**, and none
-#      was added — the audit's cost is real but it was paid off here rather than worked around.
-#      ⚠️ It comes straight back if anyone makes pyo3 non-optional or puts `python` in
-#      `[features] default`. Whoever does that owes this workflow a Python install step and
-#      `PYO3_PYTHON`.
+#      That escape hatch was a FEATURE FLAG, and it came with a warning that the trap returns the
+#      moment anyone makes pyo3 non-optional. The wheel now carries the native executable
+#      (`[tool.maturin] bindings = "bin"`) rather than an extension module, so **pyo3,
+#      `pyo3-build-config` and the `python` feature are gone from `Cargo.toml` entirely**. The
+#      verification build cannot compile pyo3-ffi because there is no pyo3 in the dependency graph
+#      to compile — `cargo tree | grep -c pyo3` is 0.
+#
+#      So `.github/workflows/release-plz.yml` still needs no Python step, and the reason is now
+#      structural rather than conditional: the warning about `[features] default` is void because
+#      there is no such feature to put anything in. What WOULD bring the trap back is adding pyo3 to
+#      `[dependencies]` again; `make rust.build` is the guard that notices, because it reads the
+#      linked binary and fails on any dynamic dependency naming Python.
 git_only = true

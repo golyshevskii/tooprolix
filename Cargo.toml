@@ -5,6 +5,21 @@ edition = "2024"
 description = "A prose budget linter for Python."
 license = "MIT"
 repository = "https://github.com/golyshevskii/tooprolix"
+# Keeps the measurement corpus OUT OF THE PACKAGE — not out of the repository, where
+# `corpus/holdout_runs/` is the evidence the anti-false-positive gate stands on.
+#
+# `git_only = true` in release-plz.toml runs `cargo package` on every release to verify the
+# tarball, so these bytes are built and walked each time. Measured on `912a066` before this line:
+# `cargo package --list` -> **135 files, 67 of them under `corpus/`**, and in the tarball
+# `corpus/` weighed **2634.0 KiB** against `src/` at **544.3 KiB**. The measurement data was five
+# times the size of the thing the package exists for.
+#
+# Nothing in the build path reads it: `build.rs` touches git and `SOURCE_DATE_EPOCH` only, and the
+# single consumer of `corpus/` is `tests/volume_corpus.rs`, which is `#[ignore]`d because it needs
+# `corpus/checkouts/` on disk — a directory that is gitignored and was never in the tarball to
+# begin with. Verified rather than assumed: `cargo package` still passes its verification build
+# with this line, and a wheel still builds from the resulting sdist.
+exclude = ["corpus/"]
 # Tracks `rust-toolchain.toml`, which is the only Rust version anything here is ever compiled with.
 #
 # It said `1.95` — the floor the pinned ruff crates declare — until a review pointed out that no job
@@ -30,16 +45,14 @@ rust-version = "1.97"
 
 [lib]
 name = "tooprolix"
-# `cdylib` for the maturin/pyo3 wheel, `rlib` so `tests/*.rs` integration targets can link the
-# crate (task 6 adds `tests/cli.rs`). With `cdylib` alone — maturin's default — they cannot.
-crate-type = ["cdylib", "rlib"]
+# `rlib` alone since epic 2 Decisions #19.1. `cdylib` was here for the maturin/pyo3 extension
+# module, and the wheel now carries the native executable instead (`[tool.maturin] bindings = "bin"`
+# in pyproject.toml), so nothing loads this crate as a shared object any more. `rlib` STAYS and is
+# not optional: every `tests/*.rs` integration target links the crate through it, and with `cdylib`
+# alone — maturin's default — they cannot.
+crate-type = ["rlib"]
 
 [dependencies]
-# OPTIONAL, and behind the `python` feature below. Unconditional, it linked the CLI binary against a
-# shared libpython, so `./target/release/tooprolix` only ran where a matching interpreter happened to
-# be. Measured after the gate: `otool -L target/debug/tooprolix` lists ONLY
-# `/usr/lib/libSystem.B.dylib`.
-pyo3 = { version = "0.29.0", optional = true }
 thiserror = "2.0.0"
 # `=` is an EXACT pin: `ruff_python_*` are ruff's internal crates published at 0.0.x, where a patch
 # bump is free to break the API (no semver contract).
@@ -110,39 +123,6 @@ ignore = "0.4.31"
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.151"
 toml = { version = "1.1.3", default-features = false, features = ["parse", "serde"] }
-
-[features]
-# The whole pyo3 boundary: `impl From<Error> for PyErr`, the `#[pymodule]`, the console-script shim,
-# and the 5 tests over them. Off by default so that the standalone binary from `cargo build` carries
-# no libpython, and on for the wheel via `[tool.maturin] features` in pyproject.toml.
-#
-# 🔴 THE COST, AND WHERE IT IS PAID. With the feature off, `cargo test` compiles none of those 5
-# tests and reports a smaller number with no warning — a gate that goes green by testing less. It is
-# paid in the `Makefile`: `rust.lint` and `rust.test` both carry `--features python`, and every CI
-# Rust job shells out to those two recipes (ci.yml contains zero direct `cargo` invocations), so the
-# local count and the CI count are equal by construction rather than by two edits staying in sync.
-# Measured 2026-07-27 by removing the flag: `make rust.test` stayed exit 0 and reported 128 passed
-# where it had been 133 — the 5 are the boundary tests at the bottom of src/lib.rs. Because that
-# mutation was GREEN, the flag alone was not a guard; src/lib.rs now also carries a
-# `#[cfg(all(test, not(feature = "python")))] compile_error!`, which turns the same mutation into a
-# build failure. Re-measured after adding it: `make rust.test` without the flag exits 101.
-#
-# `dep:pyo3` and not a bare `pyo3`, so no implicit `pyo3` feature is created alongside this one:
-# there must be exactly one name that turns the boundary on.
-python = ["dep:pyo3"]
-
-[build-dependencies]
-# Only for `build.rs`, which puts an rpath to libpython on our own test/CLI binaries. Read the header
-# of build.rs before removing it: without it `cargo test` links fine on Linux and then fails to LOAD.
-# Same minor as `pyo3` above — these two are released together and must not drift.
-#
-# Stays NON-optional even though everything it does is feature-gated: making it
-# `optional = true` and reaching for it under `#[cfg(feature = "python")]` inside build.rs gives
-# E0433 (`use of unresolved module or unlinked crate`), because build scripts are compiled before
-# the feature resolution that would activate it. build.rs branches on the `CARGO_FEATURE_PYTHON`
-# environment variable instead. The cost is one small build-dependency compiled for the no-feature
-# build too; the alternative does not compile.
-pyo3-build-config = "0.29.0"
 
 [dev-dependencies]
 # Snapshot tests for the extractor (rust-skills `test-snapshot-testing`); snapshots live in

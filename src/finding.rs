@@ -5,8 +5,9 @@
 //! [`crate::detect::volume::Overrun`] and [`crate::detect::duplicate::Cluster`] **borrow**: their
 //! fields are `&'a ProseBlock`. Two consequences, and both of them land here rather than there:
 //!
-//! * `#[pyclass]` requires `'static`, so neither can ever be handed to Python. The type that freezes
-//!   into `tooprolix.check(path) -> list[Finding]` has to own its data, and it is this one;
+//! * they cannot outlive the source text they point into, so neither can be handed to a caller that
+//!   keeps findings past the file. A type that survives the read has to own its data, and this is
+//!   the one that does;
 //! * serialising a borrowed cluster inlines [`crate::extract::ProseBlock::raw`] once per member. A
 //!   licence header shared by 2 000 files is one cluster with 2 000 members, which would be 2 000
 //!   copies of the same paragraph in the JSON.

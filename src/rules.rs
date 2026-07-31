@@ -344,8 +344,8 @@ pub fn parse_marker(line: &str) -> Option<Suppression> {
     //
     // `strip_prefix` with a `char` predicate, never a byte index: this function shipped
     // `rest[..4]` once, and a length is not a char boundary — a 3-byte lead character put byte 4
-    // inside it and the slice panicked with exit 101, outside the 0/1/2 contract, crossing the pyo3
-    // boundary as a `PanicException` that does not inherit `Exception`. Nothing here indexes bytes.
+    // inside it and the slice panicked with exit 101, outside the 0/1/2 contract this crate is the
+    // whole deliverable of. Nothing here indexes bytes.
     let directive = comment_body(line)?
         .strip_prefix(char::is_whitespace)?
         .trim_start()
@@ -657,8 +657,8 @@ mod tests {
     use super::{CATALOGUE, Rule, parse_marker};
     use crate::extract::ProseKind;
 
-    /// The code namespace is a published contract: a rename after 0.1.0 breaks the JSON schema, the
-    /// Python API and every marker a user has written. Pinning the strings here makes that a red
+    /// The code namespace is a published contract: a rename after 0.1.0 breaks the text output, the
+    /// JSON schema and every marker a user has written. Pinning the strings here makes that a red
     /// test rather than a silent break.
     #[test]
     fn each_rule_owns_exactly_one_code_and_the_codes_are_the_shipped_ones() {
@@ -1064,8 +1064,7 @@ mod tests {
     /// only `rest.len() >= 4`, and length is not a char boundary: a 3-byte lead character puts byte
     /// 4 *inside* it and the slice panics. Reproduced on the built binary —
     /// `# tooprolix: 忽略这个块` gave `end byte index 4 is not a char boundary` and **exit 101**,
-    /// which is outside this crate's whole deliverable of 0/1/2, and which crosses the pyo3
-    /// boundary as a `PanicException` that does not inherit `Exception`.
+    /// which is outside this crate's whole deliverable of 0/1/2.
     ///
     /// **Why 129 tests missed it, which is the part worth keeping:** the panic needs a **3-byte**
     /// lead. 2-byte (Cyrillic, Latin-1) and 4-byte (most emoji) characters both land byte 4 on a

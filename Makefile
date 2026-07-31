@@ -29,7 +29,7 @@ LOCK ?= corpus/corpus.lock
 COV_DIR ?= target/coverage
 
 .PHONY: help lint.fix lint.check type test corpus.measure \
-	rust.fmt rust.fmt.check rust.lint rust.test rust.doc rust.build.nopython py.build \
+	rust.fmt rust.fmt.check rust.lint rust.test rust.doc rust.build \
 	rust.cov py.cov cov
 
 help: ## Show this help
@@ -66,32 +66,12 @@ corpus.measure: ## Measure the pinned prose corpus and print the distributions
 # cargo-doc) and are what every later task has to keep green. `--locked` everywhere: Cargo.lock
 # is committed, so a gate that silently re-resolved it would not be testing the code CI builds.
 #
-# FIND_PYTHON exists because pyo3-ffi's build script locates CPython by scanning PATH, so any cargo
-# command that COMPILES the crate silently depends on whichever `python3` comes first. That is an
-# accident in both places it matters, and it bites in opposite directions:
-#   - locally, this repo's agent harness puts a `python3` shim first that refuses to run, so a fresh
-#     clone fails with `failed to run custom build command for pyo3-ffi` / `no Python 3.x interpreter
-#     found` (measured: `cargo clippy --all-targets --locked` exits 101);
-#   - in CI, it resolves to whatever the runner image happens to ship. `astral-sh/setup-uv`'s
-#     `python-version` input does NOT install an interpreter — per its README it only sets `UV_PYTHON`,
-#     which pyo3 ignores — so a green job there would be luck, not configuration.
-# `uv python find` removes the guesswork from both: uv is already this project's Python, and it
-# prefers the project's own `.venv` before falling back to an installed interpreter.
-#
-# The `-z` test is NOT redundant belt-and-braces. `.SHELLFLAGS` (and therefore `set -e`) is silently
-# IGNORED by the GNU Make 3.81 that ships with macOS — measured, `$-` inside a recipe is `hBc`, not
-# `ehuBc`. Without an explicit check, a failed lookup would run cargo with an empty PYO3_PYTHON and
-# fall straight back through to pyo3's own confusing error.
-#
-# `rust.fmt`/`rust.fmt.check` deliberately do NOT use it: rustfmt parses source and builds no
-# dependencies, so it needs no interpreter (verified — fmt passes on a fresh clone where clippy fails).
-FIND_PYTHON = PYO3_PYTHON="$$($(UV) python find || true)"; \
-	if [ -z "$$PYO3_PYTHON" ]; then \
-		echo "error: no CPython found for the pyo3 build script; '$(UV) python find' resolved nothing." >&2; \
-		echo "       install one with '$(UV) python install 3.12', or set PYO3_PYTHON yourself." >&2; \
-		exit 1; \
-	fi; \
-	export PYO3_PYTHON;
+# ⚠️ `FIND_PYTHON` used to live here and is GONE with the pyo3 boundary (epic 2 Decisions #19.1).
+# It resolved an interpreter with `uv python find` because pyo3-ffi's build script located CPython
+# by scanning PATH, so every cargo command that compiled the crate silently depended on whichever
+# `python3` came first. No cargo command here compiles against an interpreter any more — `cargo
+# tree | grep -c pyo3` is 0 — so the lookup would only be a step that can fail for a reason no gate
+# cares about. The CI steps that installed a managed Python for it went in the same change.
 
 rust.fmt: ## Format the Rust code with rustfmt
 	@$(CARGO) fmt
@@ -99,29 +79,23 @@ rust.fmt: ## Format the Rust code with rustfmt
 rust.fmt.check: ## Check Rust formatting without writing (CI mode)
 	@$(CARGO) fmt --check
 
-# `--features python` on BOTH: since `ship-v0-1-0-delivery-and-release` the pyo3 boundary is behind
-# an off-by-default feature, and with the feature off `cargo test` compiles none of the 5 boundary
-# tests in src/lib.rs. Measured 2026-07-27 by removing this flag: `make rust.test` stayed **exit 0**
-# and reported **128 passed** where it had been 133 — green by testing less, with no other signal.
+# 🔴 NO `--features python` ON EITHER, and the reason the flag existed is worth keeping.
+# Until epic 2 Decisions #19.1 the pyo3 boundary sat behind an off-by-default feature, and with the
+# feature off `cargo test` compiled none of the 5 boundary tests in src/lib.rs: measured 2026-07-27,
+# `make rust.test` stayed **exit 0** and reported **128 passed** where it had been 133 — green by
+# testing less, with no other signal. The flag plus a `compile_error!` in src/lib.rs held that line.
 #
-# That silence is why the flag is not the only thing holding the line: `src/lib.rs` carries a
-# `#[cfg(all(test, not(feature = "python")))] compile_error!`, so removing the flag from either
-# recipe below is now a build failure rather than a smaller number. Both halves are wanted — the
-# flag makes the gate right, the `compile_error!` makes deleting the flag loud.
-#
-# It lives HERE and not in `.github/workflows/ci.yml` — which is what the task asked for — because
-# ci.yml contains zero direct `cargo` invocations: all eight jobs shell out to these recipes
-# Measured, because this repo's comments are facts: `grep -c "run: make" .github/workflows/ci.yml`
-# prints **9** — one per job, plus the second `make` step (`rust.build.nopython`) in
-# `cargo-clippy` — and `grep -cE '^\s+run:.*cargo'` prints **0**. Putting the flag in the one
-# place both callers go through is also what AC3 actually wants ("the Rust test count in CI
-# equals the local `cargo test --features python` count") — true by construction, not by two
-# edits staying in sync.
+# The feature, the boundary, the 5 tests and the `compile_error!` are all gone now, so there is no
+# flag left to forget. The count drops from 218 to 213 in the same change, and that drop is the
+# 5 boundary tests and nothing else. What replaces the guard is `scripts/install-smoke.sh`, which
+# installs each built artifact and runs the command — mutation-proved against a wheel with its
+# executable removed, because "the guard changed shape" is exactly where this epic has been bitten.
+
 rust.lint: ## Lint the Rust code with clippy, warnings are errors
-	@$(FIND_PYTHON) $(CARGO) clippy --all-targets --locked --features python -- -D warnings
+	@$(CARGO) clippy --all-targets --locked -- -D warnings
 
 rust.test: ## Run the Rust tests (unit + doctests)
-	@$(FIND_PYTHON) $(CARGO) test --locked --features python
+	@$(CARGO) test --locked
 
 # Rustdoc as a GATE, not a byproduct. `cargo doc` reports a broken intra-doc link as a warning and
 # still exits 0, so before this target the crate carried 5 of them on `main` and every gate was
@@ -136,37 +110,34 @@ rust.test: ## Run the Rust tests (unit + doctests)
 # stays invisible. Mutation-proved both ways: with the link broken and the flag dropped, the gate
 # goes back to exit 0.
 #
-# `--features python`: without it the gate never looks at the pyo3 surface in src/lib.rs -- the same
-# "gate switched off by configuration" defect the flag on rust.lint/rust.test exists to prevent.
 # `--no-deps`: we gate OUR docs, not our dependencies'.
 rust.doc: ## Build the rustdoc and fail on any warning (broken or private intra-doc links)
-	@$(FIND_PYTHON) RUSTDOCFLAGS="-D warnings" $(CARGO) doc --locked --no-deps \
-		--document-private-items --features python
+	@RUSTDOCFLAGS="-D warnings" $(CARGO) doc --locked --no-deps --document-private-items
 
-# The OTHER half of the feature gate, and the only thing in CI that compiles it: with `--features
-# python` on both gates above, nothing would ever build the configuration the standalone binary is
-# actually shipped in, so a stray `use pyo3::…` outside the `#[cfg]` would break `cargo build` and
-# no gate would say so.
+# The linkage guard on the shipped binary. It is what proves `tooprolix` runs where no interpreter
+# does — the promise the wheel makes by carrying a native executable instead of an extension module.
 #
-# 🔴 IT ASSERTS THE LINKAGE, NOT THE COMPILATION, and the difference is the whole guard. AC1 does
-# not promise "it builds", it promises a binary that needs no interpreter — and `cargo build` alone
-# cannot tell the two apart. Measured 2026-07-27: with `default = ["python"]` added to `[features]`
-# and an interpreter on PATH, the build step exits **0** and blesses a binary whose `otool -L` reads
+# ⚠️ It used to be called `rust.build.nopython`, the "other half" of a pyo3 feature gate that no
+# longer exists: with `--features python` on every other Rust gate, this was the only thing in CI
+# that ever compiled the crate with the feature OFF. Epic 2 Decisions #19.1 deleted the feature, so
+# there is no longer another half — this is now simply THE build.
+#
+# 🔴 IT ASSERTS THE LINKAGE, NOT THE COMPILATION, and the difference is the whole guard. `cargo
+# build` alone cannot tell "it compiles" from "it needs no interpreter". Measured 2026-07-27, back
+# when the feature existed: with `default = ["python"]` and an interpreter on PATH the build step
+# exits **0** and blesses a binary whose `otool -L` reads
 #
 #     /opt/homebrew/opt/python@3.14/Frameworks/Python.framework/Versions/3.14/Python
 #
-# In CI that mutation would sail through, because this target is the last step of `cargo-clippy`,
-# four steps after "Install a managed Python for the pyo3 build script" — an interpreter is always
-# on PATH there. On a machine with no usable `python3` the build happens to fail, which is an
-# accident of the environment and not the guard working. So the guard now reads the produced
-# artifact and fails on any dynamic dependency naming Python.
+# and the same shape is still reachable today by putting `pyo3` back in `[dependencies]` — which is
+# exactly how this guard is mutation-proved rather than assumed.
 #
 # `otool -L` on macOS, `ldd` on Linux (both CI runners and this laptop are covered; nothing else
 # runs it). Deliberately NOT a `cargo tree`/feature-graph check: that grades a proxy for the
-# artifact, which is the same mistake as trusting the flag instead of the `compile_error!`.
+# artifact rather than the artifact.
 #
-# 🔴 THE PATH COMES FROM CARGO, and hardcoding it was a second instance of the very defect this
-# target exists to close. `target/debug/tooprolix` is not where cargo necessarily writes: both
+# 🔴 THE PATH COMES FROM CARGO, and hardcoding it was an instance of the very defect this target
+# exists to close. `target/debug/tooprolix` is not where cargo necessarily writes: both
 # `CARGO_TARGET_DIR` and `build.target-dir` in `.cargo/config.toml` move it. Measured 2026-07-27
 # with `default = ["python"]` and `CARGO_TARGET_DIR` set elsewhere — cargo compiled a
 # libpython-linked binary into the alternate directory while this recipe read a stale clean binary
@@ -177,16 +148,13 @@ rust.doc: ## Build the rustdoc and fail on any warning (broken or private intra-
 # An empty listing is treated as a FAILURE, not a pass, and so is cargo reporting no executable at
 # all. A missing or renamed `otool`/`ldd` would otherwise make the grep match nothing and the guard
 # report success without having looked.
-#
-# No FIND_PYTHON: not needing an interpreter is the whole point, and this target failing without one
-# would mean the gate had stopped testing what it is for.
-rust.build.nopython: ## Build the standalone binary with the pyo3 feature OFF, and prove it links no libpython
+rust.build: ## Build the binary and prove it links no libpython (it must run without an interpreter)
 	@json="$$($(CARGO) build --locked --message-format=json)"; \
 	rc=$$?; \
 	if [ $$rc -ne 0 ]; then exit $$rc; fi; \
 	binary="$$(printf '%s\n' "$$json" | sed -n 's/.*"executable":"\([^"]*\)".*/\1/p' | tail -1)"; \
 	if [ -z "$$binary" ]; then \
-		echo "error: cargo reported no executable; the AC1 guard has nothing to inspect." >&2; \
+		echo "error: cargo reported no executable; the linkage guard has nothing to inspect." >&2; \
 		exit 1; \
 	fi; \
 	case "$$(uname -s)" in \
@@ -194,27 +162,16 @@ rust.build.nopython: ## Build the standalone binary with the pyo3 feature OFF, a
 		*)      linked="$$(ldd $$binary)" ;; \
 	esac; \
 	if [ -z "$$linked" ]; then \
-		echo "error: could not read the dynamic dependencies of $$binary; the AC1 guard did not run." >&2; \
+		echo "error: could not read the dynamic dependencies of $$binary; the linkage guard did not run." >&2; \
 		exit 1; \
 	fi; \
 	if printf '%s\n' "$$linked" | grep -i python; then \
-		echo "error: $$binary links the Python library above, built with the 'python' feature OFF." >&2; \
-		echo "       AC1 promises a standalone binary that runs without an interpreter." >&2; \
+		echo "error: $$binary links the Python library above; the wheel promises a self-contained binary." >&2; \
+		echo "       Nothing in [dependencies] may pull an interpreter in." >&2; \
 		exit 1; \
 	fi; \
 	printf '%s\n' "$$linked"; \
 	echo "ok: $$binary links no libpython"
-
-# Rebuild the pyo3 extension into .venv and reinstall it. `--reinstall-package` is NOT optional, and
-# it is the ONLY thing here that reliably rebuilds:
-#   - a plain `uv sync` after a Rust edit answers "Checked 1 package" and keeps the previous binary;
-#   - `rm -rf .venv && uv sync` is ALSO not enough — measured: with `src/lib.rs` edited to raise
-#     RuntimeError, a full `rm -rf .venv && uv sync` still installed a wheel that raised ValueError,
-#     because uv's build cache is not invalidated by the Rust source change.
-# So any check of Rust behaviour from Python must go through this target (or `maturin develop`).
-# Deleting the venv looks like a clean slate and is not one.
-py.build: ## Rebuild and reinstall the Rust extension into .venv
-	@$(UV) sync --reinstall-package tooprolix
 
 # -----------------------------------------------------------------------------------------------
 # Coverage. Two numbers, never one: the Rust crate is the product and `corpus/` is throwaway
@@ -271,13 +228,7 @@ py.build: ## Rebuild and reinstall the Rust extension into .venv
 
 rust.cov: ## Measure Rust line coverage and print it
 	@mkdir -p $(COV_DIR)
-	@# No `--features python` guard of its own here on purpose. `src/lib.rs` already carries a
-	@# `#[cfg(all(test, not(feature = "python")))] compile_error!`, which fires on ANY test
-	@# compilation without the feature, not only on `cargo test` — verified 2026-07-29 by running
-	@# this exact command with the flag removed: `cargo llvm-cov` failed to build with
-	@# "the tests must be run with `--features python`" and exit 101. A second copy of a guard that
-	@# already fails loud would only be a second thing to keep in sync.
-	@$(FIND_PYTHON) $(CARGO) llvm-cov --locked --features python --summary-only \
+	@$(CARGO) llvm-cov --locked --summary-only \
 		--json --output-path $(COV_DIR)/llvm-cov.json
 	@$(UV) run --no-project python3 scripts/coverage_report.py \
 		--report $(COV_DIR)/llvm-cov.json --format llvm-cov

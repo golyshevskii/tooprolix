@@ -153,7 +153,7 @@ pub enum Error {
     Io {
         /// The file that could not be read.
         path: PathBuf,
-        /// The underlying failure, kind intact — the pyo3 boundary maps on it.
+        /// The underlying failure, kind intact — [`crate::cli`] renders on it.
         source: std::io::Error,
     },
 }
@@ -271,8 +271,8 @@ impl ProseBlock {
         // `saturating_sub`, not `-`: every field is public and the detectors of the next task
         // build blocks inside this crate, so an inverted span is reachable with no external caller.
         // Measured before this: `attempt to subtract with overflow` in debug, 18446744073709551614
-        // in release. Across the pyo3 boundary a debug panic arrives as `PanicException`, not the
-        // `ValueError` the boundary test pins.
+        // in release — a panic where the exit contract promises a code, and a silently absurd
+        // number where it does not.
         self.line_end.saturating_sub(self.line_start) + 1
     }
 
@@ -934,10 +934,9 @@ fn sphinx_field(trimmed: &str) -> Option<&str> {
 /// enum. `build-cli-with-exit-contract-and-rule-codes` looked at it — the last moment it was free —
 /// and **kept the predicate**. Three reasons, in order of weight:
 ///
-/// * it moves the error rather than removing it. The pyo3 boundary takes a `&str` path from Python
-///   and the CLI takes one from `argv`; both would have to turn a raw path into a `PythonSource`
-///   and decide what to do when it is `None`, which is the same decision at the same two places,
-///   under a different name;
+/// * it moves the error rather than removing it. Every caller — the CLI from `argv`, the tests from
+///   a fixture path — would have to turn a raw path into a `PythonSource` and decide what to do
+///   when it is `None`, which is the same decision in the same places under a different name;
 /// * the drift it guards against is a *second spelling* of the rule, and there is exactly one
 ///   spelling because this function is public and every walker calls it. The `LOUD.PY` defect was
 ///   a second spelling (`extension == "py"`), not a missing type — a newtype whose constructor
@@ -995,9 +994,8 @@ pub fn extract(path: &Path, source: &str) -> Result<Vec<ProseBlock>, Error> {
 /// Reads `path` into a string, as [`extract`]'s companion for callers that have a filesystem.
 ///
 /// The single producer of [`Error::Io`], and the reason it exists rather than every caller writing
-/// its own `fs::read_to_string`: the failure has to carry the path, and it has to arrive at the
-/// pyo3 boundary as the same error type the parser failures do, so that one `match` decides how a
-/// Python caller sees both.
+/// its own `fs::read_to_string`: the failure has to carry the path, and it has to reach the CLI as
+/// the same error type the parser failures do, so that one place decides how both are reported.
 ///
 /// Deliberately *not* `extract_file(path) -> Vec<ProseBlock>`, which is the obvious convenience:
 /// the opt-out marker is read from the physical line above a block, so the CLI needs the text as
@@ -1644,8 +1642,8 @@ mod tests {
     /// `size_lines` must not underflow on an inverted span. Every field of [`ProseBlock`] is public
     /// and the detectors of the next task build blocks inside this crate, so `line_start > line_end`
     /// is reachable without any external caller. Measured before the fix: `attempt to subtract with
-    /// overflow` in debug, `18446744073709551614` in release — and across the pyo3 boundary a debug
-    /// panic surfaces as `PanicException`, not the `ValueError` the boundary test pins.
+    /// overflow` in debug, `18446744073709551614` in release — a panic where the exit contract
+    /// promises a code, and a silently absurd number where it does not.
     #[test]
     fn size_lines_does_not_underflow_on_an_inverted_span() {
         let block = ProseBlock {

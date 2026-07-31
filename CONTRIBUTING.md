@@ -136,18 +136,22 @@ and becomes a barrier when the publication task registers required checks.
   fails before compiling any of this crate.
 - Python comes from `uv` (≥ 3.12). Use `uv run python3`, never a bare `python3`.
 
-## Working on the Rust extension from Python
+## Building and smoking the distribution
 
-`uv sync` **does not rebuild** after a Rust edit — it reports `Checked 1 package` and leaves the
-previous binary installed, so a Python-side check would silently pass against stale code.
-
-**Deleting the venv does not help either.** With `src/lib.rs` edited to raise `RuntimeError`, a full
-`rm -rf .venv && uv sync` still installed a wheel that raised `ValueError`: uv's build cache is not
-invalidated by the Rust source change. Always use:
+There is no Rust extension module any more and no `make py.build`. The wheel carries the compiled
+executable (`[tool.maturin] bindings = "bin"`), so `import tooprolix` raises `ModuleNotFoundError`
+by design and there is nothing to rebuild into `.venv`.
 
 ```bash
-make py.build         # uv sync --reinstall-package tooprolix
+make rust.build       # cargo build + prove the binary links no libpython -> CI job "cargo-clippy"
+uvx maturin==1.14.1 build --release --locked --out dist   # a wheel for this machine
+scripts/install-smoke.sh dist/tooprolix-*.whl              # install it and run the COMMAND
 ```
+
+`scripts/install-smoke.sh` is the guard that replaced the pyo3 boundary tests: it installs the
+artifact into a throwaway project and asserts the command exists, prints a real version and date,
+exits 1 with `TPX002` on a file with a finding and 0 on a clean one. `.github/workflows/build-artifacts.yml`
+runs the same script on every artifact it builds.
 
 ## Coverage
 
