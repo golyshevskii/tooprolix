@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.2](https://github.com/golyshevskii/tooprolix/compare/v0.4.1...v0.4.2) - 2026-07-31
+
+### Other
+
+- Merge pull request #34 from golyshevskii/feat/binary-wheel-and-packaging-matrix
+
 ## [0.4.1](https://github.com/golyshevskii/tooprolix/compare/v0.4.0...v0.4.1) - 2026-07-31
 
 ### Fixed
