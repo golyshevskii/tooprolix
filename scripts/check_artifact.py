@@ -154,8 +154,7 @@ def _problems(path: Path, readme: Path, expect_tag: str | None) -> Iterator[str]
     names, raw = _wheel(path) if is_wheel else _sdist(path)
     message = email.message_from_bytes(raw)
 
-    # Grade the PARSE first: every check below reads what `email` RECOVERED from the document, and a
-    # recovery is a guess no installer is obliged to repeat.
+    # Grade the PARSE first: every check below reads what `email` RECOVERED, and a recovery is a guess.
     for defect in message.defects:
         yield f"the metadata did not parse cleanly: {type(defect).__name__}"
 
@@ -169,8 +168,7 @@ def _problems(path: Path, readme: Path, expect_tag: str | None) -> Iterator[str]
             if actual != promised:
                 yield f"the {source} declares {sorted(actual)}, the matrix promises {sorted(promised)}"
 
-    # `get_all`, never `get`: `get` answers with the FIRST occurrence, so a duplicated, contradicting
-    # header is invisible to it.
+    # `get_all`, never `get`: `get` answers with the FIRST occurrence, hiding a duplicated header.
     for header, expected in REQUIRED_HEADERS.items():
         actual = message.get_all(header) or []
         if header in MULTI_USE_HEADERS:
@@ -179,11 +177,11 @@ def _problems(path: Path, readme: Path, expect_tag: str | None) -> Iterator[str]
         elif actual != [expected]:
             yield f"{header}: expected exactly one {expected!r}, archive says {actual!r}"
 
-    # The header is a claim; the file is the artifact. Both are required — a `License-File` naming
-    # a file that is not in the archive is exactly the shape of a self-report.
-    licences = [n for n in names if Path(n).name == "LICENSE"]
-    if not licences:
-        yield "no file named LICENSE anywhere in the archive"
+    # The header is the claim; the archive member is the fact. EVERY declared licence file is graded,
+    # by its declared PATH — which subsumes the old basename-only `LICENSE` check, now deleted.
+    for declared in message.get_all("License-File") or []:
+        if not any(name == declared or name.endswith(f"/{declared}") for name in names):
+            yield f"License-File declares {declared!r}, which is not in the archive"
 
     if not is_wheel:
         for document in REQUIRED_SDIST_DOCUMENTS:

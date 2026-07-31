@@ -506,7 +506,15 @@ def measure_file(path: Path, rel_path: str | None = None) -> FileStats:
 
     Raises SyntaxError / UnicodeDecodeError / tokenize.TokenError on input the
     stdlib parser rejects; the caller counts those files instead of guessing.
+
+    Also refuses below `MIN_INTERPRETER`, and this is the ONLY place that check
+    lives besides `main`'s early exit. Every corpus number is born here, so
+    every consumer — `measure_repo`, `render`, `inspect_findings`, and whatever
+    is written next — inherits the refusal instead of needing a guard of its
+    own. Guarding consumers one at a time is how three rounds of review each
+    found the next unguarded one.
     """
+    _require_corpus_interpreter()
     rel: str = rel_path if rel_path is not None else path.name
     with tokenize.open(path) as handle:
         source: str = handle.read()
@@ -975,10 +983,8 @@ def measure_repo(url: str, sha: str, root: Path) -> RepoStats:
     """
     Walk every eligible `.py` file of a checked-out repo.
 
-    Refuses below `MIN_INTERPRETER` so the work stops before it starts. `render` refuses too — that
-    is the one no route can skip. `measure_file` is deliberately not guarded.
+    No interpreter guard here: `measure_file` carries it, so this inherits it.
     """
-    _require_corpus_interpreter()
     stats = RepoStats(name=repo_name(url), url=url, sha=sha, available=True)
     for path in iter_python_files(root):
         rel: str = path.relative_to(root).as_posix()
@@ -1014,11 +1020,9 @@ def render(repos: list[RepoStats], duplicates: dict[str, DuplicateStats]) -> lis
     """
     Render the whole report as lines. Pure function of the inputs — AC4 lives here.
 
-    Refuses below `MIN_INTERPRETER`. This is the SINGLE emitter, so no route — not an importer
-    assembling `RepoStats` from unguarded `measure_file` calls — can turn a wrong-interpreter run
-    into REPORT text.
+    No interpreter guard here either: on a wrong interpreter there are no stats
+    to render, because `measure_file` refuses to produce any.
     """
-    _require_corpus_interpreter()
     out: list[str] = []
     out.append("# tooprolix corpus measurement")
     out.append("")

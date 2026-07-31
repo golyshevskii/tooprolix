@@ -154,6 +154,20 @@ class TestEachPromiseIsRefusedSeparately:
 
         assert main([str(archive), str(readme)]) == 1
 
+    @pytest.mark.parametrize("kind", ["wheel", "sdist"])
+    def test_a_declared_licence_file_that_is_not_in_the_archive_fails(
+        self, tmp_path: Path, readme: Path, kind: str
+    ) -> None:
+        # Accepting `License-File` by MEMBERSHIP made the header a self-report again: `LICENSE` is
+        # there, so the check passed, and nothing ever asked about the `NOTICE` the archive also
+        # promised. Both specifications require every declared licence file to be present at its
+        # declared path — so the archive is graded against its own declaration, which is also what
+        # makes the old basename-only `LICENSE` check redundant.
+        metadata = _metadata(f"{HEADERS}License-File: NOTICE\n")
+        archive = _wheel(tmp_path, metadata=metadata) if kind == "wheel" else _sdist(tmp_path, metadata=metadata)
+
+        assert main([str(archive), str(readme)]) == 1
+
     def test_a_second_license_file_is_accepted_when_its_file_is_in_the_archive(
         self, tmp_path: Path, readme: Path
     ) -> None:

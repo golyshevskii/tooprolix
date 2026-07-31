@@ -100,7 +100,11 @@ def test_ci_runs_above_the_corpus_floor_so_the_open_upper_bound_is_exercised() -
     """
     text: str = CI_WORKFLOW.read_text(encoding="utf-8")
 
-    declared: list[tuple[str, str]] = re.findall(r'^\s*PYTHON_VERSION:\s*"(\d+)\.(\d+)"\s*$', text, re.MULTILINE)
+    # Quote-agnostic on purpose: YAML accepts "3.12", '3.12' and bare 3.12 alike, so a pattern that
+    # knew only double quotes would miss a job-level `env:` override and then happily assert the
+    # workflow-level value it did match. Every declaration is counted, whatever its spelling.
+    pattern = r"""^\s*PYTHON_VERSION:\s*["']?([^"'\s#]+)["']?\s*(?:#.*)?$"""
+    declared: list[str] = re.findall(pattern, text, re.MULTILINE)
     assert len(declared) == 1, f"ci.yml must declare PYTHON_VERSION exactly once, found {declared}"
 
     literal: list[str] = [
@@ -110,7 +114,7 @@ def test_ci_runs_above_the_corpus_floor_so_the_open_upper_bound_is_exercised() -
     ]
     assert literal == [], f"ci.yml pins python-version outside PYTHON_VERSION: {literal}"
 
-    ci_interpreter: tuple[int, int] = (int(declared[0][0]), int(declared[0][1]))
+    ci_interpreter: tuple[int, ...] = tuple(int(part) for part in declared[0].split("."))
     assert ci_interpreter > measure.MIN_INTERPRETER
 
 
@@ -156,40 +160,22 @@ def test_identifiers_interpolated_in_an_fstring_are_seen_by_the_restatement_prob
     assert stats.restatement_hits[0].code_line == 'message = f"{counter} of {limit}"'
 
 
-def test_rendering_the_report_below_the_corpus_floor_raises(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_no_corpus_number_can_be_born_below_the_floor(monkeypatch: pytest.MonkeyPatch) -> None:
     """
-    `render` is the single emitter, so it is the last place a wrong interpreter can be stopped.
+    One guard, on the function that CREATES every corpus number, instead of one per consumer.
 
-    Guarding `measure_repo` alone still lets an importer assemble `RepoStats` out of unguarded
-    `measure_file` calls and render them: measured, that route shifts the counts (OpenHands
-    1249 -> 1255, crewAI 147 -> 149, langgraph 482 -> 485, agents 595 -> 597). Numbers that look
-    right and are wrong is precisely what `MIN_INTERPRETER` exists to prevent, so the refusal has to
-    sit on the path every REPORT line goes through, not only on the path most callers take.
-    """
-    monkeypatch.setattr(sys, "version_info", (3, 11, 9, "final", 0))
+    Guarding consumers is a losing game: `main` was guarded, then `measure_repo`, then `render`, and
+    `inspect_findings` was still open — each round found the next one. `measure_file` is where the
+    counts are born, so guarding it means every consumer that exists or is written later inherits
+    the refusal and cannot emit numbers PEP 701 would have shifted.
 
-    with pytest.raises(RuntimeError, match=r"3\.12"):
-        measure.render([], {})
-
-
-def test_measuring_a_repo_below_the_corpus_floor_raises_instead_of_emitting_numbers(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    """
-    The floor belongs on the EMITTING path, not only on the CLI.
-
-    `main`'s check protects `uv run python3 corpus/measure.py`. It protects nothing that imports
-    `measure` — and lowering `requires-python` to the distribution floor is exactly what made a 3.11
-    environment buildable in the first place. `measure_repo` is where every counted repository goes
-    through, so a wrong-interpreter run stops there rather than returning numbers that look right.
-
-    `measure_file` is deliberately NOT guarded: it is the unit under test above, called directly on
-    `corpus/fixtures/` by the hand-counted tests.
+    That the hand-counted oracle tests now raise on 3.11 is the point, not a casualty: their
+    expected values were counted on 3.12+, so on 3.11 they assert numbers nobody derived.
     """
     monkeypatch.setattr(sys, "version_info", (3, 11, 9, "final", 0))
 
     with pytest.raises(RuntimeError, match=r"3\.12"):
-        measure.measure_repo("https://example.invalid/repo", "0" * 40, tmp_path)
+        measure.measure_file(FSTRING_FIXTURE)
 
 
 @pytest.fixture

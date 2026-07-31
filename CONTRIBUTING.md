@@ -140,11 +140,13 @@ and becomes a barrier when the publication task registers required checks.
     which interpreter installs it — `.github/workflows/build-artifacts.yml` smokes every artifact on
     3.11, and `scripts/check_artifact.py` fails a build whose `Requires-Python` header says anything
     narrower.
-  - **development** needs **≥ 3.12**: `corpus/measure.py` refuses to start below it
+  - **development** needs **≥ 3.12**: `measure_file` in `corpus/measure.py` raises below it
     (`MIN_INTERPRETER`, PEP 701 — pre-3.12 `tokenize` hides identifiers inside f-strings and lowers
-    the restatement counts). `ci.yml` runs **3.14** — above that floor, so `requires-python`'s open
+    the restatement counts), so **`make test` itself fails on 3.11** rather than measuring
+    differently in silence. `ci.yml` runs **3.14** — above that floor, so `requires-python`'s open
     upper bound is actually exercised. `tests/unit/test_measure.py` reddens if either floor swallows
-    the other, if CI drops back onto the floor, or if any CI job pins `python-version` literally.
+    the other, if CI drops back onto the floor, or if `ci.yml` declares `PYTHON_VERSION` anywhere but
+    once at the top (a job-level `env:` counts, in any quoting).
 
   ruff's `target-version` and ty's `python-version` are **inferred** from `requires-python`, i.e.
   3.11 — deliberately the lower of the two, because `build-artifacts.yml` runs `scripts/*.py` under
