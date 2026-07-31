@@ -129,8 +129,19 @@ rust.doc: ## Build the rustdoc and fail on any warning (broken or private intra-
 #
 #     /opt/homebrew/opt/python@3.14/Frameworks/Python.framework/Versions/3.14/Python
 #
-# and the same shape is still reachable today by putting `pyo3` back in `[dependencies]` — which is
-# exactly how this guard is mutation-proved rather than assumed.
+# 🔴 AND THE MUTATION THAT PROVES IT IS NOT THE OBVIOUS ONE. Adding `pyo3 = "0.29.0"` back to
+# `[dependencies]` leaves this target **GREEN** — measured 2026-07-31, `otool -L` still lists only
+# `libSystem.B.dylib`, because rustc links no crate nothing references. The comment here claimed
+# that declaration was the mutation, and the claim was false; it is corrected rather than quietly
+# dropped, because a guard whose stated mutation passes is a guard nobody has actually tested.
+#
+# The mutation that DOES turn it red is the declaration plus a real `use`: with `pyo3` in
+# `[dependencies]` and a `pyo3::Python::attach(...)` in `src/lib.rs`, this target fails with
+#
+#     /opt/homebrew/opt/python@3.14/Frameworks/.../Python (compatibility version 3.14.0, ...)
+#     error: ... links the Python library above; the wheel promises a self-contained binary.
+#
+# which is also the shape a real regression takes — nobody re-adds the dependency without using it.
 #
 # `otool -L` on macOS, `ldd` on Linux (both CI runners and this laptop are covered; nothing else
 # runs it). Deliberately NOT a `cargo tree`/feature-graph check: that grades a proxy for the
@@ -167,7 +178,7 @@ rust.build: ## Build the binary and prove it links no libpython (it must run wit
 	fi; \
 	if printf '%s\n' "$$linked" | grep -i python; then \
 		echo "error: $$binary links the Python library above; the wheel promises a self-contained binary." >&2; \
-		echo "       Nothing in [dependencies] may pull an interpreter in." >&2; \
+		echo "       A dependency that is merely declared is fine; one that is USED links it in." >&2; \
 		exit 1; \
 	fi; \
 	printf '%s\n' "$$linked"; \
