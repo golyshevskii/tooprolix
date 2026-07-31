@@ -145,3 +145,36 @@ pedantic = { level = "warn", priority = -1 }
 # names the invariant. Deliberately NOT denying `expect_used` — a panic in a test with a message is
 # the documented-in-rust-skills exception, and denying it would only buy a wall of `#[allow]`.
 unwrap_used = "deny"
+
+# Measured, not copied. A/B on this machine (2026-07-31, aarch64-apple-darwin, release binary), with
+# `corpus/bench.py` over all six pinned checkouts and 100 runs of `--version` for startup:
+#
+#   | config                                | binary    | startup | corpus medians          |
+#   |---------------------------------------|-----------|---------|-------------------------|
+#   | A no `[profile.release]`               | 4 088 720 | 13.40ms | 26 / 183 / 224 / 252 / 390 / 301 ms |
+#   | B `strip = true` (ruff's line)         | 3 490 608 | 11.33ms | 28 / 215 / 244 / 270 / 399 / 298 ms |
+#   | C this profile                         | 2 999 088 | 12.41ms | 26 / 203 / 232 / 290 / 404 / 291 ms |
+#
+# **The only effect that survives measurement is size: −26.7% against baseline.** The runtime
+# columns look like a regression on `crewAI` in that table (252 -> 290 ms, and the min/max did not
+# even overlap) and it is NOT one — the three configs were built and timed in sequence, so the table
+# is measuring drift as much as code. Re-run interleaved, 15 samples per config round-robin on the
+# same root, the ranking inverts: C 303.8 ms, A 315.4 ms, B 321.9 ms, all three spreads overlapping.
+# Sequential A/B on a laptop is how a 15% "regression" gets published; the interleaved run is the
+# number this decision rests on. Startup is process spawn, not the profile: ~2 ms of variation
+# between configs is larger than any difference between them.
+#
+# So `strip` is taken for the wheel size, `lto`/`codegen-units` for the further 14% on top of it,
+# and no runtime claim is made in either direction.
+#
+# 🔴 `panic = "abort"` IS FORBIDDEN HERE, and it is the one knob this measurement may not reach for.
+# The deliverable is the 0/1/2 exit contract; abort is `SIGABRT`, which is not a number, does not
+# run destructors, and drops whatever `cli::emit`'s `BufWriter` was holding. The prohibition used to
+# be justified by "a panic across the pyo3 boundary is a UB class" — there is no pyo3 boundary any
+# more (Decisions #19.1), and the ban survives on the exit contract alone. It is not left to this
+# comment: `tests/cli.rs::no_cargo_profile_aborts_on_panic` scans every `[profile…]` table in this
+# file, so the key cannot be smuggled into `[profile.bench]` either.
+[profile.release]
+lto = "fat"
+codegen-units = 1
+strip = true
