@@ -144,6 +144,12 @@ test = [
     # mean a second resolve of the same pytest for no behavioural difference. It is pure Python,
     # so the three `--only-group` gates stay Rust-free (epic-1 rule, this task's AC4).
     "pytest-cov>=7.0.0",
+    # `scripts/transform_readme.py` verifies its own output by RENDERING it — this is the library
+    # PyPI renders descriptions with, and the one `twine check` already installs. It rides in the
+    # `test` group because `tests/unit/test_transform_readme.py` is what exercises the verifier;
+    # the build workflow supplies it with `uv run --with` instead, so it is not a runtime
+    # dependency of the distribution.
+    "readme-renderer[md]>=45.0",
 ]
 type = [
     "ty>=0.0.63",

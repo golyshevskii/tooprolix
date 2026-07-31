@@ -7,7 +7,7 @@ PyPI project page there is no repository to resolve against, so every relative a
 Measured on this README 2026-07-31: **10** of them — 8 relative markdown links, the
 `assets/tooprolix.gif` image, and the `<a href="LICENSE">` behind the licence badge.
 
-The three ways this script can leave the shop window broken are the three things tested here:
+The four ways this script can leave the shop window broken are the four things tested here:
 
   1. **it can miss an address.** So the guard is not "the four links we thought of were rewritten":
      `TestTheRealReadmeIsFullyResolved` transforms the repository's own README and asserts that
@@ -21,6 +21,12 @@ The three ways this script can leave the shop window broken are the three things
      `twine check` cannot see and the reason ruff's own transformer raises rather than warns: a
      README with no relative addresses at all means the document was restructured and this script
      has stopped doing anything. That is a build failure, not a no-op.
+  4. 🔴 **it can grade its own output.** The verification used to re-run the rewriting regex, so it
+     was blind exactly where the rewriter was blind — a reference-style definition and a
+     single-quoted `href` both survived a run that reported success. `TestTheShapesTheSharedRegexWasBlindTo`
+     pins those shapes and `TestTheVerifierDoesNotShareTheRewritersEyes` pins the split itself:
+     the verifier renders the markdown the way PyPI does and reads the HTML, sharing no pattern
+     with the rewriter.
 
 `TestTheGuardIsWiredIntoTheEntryPoint` runs the script the way the workflow runs it, so a check
 deleted from `main()` fails a test rather than nothing at all.
@@ -35,7 +41,14 @@ import sys
 from pathlib import Path
 
 import pytest
-from transform_readme import BLOB, RAW, ReadmeNotInExpectedFormatError, relative_addresses, transform
+from transform_readme import (
+    BLOB,
+    RAW,
+    ReadmeNotInExpectedFormatError,
+    relative_addresses,
+    rendered_addresses,
+    transform,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = REPO_ROOT / "scripts" / "transform_readme.py"
@@ -117,6 +130,83 @@ class TestTheRealReadmeIsFullyResolved:
         ]
 
         assert missing == []
+
+
+class TestTheShapesTheSharedRegexWasBlindTo:
+    """
+    🔴 The verifier used to be `relative_addresses` — **the same regex the rewriter runs**. So it was
+    blind exactly where the rewriter was blind and reported success on its own output: the defect
+    this epic keeps finding, one layer up.
+
+    Reproduced on a real tree 2026-07-31, before the fix: appending a reference-style link, a
+    single-quoted `href` and a fenced code block gave `rc=0`, `rewrote 11 relative addresses`, and
+    left two 404s in the shipped description while corrupting the code block.
+
+    Each shape below is one of those, and they are asserted through `transform` — which now verifies
+    by rendering the markdown the way PyPI does, so a shape the rewriter misses is a build failure
+    rather than a silent pass.
+    """
+
+    def test_a_reference_style_link_definition_is_rewritten(self) -> None:
+        text = "See the [guide][g] for more.\n\n[g]: docs/cli-contract.md\n"
+
+        assert transform(text, root=REPO_ROOT) == (f"See the [guide][g] for more.\n\n[g]: {BLOB}docs/cli-contract.md\n")
+
+    def test_a_single_quoted_html_attribute_is_rewritten(self) -> None:
+        text = "<a href='docs/rules-and-configuration.md'>rules</a>\n"
+
+        assert transform(text, root=REPO_ROOT) == f"<a href='{BLOB}docs/rules-and-configuration.md'>rules</a>\n"
+
+    def test_an_address_inside_a_fenced_code_block_is_left_alone(self) -> None:
+        # A fenced block is literal text: rewriting it changes what the document SAYS, which is the
+        # opposite failure from a dead link and just as wrong.
+        text = "[real](LICENSE)\n\n```markdown\n[an example](docs/cli-contract.md)\n```\n"
+
+        transformed = transform(text, root=REPO_ROOT)
+
+        assert "```markdown\n[an example](docs/cli-contract.md)\n```" in transformed
+        assert transformed.count(BLOB) == 1
+
+    def test_an_address_inside_an_inline_code_span_is_left_alone(self) -> None:
+        text = "[real](LICENSE) and `see [x](docs/cli-contract.md)` verbatim.\n"
+
+        transformed = transform(text, root=REPO_ROOT)
+
+        assert "`see [x](docs/cli-contract.md)`" in transformed
+        assert transformed.count(BLOB) == 1
+
+    def test_a_shape_the_rewriter_misses_is_a_build_failure_not_a_silent_pass(self) -> None:
+        # The guard that makes the four cases above more than a list of shapes somebody thought of.
+        # `<a href=docs/cli-contract.md>` is UNQUOTED — the rewriter does not handle it, on purpose,
+        # because this test pins what happens then: the render-based verifier still sees the address
+        # and the build stops. A new shape costs a red build, never a broken project page.
+        with pytest.raises(ReadmeNotInExpectedFormatError, match="survived"):
+            transform("[real](LICENSE) <a href=docs/cli-contract.md>x</a>\n", root=REPO_ROOT)
+
+
+class TestTheVerifierDoesNotShareTheRewritersEyes:
+    """
+    `rendered_addresses` is the independent half: it runs the markdown through the SAME renderer
+    PyPI uses and reads the `href`/`src` of the resulting HTML. It shares no regex with the rewriter,
+    so it can see shapes the rewriter cannot.
+    """
+
+    def test_it_sees_an_address_the_rewriting_regex_cannot(self) -> None:
+        # An UNQUOTED HTML attribute. The rewriter does not handle it and this test is what says so
+        # out loud: `relative_addresses` returns nothing, the renderer returns the address, and the
+        # gap between the two lists is the whole reason the verifier is a separate mechanism.
+        source = "<a href=docs/cli-contract.md>bare</a>\n"
+
+        assert relative_addresses(source) == []
+        assert rendered_addresses(source) == ["docs/cli-contract.md"]
+
+    def test_it_does_not_see_addresses_inside_code(self) -> None:
+        source = "```\n[x](docs/cli-contract.md)\n```\n\n`[y](LICENSE)`\n"
+
+        assert rendered_addresses(source) == []
+
+    def test_it_reports_the_absolute_urls_it_finds_so_the_caller_can_judge_them(self) -> None:
+        assert rendered_addresses(f"[x]({BLOB}LICENSE)\n") == [f"{BLOB}LICENSE"]
 
 
 class TestItFailsLoudRatherThanSilently:
