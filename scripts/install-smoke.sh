@@ -146,11 +146,25 @@ echo
 # that makes the run un-redirectable: `uv run tooprolix` below resolves through uv, and uv can be
 # pointed elsewhere, but this asks the filesystem whether the artifact under test actually created
 # the command. Layer 2 of the note at the top.
-if [ ! -x "$work/.venv/bin/tooprolix" ]; then
-	echo "FAIL: installing '$source_spec' produced no executable at $work/.venv/bin/tooprolix" >&2
+# POSIX venvs put it in `bin/`, Windows venvs in `Scripts/` with an `.exe` suffix. Both spellings
+# are listed and BOTH are required to be absent before this fails — a check that only knew `bin/`
+# would report a missing command on every Windows runner, and one that only knew `Scripts/` would
+# pass on Linux without looking. The supported matrix includes Windows x86_64, so this script runs
+# under Git Bash there and has to answer for that layout.
+installed=""
+for candidate in "$work/.venv/bin/tooprolix" "$work/.venv/Scripts/tooprolix.exe"; do
+	if [ -x "$candidate" ]; then
+		installed="$candidate"
+		break
+	fi
+done
+if [ -z "$installed" ]; then
+	echo "FAIL: installing '$source_spec' produced no executable in $work/.venv" >&2
+	echo "      (looked for bin/tooprolix and Scripts/tooprolix.exe)" >&2
 	echo "      — either the wheel carries nothing under *.data/scripts/, or uv installed elsewhere." >&2
 	exit 1
 fi
+echo "install-smoke: executable=$installed"
 
 run_check 0 'tooprolix check <path>' uv run tooprolix --help
 

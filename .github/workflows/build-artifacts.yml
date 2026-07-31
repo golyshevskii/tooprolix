@@ -1,0 +1,246 @@
+name: Build artifacts
+
+# 🔴 THERE IS NO PUBLISH STEP IN THIS FILE, AND THAT IS THE POINT OF IT.
+#
+# This is the reversible half of publication (epic 2 Decisions #2): it builds every artifact the
+# supported matrix promises, installs each one and runs it, and uploads the results as run
+# artifacts. Nothing is uploaded to PyPI, TestPyPI or crates.io, no tag is created, and no
+# credential is read — `permissions: contents: read` and no `id-token`, so even an OIDC exchange is
+# not available to a step that tried. `flip-public-and-publish-to-pypi` owns the irreversible half
+# and will add a publish job of its own.
+#
+# Manual dispatch, plus a narrow `push:` filter on the five files that decide what an artifact
+# contains. Two reasons, and the second is why the filter is not simply dropped:
+#
+#   1. it is ruff's own practice — their `build-binaries.yml` carries a `pull_request: paths:` on
+#      `pyproject.toml` and the workflow itself, "so that the maturin builds still work". The
+#      packaging path is otherwise exercised only at release time, which is the worst moment to
+#      discover it rotted;
+#   2. `workflow_dispatch` **cannot be triggered on a branch whose workflow is not yet on the
+#      default branch** — GitHub reads the dispatch definition from the default branch. So on a
+#      feature branch that adds this file, manual dispatch is not available and `push:` is the only
+#      trigger that can produce the green run with artifacts this task has to show.
+#
+# It is deliberately NOT unfiltered: the jobs compile the crate three more times than `ci.yml`
+# already does, on three runner families. ⚠️ A `paths:` filter is safe HERE and would not be on
+# `ci.yml` — a skipped check does not satisfy a required status check, and none of these jobs is
+# registered as one.
+#
+# # The supported matrix, and why it is three platforms rather than seventeen
+#
+# `linux x86_64`, `macOS arm64`, `Windows x86_64`, plus an sdist for everything else (Decisions
+# #19.3). All three run natively on free hosted runners, so **every published wheel is smoke-tested
+# on the operating system it claims**. Our reference, ruff, publishes 17 wheels of which 5 have no
+# install-smoke at all — its `macos-x86_64` job has no `Test` step whatsoever — and that is the
+# reason its width is deliberately NOT copied. Linux aarch64 and macOS x86_64 would mean QEMU or an
+# untested wheel; neither is taken on speculation.
+#
+# # The floor of each platform is DECLARED, not inherited from the runner
+#
+# A wheel that builds on the newest runner and is tagged for the oldest OS its platform tag names
+# fails at the user's dynamic loader, which is the one failure no gate here would otherwise see:
+#
+#   * linux   — `manylinux: 2_17`, i.e. glibc >= 2.17 (CentOS 7 / Ubuntu 14.04). The tag the wheel
+#     carries is checked below rather than assumed.
+#   * macOS   — `MACOSX_DEPLOYMENT_TARGET: "11.0"`. maturin defaults to exactly this for
+#     aarch64-apple-darwin (observed in its own output) and 11.0 is also the first macOS with Apple
+#     silicon, so nothing older can run an arm64 build anyway. It is written down because a default
+#     is not a promise.
+#   * windows — x86_64-pc-windows-msvc. There is no deployment-target knob; the floor is whatever
+#     the MSVC runtime the toolchain links against supports, which is Windows 10 for the pinned
+#     Rust. Said out loud rather than left blank.
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - Cargo.toml
+      - pyproject.toml
+      - .github/workflows/build-artifacts.yml
+      - scripts/install-smoke.sh
+      - scripts/transform_readme.py
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.12"
+  # Pinned, exactly as ruff pins it. maturin decides the wheel tag and the archive layout, so an
+  # unpinned "latest" would let the shape of the published artifact change without a commit here.
+  MATURIN_VERSION: v1.14.1
+  CARGO_INCREMENTAL: "0"
+  CARGO_NET_RETRY: "10"
+  CARGO_TERM_COLOR: always
+  RUSTUP_MAX_RETRIES: "10"
+
+jobs:
+  sdist:
+    name: sdist (+ the wheel built from it)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+
+      # 🔴 THE ONLY WAY A RELEASE ARTIFACT LEARNS WHAT IT WAS BUILT FROM.
+      #
+      # `tooprolix --version` prints the COMMIT date, resolved by build.rs as SOURCE_DATE_EPOCH ->
+      # git -> `unknown`. An sdist carries no `.git`, and since `add-version-and-rules-commands` it
+      # will not borrow a surrounding repository's either — so without this line the wheel built
+      # from the sdist below prints `tooprolix 0.4.1 (unknown)`. Measured, not predicted: that is
+      # exactly what it printed, and it passed every other assertion in the smoke.
+      #
+      # `>> "$GITHUB_ENV"` so it reaches the maturin steps, which run in their own shells.
+      - name: Export SOURCE_DATE_EPOCH from the commit
+        run: |
+          echo "SOURCE_DATE_EPOCH=$(git log -1 --format=%ct)" >> "$GITHUB_ENV"
+          echo "commit date: $(git log -1 --format=%cs)"
+
+      # Before maturin reads `readme = "README.md"`. The script rewrites the 10 relative addresses
+      # into absolute GitHub URLs and FAILS THE BUILD if the README is not the shape it expects —
+      # `twine check` validates the METADATA envelope and never the links inside the description.
+      - name: Rewrite the README for the PyPI project page
+        run: uv run --no-project python scripts/transform_readme.py README.md
+
+      - name: Build sdist
+        uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b # v1.51.0
+        with:
+          maturin-version: ${{ env.MATURIN_VERSION }}
+          command: sdist
+          args: --out dist
+
+      # AC1: the sdist must be self-sufficient. A wheel built from the unpacked tarball, in a
+      # directory with no `.git` and no repository around it, is the only honest test of that — a
+      # `cargo package --list` shows what is inside but not whether it builds.
+      - name: Build a wheel FROM the sdist
+        run: |
+          set -euo pipefail
+          mkdir -p from-sdist && tar xzf dist/tooprolix-*.tar.gz -C from-sdist
+          test ! -e from-sdist/tooprolix-*/.git
+          uvx "maturin==${MATURIN_VERSION#v}" build --release --locked \
+            --manifest-path from-sdist/tooprolix-*/Cargo.toml \
+            --out dist-from-sdist --compatibility pypi
+
+      - name: twine check
+        run: uvx twine check --strict dist/* dist-from-sdist/*
+
+      # AC4 for the source path: the artifact that carries no compiled binary is installed, built,
+      # and the resulting COMMAND is run. This is where `unknown` would surface if the
+      # SOURCE_DATE_EPOCH step above were ever dropped.
+      - name: install-smoke the wheel built from the sdist
+        run: scripts/install-smoke.sh "$(echo dist-from-sdist/*.whl)"
+
+      - name: install-smoke the sdist itself
+        run: scripts/install-smoke.sh "$(echo dist/*.tar.gz)"
+
+      - name: Upload
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: artifacts-sdist
+          path: |
+            dist
+            dist-from-sdist
+
+  wheels:
+    name: wheel ${{ matrix.platform.name }}
+    runs-on: ${{ matrix.platform.runner }}
+    timeout-minutes: 30
+    strategy:
+      # `fail-fast: false` so one red platform still leaves the other two measured. AC4's rule is
+      # "an artifact that could not be smoked is excluded from the matrix", and deciding that needs
+      # every platform's answer, not the first failure.
+      fail-fast: false
+      matrix:
+        platform:
+          - name: linux-x86_64
+            runner: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            manylinux: "2_17"
+            # The tag the wheel is REQUIRED to carry, checked against the file maturin produced.
+            # "it built on the runner" is not a floor.
+            expect_tag: py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64
+          - name: macos-arm64
+            runner: macos-15
+            target: aarch64-apple-darwin
+            manylinux: auto
+            expect_tag: py3-none-macosx_11_0_arm64
+          - name: windows-x86_64
+            runner: windows-latest
+            target: x86_64-pc-windows-msvc
+            manylinux: auto
+            expect_tag: py3-none-win_amd64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+
+      - name: Export SOURCE_DATE_EPOCH from the commit
+        shell: bash
+        run: echo "SOURCE_DATE_EPOCH=$(git log -1 --format=%ct)" >> "$GITHUB_ENV"
+
+      - name: Rewrite the README for the PyPI project page
+        shell: bash
+        run: uv run --no-project python scripts/transform_readme.py README.md
+
+      - name: Build wheel
+        uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b # v1.51.0
+        with:
+          maturin-version: ${{ env.MATURIN_VERSION }}
+          target: ${{ matrix.platform.target }}
+          manylinux: ${{ matrix.platform.manylinux }}
+          args: --release --locked --out dist --compatibility pypi
+        env:
+          # Declared rather than inherited — see the header. maturin already defaults to 11.0 here;
+          # a default is not a promise, and this is the line that keeps the tag honest if it changes.
+          MACOSX_DEPLOYMENT_TARGET: "11.0"
+
+      # AC2: the tag is READ OFF THE BUILT FILE and compared with what the matrix promised. A wheel
+      # whose name says manylinux_2_17 while it was linked against a newer glibc is the failure this
+      # catches; "it built on the runner" is not a floor and the platform tag is the only thing a
+      # user's installer looks at.
+      - name: The wheel tag is the one the supported matrix promises
+        shell: bash
+        run: |
+          set -euo pipefail
+          wheel="$(echo dist/*.whl)"
+          echo "built: $wheel"
+          case "$(basename "$wheel")" in
+          "tooprolix-"*"-${{ matrix.platform.expect_tag }}.whl") ;;
+          *)
+            echo "FAIL: expected the tag ${{ matrix.platform.expect_tag }}" >&2
+            exit 1
+            ;;
+          esac
+
+      - name: twine check
+        shell: bash
+        run: uvx twine check --strict dist/*
+
+      - name: install-smoke
+        shell: bash
+        run: scripts/install-smoke.sh "$(echo dist/*.whl)"
+
+      - name: Upload
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: artifacts-${{ matrix.platform.name }}
+          path: dist
