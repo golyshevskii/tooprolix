@@ -19,18 +19,14 @@
 //! `corpus/determinism_check.sh` and `corpus/bench.py` all drive `target/release/tooprolix`, and
 //! that is a standalone binary from this source under `[profile.release]`, not an extension module.
 //!
-//! **It is NOT the same bytes, and nothing here checks that it is.** Measured 2026-07-31 at
-//! `72fda14` on macOS/arm64: `maturin build --release` copies the cargo artifact unchanged, so the
-//! wheel's `*.data/scripts/tooprolix` and `target/release/tooprolix` shared sha256
-//! `b771fe92…`; rebuilding with `SOURCE_DATE_EPOCH=1000000000` gave `004e52d1…` from identical
-//! source, because `build.rs` embeds the date. CI builds each published wheel per platform with
-//! `SOURCE_DATE_EPOCH` taken from the commit, so a published wheel's executable is a different
-//! build from any local corpus binary. Claiming otherwise would matter at publication time, where
-//! artifact identity is reasoned about.
+//! Measured 2026-07-31 at `72fda14` on macOS/arm64: `maturin build --release` copies the cargo
+//! artifact unchanged, so the wheel's `*.data/scripts/tooprolix` and `target/release/tooprolix`
+//! shared sha256 `b771fe92…`. A *published* wheel's executable is a different build: CI supplies a
+//! per-platform `SOURCE_DATE_EPOCH`, and `build.rs` embeds the date, so the same source rebuilt
+//! with `SOURCE_DATE_EPOCH=1000000000` gave `004e52d1…`.
 //!
-//! The guard that a wheel actually exports something is `scripts/install-smoke.sh`, which installs
-//! each built artifact into a clean environment and runs the *command*; it is mutation-proved
-//! against a wheel with its executable removed.
+//! The wheel is checked to actually export something by `scripts/install-smoke.sh`, which installs
+//! each built artifact into a clean environment and runs the *command*.
 //!
 //! [`finding::Finding`] owns its data and holds no prose, so a future Python API would not need it
 //! redesigned; but nothing in this crate promises one.

@@ -107,11 +107,17 @@
 //! # The reference host
 //!
 //! **Apple M1 Max (`MacBookPro18,2`), macOS 26.5.2, `rustc 1.97.0` pinned by
-//! `rust-toolchain.toml`**, cargo's default release profile (`opt-level = 3`, no LTO,
-//! `codegen-units = 16` — this crate declares no `[profile.release]`, which is
-//! `dry-run-packaging-matrix`'s A/B to make and deliberately not this file's). Naming the chip
-//! matters: "Apple M-series" spans parts that differ by more than the margin being measured.
+//! `rust-toolchain.toml`**, measured at `7df7e4a` (2026-07-30) under cargo's DEFAULT release
+//! profile — `opt-level = 3`, no LTO, `codegen-units = 16` — because this crate declared no
+//! `[profile.release]` at that commit. Naming the chip matters: "Apple M-series" spans parts that
+//! differ by more than the margin being measured.
 //! One discarded warm-up run per size, then [`RUNS`] timed runs, median reported.
+//!
+//! **The profile has since changed, so a re-run is not comparable to the table below.** `d743d8c`
+//! (2026-07-31, PR #34) added `[profile.release]` with `lto = "fat"`, `codegen-units = 1` and
+//! `strip = true`, and `7df7e4a` is an ancestor of it. Every number here is therefore attributable
+//! — to the default profile at the commit named above — and nothing has re-measured them under the
+//! profile that ships today. Re-stating the table means re-running it and saying so.
 //!
 //! Wall-clock numbers are not byte-reproducible across hosts; they are re-runnable on this one.
 //! The spread between the printed `min` and `max` within one run is under 2% at every size; across

@@ -5,18 +5,14 @@
 # the compiled executable under `*.data/scripts/`; a wheel that exports nothing has passed every
 # other gate before.
 #
-# What enforces it, named because nothing inside the repository can: the `sdist` and `wheels` jobs
-# of `.github/workflows/build-artifacts.yml` invoke this script on EVERY artifact they build — the
-# sdist, the wheel built from it, and each wheel of the platform matrix. No count is written down:
-# the matrix decides how many times the last of those runs, so any number here would be wrong the
-# day a platform is added. No `make` or `cargo` target reaches this script, so a green local suite
-# says nothing about it. Mutation-proved rather than merely present: a wheel with its executable
-# removed exits 1 here.
+# The `sdist` and `wheels` jobs of `.github/workflows/build-artifacts.yml` invoke this script on
+# EVERY artifact they build — the sdist, the wheel built from it, and each wheel of the platform
+# matrix. No count is written down: the matrix decides how many times the last of those runs.
 #
 # Nothing inside the repository can see any of this: `make test` is `uv run --only-group test
 # pytest`, which deliberately does not build or install the project, and `cargo test` never produces
 # a wheel at all. The only honest check is to install the artifact into a fresh environment and run
-# the command.
+# the command — which also means no local suite can fail when this script stops checking something.
 #
 # Usage:
 #   scripts/install-smoke.sh <install-source>

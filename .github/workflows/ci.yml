@@ -198,9 +198,16 @@ jobs:
         run: make rust.lint
 
       # The linkage guard: it reads the binary cargo just linked and fails on any dynamic dependency
-      # naming Python. It is what says the executable the wheel ships runs where no interpreter
-      # does. It rides in this job rather than a new one because a new job would be a new required
-      # status check.
+      # naming Python. It rides in this job rather than a new one because a new job would be a new
+      # required status check.
+      #
+      # WHAT IT DOES NOT COVER, said plainly because it is easy to read this as a promise about the
+      # shipped wheel: `make rust.build` runs `cargo build --locked` with no `--release`, and this
+      # job is `runs-on: ubuntu-latest`. So it grades ONE artifact — a Linux x86_64 DEBUG executable
+      # — while `build-artifacts.yml` ships release builds for linux-x86_64, macos-arm64 and
+      # windows-x86_64. A linkage that appeared only under `--release`, or only on macOS or Windows,
+      # would pass here and still reach a published wheel. What actually exercises the shipped
+      # artifacts is `scripts/install-smoke.sh` in `build-artifacts.yml`, which runs each one.
       - name: make rust.build
         run: make rust.build
 
