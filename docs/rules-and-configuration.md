@@ -15,9 +15,9 @@ For output format, exit codes, and the JSON schema, see [cli-contract.md](cli-co
 | `TPX004` | Comments that restate the following code | Reserved |
 
 `tooprolix --rules` prints these same three columns. The CLI renders them from one array in
-`src/rules.rs`; this table is written by hand, and a test (`the_rules_listing_agrees_with_every_documented_table`)
-compares the binary's output against the rows above, so the two cannot drift apart unnoticed.
-`Reserved` is what `TPX004` is; the paragraph below says why.
+`src/rules.rs`; this table is written by hand, and `the_rules_listing_agrees_with_every_documented_table`
+in `tests/cli.rs` requires the rows above to carry the same codes, statuses, descriptions and order
+the binary printed, so the two cannot drift apart unnoticed.
 
 ### Volume boundaries
 
@@ -25,9 +25,9 @@ Volume is measured in **words** rather than lines or characters, and the limit i
 allowed — a block of exactly the limit is silent, one word over is a finding.
 
 A block must also span at least two physical lines to be considered at all. That threshold is why
-one-line prose never produces a finding: measured on the reference corpus, the overwhelming majority
-of exact duplicate pairs are one-line blocks like `"""Initialize the class."""`, and counting them
-would bury every real result.
+one-line prose never produces a finding: on the reference corpus, one-line blocks like
+`"""Initialize the class."""` are 98.83%–99.99% of all exact duplicate pairs (`corpus/REPORT.md`,
+*Minimum prose-block size*), and counting them would bury every real result.
 
 ### What `TPX003` compares: narrative prose, not the reference scaffolding
 
@@ -63,9 +63,8 @@ Everything else stays narrative, on purpose and in this direction on purpose:
   `Args:`.
 
 Every one of those is a case the parser does **not** recognise, and each one keeps more text in the
-comparison. That bias is deliberate: an unrecognised construct can then only preserve a finding,
-never invent one. The opposite bias would delete findings through a parser bug with nothing in the
-output to say so.
+comparison. That bias is deliberate: an unrecognised construct can only preserve a finding, never
+invent one, whereas the opposite bias would delete findings through a parser bug silently.
 
 A block whose narrative is shorter than **three words** — a docstring that is nothing but a parameter
 table, or one left with a bare `Send.` — takes no part in `TPX003` at all: once the table is
@@ -74,7 +73,7 @@ so it is also the point below which the two comparison paths could not agree: a 
 no shingle at all. Such a block still counts in full towards `TPX001` and `TPX002`, which measure
 volume rather than repetition.
 
-⚠️ **What this floor does not do.** Two unrelated callables whose narratives are the *same* templated
+**What this floor does not do.** Two unrelated callables whose narratives are the *same* templated
 summary of three words or more are still reported as one finding. That is the templated-summary
 class described in `corpus/annotations.md` §1.5, and §1.5 records the measurement showing it cannot
 be separated by raising the similarity threshold either — a genuine finding sits at the same score.

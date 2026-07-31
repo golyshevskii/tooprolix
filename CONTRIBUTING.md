@@ -38,16 +38,13 @@ Cargo SemVer for `0.x`.
 
 ## `v0.3.4` shipped a breaking change as a patch, and is knowingly left as is
 
-Recorded so it is not rediscovered as a bug. `v0.3.4` should have been `v0.4.0`. The tag, the GitHub
-release and the CHANGELOG entry are live and all say patch.
-
-**It is deliberately not being fixed.** It is not retagged, the release is not deleted, and neither
-`[package] version` in `Cargo.toml` nor the `## [0.3.4]` heading in `CHANGELOG.md` is hand-edited —
-the rule above forbids exactly that, and the rule stands. Nothing is user-facing: the repository is
-private and PyPI returns 404 for this project, so the entire cost is bookkeeping.
-
-**Owner: the `flip-public-and-publish-to-pypi` task**, which chooses the first *published* version
-deliberately. Until then this is a known wart with a named owner, not an open question.
+Recorded so it is not rediscovered as a bug. `v0.3.4` should have been `v0.4.0`; the tag, the GitHub
+release and the CHANGELOG entry are live and all say patch. It is deliberately **not** retagged and
+neither `Cargo.toml` nor `CHANGELOG.md` is hand-edited — the rule above forbids exactly that, and the
+rule stands. The cost is bookkeeping only for as long as the repository is **private** — the tag and
+its GitHub release become user-facing the moment visibility flips, which is before anything is
+published. **Owner: the `flip-public-and-publish-to-pypi` task**, which chooses the first *published*
+version deliberately.
 
 ## Never edit versions or the changelog by hand
 
@@ -57,8 +54,16 @@ deliberately. Until then this is a known wart with a named owner, not an open qu
   so there is exactly one number to bump and no way for the two to disagree.
 
 Merging the Release PR that release-plz opens is what creates the tag and the GitHub release.
-Publishing to PyPI and crates.io is **off** until the packaging task turns it on. There is exactly
-one switch for that: `[workspace] publish = false` in `release-plz.toml`.
+Neither registry receives anything today, and **the two are off for different reasons**:
+
+- **crates.io is off by a switch** — `[workspace] publish = false` in `release-plz.toml` keeps
+  release-plz to version, changelog, tag and GitHub release, never `cargo publish`;
+- **PyPI is off because nothing uploads to it** — there is no switch. `build-artifacts.yml` builds,
+  checks and attaches artifacts to the run, and opens with "THERE IS NO PUBLISH STEP IN THIS FILE,
+  AND THAT IS THE POINT OF IT"; the publishing task adds that job.
+
+Neither is a one-line flip: `release-plz.yml` also withholds `CARGO_REGISTRY_TOKEN` as a backstop,
+and PyPI has no publish job to enable.
 
 > **Do not add `publish = false` to `Cargo.toml`.** It reads like the obvious way to say "not
 > published yet", and it silently disables release-plz entirely — no version bump, no changelog, no
@@ -80,11 +85,10 @@ release goes out, all of them move together:
   `the_rules_listing_agrees_with_every_documented_table` in `tests/cli.rs` turns each line the
   binary printed into a table row and requires the `| \`TPX…` rows of both Markdown files to be
   exactly that list, in order, so changing one of the three reddens the suite;
-- refresh the worked `--version` example in `docs/cli-contract.md` (`tooprolix 0.3.1 (2026-07-28)`).
-  It is a commit date, so it goes stale at every release and **nothing watches it** — the rule
-  tables have a test, this line does not, and writing one would mean pinning a date that is
-  supposed to move;
 - verify every install and output example against the **published wheel**, not a local build.
+
+Nothing on this list is a version or date string copied into prose: `docs/` deliberately carries no
+frozen `--version` example, because nothing would go red when a hand-refreshed copy went stale.
 
 ## Run the gates before you push
 
@@ -100,9 +104,8 @@ make rust.test        # cargo test                          -> CI job "cargo-tes
 make rust.doc         # cargo doc, warnings are errors      -> CI job "cargo-doc"
 ```
 
-`make rust.doc` is the rustdoc gate. `cargo doc` exits 0 on a broken intra-doc link, so before it
-existed the crate carried five rustdoc diagnostics with every other job green — one of them a link
-to a function that had been renamed away. `RUSTDOCFLAGS="-D warnings"` is what makes them fail.
+`make rust.doc` is the rustdoc gate. `cargo doc` exits 0 on a broken intra-doc link — a link to a
+renamed function passes it — so `RUSTDOCFLAGS="-D warnings"` is what makes those diagnostics fail.
 
 An **eighth** job in `ci.yml`, `coverage`, runs `make cov` — see below. **It is deliberately not a
 required check**: it protects the measuring instrument (that the coverage toolchain still resolves
@@ -112,12 +115,11 @@ A separate `release-contract` check validates the PR title on open, edit, reopen
 It reads the trusted workflow from the base branch and never checks out or executes PR code. Keeping
 it separate avoids rerunning the eight `ci.yml` jobs when only the PR title or body changes.
 
-**None of them is enforced by branch protection today — not one.** This paragraph used to say that
-`lint`, `type` and `test` were required; that was measured false on 2026-07-29:
-`gh api repos/golyshevskii/tooprolix/branches/main/protection` returns **404** and
-`.../rulesets` returns **403 "Upgrade to GitHub Pro or make this repository public"**. A private
-repository without Pro cannot have branch protection at all, so every job here runs and reports
-and none of them can block a merge.
+**None of them is enforced by branch protection — not one.** Measured 2026-07-29:
+`gh api repos/golyshevskii/tooprolix/branches/main/protection` returns **404** and `.../rulesets`
+returns **403 "Upgrade to GitHub Pro or make this repository public"**. A private repository without
+Pro cannot have branch protection at all, so every job here runs and reports and none of them can
+block a merge.
 
 Consequence, and it is the reason this is written down rather than quietly corrected: **a pull
 request with every Rust gate red is still mergeable.** Read the job results yourself before
@@ -161,7 +163,7 @@ executable (`[tool.maturin] bindings = "bin"`), so `import tooprolix` raises `Mo
 by design and there is nothing to rebuild into `.venv`.
 
 ```bash
-make rust.build       # cargo build + prove the binary links no libpython -> CI job "cargo-clippy"
+make rust.build       # cargo build, then otool/ldd that binary -> CI job "cargo-clippy"
 uvx maturin==1.14.1 build --release --locked --out dist   # a wheel for this machine
 # install it and run the COMMAND. The date is REQUIRED and is the oracle the check compares
 # against — without one it could only assert the SHAPE of a date, which accepted a binary built
@@ -171,6 +173,9 @@ scripts/install-smoke.sh dist/tooprolix-*.whl "$(git log -1 --format=%cs)"
 # description that is the TRANSFORMED README rather than whatever happens to be on disk.
 uv run --no-project python scripts/check_artifact.py dist/tooprolix-*.whl README.md
 ```
+
+`make rust.build` is **not** a guard on the shipped wheels: it inspects the binary cargo just linked
+on the machine running it, not the release artifacts `build-artifacts.yml` produces.
 
 `scripts/install-smoke.sh` is the guard that replaced the pyo3 boundary tests: it installs the
 artifact into a throwaway project and asserts the command exists, prints exactly the expected
@@ -182,9 +187,7 @@ runs the same script on every artifact it builds.
 ## Coverage
 
 Coverage is measured and printed; it is **not** published. There is no badge and no committed
-artifact — the repository is private until the PyPI flip so no badge host can read it, and the
-projects worth comparing against publish none either (ruff, uv, tokio, serde, ripgrep, cargo,
-maturin, polars, httpx, starlette). Revisit at publication.
+artifact — while the repository is private, no badge host can read one. Revisit when it goes public.
 
 ```bash
 make rust.cov         # cargo llvm-cov -> prints "rust coverage: NN.N%"
@@ -210,8 +213,13 @@ is the part worth keeping in mind when you touch coverage configuration. A perce
 raised by measuring less — dropping `branch = true`, orphaning a `.rs` file from the module tree,
 adding a `corpus/` subdirectory coverage.py cannot discover — and none of those leave any other
 trace. The script walks the source tree itself and compares it against what the report claims to
-have measured, so those edits fail the run with a message naming the file. If one fires, fix the
-denominator; do not silence the check.
+have measured, and fails the run with a message naming the file. Its one ceiling is stated in the
+script at the line that implements it: a missing Rust file is reported only if its text contains a
+literal `fn `. That is what lets `src/detect.rs` — module documentation and `pub mod` declarations,
+no functions — be legitimately absent, which
+`test_a_rust_source_file_with_no_instrumentable_code_may_be_absent` holds in place; it also means a
+module whose functions all arrive from a macro expansion clears the filter and leaves the
+denominator without a word. If the check fires, fix the denominator; do not silence it.
 
 Do not add a `--fail-under` threshold either: picking one before the code audits would be picking a
 number to match today's code.
@@ -221,15 +229,16 @@ could:
 
 - **`build.rs` is invisible to the Rust number.** It is a build script, compiled and run on the host
   before the crate exists, so `cargo llvm-cov` never instruments it and it appears in no row of the
-  report. Its ~190 lines are unmeasured, not covered.
+  report. It is unmeasured, not covered.
 - **Rust branch coverage is not reported at all** on the pinned stable toolchain — llvm-cov's
   `Branches` column reads `-`. The Rust number is **line** coverage; the Python number folds branches
   in (`branch = true`). They are two different measures, which is why they are never added together
   into a single figure and why neither is described as comparable to the other.
-- **The 6 doctests are not in the Rust number.** `cargo llvm-cov` skips doctests unless
-  `--doctests` is passed, and that flag needs a nightly toolchain — on the pinned 1.97.0 it fails
-  with `error: 2 nightly options were parsed`. So `make rust.cov` instruments **188 of the 194**
-  tests `make rust.test` runs, and code reached only by a doctest counts as uncovered.
+- **The doctests are not in the Rust number.** `cargo llvm-cov` skips doctests unless `--doctests`
+  is passed, and that flag needs a nightly toolchain — on the pinned 1.97.0 it fails with
+  `error: 2 nightly options were parsed`. So the `Doc-tests tooprolix` target is absent from
+  `make rust.cov` entirely and code reached only by a doctest counts as uncovered. No test counts
+  are written down here, on purpose: nothing would fail when they drifted. Run `make rust.test`.
 - **The Python number measures `corpus/` only** (`[tool.coverage.run] source` in `pyproject.toml`),
   which is the throwaway research tooling — the product itself is Rust. `tests/unit` is the runner's
   input, never part of the denominator: a denominator containing the tests climbs when you write
