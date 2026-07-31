@@ -38,6 +38,8 @@ import pytest
 
 # corpus/fixtures/sample.py, reached from tests/unit/
 FIXTURE: Path = Path(__file__).parents[2] / "corpus" / "fixtures" / "sample.py"
+#: The second oracle, and the only one that can tell the interpreters apart. See its own test.
+FSTRING_FIXTURE: Path = Path(__file__).parents[2] / "corpus" / "fixtures" / "fstring_identifiers.py"
 PYPROJECT: Path = Path(__file__).parents[2] / "pyproject.toml"
 CI_WORKFLOW: Path = Path(__file__).parents[2] / ".github" / "workflows" / "ci.yml"
 
@@ -65,10 +67,16 @@ def test_the_corpus_floor_stays_above_the_floor_the_distribution_promises() -> N
     `requires-python` back to the corpus floor would lock installers out of an interpreter the
     distribution supports; lowering `MIN_INTERPRETER` to the distribution floor would let the
     research oracle answer with numbers no downstream constant was derived from.
+
+    The exact spelling is asserted before it is parsed, and both halves are load-bearing. AC5
+    promises `>=3.11` and nothing narrower OR broader: `>=3.10` would satisfy the separation below
+    while advertising an interpreter nothing installs on, and `>=3.11,<4` or `~=3.11` would mean
+    something this test's parser cannot read. Pinning the string makes the parse total.
     """
     declared: str = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))["project"]["requires-python"]
-    distribution_floor: tuple[int, ...] = tuple(int(part) for part in declared.removeprefix(">=").split("."))
 
+    assert declared == ">=3.11"
+    distribution_floor: tuple[int, ...] = tuple(int(part) for part in declared.removeprefix(">=").split("."))
     assert distribution_floor < measure.MIN_INTERPRETER
 
 
@@ -80,11 +88,29 @@ def test_ci_runs_above_the_corpus_floor_so_the_open_upper_bound_is_exercised() -
     in the repository sits at the bottom of a range the package advertises as open, and a break on
     any newer interpreter passes everything. This is what makes "the upper bound is open" a measured
     statement rather than a comment.
-    """
-    matched = re.search(r'^\s*PYTHON_VERSION:\s*"(\d+)\.(\d+)"', CI_WORKFLOW.read_text(encoding="utf-8"), re.MULTILINE)
-    assert matched is not None, "ci.yml declares no PYTHON_VERSION"
-    ci_interpreter: tuple[int, int] = (int(matched[1]), int(matched[2]))
 
+    Reading the `env:` value alone would assert the first regex match rather than the workflow: a
+    job or step setting `python-version: "3.12"` directly leaves the global value untouched and runs
+    on the floor anyway. So every `python-version:` in the file is required to route through
+    `${{ env.PYTHON_VERSION }}`, and the file must declare that variable exactly once — absent or
+    duplicated, this fails rather than picking one.
+
+    `build-artifacts.yml` is deliberately NOT covered: its 3.11 pin is the distribution floor, a
+    different contract, exercised on purpose.
+    """
+    text: str = CI_WORKFLOW.read_text(encoding="utf-8")
+
+    declared: list[tuple[str, str]] = re.findall(r'^\s*PYTHON_VERSION:\s*"(\d+)\.(\d+)"\s*$', text, re.MULTILINE)
+    assert len(declared) == 1, f"ci.yml must declare PYTHON_VERSION exactly once, found {declared}"
+
+    literal: list[str] = [
+        value
+        for value in re.findall(r"^\s*python-version:\s*(.+?)\s*$", text, re.MULTILINE)
+        if value != "${{ env.PYTHON_VERSION }}"
+    ]
+    assert literal == [], f"ci.yml pins python-version outside PYTHON_VERSION: {literal}"
+
+    ci_interpreter: tuple[int, int] = (int(declared[0][0]), int(declared[0][1]))
     assert ci_interpreter > measure.MIN_INTERPRETER
 
 
@@ -106,6 +132,44 @@ def test_the_corpus_tool_refuses_an_interpreter_below_its_own_floor(
 
     assert code == 2
     assert "need CPython >= 3.12, got 3.11" in caplog.text
+
+
+def test_identifiers_interpolated_in_an_fstring_are_seen_by_the_restatement_probe() -> None:
+    """
+    The PEP 701 difference itself, which every other test in this suite is blind to.
+
+    `MIN_INTERPRETER`, the CI pin and the whole two-floor split rest on one measured fact: before
+    3.12 an f-string is ONE STRING token, so `counter` and `limit` inside
+    `f"{counter} of {limit}"` are invisible to the probe and the comment above it scores 0 instead
+    of 1.0. `sample.py` contains no interpolated identifier, so the entire suite passes identically
+    on 3.11 and 3.14 — and a developer whose venv is 3.11 (buildable at all only because the
+    distribution floor was lowered) gets a green run that agrees with them.
+
+    So this test is DESIGNED to go red on 3.11. That is not a flaw in it: it is the only thing in
+    the repository that tells such a developer the interpreter is wrong instead of quietly
+    producing different numbers. Hand-counted on the 6-line fixture: the block on line 5 is the one
+    hit, and its target is the f-string on line 6.
+    """
+    stats: measure.FileStats = measure.measure_file(FSTRING_FIXTURE)
+
+    assert [hit.line for hit in stats.restatement_hits] == [5]
+    assert stats.restatement_hits[0].code_line == 'message = f"{counter} of {limit}"'
+
+
+def test_rendering_the_report_below_the_corpus_floor_raises(monkeypatch: pytest.MonkeyPatch) -> None:
+    """
+    `render` is the single emitter, so it is the last place a wrong interpreter can be stopped.
+
+    Guarding `measure_repo` alone still lets an importer assemble `RepoStats` out of unguarded
+    `measure_file` calls and render them: measured, that route shifts the counts (OpenHands
+    1249 -> 1255, crewAI 147 -> 149, langgraph 482 -> 485, agents 595 -> 597). Numbers that look
+    right and are wrong is precisely what `MIN_INTERPRETER` exists to prevent, so the refusal has to
+    sit on the path every REPORT line goes through, not only on the path most callers take.
+    """
+    monkeypatch.setattr(sys, "version_info", (3, 11, 9, "final", 0))
+
+    with pytest.raises(RuntimeError, match=r"3\.12"):
+        measure.render([], {})
 
 
 def test_measuring_a_repo_below_the_corpus_floor_raises_instead_of_emitting_numbers(

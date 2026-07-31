@@ -36,9 +36,11 @@ from collections.abc import Iterator
 from pathlib import Path
 
 #: Metadata the project promises and PyPI shows. PEP 639 spellings, which is what maturin emits.
-#: `Requires-Python` is the distribution floor, deliberately not `MIN_INTERPRETER` from
-#: `corpus/measure.py`; `tests/unit/test_measure.py` keeps the two apart.
+#: `Requires-Python` is the distribution floor, not `MIN_INTERPRETER`; test_measure.py keeps them apart.
 REQUIRED_HEADERS: dict[str, str] = {"License-Expression": "MIT", "License-File": "LICENSE", "Requires-Python": ">=3.11"}
+
+#: Of those, the ones core metadata allows more than once: required to be PRESENT, not unique.
+MULTI_USE_HEADERS: frozenset[str] = frozenset({"License-File"})
 
 #: Documents `README.md` links to that must travel with the source. The README's own links are
 #: rewritten to GitHub URLs for the project page, so the sdist is the only place a consumer without
@@ -152,6 +154,11 @@ def _problems(path: Path, readme: Path, expect_tag: str | None) -> Iterator[str]
     names, raw = _wheel(path) if is_wheel else _sdist(path)
     message = email.message_from_bytes(raw)
 
+    # Grade the PARSE first: every check below reads what `email` RECOVERED from the document, and a
+    # recovery is a guess no installer is obliged to repeat.
+    for defect in message.defects:
+        yield f"the metadata did not parse cleanly: {type(defect).__name__}"
+
     # AC2. `expect_tag` comes from the matrix, so it is fixed independently of whatever the build
     # produced; the archive and the filename are then both required to agree with it and therefore
     # with each other. The in-archive read is the one a resolver honours — a filename is a label
@@ -163,10 +170,13 @@ def _problems(path: Path, readme: Path, expect_tag: str | None) -> Iterator[str]
                 yield f"the {source} declares {sorted(actual)}, the matrix promises {sorted(promised)}"
 
     # `get_all`, never `get`: `get` answers with the FIRST occurrence, so a duplicated, contradicting
-    # header is invisible to it. Exactly one is required, which also refuses a missing header.
+    # header is invisible to it.
     for header, expected in REQUIRED_HEADERS.items():
-        actual = message.get_all(header)
-        if actual != [expected]:
+        actual = message.get_all(header) or []
+        if header in MULTI_USE_HEADERS:
+            if expected not in actual:
+                yield f"{header}: expected {expected!r} among {actual!r}"
+        elif actual != [expected]:
             yield f"{header}: expected exactly one {expected!r}, archive says {actual!r}"
 
     # The header is a claim; the file is the artifact. Both are required — a `License-File` naming

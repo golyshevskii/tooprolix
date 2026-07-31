@@ -38,9 +38,9 @@ classifiers = [
 ]
 # The distribution floor: the lowest interpreter `build-artifacts.yml` install-smokes, graded on the
 # built archive by `scripts/check_artifact.py`. NOT the corpus-tooling floor — `corpus/measure.py`
-# keeps its own, higher `MIN_INTERPRETER = (3, 12)`, because pre-3.12 `tokenize` hides identifiers
-# inside f-strings (PEP 701) and lowers the restatement counts from 137 to 133 on an audited
-# repository. `tests/unit/test_measure.py` requires it to stay strictly above this line.
+# keeps its own, higher `MIN_INTERPRETER = (3, 12)`: pre-3.12 `tokenize` hides identifiers inside
+# f-strings (PEP 701), lowering the restatement counts from 137 to 133 on an audited repository.
+# `tests/unit/test_measure.py` pins this string and requires MIN_INTERPRETER to stay above it.
 requires-python = ">=3.11"
 
 # ⚠️ THERE IS DELIBERATELY NO `[project.scripts]` HERE, and its absence is load-bearing.
@@ -149,9 +149,9 @@ type = [
 
 [tool.ruff]
 line-length = 120
-# Pinned, not inferred: `requires-python` is the distribution floor (>=3.11), and the only Python
-# here is the corpus tooling, which refuses to run below 3.12.
-target-version = "py312"
+# target-version: inferred from requires-python, i.e. py311 — measured, not assumed
+# (`ruff check --show-settings`). `build-artifacts.yml` runs `scripts/*.py` under 3.11, so a
+# higher target here would greenlight a construct that syntax-errors during the release build.
 # exclude: ruff's default list is a superset of what we'd write — keep the default.
 # Fixture trees are test DATA and can never be lint-clean by construction:
 #   - `corpus/fixtures/` holds the hand-counted oracle for tests/unit/test_measure.py. Its
@@ -251,8 +251,7 @@ split-on-trailing-comma = false # If a comma is placed after the last member in 
                                 # then the imports will never be folded into one line.
 
 [tool.ty.environment]
-# Pinned for the same reason as ruff's `target-version` above.
-python-version = "3.12"
+# python-version: inferred from requires-python, same as ruff above (measured with a PEP 695 probe).
 # Same reason as pytest's `pythonpath`: `measure.py` is a loose script in corpus/, not an
 # installed package, so tests/unit/ imports it as a top-level module. ty needs the same search
 # path or it cannot resolve the import. (ty rejects unknown config keys, so a typo here fails

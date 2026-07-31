@@ -42,6 +42,17 @@ LOG: logging.Logger = logging.getLogger("measure")
 # 3.11 run quietly emit different constants into REPORT.md, refuse to run at all.
 MIN_INTERPRETER: tuple[int, int] = (3, 12)
 
+
+def _require_corpus_interpreter() -> None:
+    """Refuse to measure or emit below `MIN_INTERPRETER`. Guards `measure_repo` and `render`."""
+    if sys.version_info[:2] < MIN_INTERPRETER:
+        message = (
+            f"need CPython >= {MIN_INTERPRETER[0]}.{MIN_INTERPRETER[1]}, "
+            f"got {sys.version_info[0]}.{sys.version_info[1]} (see MIN_INTERPRETER)"
+        )
+        raise RuntimeError(message)
+
+
 # --- denominator hygiene ----------------------------------------------------
 # Any path containing one of these directory components is not this repo's own
 # prose: it is a virtualenv, a build artefact, vendored or generated code. A
@@ -964,15 +975,10 @@ def measure_repo(url: str, sha: str, root: Path) -> RepoStats:
     """
     Walk every eligible `.py` file of a checked-out repo.
 
-    Refuses below `MIN_INTERPRETER`: `main`'s check covers only the command line, and this is the
-    path every counted repository goes through. `measure_file` is deliberately not guarded.
+    Refuses below `MIN_INTERPRETER` so the work stops before it starts. `render` refuses too — that
+    is the one no route can skip. `measure_file` is deliberately not guarded.
     """
-    if sys.version_info[:2] < MIN_INTERPRETER:
-        message = (
-            f"need CPython >= {MIN_INTERPRETER[0]}.{MIN_INTERPRETER[1]}, "
-            f"got {sys.version_info[0]}.{sys.version_info[1]} (see MIN_INTERPRETER)"
-        )
-        raise RuntimeError(message)
+    _require_corpus_interpreter()
     stats = RepoStats(name=repo_name(url), url=url, sha=sha, available=True)
     for path in iter_python_files(root):
         rel: str = path.relative_to(root).as_posix()
@@ -1005,7 +1011,14 @@ def _fmt_pct(value: float) -> str:
 
 
 def render(repos: list[RepoStats], duplicates: dict[str, DuplicateStats]) -> list[str]:
-    """Render the whole report as lines. Pure function of the inputs — AC4 lives here."""
+    """
+    Render the whole report as lines. Pure function of the inputs — AC4 lives here.
+
+    Refuses below `MIN_INTERPRETER`. This is the SINGLE emitter, so no route — not an importer
+    assembling `RepoStats` from unguarded `measure_file` calls — can turn a wrong-interpreter run
+    into REPORT text.
+    """
+    _require_corpus_interpreter()
     out: list[str] = []
     out.append("# tooprolix corpus measurement")
     out.append("")
