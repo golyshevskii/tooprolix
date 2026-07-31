@@ -124,6 +124,13 @@ jobs:
       # AC1: the sdist must be self-sufficient. A wheel built from the unpacked tarball, in a
       # directory with no `.git` and no repository around it, is the only honest test of that — a
       # `cargo package --list` shows what is inside but not whether it builds.
+      #
+      # 🔴 THE WHEEL THIS STEP PRODUCES IS EVIDENCE, NOT A PUBLISHABLE ARTIFACT, and its own tag says
+      # so: measured in run 30605245528 it came out `py3-none-manylinux_2_34_x86_64`, because it is
+      # built directly on the runner rather than in the manylinux 2_17 container the matrix leg uses.
+      # glibc 2.34 is a far higher floor than the one this project promises. It lives in
+      # `dist-from-sdist/` and never in `dist/` for exactly that reason. Whoever adds the publish job
+      # uploads `dist/` and the matrix artifacts — never this one.
       - name: Build a wheel FROM the sdist
         run: |
           set -euo pipefail
