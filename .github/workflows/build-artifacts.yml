@@ -229,6 +229,17 @@ jobs:
           target: ${{ matrix.platform.target }}
           manylinux: ${{ matrix.platform.manylinux }}
           args: --release --locked --out dist --compatibility pypi
+          # 🔴 THE MANYLINUX WHEEL BUILDS INSIDE A DOCKER CONTAINER, AND THE JOB'S ENVIRONMENT DOES
+          # NOT FOLLOW IT IN. Found by the smoke rather than by reading the action: run 30605047058
+          # was green through `Build wheel`, the tag check and `twine check`, and then
+          #
+          #   FAIL: --version printed 'tooprolix 0.4.1 (unknown)'
+          #
+          # — the linux artifact did not know what commit it was built from, while the natively
+          # built macOS wheel in the same run printed a real date. Without the version assertion in
+          # `scripts/install-smoke.sh` this run would have uploaded that wheel as a pass. This is
+          # ignored on the macOS and Windows legs, which use no container.
+          docker-options: -e SOURCE_DATE_EPOCH
         env:
           # Declared rather than inherited — see the header. maturin already defaults to 11.0 here;
           # a default is not a promise, and this is the line that keeps the tag honest if it changes.
