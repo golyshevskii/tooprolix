@@ -158,6 +158,18 @@ jobs:
       - name: twine check
         run: uvx twine check --strict "$SDIST" "$WHEEL_FROM_SDIST"
 
+      # 🔴 AC3 AND AC8, GATED IN CODE RATHER THAN OBSERVED IN A REPORT. `twine check --strict`
+      # validates the METADATA envelope and the description's markup; it never asks what the licence
+      # says, whether a LICENSE file is actually in the archive, whether the sdist carries the two
+      # documents the README links to, or which file the shipped description came from. All three
+      # exploits were measured green under every other gate here — see the script's own header.
+      #
+      # README.md on disk is the TRANSFORMED one at this point, which is the object AC8 names.
+      - name: The archives carry MIT, their LICENSE, docs/, and the transformed README
+        run: |
+          uv run --no-project python scripts/check_artifact.py "$SDIST" README.md
+          uv run --no-project python scripts/check_artifact.py "$WHEEL_FROM_SDIST" README.md
+
       # AC4 for the source path, with an ORACLE rather than a shape check: the expected date is
       # `git log -1 --format=%cs`, computed here from the checkout, so a binary built from any other
       # commit fails. Without it the smoke accepted `tooprolix 0.4.1 (2000-01-01)` — measured.
@@ -309,6 +321,12 @@ jobs:
       - name: twine check
         shell: bash
         run: uvx twine check --strict "$WHEEL"
+
+      # Same gate as in the sdist job — see the note there. Every published artifact is graded, not
+      # just the one that happened to be looked at.
+      - name: The wheel carries MIT, its LICENSE, and the transformed README
+        shell: bash
+        run: uv run --no-project python scripts/check_artifact.py "$WHEEL" README.md
 
       - name: install-smoke
         shell: bash

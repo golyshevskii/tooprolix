@@ -149,6 +149,9 @@ uvx maturin==1.14.1 build --release --locked --out dist   # a wheel for this mac
 # against — without one it could only assert the SHAPE of a date, which accepted a binary built
 # from any other commit. Use `unknown` for an sdist built with no SOURCE_DATE_EPOCH.
 scripts/install-smoke.sh dist/tooprolix-*.whl "$(git log -1 --format=%cs)"
+# ... and grade the archive itself: MIT metadata, a physical LICENSE, docs/ in the sdist, and a
+# description that is the TRANSFORMED README rather than whatever happens to be on disk.
+uv run --no-project python scripts/check_artifact.py dist/tooprolix-*.whl README.md
 ```
 
 `scripts/install-smoke.sh` is the guard that replaced the pyo3 boundary tests: it installs the
