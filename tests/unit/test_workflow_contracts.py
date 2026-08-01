@@ -10,6 +10,8 @@ Run: make test
 
 from __future__ import annotations
 
+import json
+import os
 import re
 import subprocess
 import tempfile
@@ -17,6 +19,7 @@ import textwrap
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -28,9 +31,13 @@ RELEASE_PLZ: Path = WORKFLOWS / "release-plz.yml"
 
 CONCURRENCY_GROUP = re.compile(r"^concurrency:\n\s+group:\s*(?P<group>.+)$", re.MULTILINE)
 
-#: The step whose shell IS the stale-tree guard. The tests below execute that shell rather than
+#: The steps whose shell IS the guard. The tests below execute that shell rather than
 #: re-implementing it, so a mutation to the workflow is what they grade.
 STALE_TREE_GUARD_STEP = "Refuse to tag a tree that is not main's"
+AGGREGATE_STEP = "Every required job succeeded, on the commit the event named"
+
+#: The commit a fixture event names, i.e. what `github.sha` would hold.
+EVENT_SHA: str = "e5" * 20
 
 #: Every `make` target `ci.yml` ran before the eight jobs were consolidated into four. The
 #: consolidation's one real risk is dropping a gate while the run still goes green, and a job count
@@ -107,18 +114,71 @@ def make_targets(job: str) -> set[str]:
     return set(re.findall(r"^\s+run: make (\S+)$", job, re.MULTILINE))
 
 
-def stale_tree_guard() -> str:
-    """Extract the guard's shell out of `release-plz.yml`, so the tests run the shipped artifact."""
+def step_script(workflow: Path, step: str) -> str:
+    """
+    Extract a step's `run: |` shell, so the tests EXECUTE the shipped artifact instead of matching it.
+
+    A token assertion cannot tell `!= "success"` from `== "success"`, and the inverted form turns
+    the aggregate into "fail if any job passed". Measured: that exact inversion left all 25 workflow
+    tests green. Anything with real semantics in this file is executed, not pattern-matched.
+    """
+    # The `(?: +[^\n]*\n)*?` skips whatever the step declares between its name and its script —
+    # `id:`, `env:` and their children — without letting the match run past this step, because it is
+    # non-greedy and anchored on the first `run: |` that follows the name.
     body = re.search(
-        rf"- name: {re.escape(STALE_TREE_GUARD_STEP)}\n(?P<pad> +)run: \|\n(?P<script>(?:(?P=pad) +.*\n|[ \t]*\n)+)",
-        RELEASE_PLZ.read_text(encoding="utf-8"),
+        rf"- name: {re.escape(step)}\n(?: +[^\n]*\n)*?(?P<pad> +)run: \|\n(?P<script>(?:(?P=pad) +.*\n|[ \t]*\n)+)",
+        workflow.read_text(encoding="utf-8"),
     )
-    assert body is not None, f"release-plz.yml has no `{STALE_TREE_GUARD_STEP}` step with a `run: |` script"
+    assert body is not None, f"{workflow.name} has no `{step}` step with a `run: |` script"
     return textwrap.dedent(body.group("script"))
 
 
 def run_guard(cwd: Path) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(["bash", "-c", stale_tree_guard()], cwd=cwd, capture_output=True, text=True, check=False)
+    script = step_script(RELEASE_PLZ, STALE_TREE_GUARD_STEP)
+    return subprocess.run(["bash", "-c", script], cwd=cwd, capture_output=True, text=True, check=False)
+
+
+def run_aggregate(needs: dict[str, dict[str, Any]], event_sha: str = EVENT_SHA) -> subprocess.CompletedProcess[str]:
+    """Execute `ci-required`'s shipped shell against a `needs` context, exactly as Actions would."""
+    return subprocess.run(
+        ["bash", "-c", step_script(CI, AGGREGATE_STEP)],
+        env={**os.environ, "RESULTS": json.dumps(needs), "EVENT_SHA": event_sha},
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
+def succeeded(*jobs: str, sha: str = EVENT_SHA) -> dict[str, dict[str, Any]]:
+    return {
+        job: {"result": "success", "outputs": {"checked_out_sha": sha, "checked_out_tree": "t" * 40}} for job in jobs
+    }
+
+
+def evaluate(expression: str, event_name: str, ref: str, head_ref: str) -> bool:
+    """
+    Evaluate a SHIPPED GitHub `if:` expression against a context.
+
+    The alternative was asserting that the string contains `refs/tags/v`, which cannot distinguish
+    `||` from `&&` — and flipping the first `||` to `&&`, which stops the tag matrix running
+    entirely, left every wheel assertion green. The accepted subset is whitelisted below, so an
+    expression that grows a construct this cannot translate fails loudly instead of being
+    mistranslated into a passing answer.
+    """
+    # `if: >-` is a folded scalar, so the shipped value arrives with its newlines and indentation
+    # intact. YAML folds them to single spaces; so does this.
+    expression = " ".join(expression.split())
+    context = {"github.event_name": event_name, "github.ref": ref, "github.head_ref": head_ref}
+    skeleton = re.sub(r"'[^']*'", "''", expression)
+    used = set(re.findall(r"[A-Za-z_][\w.]*", skeleton))
+    assert used <= {"startsWith", *context}, (
+        f"expression uses {used - {'startsWith', *context}}, which is not translated"
+    )
+
+    translated = expression.replace("||", " or ").replace("&&", " and ")
+    for name, value in context.items():
+        translated = translated.replace(name, repr(value))
+    return bool(eval(translated, {"__builtins__": {}}, {"startsWith": lambda text, prefix: text.startswith(prefix)}))
 
 
 @contextmanager
@@ -215,9 +275,33 @@ def test_the_wheel_matrix_is_gated_on_release_events_and_the_sdist_is_not_gated_
 
     gate = job_condition(build["wheels"])
     assert gate is not None, "the wheel matrix is ungated, so every ordinary PR pays for three wheel legs"
-    assert "workflow_dispatch" in gate, gate
-    assert "refs/tags/v" in gate, gate
-    assert "release-plz-" in gate, gate
+
+
+@pytest.mark.parametrize(
+    ("event", "event_name", "ref", "head_ref", "builds_wheels"),
+    [
+        ("an ordinary pull request", "pull_request", "refs/pull/52/merge", "feat/something", False),
+        ("a release-plz pull request", "pull_request", "refs/pull/53/merge", "release-plz-2026-08-01T09-00-00Z", True),
+        ("a v* tag push", "push", "refs/tags/v0.4.8", "", True),
+        ("a push to main", "push", "refs/heads/main", "", False),
+        ("a manual dispatch", "workflow_dispatch", "refs/heads/main", "", True),
+    ],
+)
+def test_the_shipped_wheel_gate_selects_the_release_events(
+    event: str, event_name: str, ref: str, head_ref: str, builds_wheels: bool
+) -> None:
+    """
+    The gate's SEMANTICS, by evaluating the shipped expression rather than reading tokens out of it.
+
+    `startsWith` on an empty `github.head_ref` is what keeps the release-plz clause from leaking
+    into a push event, and no substring assertion can check that. Nor can one tell `||` from `&&`:
+    flipping the first `||` stops the tag matrix running and left every token assertion green.
+    """
+    gate = job_condition(jobs(uncommented(BUILD_ARTIFACTS))["wheels"])
+    assert gate is not None
+    expression = gate.removeprefix(">-").strip()
+
+    assert evaluate(expression, event_name, ref, head_ref) is builds_wheels, f"{event} selected the wrong matrix"
 
 
 # ---------------------------------------------------------------------------------------------
@@ -269,6 +353,85 @@ def test_the_aggregate_is_unconditional_and_covers_every_required_job() -> None:
     needs = re.search(r"^ {4}needs:\s*\[(?P<list>[^\]]*)\]", aggregate, re.MULTILINE)
     assert needs is not None, "the aggregate needs nothing, so it is green whatever CI did"
     assert {name.strip() for name in needs.group("list").split(",")} == {"ci-python", "ci-rust", "cargo-doc"}
+
+
+def test_the_shipped_aggregate_passes_only_a_wholly_successful_run() -> None:
+    """The baseline the refusals below break; without it a gate that always fails looks correct."""
+    result = run_aggregate(succeeded("ci-python", "ci-rust", "cargo-doc"))
+    assert result.returncode == 0, f"{result.stdout}{result.stderr}"
+
+
+@pytest.mark.parametrize("result", ["failure", "cancelled", "skipped", "neutral"])
+def test_the_shipped_aggregate_refuses_any_result_that_is_not_success(result: str) -> None:
+    """
+    Only `success` passes. `cancelled` and `skipped` are the ones that matter: neither is a
+    `failure`, and reading them as "not failed" is exactly how PR #37's four cancelled artifact
+    checks looked green. Executed, not matched — inverting `!= "success"` to `== "success"` turns
+    this gate into "fail if any job passed" and no token assertion can see it.
+    """
+    needs = succeeded("ci-python", "ci-rust", "cargo-doc")
+    needs["ci-rust"]["result"] = result
+
+    assert run_aggregate(needs).returncode == 1
+
+
+def test_the_shipped_aggregate_refuses_an_empty_needs_list() -> None:
+    """
+    Deleting `needs:` would otherwise leave a job that reports success unconditionally — a required
+    check that grades nothing is worse than no required check, because it is counted.
+    """
+    assert run_aggregate({}).returncode == 1
+
+
+def test_the_shipped_aggregate_refuses_a_job_that_graded_another_commit() -> None:
+    """
+    🔴 The binding AC1 needs, and the reason the `checked_out_sha` outputs are not decoration.
+
+    Job outputs are not returned by the `actions/runs/<id>/jobs` REST endpoint, so nothing outside
+    the run can read them — the comparison has to happen here. A `ref:` mistake in any required job
+    makes it grade a tree the event never named, and every gate inside that job still passes.
+    """
+    needs = succeeded("ci-python", "ci-rust", "cargo-doc")
+    needs["cargo-doc"]["outputs"]["checked_out_sha"] = "f0" * 20
+
+    assert run_aggregate(needs).returncode == 1
+
+
+def test_the_shipped_aggregate_refuses_a_job_that_emitted_nothing() -> None:
+    """A job that reports no checkout cannot be shown to have graded the right tree, so it blocks."""
+    needs = succeeded("ci-python", "ci-rust", "cargo-doc")
+    needs["ci-python"]["outputs"] = {}
+
+    assert run_aggregate(needs).returncode == 1
+
+
+def test_the_shipped_aggregate_refuses_an_event_that_names_no_commit() -> None:
+    """
+    A guard whose reference value is empty must refuse, not compare everything to nothing.
+
+    The fixture emits NOTHING as well as naming nothing, and that pairing is the whole point: with
+    real `checked_out_sha` values the comparison fails on its own and this test passes whether or
+    not the emptiness check exists — measured, it stayed green when the check was deleted. Empty
+    against empty is the vacuous case, where `"" == ""` and the binding silently certifies nothing.
+    """
+    silent = {job: {"result": "success", "outputs": {}} for job in ("ci-python", "ci-rust", "cargo-doc")}
+
+    assert run_aggregate(silent, event_sha="").returncode == 1
+
+
+def test_every_job_the_aggregate_needs_emits_what_it_checked_out() -> None:
+    """
+    The aggregate can only compare what the jobs declare. A required job that checks out
+    independently and declares no `outputs:` would make the comparison silently vacuous for itself.
+    """
+    ci = jobs(uncommented(CI))
+    needed = re.search(r"^ {4}needs:\s*\[(?P<list>[^\]]*)\]", ci["ci-required"], re.MULTILINE)
+    assert needed is not None
+
+    for name in (entry.strip() for entry in needed.group("list").split(",")):
+        assert "checked_out_sha: ${{ steps.checked-out.outputs.checked_out_sha }}" in ci[name], (
+            f"{name} is required but declares no checkout evidence, so the aggregate cannot bind it"
+        )
 
 
 def test_only_the_aggregate_carries_a_job_condition() -> None:
@@ -368,9 +531,14 @@ def test_the_consolidation_kept_every_hardening_setting() -> None:
     """
     text = uncommented(CI)
 
-    unpinned = [
-        ref for ref in re.findall(r"^\s+uses: (\S+)$", text, re.MULTILINE) if not re.search(r"@[0-9a-f]{40}$", ref)
-    ]
+    # NOT anchored with `$`. Every shipped `uses:` line carries a trailing ` # v7.0.1` version
+    # comment, and `uncommented()` strips only WHOLE-LINE comments — so an anchored pattern matched
+    # zero of the 11 actions in this file and `unpinned` was unconditionally empty. Measured: all
+    # four `actions/checkout` pins replaced with `@v7 # v7.0.1` and this test still reported
+    # `1 passed`. An assertion that cannot fail is worse than no assertion, because it is counted.
+    used = re.findall(r"^\s+uses:\s+(\S+)", text, re.MULTILINE)
+    assert len(used) >= 11, f"only {len(used)} `uses:` lines found — the matcher has stopped seeing them"
+    unpinned = [ref for ref in used if not re.search(r"@[0-9a-f]{40}$", ref)]
     assert unpinned == [], f"actions not pinned to a commit SHA: {unpinned}"
     assert text.count("actions/checkout@") == text.count("persist-credentials: false"), (
         "every checkout must keep the token out of .git/config"
@@ -471,6 +639,49 @@ def test_the_guard_reproduces_every_historical_release(tag: str, merge: str, hol
     assert (result.returncode == 0) is holds, (
         f"{tag} at {merge}: exit {result.returncode}\n{result.stdout}{result.stderr}"
     )
+
+
+def test_a_non_release_merge_does_not_redden_main(tmp_path: Path) -> None:
+    """
+    🔴 The guard must refuse RELEASES, not refuse MERGES.
+
+    An ordinary merge-commit PR forks at A, `main` advances to B, and the PR lands as merge M.
+    `M^{tree}` holds both changes and `M^2^{tree}` lacks B, so the trees differ exactly as a stale
+    release's do — while `release_always = false` means release-plz would tag nothing at all.
+    Comparing unconditionally paints `main` red for every merge-commit PR forever.
+
+    The fixture asserts the trees really DO differ before asserting the guard passes; otherwise it
+    would prove only that a clean merge is clean, which is a different test.
+    """
+    repo = tmp_path / "repo"
+    repo.mkdir()
+
+    def git(*args: str) -> str:
+        done = subprocess.run(["git", *args], cwd=repo, check=True, capture_output=True, text=True)
+        return done.stdout.strip()
+
+    git("init", "-q", "-b", "main")
+    git("config", "user.email", "fixture@example.com")
+    git("config", "user.name", "fixture")
+    (repo / "base.txt").write_text("base\n", encoding="utf-8")
+    git("add", "-A")
+    git("commit", "-qm", "chore: base")
+    git("checkout", "-qb", "feature")
+    (repo / "feature.txt").write_text("feature\n", encoding="utf-8")
+    git("add", "-A")
+    git("commit", "-qm", "feat: the feature this PR proposes")
+    git("checkout", "-q", "main")
+    (repo / "landed-first.txt").write_text("someone else got there first\n", encoding="utf-8")
+    git("add", "-A")
+    git("commit", "-qm", "fix: an unrelated change that landed first")
+    git("merge", "--no-ff", "-q", "-m", "Merge pull request #7 from golyshevskii/feature", "feature")
+
+    assert git("rev-parse", "HEAD^{tree}") != git("rev-parse", "HEAD^2^{tree}"), (
+        "the fixture's trees agree, so it cannot show the guard distinguishing a merge from a release"
+    )
+
+    result = run_guard(repo)
+    assert result.returncode == 0, f"a non-release merge reddened main:\n{result.stdout}{result.stderr}"
 
 
 def test_the_guard_fails_when_it_cannot_resolve_what_it_is_grading(tmp_path: Path) -> None:

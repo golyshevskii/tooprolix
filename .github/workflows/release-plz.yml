@@ -110,6 +110,23 @@ jobs:
       # commit that can be tagged IS HEAD, so the invariant holds by construction rather than by
       # assumption, and that branch is stated out loud rather than left as a silent pass.
       #
+      # IT MUST REFUSE RELEASES, NOT REFUSE MERGES. An ORDINARY merge-commit PR forks at A, `main`
+      # advances to B, and the PR lands as merge M: `M^{tree}` holds both changes and `M^2^{tree}`
+      # lacks B, so the trees differ — and `release_always = false` means release-plz would tag
+      # nothing at all. Comparing unconditionally would paint `main` red for a merge that is not a
+      # release. So the release commit is IDENTIFIED first, on two independent signals, and both
+      # were measured over every merge commit this repository has:
+      #
+      #   * `HEAD^2`'s subject is `chore: release …` — true for all TWELVE releases (v0.3.5..v0.4.7);
+      #   * the merge's own subject names a `release-plz-…` branch — true for the ten that GitHub
+      #     merged rather than squashed.
+      #
+      # The one non-release merge on `main` (`68ab88f`, PR #19) matches NEITHER. The residual is
+      # named rather than hidden: a release whose commit subject template changed AND that was
+      # merged without `release-plz-` in the merge subject would skip the comparison. Both signals
+      # would have to change together, and `test_a_non_release_merge_does_not_redden_main` plus the
+      # six historical releases pin the behaviour in both directions.
+      #
       # IT RUNS BEFORE THE TAGGING ACTION, because afterwards there is nothing left to refuse: a tag
       # is not a proposal, and deleting a published one is not a CI problem any more.
       #
@@ -125,17 +142,30 @@ jobs:
 
           head=$(git rev-parse --verify "HEAD^{commit}")
           head_tree=$(git rev-parse --verify "HEAD^{tree}")
-
-          if release=$(git rev-parse --verify --quiet "HEAD^2"); then
-            release_tree=$(git rev-parse --verify "$release^{tree}")
-          else
-            release="$head"
-            release_tree="$head_tree"
-            echo "note: HEAD is not a merge commit, so the only commit release-plz can tag is HEAD."
+          if [ -z "$head" ] || [ -z "$head_tree" ]; then
+            echo "FAIL: unresolved input (main commit '$head', main tree '$head_tree')." >&2
+            exit 1
           fi
 
-          if [ -z "$head_tree" ] || [ -z "$release_tree" ]; then
-            echo "FAIL: unresolved input (main tree '$head_tree', release tree '$release_tree')." >&2
+          if ! release=$(git rev-parse --verify --quiet "HEAD^2"); then
+            echo "OK: HEAD is not a merge commit, so the only commit release-plz can tag is HEAD."
+            exit 0
+          fi
+
+          release_subject=$(git log -1 --format=%s "$release")
+          merge_subject=$(git log -1 --format=%s "$head")
+          is_release=no
+          case "$release_subject" in "chore: release "*) is_release=yes ;; esac
+          case "$merge_subject" in *"release-plz-"*) is_release=yes ;; esac
+          if [ "$is_release" != "yes" ]; then
+            echo "OK: HEAD^2 is '$release_subject', which is not a release-plz release commit."
+            echo "    release_always = false, so this push creates no tag and there is no tree to guard."
+            exit 0
+          fi
+
+          release_tree=$(git rev-parse --verify "$release^{tree}")
+          if [ -z "$release_tree" ]; then
+            echo "FAIL: unresolved input (release tree of $release is empty)." >&2
             exit 1
           fi
 
