@@ -29,17 +29,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # WHERE THE STALE TAG IS BORN, AND THE ONE LINE THAT STOPS IT BEING BORN.
+          # WHERE THE STALE TAG IS BORN. By default this checks out `github.sha`, the push that
+          # triggered the run; with `cancel-in-progress: false` a queued run starts minutes later
+          # and still forks the release branch from that older tip. On `v0.4.6` the branch was
+          # created at `0e1b710` while `main` was already `e9af7ed`, and the tag inherited the stale
+          # tree. `ref: main` resolves the branch when the job actually runs.
           #
-          # By default this checks out `github.sha` — the SHA of the push that triggered the run.
-          # This job's concurrency group has `cancel-in-progress: false`, so a run queued behind
-          # another starts minutes later and still forks the release branch from that older tip.
-          # Measured on `v0.4.6`: the release branch was created at `0e1b710` while `main` was
-          # already `e9af7ed` (PR #48, merged 8 min 25 s before the tag), and the tag inherited the
-          # stale tree. `ref: main` resolves the branch when the job actually runs.
-          #
-          # This is CONFIGURATION, not a guard: it removes the usual cause, it cannot refuse an
-          # outcome. The `release` job below refuses the outcome. Both, deliberately.
+          # CONFIGURATION, not a guard: it removes the usual cause but cannot refuse an outcome.
+          # The `release` job below refuses the outcome. Both, deliberately.
           ref: main
           # release-plz reads every commit since the last tag to compute the bump; a shallow clone
           # gives it nothing to read.
@@ -86,11 +83,10 @@ jobs:
 
       # INVARIANT A: THE TREE ABOUT TO BE TAGGED MUST BE THE TREE THAT LANDED ON MAIN.
       #
-      # Three of this repository's first five releases shipped a tree `main` never had. release-plz
-      # PRs are merged with a MERGE COMMIT (task PRs are squashed), so the release commit keeps
-      # whatever `main` tip release-plz forked from, and everything merged after that fork point is
-      # simply absent from the tag. `v0.4.6` is missing PR #48 entirely — 6 files, +88/-83 — and
-      # publication would have uploaded a binary built from a tree nothing on `main` ever tested.
+      # release-plz PRs merge with a MERGE COMMIT (task PRs are squashed), so the release commit
+      # keeps whatever `main` tip release-plz forked from and everything merged after that fork is
+      # absent from the tag. Three of the first five releases shipped such a tree; `v0.4.6` is
+      # missing PR #48 entirely, 6 files and +88/-83.
       #
       #   tag     tag tree    merge tree   invariant A
       #   v0.4.2  b242d719    b242d719     TRUE
@@ -100,44 +96,27 @@ jobs:
       #   v0.4.6  5d0ceefb    3a1f67fd     FALSE
       #   v0.4.7  1c89006c    1c89006c     TRUE
       #
-      # It is NOT an ancestry claim. With a merge-commit release the tag target is an ancestor of
-      # `main` on every release, good and bad alike — measured both directions on `v0.4.6`.
+      # It is NOT an ancestry claim: with a merge-commit release the tag target is an ancestor of
+      # `main` on every release, good and bad alike.
       #
       # WHAT IT COMPARES. This job runs on the push of the merge commit, so HEAD is that merge and
-      # `HEAD^2` is the release commit release-plz tags — verified against all six tags: each one's
-      # target is exactly its merge commit's second parent. A merge is only clean when those two
-      # trees are identical. When HEAD is not a merge at all there is no second candidate: the only
-      # commit that can be tagged IS HEAD, so the invariant holds by construction rather than by
-      # assumption, and that branch is stated out loud rather than left as a silent pass.
+      # `HEAD^2` is the commit release-plz tags — true of all six tags. When HEAD is not a merge
+      # there is no second candidate and the invariant holds by construction.
       #
-      # IT MUST REFUSE RELEASES, NOT REFUSE MERGES. An ORDINARY merge-commit PR forks at A, `main`
-      # advances to B, and the PR lands as merge M: `M^{tree}` holds both changes and `M^2^{tree}`
-      # lacks B, so the trees differ — and `release_always = false` means release-plz would tag
-      # nothing at all. Comparing unconditionally would paint `main` red for a merge that is not a
-      # release. So the release commit is IDENTIFIED first.
+      # IT REFUSES RELEASES, NOT MERGES. An ordinary merge-commit PR forks at A, `main` advances to
+      # B, and the merge's two trees differ exactly as a stale release's do — while
+      # `release_always = false` means release-plz would tag nothing. So the release commit is
+      # identified first, FROM AN ARTIFACT, NOT FROM PROSE: the version in `Cargo.toml` is what
+      # release-plz acts on (no bump, no tag) and cannot drift with a message template, whereas an
+      # earlier subject-text reading would have switched the guard off silently. Measured over all
+      # 13 merge commits on `main`: the version moves for all twelve releases, v0.3.5 to v0.4.7, and
+      # not for the one genuine non-release merge, `68ab88f`.
       #
-      # IDENTIFIED FROM AN ARTIFACT, NOT FROM PROSE. An earlier version read the commit SUBJECT
-      # (`chore: release …`) and the merge's branch name, and that was a fail-open this guard
-      # introduced: release-plz owns those strings, so a template change would silently switch the
-      # guard off and it would print `OK` forever. The version in `Cargo.toml` is the thing
-      # release-plz actually acts on — no bump, no tag — and it cannot drift with a message.
+      # IT RUNS BEFORE THE TAGGING ACTION, because afterwards there is nothing left to refuse.
       #
-      # Measured over EVERY merge commit on `main` (13): the version differs between the release
-      # commit and its own parent for all TWELVE releases, v0.3.5 through v0.4.7, and does not for
-      # the one genuine non-release merge, `68ab88f` (PR #19), which leaves it at 0.3.4. Both
-      # directions are pinned by tests: the six historical releases, and a synthetic non-release
-      # merge whose trees genuinely differ.
-      #
-      # Unreadable inputs FAIL rather than fall through to "not a release" — the whole point of not
-      # having a fail-open here.
-      #
-      # IT RUNS BEFORE THE TAGGING ACTION, because afterwards there is nothing left to refuse: a tag
-      # is not a proposal, and deleting a published one is not a CI problem any more.
-      #
-      # AND IT FAILS CLOSED. The first version of this verifier ignored git's exit status, so two
-      # unresolvable refs produced two empty strings, compared EQUAL, and printed `OK` — certifying
-      # objects that do not exist. `set -e` plus `--verify` plus the emptiness check is why it now
-      # exits non-zero when it cannot resolve what it is grading. Exercised by
+      # AND IT FAILS CLOSED. The first version ignored git's exit status, so two unresolvable refs
+      # compared EQUAL and it printed `OK`. `set -e`, `--verify` and the emptiness check are why it
+      # now exits non-zero when it cannot resolve what it is grading. Exercised by
       # `tests/unit/test_workflow_contracts.py`, which executes THIS shell against all six releases
       # and against a directory that is not a repository.
       - name: Refuse to tag a tree that is not main's
@@ -159,16 +138,13 @@ jobs:
           before=$(git show "$release^:Cargo.toml" | sed -n 's/^version = "\(.*\)"$/\1/p')
           after=$(git show "$release:Cargo.toml" | sed -n 's/^version = "\(.*\)"$/\1/p')
 
-          # EXACTLY ONE `version = "…"` PER MANIFEST, OR REFUSE. This read is lexical, and `head -1`
-          # was a fail-open: add a `[workspace.package]` or a `[dependencies.x]` table with its own
-          # top-of-line `version = "…"` above `[package]` and it grades THAT one. It does not move
-          # between the two commits, so the detector concludes "no bump", classifies a genuine
-          # release as an ordinary merge, and skips the tree comparison altogether. Measured on a
-          # fixture: a real release with a stale tree and a decoy `version = "9.9.9"` printed
-          # `OK: … leaves the package version at 9.9.9` and exited 0.
-          #
-          # Zero matches is refused by the same test, which is what an inherited
-          # `version.workspace = true` looks like. Ambiguity is not a thing to pick a winner from.
+          # EXACTLY ONE `version = "…"` PER MANIFEST, OR REFUSE. This read is lexical, so a
+          # `[workspace.package]` or `[dependencies.x]` table with its own top-of-line version above
+          # `[package]` would be graded instead — and being unchanged between the two commits it
+          # reads as "no bump", classifying a genuine release as an ordinary merge and skipping the
+          # tree comparison. Measured on a fixture: a real release with a stale tree and a decoy
+          # `version = "9.9.9"` printed `OK: … leaves the package version at 9.9.9` and exited 0.
+          # Zero matches (an inherited `version.workspace = true`) is refused by the same test.
           before_n=$(printf '%s' "$before" | grep -c . || true)
           after_n=$(printf '%s' "$after" | grep -c . || true)
           if [ "$before_n" != "1" ] || [ "$after_n" != "1" ]; then

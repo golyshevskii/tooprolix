@@ -1,11 +1,9 @@
 """
 The publish precondition: every expected job of a `v*` tag ran, and every one RAW-concluded success.
 
-Each test here names a way a weaker check passes while the guarantee is broken. The three the
-acceptance criteria single out are a conclusion flipped to `cancelled`, an expected job absent from
-the run entirely, and the expectation reduced to `[]` — the last one separately, because a mutation
-over a populated set cannot detect it. A fourth was found by review: a run that carries every
-expected name but belongs to some OTHER commit.
+Each test names a way a weaker check passes while the guarantee is broken — a conclusion flipped to
+`cancelled`, an expected job absent from the run, the expectation reduced to `[]`, and a run that
+carries every expected name but belongs to another commit.
 
 Run: make test
 """
@@ -42,11 +40,9 @@ def concluding(name: str, conclusion: Any) -> tuple[tuple[str, Any], ...]:
     """
     Return `COMPLETE` with exactly one job's conclusion replaced, and nothing else moved.
 
-    Written by name rather than by index because doing it by hand got it wrong: a fixture spelled
-    `(("ci-rust", "skipped"), *COMPLETE[1:])` PREPENDS a job and drops `ci-python`, so the run is
-    both short of an expected job and holds `ci-rust` twice. That test then went red through the
-    set-equality guard even with the raw-conclusion check deleted — a mutation proof that proved
-    nothing.
+    By name, not by index: `(("ci-rust", "skipped"), *COMPLETE[1:])` prepends a job and drops
+    `ci-python`, so the fixture is short one expected job and the test then goes red through the
+    set-equality guard even with the raw-conclusion check deleted.
     """
     replaced = tuple((job, conclusion if job == name else result) for job, result in COMPLETE)
     assert replaced != COMPLETE, f"{name} is not in COMPLETE, so this fixture mutates nothing"
@@ -121,38 +117,36 @@ def test_a_tag_whose_every_expected_job_succeeded_is_publishable(tmp_path: Path)
 
 def test_a_cancelled_job_blocks_publication(tmp_path: Path) -> None:
     """
-    `cancelled` is not `success`, and treating "not failed" as "passed" is how this repository
-    already shipped a green-looking release: on PR #37 all four artifact checks came back `cancel`
-    and the only surviving build was of a commit that PR does not propose.
+    Treating "not failed" as "passed" is how PR #37 shipped a green-looking release: all four
+    artifact checks came back `cancel` and the only surviving build was of a commit that PR does not
+    propose.
     """
     assert grade(tmp_path, concluding("ci-python", "cancelled"), names()) == 1
 
 
 def test_a_skipped_job_blocks_publication(tmp_path: Path) -> None:
     """
-    A skipped job is the failure mode a path filter or a job `if:` introduces: the check reports a
-    conclusion that is not a failure and never ran the work. Graded the same as `cancelled`.
+    The failure mode a path filter or a job `if:` introduces: a conclusion that is not a failure
+    over work that never ran. Graded the same as `cancelled`.
     """
     assert grade(tmp_path, concluding("ci-rust", "skipped"), names()) == 1
 
 
 def test_an_expected_job_that_never_ran_blocks_publication(tmp_path: Path) -> None:
     """
-    The comparison is set equality, never "contains". A job deleted from CI leaves every REMAINING
-    job green, so a check that only inspects what ran cannot see the deletion at all.
+    Set equality, never "contains": a job deleted from CI leaves every remaining job green, so a
+    check that only inspects what ran cannot see the deletion.
     """
     assert grade(tmp_path, COMPLETE[1:], names()) == 1
 
 
 def test_an_empty_expectation_blocks_publication(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     """
-    The vacuous-guard hole, and it needs its own test because a populated-set mutation cannot
-    reach it: shrink the tag workflow and the manifest to nothing TOGETHER and a set-equality check
-    passes having verified that no jobs equal no jobs.
+    The vacuous-guard hole: shrink the workflow and the manifest together and a set-equality check
+    passes having verified that no jobs equal no jobs. No populated-set mutation can reach it.
 
-    The DIAGNOSIS is asserted, not only the exit code, and that became necessary when the payload
-    reader learned to refuse a run with no jobs at all: with both empty, that newer guard also fires,
-    so an exit-code-only assertion stayed green with the manifest check deleted. Measured.
+    The DIAGNOSIS is asserted because the payload reader also refuses a run with no jobs, so an
+    exit-code-only assertion stayed green with the manifest check deleted.
     """
     assert grade(tmp_path, (), ()) == 1
     assert "expects no jobs at all" in capsys.readouterr().err
@@ -160,9 +154,8 @@ def test_an_empty_expectation_blocks_publication(tmp_path: Path, capsys: pytest.
 
 def test_an_unexpected_job_blocks_publication(tmp_path: Path) -> None:
     """
-    A superset must fail as loudly as a subset. A job nobody declared is either a manifest that was
-    not updated or a workflow somebody else's branch added, and both are answers a human owes the
-    release, not something to wave through because everything visible was green.
+    A superset must fail as loudly as a subset: a job nobody declared is either a stale manifest or
+    a workflow someone else added, and both are answers a human owes the release.
     """
     assert grade(tmp_path, (*COMPLETE, ("mystery", "success")), names()) == 1
 
@@ -179,10 +172,8 @@ def test_a_job_that_has_not_finished_blocks_publication(tmp_path: Path) -> None:
 
 def test_a_run_of_another_commit_blocks_publication(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     """
-    Every expected name, every conclusion `success` — and the run is of a different commit.
-
-    This is the bypass the first version of the script accepted: hand it two old green
-    feature-branch runs and it certified a tag nothing had tested.
+    Every expected name, every conclusion `success`, and the run is of a different commit — the
+    bypass the first version accepted, certifying a tag from two old green feature-branch runs.
     """
     assert grade(tmp_path, COMPLETE, names(), head_sha=OTHER_SHA) == 1
     assert OTHER_SHA in capsys.readouterr().err
@@ -190,9 +181,8 @@ def test_a_run_of_another_commit_blocks_publication(tmp_path: Path, capsys: pyte
 
 def test_a_payload_that_names_no_commit_at_all_blocks_publication(tmp_path: Path) -> None:
     """
-    The exact payload that exited 0 under review: every expected job, no `head_sha` key anywhere.
-
-    A missing field must be graded as "not the tag", never as "nothing to object to".
+    Every expected job, no `head_sha` key anywhere — the exact payload that exited 0 under review.
+    A missing field is "not the tag", never "nothing to object to".
     """
     assert grade(tmp_path, COMPLETE, names(), head_sha=None) == 1
 
@@ -200,7 +190,7 @@ def test_a_payload_that_names_no_commit_at_all_blocks_publication(tmp_path: Path
 def test_a_payload_stitched_from_two_runs_blocks_publication(tmp_path: Path) -> None:
     """
     `--paginate` walks the pages of ONE run, so jobs disagreeing about `run_id` were assembled by
-    hand. Pooling them would let a green job from any other run stand in for a missing one.
+    hand — and pooling them lets a green job from another run stand in for a missing one.
     """
 
     def job(name: str, run_id: int) -> dict[str, Any]:
@@ -223,20 +213,17 @@ def test_a_payload_stitched_from_two_runs_blocks_publication(tmp_path: Path) -> 
 
 def test_a_run_of_another_workflow_blocks_publication(tmp_path: Path) -> None:
     """
-    The same commit does not establish that the TAG-PUSH workflows ran.
-
-    Measured before the manifest carried workflow names: a payload with every expected job name, the
-    right `head_sha`, and `workflow_name: Some other workflow` dispatched on `main`, exited 0.
+    The same commit does not establish that the TAG-PUSH workflows ran. Before the manifest carried
+    workflow names, a payload with `workflow_name: Some other workflow` dispatched on `main` and
+    every expected job name exited 0.
     """
     assert grade(tmp_path, COMPLETE, names(), workflow_name="Some other workflow") == 1
 
 
 def test_a_run_of_a_branch_at_the_same_commit_blocks_publication(tmp_path: Path) -> None:
     """
-    A tag and a branch can point at the same commit, and a run of the branch is not a run of the tag.
-
-    `head_branch` is the tag name on a tag-push run — verified against the live API for `v0.4.7`,
-    run 30703436113, where every job reports `head_branch: v0.4.7`.
+    A tag and a branch can point at the same commit, and a run of the branch is not a run of the
+    tag. On a real tag-push run `head_branch` is the tag: `v0.4.7`, run 30703436113.
     """
     assert grade(tmp_path, COMPLETE, names(), head_branch="main") == 1
 
@@ -254,11 +241,9 @@ def test_a_manifest_listing_a_job_before_any_workflow_header_is_refused(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     """
-    A job with no workflow above it has no workflow binding at all, so it must not be silently
-    attached to whatever section happens to follow — or defaulted to one.
-
-    The DIAGNOSIS is asserted, not only the exit code: a version that quietly attached the orphan to
-    `CI` still exited 1 here, through the set-equality check downstream, and left this test green.
+    A job with no workflow above it has no binding at all, so it must not be attached to whatever
+    section follows. The DIAGNOSIS is asserted: a version that quietly attached the orphan to `CI`
+    still exited 1 through the set-equality check downstream and left this test green.
     """
     broken = tmp_path / "expected.txt"
     broken.write_text("ci-python\n[CI]\nci-rust\n", encoding="utf-8")
@@ -278,13 +263,10 @@ def test_a_tag_sha_that_is_not_a_full_commit_is_refused(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], given: str
 ) -> None:
     """
-    An abbreviated or empty `--tag-sha` matches no `head_sha`, so it would fail for the wrong
-    reason today and pass for the wrong reason the moment the comparison were loosened. Refused at
-    the door instead, where the message names the real fault.
-
-    The DIAGNOSIS is asserted, not only the exit code: deleting the shape check leaves an
-    exit-code-only version of this test green, because the `head_sha` comparison then fails instead
-    and blames the run for a fault that is in the argument. Measured.
+    An abbreviated `--tag-sha` matches no `head_sha`, so it fails for the wrong reason today and
+    would pass for the wrong one if the comparison were loosened. The DIAGNOSIS is asserted:
+    without the shape check the `head_sha` comparison fails instead, blaming the run for a fault
+    that is in the argument.
     """
     assert grade(tmp_path, COMPLETE, names(), tag_sha=given) == 1
     assert "--tag-sha" in capsys.readouterr().err
@@ -292,13 +274,12 @@ def test_a_tag_sha_that_is_not_a_full_commit_is_refused(
 
 def test_the_documented_runbook_command_parses(tmp_path: Path) -> None:
     """
-    The docstring IS the publication runbook, so it has to be executable, not illustrative.
-
-    Measured before `--tag-name` was added to it: running the documented line gave
-    `error: the following arguments are required: --tag-name`, exit 2. This parses the command out
-    of the module docstring and runs it, so the two cannot drift apart again. The `$(…)` token is
-    substituted with a real SHA because this test is about the ARGUMENT LIST, not about git; the
-    assertion is that argparse accepts it (a graded refusal, 1) rather than rejecting it (2).
+    The docstring IS the publication runbook, so it must be executable, not illustrative: before
+    `--tag-name` was added to it the documented line exited 2 on
+    `error: the following arguments are required`. The command is parsed out of the module docstring
+    so the two cannot drift. `$(…)` is substituted with a real SHA because this grades the ARGUMENT
+    LIST: exit 1 means argparse accepted it and the missing payloads were refused; exit 2 would mean
+    the documented arguments are wrong.
     """
     documented = next(
         line.strip() for line in (check_tag_jobs.__doc__ or "").splitlines() if "check_tag_jobs.py --" in line
@@ -309,6 +290,9 @@ def test_the_documented_runbook_command_parses(tmp_path: Path) -> None:
     ][2:]
 
     assert main(argv) == 1, "the documented command must be refused on its missing payloads, not on its arguments"
+
+
+def test_a_missing_manifest_blocks_publication(tmp_path: Path) -> None:
     """A guard that cannot find its expectation must refuse, not default to expecting nothing."""
     jobs = payload(tmp_path / "jobs.json", COMPLETE)
     assert (
@@ -330,15 +314,12 @@ def test_a_payload_that_is_not_a_jobs_response_blocks_publication(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], document: str, diagnosis: str
 ) -> None:
     """
-    An API error body, an empty document or a truncated page must not read as "no jobs, nothing
-    wrong". `{"message": "Not Found"}` is what a wrong run id returns, and it has no `jobs` key at
-    all — the exact input a lenient reader turns into a silent pass.
+    An API error body or an empty document must not read as "no jobs, nothing wrong":
+    `{"message": "Not Found"}` is what a wrong run id returns, valid JSON with no `jobs` key.
 
-    The DIAGNOSIS is asserted, not only the exit code, and that is the difference between this test
-    and a weaker one. A lenient reader that silently collected nothing would still exit 1 here —
-    the set-equality check downstream would report every expected job as missing — so an exit-code
-    assertion alone passes whether or not the payload guard exists at all. Measured: deleting the
-    shape check left an exit-code-only version of this test GREEN.
+    The DIAGNOSIS is asserted because a lenient reader that collected nothing would still exit 1
+    through the set-equality check downstream — measured, an exit-code-only version stayed GREEN
+    with the shape check deleted.
     """
     broken = tmp_path / "jobs.json"
     broken.write_text(document, encoding="utf-8")
@@ -358,9 +339,8 @@ def test_a_payload_that_is_not_a_jobs_response_blocks_publication(
 
 def test_the_two_workflows_a_tag_fires_are_graded_together(tmp_path: Path) -> None:
     """
-    A `v*` tag fires `CI` and `Build artifacts`, so the expectation spans both runs and the check
-    has to be given both payloads. Grading them one at a time would make each run's payload a
-    superset failure against the other's names. Two files, two run ids, one tag.
+    A `v*` tag fires `CI` and `Build artifacts`, so the expectation spans both runs and both
+    payloads must be given at once — one at a time, each is a superset failure against the other.
     """
     ci = payload(tmp_path / "ci.json", COMPLETE, run_id=111)
     artifacts = payload(tmp_path / "artifacts.json", (("wheel macos-arm64", "success"),), run_id=222)

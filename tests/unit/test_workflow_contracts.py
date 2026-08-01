@@ -45,12 +45,12 @@ EXPECTED_MAKE_TARGETS: frozenset[str] = frozenset(
     {"lint.check", "type", "test", "rust.fmt.check", "rust.lint", "rust.build", "rust.test", "rust.doc", "cov"}
 )
 
-#: `(tag, the merge commit that landed it on main, whether invariant A holds)`, measured at
-#: `bb327cc`. Invariant A: the tag's tree equals the tree of the merge commit that landed it.
-#: The three FALSE rows are real releases that shipped a tree `main` never had.
-#: What an ordinary (non-release) PR's manifest looks like: a readable version that never moves.
+#: An ordinary (non-release) PR's manifest: a readable version that never moves.
 VERSIONED_MANIFEST: str = '[package]\nname = "fixture"\nversion = "0.3.4"\n'
 
+#: `(tag, the merge commit that landed it on main, whether invariant A holds)`. Invariant A: the
+#: tag's tree equals that merge commit's tree. The FALSE rows are real releases that shipped a tree
+#: `main` never had.
 RELEASE_MERGES: tuple[tuple[str, str, bool], ...] = (
     ("v0.4.2", "3ee7001", True),
     ("v0.4.3", "fbe760a", False),
@@ -65,9 +65,8 @@ def uncommented(path: Path) -> str:
     """
     Read a workflow with its whole-line `#` comments removed.
 
-    Every comment in these files quotes the very keys the tests below forbid — `ci.yml:54-59` spells
-    out "no `paths:`, `paths-ignore:` or `if:`". A substring search over the raw text would grade the
-    prose describing the rule instead of the YAML obeying it.
+    The comments in these files quote the very keys the tests below forbid, so a substring search
+    over the raw text would grade the prose describing a rule instead of the YAML obeying it.
     """
     return "\n".join(
         line for line in path.read_text(encoding="utf-8").splitlines() if not line.lstrip().startswith("#")
@@ -120,13 +119,11 @@ def step_scripts(workflow: Path, step: str) -> list[str]:
     """
     Extract a step's `run: |` shell, so the tests EXECUTE the shipped artifact instead of matching it.
 
-    A token assertion cannot tell `!= "success"` from `== "success"`, and the inverted form turns
-    the aggregate into "fail if any job passed". Measured: that exact inversion left all 25 workflow
-    tests green. Anything with real semantics in this file is executed, not pattern-matched.
+    A token assertion cannot tell `!= "success"` from `== "success"`, and that inversion turns the
+    aggregate into "fail if any job passed" — measured, it left all 25 workflow tests green.
     """
-    # The `(?: +[^\n]*\n)*?` skips whatever the step declares between its name and its script —
-    # `id:`, `env:` and their children — without letting the match run past this step, because it is
-    # non-greedy and anchored on the first `run: |` that follows the name.
+    # `(?: +[^\n]*\n)*?` skips `id:`/`env:` between the name and the script; non-greedy and
+    # anchored on the first `run: |`, so it cannot run past this step.
     found = [
         textwrap.dedent(body.group("script"))
         for body in re.finditer(
@@ -178,21 +175,16 @@ def evaluate(expression: str, event_name: str, ref: str, head_ref: str) -> bool:
     """
     Evaluate a SHIPPED GitHub `if:` expression against a context.
 
-    The alternative was asserting that the string contains `refs/tags/v`, which cannot distinguish
-    `||` from `&&` — and flipping the first `||` to `&&`, which stops the tag matrix running
-    entirely, left every wheel assertion green. The accepted subset is whitelisted below, so an
-    expression that grows a construct this cannot translate fails loudly instead of being
-    mistranslated into a passing answer.
+    Asserting the string merely contains `refs/tags/v` cannot distinguish `||` from `&&`, and
+    flipping the first `||` — which stops the tag matrix running — left every wheel assertion green.
+    The accepted subset is whitelisted below, so an expression growing a construct this cannot
+    translate fails loudly instead of being mistranslated into a passing answer.
     """
-    # `if: >-` is a folded scalar, so the shipped value arrives with its newlines and indentation
-    # intact. YAML folds them to single spaces; so does this.
+    # `if: >-` is a folded scalar; YAML folds its newlines to single spaces, and so does this.
     expression = " ".join(expression.split())
 
-    # `''` inside a single-quoted GitHub literal is ONE escaped apostrophe. The literal regex below
-    # reads it as two adjacent strings instead, which is a mistranslation — so it is refused rather
-    # than guessed at. Implementing the escape would be the other answer; no shipped expression uses
-    # one, and a loud refusal is the cheaper correct behaviour. Same rule as the whitelist: anything
-    # this cannot translate exactly must stop the test, never quietly produce an answer.
+    # `''` in a single-quoted GitHub literal is ONE escaped apostrophe; the regex below reads it as
+    # two adjacent strings. Refused rather than mistranslated — no shipped expression uses one.
     assert "''" not in expression, f"escaped apostrophes are not translated: {expression!r}"
 
     context = {"github.event_name": event_name, "github.ref": ref, "github.head_ref": head_ref}
@@ -202,17 +194,13 @@ def evaluate(expression: str, event_name: str, ref: str, head_ref: str) -> bool:
         f"expression uses {used - {'startsWith', *context}}, which is not translated"
     )
 
-    # GITHUB COMPARES STRINGS CASE-INSENSITIVELY — `==`, `!=`, `startsWith`, `endsWith` and
-    # `contains` all do. Python does not, and translating them to Python's operators made this
-    # PERMISSIVELY wrong: `|| startsWith(github.ref, 'REFS/HEADS/MAIN')` runs the wheel matrix on
-    # every push to `main` in real Actions, and every fixture below passed. A translator that errs
-    # towards "the gate is fine" makes a green test certify a broken gate, which is worse than no
-    # test at all. Case-folding BOTH sides restores GitHub's semantics exactly for this subset,
-    # whose only operations are string equality and prefix tests.
-    #
-    # `||`/`&&` become `or`/`and`, whose relative precedence and short-circuit order match
-    # GitHub's; `bool()` on the result matches GitHub's truthiness for strings (empty is false).
-    # The whitelist above keeps anything whose translation is not obvious out of this function.
+    # GITHUB COMPARES STRINGS CASE-INSENSITIVELY — `==`, `!=`, `startsWith`, `endsWith`, `contains`.
+    # Python does not, so translating to Python's operators was PERMISSIVELY wrong:
+    # `|| startsWith(github.ref, 'REFS/HEADS/MAIN')` runs the wheel matrix on every push to `main`
+    # in real Actions and every fixture below passed. A translator that errs towards "the gate is
+    # fine" makes a green test certify a broken gate. Case-folding both sides restores GitHub's
+    # semantics for this subset, whose only operations are equality and prefix tests. `||`/`&&`
+    # become `or`/`and`, matching GitHub's precedence and short-circuit order.
     translated = re.sub(r"'([^']*)'", lambda literal: repr(literal.group(1).casefold()), expression)
     translated = translated.replace("||", " or ").replace("&&", " and ")
     for name, value in context.items():
@@ -225,8 +213,8 @@ def checkout_of(commit: str) -> Iterator[Path]:
     """
     Yield a worktree whose HEAD is `commit`, so the guard reads a real repository state.
 
-    `--no-checkout`: the guard only asks git plumbing questions, so materialising the files would be
-    seconds of I/O per historical release for nothing.
+    `--no-checkout`: the guard only asks git plumbing questions, so materialising files would cost
+    seconds per historical release for nothing.
     """
     with tempfile.TemporaryDirectory() as tmp:
         worktree = Path(tmp) / "release"
@@ -255,18 +243,11 @@ def test_an_artifact_build_is_only_cancelled_by_another_build_of_the_same_commit
     """
     The artifact build must belong to the COMMIT it built, not to the branch it arrived on.
 
-    One logical event can produce two pushes to one new ref within seconds — release-plz creates the
-    branch at the base tip and pushes the release commit, and GitHub delivers those as separate
-    events. Keyed on `github.ref` with `cancel-in-progress`, the later run kills the earlier one on
-    the assumption that later means newer. That assumption is false here, and it lost the race for
-    real: on PR #37 (`chore: release v0.4.3`) all four artifact checks came back `cancel`, and the
-    only surviving build was of the base tip — a commit that PR does not propose. PR #35 raced the
-    same way and happened to win, which is worse than losing, because it makes the defect look
-    absent.
-
-    Keyed on `github.sha`, a build can only be cancelled by another run of the same commit, so a
-    commit that reaches a tag has artifacts built from its own tree. Duplicate events for one SHA
-    still collapse, which is all `cancel-in-progress` was ever wanted for.
+    Keyed on `github.ref` with `cancel-in-progress`, a later push to the same ref kills the earlier
+    run on the assumption that later means newer. On PR #37 all four artifact checks came back
+    `cancel` and the only surviving build was of the base tip, a commit that PR does not propose.
+    Keyed on `github.sha`, a build can only be cancelled by another run of the same commit, and
+    duplicate events for one SHA still collapse.
     """
     matched = CONCURRENCY_GROUP.search(BUILD_ARTIFACTS.read_text(encoding="utf-8"))
     assert matched is not None, "build-artifacts.yml declares no concurrency group"
@@ -278,13 +259,9 @@ def test_an_artifact_build_is_only_cancelled_by_another_build_of_the_same_commit
 
 def test_artifacts_are_built_for_main_v_tags_and_pull_requests_and_nothing_else() -> None:
     """
-    A bare `push:` builds every ref, and a release cycle then pays for the same tree three times.
-
-    Measured over the `v0.4.6` cycle: six full artifact matrices, of which at most two were
-    load-bearing. The duplicates come from the BRANCH axis — GitHub delivers a branch-CREATION push
-    for every release-plz branch, so the base tip is rebuilt before the release commit even exists.
-    Restricting the trigger to `main`, `v*` and pull requests deletes those without touching the
-    path axis, which must stay unfiltered.
+    A bare `push:` builds every ref: the `v0.4.6` cycle ran six full artifact matrices of which at
+    most two were load-bearing. The duplicates come from the BRANCH axis — GitHub delivers a
+    branch-CREATION push for every release-plz branch. The path axis must stay unfiltered.
     """
     triggers = top_level_block(uncommented(BUILD_ARTIFACTS), "on")
 
@@ -298,16 +275,9 @@ def test_artifacts_are_built_for_main_v_tags_and_pull_requests_and_nothing_else(
 
 def test_the_wheel_matrix_is_gated_on_release_events_and_the_sdist_is_not_gated_at_all() -> None:
     """
-    Three wheel legs cost 29 of the 32 billed minutes an ordinary PR spends on artifacts.
-
-    Measured per PR: sdist 3 + linux 3 + macos 20 (x10 private-repo multiplier) + windows 6. A
-    cross-platform break still has to be caught BEFORE the tag, so the gate lets the wheels through
-    on exactly the events that precede one — the release-plz PR, a `v*` tag, and a manual dispatch —
-    and an ordinary PR keeps the sdist, which is the leg that grades the README transform and the
-    archive contents.
-
-    It is an EVENT condition, never a path one: a path filter would skip the wheels on the
-    README-only change that is precisely the change able to break the transformer.
+    The three wheel legs cost 29 of the 32 billed minutes an ordinary PR spends on artifacts, so
+    they run only on the events that precede a tag. The sdist is ungated: it grades the README
+    transform and the archive contents, which any code change can break.
     """
     build = jobs(uncommented(BUILD_ARTIFACTS))
     assert job_condition(build["sdist"]) is None, "the sdist must run on every event this workflow accepts"
@@ -318,10 +288,8 @@ def test_the_wheel_matrix_is_gated_on_release_events_and_the_sdist_is_not_gated_
 
 def test_the_expression_translator_refuses_an_escaped_apostrophe() -> None:
     """
-    `'it''s'` is ONE GitHub literal containing an apostrophe; the literal regex reads it as two.
-
-    A translator that mistranslates silently is the failure mode this whole function exists to
-    avoid, so the unsupported construct stops the test instead of producing a plausible answer.
+    `'it''s'` is ONE GitHub literal containing an apostrophe; the literal regex reads it as two. A
+    silent mistranslation is the failure mode this function exists to avoid, so it stops the test.
     """
     with pytest.raises(AssertionError, match="escaped apostrophes"):
         evaluate("startsWith(github.ref, 'it''s')", "push", "refs/tags/v0.4.8", "")
@@ -329,10 +297,8 @@ def test_the_expression_translator_refuses_an_escaped_apostrophe() -> None:
 
 def test_the_expression_translator_folds_case_on_the_context_too() -> None:
     """
-    Case-insensitivity has two sides, and folding only the LITERALS leaves the other one wrong.
-
-    Measured: with the context left as-is, every literal-side fixture stayed green. A ref that
-    arrives upper-cased must still match a lower-case prefix, and must still fail a different one.
+    Case-insensitivity has two sides: with the context left unfolded, every literal-side fixture
+    below still passed. An upper-cased ref must match a lower-case prefix, and still fail another.
     """
     assert evaluate("startsWith(github.ref, 'refs/tags/v')", "PUSH", "REFS/TAGS/V0.4.8", "") is True
     assert evaluate("github.event_name == 'push'", "PUSH", "REFS/TAGS/V0.4.8", "") is True
@@ -342,9 +308,8 @@ def test_the_expression_translator_folds_case_on_the_context_too() -> None:
 @pytest.mark.parametrize(
     ("expression", "holds"),
     [
-        # GitHub compares strings CASE-INSENSITIVELY. A translator that used Python's operators was
-        # permissively wrong: codex's exploit `|| startsWith(github.ref, 'REFS/HEADS/MAIN')` runs the
-        # wheel matrix on every push to main in real Actions, and every fixture below still passed.
+        # Case-insensitively: `|| startsWith(github.ref, 'REFS/HEADS/MAIN')` runs the wheel matrix
+        # on every push to main in real Actions, and every fixture below still passed.
         ("startsWith(github.ref, 'refs/tags/v')", True),
         ("startsWith(github.ref, 'REFS/TAGS/V')", True),
         ("github.event_name == 'push'", True),
@@ -360,10 +325,8 @@ def test_the_expression_translator_folds_case_on_the_context_too() -> None:
 )
 def test_the_expression_translator_reproduces_github_semantics(expression: str, holds: bool) -> None:
     """
-    The translator is itself a guard, so its semantics are pinned rather than assumed.
-
-    A permissively wrong translator makes a green test certify a broken gate, which is strictly
-    worse than having no test: the gate below is only as trustworthy as this function.
+    The translator is itself a guard, so its semantics are pinned rather than assumed: the gate
+    below is only as trustworthy as this function.
     """
     assert evaluate(expression, event_name="push", ref="refs/tags/v0.4.8", head_ref="") is holds
 
@@ -383,10 +346,8 @@ def test_the_shipped_wheel_gate_selects_the_release_events(
 ) -> None:
     """
     The gate's SEMANTICS, by evaluating the shipped expression rather than reading tokens out of it.
-
-    `startsWith` on an empty `github.head_ref` is what keeps the release-plz clause from leaking
-    into a push event, and no substring assertion can check that. Nor can one tell `||` from `&&`:
-    flipping the first `||` stops the tag matrix running and left every token assertion green.
+    No substring assertion can check that `startsWith` on an empty `head_ref` keeps the release-plz
+    clause out of push events, nor tell `||` from `&&`.
     """
     gate = job_condition(jobs(uncommented(BUILD_ARTIFACTS))["wheels"])
     assert gate is not None
@@ -402,12 +363,9 @@ def test_the_shipped_wheel_gate_selects_the_release_events(
 
 def test_ordinary_ci_runs_on_the_exact_v_tag() -> None:
     """
-    Publication uploads from a `v*` tag, and no ordinary CI job has ever run at a tag SHA.
-
-    Measured at `eb65e32`: five tags, five workflow runs, all of them `Build artifacts`. Zero
-    lint/type/test/cargo runs on any tag, ever. The release PR's own CI does not stand in for it —
-    on `pull_request` `actions/checkout` materialises `refs/pull/N/merge`, which for `v0.4.6` was
-    tree `3a1f67fd` while the tag's tree was `5d0ceefb`.
+    Publication uploads from a `v*` tag; before this, five tags produced five runs and every one was
+    `Build artifacts`. The release PR's CI does not stand in for it — `pull_request` checks out
+    `refs/pull/N/merge`, tree `3a1f67fd` for `v0.4.6`, while the tag's was `5d0ceefb`.
     """
     triggers = top_level_block(uncommented(CI), "on")
     push = top_level_block(triggers.replace("  push:", "push:"), "push")
@@ -421,22 +379,18 @@ def test_ordinary_ci_runs_on_the_exact_v_tag() -> None:
 def test_ci_reports_the_four_work_jobs_and_one_aggregate() -> None:
     """
     A required check name that stops reporting stays required forever, so the names are pinned here.
-
-    Renaming is free only while `branches/main/protection` is 404. The aggregate exists NOW, before
-    protection, so `CI / ci-required` is final before it can ever be registered — the deferred path
-    classifier reuses this name instead of orphaning one.
+    Renaming is free only while `branches/main/protection` is 404, which is why `CI / ci-required`
+    is created and named now, before anyone can register it.
     """
     assert set(jobs(uncommented(CI))) == {"ci-python", "ci-rust", "cargo-doc", "coverage", "ci-required"}
 
 
 def test_the_aggregate_is_unconditional_and_covers_every_required_job() -> None:
     """
-    `if: always()` is what makes the aggregate able to see a `cancelled` or `skipped` dependency.
-
-    Without it the aggregate is itself skipped the moment a needed job does not succeed, and a
-    skipped check never reports — it wedges a protected PR at "Expected — waiting for status to be
-    reported" instead of going red. `coverage` is deliberately outside `needs:`: it protects the
-    measuring instrument, not the shipped artifact, and was never a required check.
+    Without `if: always()` the aggregate is itself skipped the moment a needed job does not succeed,
+    and a skipped check never reports — it wedges a protected PR at "Expected — waiting for status
+    to be reported" instead of going red. `coverage` is outside `needs:` deliberately: it protects
+    the measuring instrument, not the shipped artifact.
     """
     aggregate = jobs(uncommented(CI))["ci-required"]
 
@@ -455,10 +409,9 @@ def test_the_shipped_aggregate_passes_only_a_wholly_successful_run() -> None:
 @pytest.mark.parametrize("result", ["failure", "cancelled", "skipped", "neutral"])
 def test_the_shipped_aggregate_refuses_any_result_that_is_not_success(result: str) -> None:
     """
-    Only `success` passes. `cancelled` and `skipped` are the ones that matter: neither is a
-    `failure`, and reading them as "not failed" is exactly how PR #37's four cancelled artifact
-    checks looked green. Executed, not matched — inverting `!= "success"` to `== "success"` turns
-    this gate into "fail if any job passed" and no token assertion can see it.
+    Only `success` passes. `cancelled` and `skipped` are the ones that matter: reading them as "not
+    failed" is how PR #37's four cancelled artifact checks looked green. Executed, not matched — no
+    token assertion can tell `!= "success"` from `== "success"`.
     """
     needs = succeeded("ci-python", "ci-rust", "cargo-doc")
     needs["ci-rust"]["result"] = result
@@ -468,8 +421,8 @@ def test_the_shipped_aggregate_refuses_any_result_that_is_not_success(result: st
 
 def test_the_shipped_aggregate_refuses_an_empty_needs_list() -> None:
     """
-    Deleting `needs:` would otherwise leave a job that reports success unconditionally — a required
-    check that grades nothing is worse than no required check, because it is counted.
+    Deleting `needs:` would leave a job reporting success unconditionally, and a required check that
+    grades nothing is worse than none, because it is counted.
     """
     assert run_aggregate({}).returncode == 1
 
@@ -477,24 +430,20 @@ def test_the_shipped_aggregate_refuses_an_empty_needs_list() -> None:
 @pytest.mark.parametrize("workflow", [CI, BUILD_ARTIFACTS])
 def test_every_job_that_checks_out_proves_which_commit_it_graded(workflow: Path) -> None:
     """
-    The binding AC1 needs, and it has to reach the ARTIFACT workflow, which is where the
-    publishable binaries are built.
+    The binding must reach the ARTIFACT workflow, where the publishable binaries are built: point
+    its checkout at `ref: main` and every leg builds the wrong tree while every REST job still
+    self-reports `head_sha=<tag>`. An aggregate cannot cover it — `needs:` does not cross workflows
+    and job outputs are not returned by the jobs REST endpoint.
 
-    Point `build-artifacts.yml`'s checkout at `ref: main` and every leg builds the wrong tree while
-    every REST job still self-reports `head_sha=<tag>` — a grader reading that field accepts it,
-    because it is a label the run attaches to itself. An aggregate cannot cover this: `needs:` does
-    not cross workflows and job outputs are not returned by the jobs REST endpoint.
-
-    LAST STEP, not first. Recording HEAD right after the checkout leaves a window where a second
-    checkout inserted afterwards changes what the gates graded while the record stays correct.
+    LAST STEP, not first: recorded right after the checkout, a second checkout inserted afterwards
+    would change what the gates graded while the record stayed correct.
     """
     for name, job in jobs(uncommented(workflow)).items():
         if "actions/checkout@" not in job:
             continue
-        # EVERY step, named or not. Matching `- name:` lines only made "last" mean "last NAMED",
-        # and a step written as a bare `- run: git checkout main` after the assertion is exactly the
-        # second-checkout window the assertion exists to close. Measured: with such a step appended,
-        # `ci-python`'s real last step was `{'run': 'git checkout main'}` and this test still passed.
+        # EVERY step, named or not. Matching `- name:` lines made "last" mean "last NAMED", and a
+        # bare `- run: git checkout main` after the assertion is the exact window it exists to
+        # close — measured: with one appended, this test still passed.
         steps = re.findall(r"^ {6}- (\S.*)$", job, re.MULTILINE)
         assert steps[-1] == f"name: {COMMIT_ASSERTION_STEP}", (
             f"{name}'s last step is {steps[-1]!r}, so something can run after its checkout is graded"
@@ -503,8 +452,8 @@ def test_every_job_that_checks_out_proves_which_commit_it_graded(workflow: Path)
 
 def test_the_commit_assertion_is_one_script_and_not_six_drifting_copies() -> None:
     """
-    Six jobs carry it, so a fix applied to one copy and not the others would leave a hole that the
-    per-job test above cannot see — it checks placement, not content.
+    Six jobs carry it, and the per-job test above checks placement, not content — so a fix applied
+    to one copy and not the others would leave a hole nothing else sees.
     """
     copies = step_scripts(CI, COMMIT_ASSERTION_STEP) + step_scripts(BUILD_ARTIFACTS, COMMIT_ASSERTION_STEP)
 
@@ -516,9 +465,8 @@ def test_the_commit_assertion_is_one_script_and_not_six_drifting_copies() -> Non
 
 def test_the_shipped_commit_assertion_accepts_only_the_commit_the_event_names() -> None:
     """
-    Executed in a real checkout against the shipped shell, because the point is behaviour: a job
-    that graded some other commit must go red, and a job whose event names nothing must go red too
-    rather than compare a real SHA against an empty one and call it a mismatch by luck.
+    Executed in a real checkout against the shipped shell: a job that graded another commit must go
+    red, and so must one whose event names nothing, rather than mismatching an empty string by luck.
     """
     with checkout_of("bb327cc") as worktree:
         graded = subprocess.run(
@@ -532,11 +480,10 @@ def test_the_shipped_commit_assertion_accepts_only_the_commit_the_event_names() 
 
 def test_only_the_aggregate_carries_a_job_condition() -> None:
     """
-    A SKIPPED check does not satisfy a required status check — it stays pending, so a conditional
-    work job wedges a PR at "Expected — waiting for status to be reported" while CI is entirely
-    green. The path classifier that would need such conditions is deferred; until it lands with a
-    verified answer for skipped-check semantics, the aggregate is the only job allowed a condition,
-    and its condition is `always()`, which can only ever add work.
+    A skipped check does not satisfy a required one — it stays pending, so a conditional work job
+    wedges a PR at "Expected — waiting for status to be reported" while CI is entirely green. The
+    path classifier that would need such conditions is deferred. The aggregate is the only job
+    allowed a condition, and `always()` can only ever add work.
     """
     conditional = {name: job_condition(job) for name, job in jobs(uncommented(CI)).items() if job_condition(job)}
     assert conditional == {"ci-required": "always()"}, conditional
@@ -546,9 +493,8 @@ def test_only_the_aggregate_carries_a_job_condition() -> None:
 def test_no_workflow_selects_jobs_by_changed_path(workflow: Path) -> None:
     """
     The old five-file allowlist on `build-artifacts.yml` skipped a README-only change — precisely
-    the change that breaks the README transformer — so not one of its checks could go red on it.
-    Replacing a stale allowlist with a longer one only moves the boundary; the next file nobody
-    thought of has the same effect, and the list rots silently because nothing tells you it is short.
+    the change that breaks the README transformer. A longer allowlist only moves the boundary: the
+    next file nobody thought of has the same effect, and nothing tells you the list is short.
     """
     offending = re.findall(r"^\s*paths(?:-ignore)?:.*$", uncommented(workflow), re.MULTILINE)
     assert offending == [], f"{workflow.name} filters by path: {offending}"
@@ -556,9 +502,8 @@ def test_no_workflow_selects_jobs_by_changed_path(workflow: Path) -> None:
 
 def test_every_make_target_that_ran_before_the_consolidation_still_runs() -> None:
     """
-    Consolidating eight jobs into four is a green-to-green refactor, which is exactly the shape that
-    can silently delete a gate: fewer red Xs looks like progress. The job count cannot see it. This
-    grades the work the run actually performs.
+    Consolidating eight jobs into four is a green-to-green refactor, the shape that can silently
+    delete a gate: fewer red Xs looks like progress and the job count cannot see it.
     """
     ran = set().union(*(make_targets(job) for job in jobs(uncommented(CI)).values()))
     assert ran == EXPECTED_MAKE_TARGETS, (
@@ -568,16 +513,13 @@ def test_every_make_target_that_ran_before_the_consolidation_still_runs() -> Non
 
 def test_every_job_that_runs_the_python_tests_checks_out_the_full_history() -> None:
     """
-    `corpus/classification.py` resolves the commit each measurement names with `git cat-file` rather
-    than trusting the string, so under the default shallow checkout that lookup fails on a commit
-    that genuinely exists and ~20 tests go red for an environment reason. Deliberately not fixed by
-    letting the check pass when the repository is shallow — that would be a guard disabled by the
-    checkout depth of whoever runs it.
+    `corpus/classification.py` resolves the commit each measurement names with `git cat-file`, and
+    a shallow checkout fails that lookup on a commit that genuinely exists: 16 tests go red for an
+    environment reason. NOT fixed by passing the check when the repository is shallow — that guard
+    would be disabled by the checkout depth of whoever ran it.
 
-    EVERY job that runs those tests needs it, not just the obvious one. `coverage` runs them too,
-    through `make cov` -> `py.cov`, and it went red for the identical reason after the first job was
-    fixed alone. This asks which jobs run them rather than naming the jobs, so a fifth one inherits
-    the requirement.
+    EVERY job running those tests needs it; `coverage` does too, and went red for the same reason
+    after the first job was fixed alone. This asks which jobs run them rather than naming them.
     """
     for name, job in jobs(uncommented(CI)).items():
         if make_targets(job) & {"test", "cov"}:
@@ -586,14 +528,10 @@ def test_every_job_that_runs_the_python_tests_checks_out_the_full_history() -> N
 
 def test_the_job_that_runs_the_rust_tests_installs_uv() -> None:
     """
-    Two Rust tests SHELL OUT to `uv`, for reasons unrelated to the deleted pyo3 boundary:
-    `tests/cli.rs` proves the JSON document is consumable by a Python consumer, and
-    `tests/ruff_compatibility.rs` proves the marker grammar stays invisible to ruff. Deleting the uv
-    setup was reasoned from the build ("nothing compiles against an interpreter") and went red on
-    PR #34 with `Os { code: 2, kind: NotFound }`.
-
-    The rule is "does anything it EXECUTES shell out to uv?", not "does anything it builds need an
-    interpreter?" — so the reason is asserted from the Rust sources, not from a job name.
+    Two Rust tests SHELL OUT to `uv`, unrelated to the deleted pyo3 boundary. Removing the uv setup
+    was reasoned from the build ("nothing compiles against an interpreter") and went red on PR #34
+    with `Os { code: 2, kind: NotFound }`. The rule is "does anything it EXECUTES shell out to uv?",
+    so the requirement is derived from the Rust sources rather than from a job name.
     """
     shelling_out = [
         path.name
@@ -620,18 +558,17 @@ def test_no_ci_job_may_write_a_snapshot() -> None:
 
 def test_the_consolidation_kept_every_hardening_setting() -> None:
     """
-    Four jobs' worth of steps were merged into two, and each of these settings is one line that a
-    merge can drop while the run stays green: an unpinned action is a supply-chain hole, a persisted
+    Four jobs' worth of steps were merged into two, and each of these settings is one line a merge
+    can drop while the run stays green: an unpinned action is a supply-chain hole, a persisted
     credential outlives the checkout in `.git/config`, and a cache written from every branch lets a
     PR poison the entry `main` reads.
     """
     text = uncommented(CI)
 
-    # NOT anchored with `$`. Every shipped `uses:` line carries a trailing ` # v7.0.1` version
-    # comment, and `uncommented()` strips only WHOLE-LINE comments — so an anchored pattern matched
-    # zero of the 11 actions in this file and `unpinned` was unconditionally empty. Measured: all
-    # four `actions/checkout` pins replaced with `@v7 # v7.0.1` and this test still reported
-    # `1 passed`. An assertion that cannot fail is worse than no assertion, because it is counted.
+    # NOT anchored with `$`: every shipped `uses:` line carries a trailing ` # v7.0.1`, which
+    # `uncommented()` does not strip, so an anchored pattern matched zero of the 11 actions and
+    # `unpinned` was unconditionally empty. Measured: all four checkout pins replaced with
+    # `@v7 # v7.0.1` and this test still reported `1 passed`.
     used = re.findall(r"^\s+uses:\s+(\S+)", text, re.MULTILINE)
     assert len(used) >= 11, f"only {len(used)} `uses:` lines found — the matcher has stopped seeing them"
     unpinned = [ref for ref in used if not re.search(r"@[0-9a-f]{40}$", ref)]
@@ -646,17 +583,14 @@ def test_the_consolidation_kept_every_hardening_setting() -> None:
 
 def test_the_expected_tag_job_manifest_names_every_ci_job() -> None:
     """
-    The manifest is the publish precondition's expectation, graded by SET EQUALITY over
-    `(workflow name, job name)` pairs, so a job added to `ci.yml` without being added here turns
-    every future release red at the tag — after the tag exists. This moves that discovery to the
-    pull request that adds the job.
+    Graded by SET EQUALITY over `(workflow name, job name)` pairs, so a job added to `ci.yml` and
+    not here turns every future release red at the tag. This moves that discovery to the PR.
 
-    Read with the SHIPPED parser rather than a second one written here. A duplicate reader cannot
-    see a `[workflow]` header going missing, and that omission silently reassigns four artifact jobs
-    to `CI` — measured: a second reader left this test green through exactly that deletion.
+    Read with the SHIPPED parser: a duplicate reader cannot see a `[workflow]` header going missing,
+    which silently reassigns four artifact jobs to `CI` — measured, it left this test green.
 
-    Only `ci.yml`'s names are checked from this direction: `build-artifacts.yml`'s wheel legs are
-    matrix-expanded, so their reported names are not readable out of the YAML.
+    Only `ci.yml`'s names are checked from this direction; the wheel legs are matrix-expanded, so
+    their reported names are not readable out of the YAML.
     """
     expected = read_manifest(REPO / ".github" / "expected-tag-jobs.txt")
 
@@ -687,13 +621,10 @@ def test_the_release_job_checks_the_tree_before_release_plz_can_tag() -> None:
 
 def test_the_release_pr_is_opened_from_the_current_main_tip() -> None:
     """
-    Configuration is not a guard, but it is what stops the guard from ever having to fire.
-
     The staleness is created here, not at tag time: a `release-pr` run queued behind another checks
-    out the SHA of the push that triggered it, and forks the release branch from that older tip. For
-    `v0.4.6` the branch was created at `0e1b710` while `main` was already `e9af7ed`, and the tag
-    inherited it. Checking out `main` by name makes the release PR fork from whatever `main` is when
-    the job actually runs.
+    out the SHA of the push that triggered it and forks from that older tip. For `v0.4.6` the branch
+    was created at `0e1b710` while `main` was already `e9af7ed`. Configuration is not a guard, but
+    it is what stops the guard in the `release` job from having to fire.
     """
     release_pr = jobs(uncommented(RELEASE_PLZ))["release-pr"]
     assert re.search(r"^\s+ref: main$", release_pr, re.MULTILINE), "the release PR may fork from a stale main tip"
@@ -702,15 +633,13 @@ def test_the_release_pr_is_opened_from_the_current_main_tip() -> None:
 @pytest.mark.parametrize(("tag", "merge", "holds"), RELEASE_MERGES)
 def test_the_guard_reproduces_every_historical_release(tag: str, merge: str, holds: bool) -> None:
     """
-    The guard is graded against the six releases this repository has actually cut.
+    Graded against the six releases this repository has actually cut. Invariant A holds for
+    `v0.4.2`, `v0.4.4` and `v0.4.7` and fails for `v0.4.3`, `v0.4.5` and `v0.4.6`, where the tag
+    shipped a tree `main` never had — `v0.4.6` misses PR #48 entirely, six files and +88/-83. A
+    guard that passes all six would prove nothing, which is why the FALSE rows are here.
 
-    Invariant A — the tag's tree must equal the tree of the merge commit that landed it on `main` —
-    is TRUE for `v0.4.2`, `v0.4.4` and `v0.4.7` and FALSE for `v0.4.3`, `v0.4.5` and `v0.4.6`, where
-    the tag shipped a tree `main` never had: `v0.4.6` is missing PR #48 entirely, six files and
-    +88/-83. A guard that passes all six proves nothing, which is why the FALSE rows are here.
-
-    It is NOT an ancestry claim in either direction. With a merge-commit release the tag target is
-    an ancestor of `main` on every release, good and bad alike.
+    It is NOT an ancestry claim: with a merge-commit release the tag target is an ancestor of `main`
+    on every release, good and bad alike.
     """
     with checkout_of(merge) as worktree:
         result = run_guard(worktree)
@@ -722,7 +651,7 @@ def test_the_guard_reproduces_every_historical_release(tag: str, merge: str, hol
 
 def a_merge_that_is_not_a_release(root: Path, *, manifest: str | None, release_manifest: str | None = None) -> Path:
     """
-    Build the shape codex named: fork at A, `main` advances to B, land the PR as a merge commit.
+    Fork at A, `main` advances to B, land the PR as a merge commit.
 
     `HEAD^{tree}` then holds both changes and `HEAD^2^{tree}` lacks B, so the trees differ exactly
     as a stale release's do — while release-plz, with `release_always = false`, would tag nothing.
@@ -765,12 +694,10 @@ def a_merge_that_is_not_a_release(root: Path, *, manifest: str | None, release_m
 
 def test_a_non_release_merge_does_not_redden_main(tmp_path: Path) -> None:
     """
-    The guard must refuse RELEASES, not refuse MERGES.
-
-    Comparing unconditionally paints `main` red for every merge-commit PR forever, and release-plz
-    would not have tagged anything on any of them. The release is identified from the version in
-    `Cargo.toml` — the artifact release-plz acts on — rather than from a commit subject it owns and
-    could reword at any time.
+    The guard must refuse RELEASES, not refuse MERGES: comparing unconditionally paints `main` red
+    for every merge-commit PR, none of which release-plz would have tagged. The release is
+    identified from the version in `Cargo.toml` — what release-plz acts on — rather than from a
+    commit subject it owns and could reword.
     """
     result = run_guard(a_merge_that_is_not_a_release(tmp_path, manifest=VERSIONED_MANIFEST))
 
@@ -791,10 +718,8 @@ def test_a_merge_whose_package_version_cannot_be_read_is_refused(
     tmp_path: Path, manifest: str | None, shape: str
 ) -> None:
     """
-    The classification itself must fail CLOSED.
-
-    "I could not tell whether this is a release" has to mean refuse, never "not a release, so
-    nothing to check" — that is the fail-open the subject-text detector had, one level down.
+    The classification itself must fail CLOSED: "I could not tell whether this is a release" has to
+    mean refuse, never "not a release, so nothing to check".
     """
     result = run_guard(a_merge_that_is_not_a_release(tmp_path, manifest=manifest))
 
@@ -804,22 +729,15 @@ def test_a_merge_whose_package_version_cannot_be_read_is_refused(
 
 def test_an_ambiguous_package_version_is_refused(tmp_path: Path) -> None:
     """
-    The fail-open the lexical read had: a decoy `version = "…"` above `[package]`.
+    The fail-open the lexical read had: a decoy `version = "…"` above `[package]`. The fixture is a
+    GENUINE release — version 0.3.4 -> 0.4.0, tree stale — carrying a `[workspace.package]` table
+    whose version never changes. Reading the first match graded 9.9.9 on both sides and skipped the
+    tree comparison: measured, exit 0 with `OK: … leaves the package version at 9.9.9`.
 
-    The fixture is a GENUINE release — the package version moves 0.3.4 -> 0.4.0 and the tree is
-    stale — carrying a `[workspace.package]` table whose own version never changes. Reading the
-    first match graded 9.9.9 on both sides, concluded "not a release commit", and skipped the tree
-    comparison: measured, exit 0 with `OK: … leaves the package version at 9.9.9`.
-
-    Refusing beats picking a winner. There is no reading of an ambiguous manifest that is safe to
-    guess at, and this guard's whole job is to be the thing that does not guess.
-
-    🔴 THE DIAGNOSIS IS ASSERTED, NOT ONLY THE EXIT CODE, and an earlier version of this test that
-    checked only the exit code was carried by a neighbour: this fixture's tree is also stale, so
-    with the ambiguity refusal disabled the two multi-line version strings still differ, the guard
-    classifies it as a release, reaches the TREE comparison and exits 1 anyway. Measured — with
-    `if [ "$before_n" != "1" ] …` replaced by `if false`, the exit-code-only test reported
-    `1 passed`. The counts in the message are what only this guard can produce.
+    THE DIAGNOSIS IS ASSERTED, NOT ONLY THE EXIT CODE. This fixture's tree is also stale, so with
+    the ambiguity refusal disabled the guard still reaches the TREE comparison and exits 1 anyway —
+    measured, the exit-code-only version of this test reported `1 passed`. Only this guard can
+    produce the counts in the message.
     """
     decoy = '[workspace.package]\nversion = "9.9.9"\n\n[package]\nname = "fixture"\nversion = "0.3.4"\n'
     released = decoy.replace('version = "0.3.4"', 'version = "0.4.0"')
@@ -834,8 +752,6 @@ def test_an_ambiguous_package_version_is_refused(tmp_path: Path) -> None:
 
 def test_the_guard_fails_when_it_cannot_resolve_what_it_is_grading(tmp_path: Path) -> None:
     """
-    A guard that passes when its inputs do not resolve is the defect this whole review is about.
-
     The first version of this verifier ignored git's exit status, so two unresolvable refs produced
     two empty strings, compared EQUAL, and it printed `OK` — certifying objects that do not exist.
     """

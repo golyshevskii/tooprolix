@@ -1,29 +1,23 @@
 # EVERY JOB THAT MUST HAVE CONCLUDED `success` AT A `v*` TAG BEFORE ANYTHING IS PUBLISHED.
 #
-# This file is the EXPECTATION, pinned where shrinking it is a reviewable diff instead of a silent
-# behaviour change. `scripts/check_tag_jobs.py` compares it to a tag run's jobs by SET EQUALITY —
-# never "contains" — so a job that disappears from CI fails as loudly as a job that goes red, and a
-# job that appears from nowhere fails too. The comparison is refused outright when this list is
-# empty: an expectation of nothing is satisfied by nothing, which is the vacuous-guard hole that a
-# populated-set test cannot detect.
+# The expectation is pinned here so that shrinking it is a reviewable diff.
+# `scripts/check_tag_jobs.py` compares it to a tag run's jobs by SET EQUALITY, never "contains", and
+# refuses an empty list outright — an expectation of nothing is satisfied by nothing.
 #
-# The `[section]` headers are `workflow_name` as the Actions API reports it, and the lines under
-# them are `.name` values — not YAML job ids, which differ for a matrix job. Pairing the two is what
-# stops a run of some OTHER workflow, or a hand-dispatched run, satisfying the expectation just by
-# carrying the right job names: measured, a payload naming a foreign workflow passed before the
-# sections existed.
+# `[section]` headers are `workflow_name` as the Actions API reports it; the lines under them are
+# `.name` values, not YAML job ids, which differ for a matrix job. Pairing the two is what stops a
+# run of some other workflow satisfying the expectation by carrying the right job names.
 #
 #   gh api repos/golyshevskii/tooprolix/actions/runs/<id>/jobs --paginate > ci.json
 #   python scripts/check_tag_jobs.py --tag-sha "$(git rev-parse 'v0.4.8^{commit}')" \
 #     --tag-name v0.4.8 ci.json artifacts.json
 #
-# Two workflows fire on a `v*` tag: `CI` (.github/workflows/ci.yml) and
-# `Build artifacts` (.github/workflows/build-artifacts.yml). `Release-plz` does not — it triggers on
-# pushes to `main` only — and `release contract` does not, being `pull_request_target`.
+# A `v*` tag fires exactly two workflows: `CI` and `Build artifacts`. `Release-plz` triggers only on
+# pushes to `main`, and `release contract` is `pull_request_target`.
 #
-# `coverage` is listed even though it is NOT a required status check. Set equality is the point: it
-# runs at the tag, so leaving it out would make an otherwise complete run fail. Required-check
-# membership is decided by `ci-required`'s `needs:`, not by this file.
+# `coverage` is listed although it is NOT a required status check: it runs at the tag, and under set
+# equality omitting it would fail an otherwise complete run. Required-check membership is decided by
+# `ci-required`'s `needs:`.
 
 [CI]
 ci-python

@@ -1,63 +1,45 @@
 """
 Refuse to publish a `v*` tag unless every expected job of that tag ran and RAW-concluded `success`.
 
-**The defect this closes is grading a self-report.** A run's `head_sha` is a label the run attaches
-to itself, and an expected-job list derived from the run itself agrees with whatever the run did.
-Measured in this repository: run 30691798694 reports `head_sha=292d8af4` while `actions/checkout`
-materialised tree `3a1f67fd`. So the expectation is pinned in a tracked file
-(`.github/expected-tag-jobs.txt`) that a human has to edit in a reviewable diff, and the observation
-is each job's RAW `conclusion` — `cancelled` and `skipped` are not `success`, and reading them as
-"not failed" is exactly how PR #37's four cancelled artifact checks looked green.
+The defect this closes is grading a self-report: a run's `head_sha` is a label the run attaches to
+itself, and an expected-job list derived from the run agrees with whatever the run did. Run
+30691798694 reports `head_sha=292d8af4` while `actions/checkout` materialised tree `3a1f67fd`. So
+the expectation is pinned in a tracked file (`.github/expected-tag-jobs.txt`) that a human edits in
+a reviewable diff, and the observation is each job's RAW `conclusion` — `cancelled` and `skipped`
+are not `success`, and reading them as "not failed" is how PR #37's four cancelled artifact checks
+looked green.
 
-Three ways a weaker version of this passes while the guarantee is broken, all refused here:
+Three ways a weaker version passes while the guarantee is broken, all refused here:
 
-  * a job flipped to `cancelled` — refused, because the raw conclusion is compared to `success`
-    rather than to `failure`;
-  * an expected job absent from the run entirely — refused, because the comparison is SET EQUALITY
-    and never "contains"; a superset fails as loudly as a subset;
-  * the expectation reduced to `[]` — refused separately, because a set-equality check over an empty
-    expectation passes having verified nothing. Shrink the workflow and the manifest together and
-    every mutation fixture over a populated set still passes. This is the one that needs its own
-    assertion.
+  * a conclusion flipped to `cancelled` — the raw value is compared to `success`, not to `failure`;
+  * an expected job absent from the run — the comparison is SET EQUALITY, never "contains", so a
+    superset fails as loudly as a subset;
+  * the expectation reduced to `[]` — refused by its own assertion, because a set-equality check
+    over an empty expectation passes having verified nothing and no populated-set test can see it.
 
-**And it binds the jobs to the TAG, which an earlier version did not.** Given a payload carrying
-every expected name and no `head_sha` at all, that version exited 0 — so two old green
-feature-branch runs would have certified a tag nothing tested. Every job must now report the tag's
-own commit, and the jobs of one payload must all belong to one run and one attempt, so a file
-stitched together from several runs is refused rather than averaged.
+It also binds the jobs to the tag and to the workflows a tag push fires. Without that, a payload
+naming every expected job with no `head_sha` at all exited 0, and so did one whose `workflow_name`
+was a foreign workflow dispatched on `main`. Every job must now report the tag's commit and the tag
+as `head_branch`, the expectation is `(workflow name, job name)` pairs, and one payload must be one
+run and one attempt so a stitched-together file is refused rather than averaged.
 
-**And it binds the jobs to the WORKFLOWS a tag push fires**, because the same commit does not
-establish that those workflows ran. Measured: a payload carrying every expected job name with
-`workflow_name: Some other workflow`, dispatched on `main`, exited 0 before the manifest was
-sectioned by workflow. The expectation is now `(workflow name, job name)` pairs, and every job's
-`head_branch` must be the tag itself — on a real tag-push run it is (`v0.4.7`, run 30703436113).
+WHAT THIS CANNOT ESTABLISH:
 
-WHAT THIS CANNOT ESTABLISH, said plainly because the whole point is not to grade a self-report:
-
-  * `head_sha` is still a label the RUN attaches to itself. It proves the run claims the tag; it
-    does not prove `actions/checkout` materialised it. What proves that is the last step of every
-    job that checks out, in `ci.yml` AND `build-artifacts.yml`, which asserts
-    `git rev-parse HEAD == $GITHUB_SHA` after its gates have run. That assertion cannot be read from
-    here — job outputs and step logs are not returned by this REST endpoint — which is exactly why
-    it fails the job rather than reporting to anyone.
-  * **the run's EVENT is not in this payload, and `workflow_name` is only a display label.**
+  * `head_sha` is still a label the RUN attaches to itself. It proves the run claims the tag, not
+    that `actions/checkout` materialised it. What proves that is the last step of every job that
+    checks out, in `ci.yml` and `build-artifacts.yml`, asserting `git rev-parse HEAD == $GITHUB_SHA`
+    after its gates have run — unreadable from here, which is why it fails the job instead.
+  * the run's EVENT is not in this payload, and `workflow_name` is only a display label.
     `actions/runs/<id>/jobs` carries `workflow_name`, `head_branch`, `head_sha`, `run_id` and
-    `run_attempt`, but not `event` — that lives on `actions/runs/<id>`. Two consequences, both
-    accepted as residuals rather than closed here:
-      - a `workflow_dispatch` launched against the tag ref is indistinguishable from the tag push;
-      - a DECOY workflow file whose `name:` is `CI` or `Build artifacts`, dispatched at the tag,
-        satisfies both the section names and `head_branch`. `workflow_name` is what the workflow
-        calls itself, not which file ran.
-    Closing either means a second API call for the run object and grading its `event` and
-    `path`. That is the publication task's design problem, and it is recorded as such.
-  * the payload is trusted to have come from `gh api`. This reads a file; it does not authenticate
-    the API.
+    `run_attempt`, but `event` lives on `actions/runs/<id>`. So a `workflow_dispatch` at the tag ref
+    is indistinguishable from the tag push, and a decoy workflow whose `name:` is `CI` or
+    `Build artifacts` satisfies both the section names and `head_branch`. Closing either needs a
+    second API call grading the run's `event` and `path`: the publication task's problem.
+  * the payload is trusted to have come from `gh api`. This reads a file; it authenticates nothing.
   * nothing here checks that the run executed the workflow file that is on the tag.
 
-Usage, once per tag, before anything is uploaded. The publication runbook copies this verbatim, so
-`test_the_documented_runbook_command_parses` executes the argument list parsed out of this docstring
-— an earlier revision of it omitted `--tag-name` and exited 2 on `error: the following arguments are
-required`, which is a defect rather than a typo when a runbook is the only reader:
+Usage, once per tag, before anything is uploaded. The publication runbook copies this verbatim, and
+`test_the_documented_runbook_command_parses` executes the argument list parsed out of it:
 
     gh api repos/golyshevskii/tooprolix/actions/runs/<ci-run>/jobs --paginate > ci.json
     gh api repos/golyshevskii/tooprolix/actions/runs/<artifact-run>/jobs --paginate > artifacts.json
@@ -90,13 +72,9 @@ def read_manifest(path: Path) -> set[tuple[str, str]]:
     """
     Read the expected `(workflow name, job name)` pairs, ignoring blank lines and `#` comments.
 
-    The WORKFLOW half is what stops a run of some other workflow — or a hand-dispatched one —
-    satisfying the expectation just by carrying the right job names. Measured before it existed: a
-    payload whose `workflow_name` was `Some other workflow`, dispatched on `main`, exited 0.
-
-    Empties are NOT tolerated here rather than at the comparison: a manifest that reads as the empty
-    set is an unusable expectation whatever the run did, and saying so at the point of reading names
-    the file that is wrong.
+    The WORKFLOW half stops a run of some other workflow satisfying the expectation by carrying the
+    right job names. An empty manifest is refused here rather than at the comparison, so the message
+    names the file that is wrong.
     """
     if not path.is_file():
         raise TagJobsError(f"no expected-job manifest at {path}")
@@ -121,15 +99,10 @@ def read_jobs(paths: list[Path]) -> list[dict[str, Any]]:
     """
     Collect the job objects out of one or more `actions/runs/<id>/jobs` payloads.
 
-    Two shapes are accepted because those are the two `gh api` produces: a single response object,
-    and a list of them when `--paginate --slurp` returned several pages. Anything else is refused
-    instead of guessed at — a checker that reads an unexpected document as "no jobs, nothing wrong"
-    is the fail-open this exists to prevent. `{"message": "Not Found"}` is what a wrong run id
-    returns, and it is a perfectly valid JSON document with no jobs in it.
-
-    The two refusals are worded differently on purpose: a malformed document and a document that
-    genuinely contained no jobs are different faults, and a checker whose failures are all spelled
-    the same cannot be shown to be grading the thing it claims.
+    Two shapes are accepted because they are the two `gh api` produces: one response object, or a
+    list of them from `--paginate --slurp`. Anything else is refused rather than guessed at —
+    `{"message": "Not Found"}` is what a wrong run id returns, and it is valid JSON with no jobs in
+    it. The two refusals are worded differently on purpose, so a test can tell which one fired.
     """
     if not paths:
         raise TagJobsError("no run payloads given, so there is nothing to grade")
@@ -147,10 +120,9 @@ def read_jobs(paths: list[Path]) -> list[dict[str, Any]]:
                 if not isinstance(job, dict):
                     raise TagJobsError(f"{path} holds a job entry that is not an object: {job!r}")
                 from_this_file.append(job)
-        # ONE FILE IS ONE RUN ATTEMPT. `--paginate` walks the pages of a single run, so a file whose
-        # jobs disagree about `run_id`/`run_attempt` was stitched together from several runs — and a
-        # grader that pooled them would let a green job from any other run stand in for a missing
-        # one. Refused rather than merged.
+        # ONE FILE IS ONE RUN ATTEMPT. `--paginate` walks the pages of a single run, so jobs that
+        # disagree about `run_id`/`run_attempt` were stitched together — and pooling them would let
+        # a green job from another run stand in for a missing one.
         identities = {(job.get("run_id"), job.get("run_attempt")) for job in from_this_file}
         if len(identities) > 1:
             raise TagJobsError(f"{path} mixes {len(identities)} different run/attempt pairs: {sorted(identities)}")
@@ -166,9 +138,9 @@ def failures(expected: set[tuple[str, str]], observed: list[dict[str, Any]], tag
     """Return every reason the tag must not be published, or an empty list when there is none."""
     reasons: list[str] = []
 
-    # THE BINDING TO THE TAG. Without it this graded a SHAPE — the right names with the right
-    # conclusions — and any two old green runs satisfied it. The SHA says which commit; the ref says
-    # the run was of the tag rather than of a branch that happened to point at the same commit.
+    # THE BINDING TO THE TAG: without it this graded a SHAPE, which any two old green runs have.
+    # The SHA says which commit; the ref says the run was of the tag and not of a branch pointing at
+    # the same commit.
     strangers = sorted({str(job.get("head_sha")) for job in observed if job.get("head_sha") != tag_sha})
     if strangers:
         reasons.append(f"job(s) belong to a run of {strangers}, not of the tag {tag_sha}")
@@ -212,8 +184,8 @@ def main(argv: list[str] | None = None) -> int:
     parsed = parser.parse_args(argv)
 
     try:
-        # A 40-hex commit or nothing. An abbreviated or empty `--tag-sha` would silently match no
-        # job's `head_sha`, or — worse, if the comparison were ever loosened — match many.
+        # A 40-hex commit or nothing: an abbreviated `--tag-sha` matches no `head_sha`, and would
+        # match many if the comparison were ever loosened.
         if not re.fullmatch(r"[0-9a-f]{40}", parsed.tag_sha):
             raise TagJobsError(f"--tag-sha {parsed.tag_sha!r} is not a full 40-character commit SHA")
         # `v*` is the pattern both workflows trigger on, so anything else is not a tag they ran for.

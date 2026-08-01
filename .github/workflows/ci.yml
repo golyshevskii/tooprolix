@@ -9,20 +9,13 @@ on:
   pull_request:
   push:
     branches: [main]
-    # THE TAG IS WHAT GETS PUBLISHED, SO THE TAG IS WHAT HAS TO BE TESTED.
+    # THE TAG IS WHAT GETS PUBLISHED, SO THE TAG IS WHAT HAS TO BE TESTED. Before this, five tags
+    # produced five runs and every one was `Build artifacts`: no lint/type/test/cargo job had ever
+    # run at a tag SHA. The release PR's CI is no substitute — `pull_request` checks out
+    # `refs/pull/N/merge`, tree `3a1f67fd` for `v0.4.6`, while the tag's tree was `5d0ceefb`.
     #
-    # Measured at `eb65e32`: five tags, five workflow runs, every one of them `Build artifacts`.
-    # Zero lint/type/test/cargo runs on any tag, ever — publication would have uploaded a binary
-    # from a tree no ordinary gate had seen.
-    #
-    # The release PR's own CI is NOT a substitute, and that is measured too: on `pull_request`,
-    # `actions/checkout` materialises `refs/pull/N/merge`. For `v0.4.6` that was tree `3a1f67fd`
-    # while the tag's tree was `5d0ceefb`. Two different trees, one green tick.
-    #
-    # `branches: [main]` stays. Branch protection is absent (`branches/main/protection` -> 404,
-    # rulesets -> 403 on a Free private repository), so nothing stops a direct push to `main` and
-    # post-merge CI is the only thing that would notice one. Removing it is a separate change, gated
-    # on a 200 from the protection API and a demonstrated direct-push refusal.
+    # `branches: [main]` stays while branch protection is absent (`branches/main/protection` -> 404):
+    # nothing else would notice a direct push. Removing it needs a 200 from that API first.
     tags: ['v*']
 
 # Key on the ref so a re-push cancels the stale run instead of racing it.
@@ -49,60 +42,36 @@ env:
   RUSTUP_MAX_RETRIES: "10"
 
 jobs:
-  # FIVE JOBS: `ci-python`, `ci-rust`, `cargo-doc`, `coverage`, and the `ci-required` aggregate.
+  # FIVE JOBS: `ci-python`, `ci-rust`, `cargo-doc`, `coverage`, `ci-required`. Keep the count
+  # honest; this comment has miscounted the file it sits in three times.
   #
-  # Keep this count honest. This comment has miscounted the file it sits in three times — "Six" at
-  # seven jobs, "eight" after `cargo-doc` landed, and briefly "Nine" for a `pr-title` job that now
-  # lives in `.github/workflows/release-contract.yml` instead, because that gate needs a
-  # `pull_request: types: [… edited]` trigger and putting it on this shared one would re-run
-  # everything on every description typo. A comment that miscounts the file it sits in is the
-  # cheapest possible thing to get wrong and the easiest to believe.
+  # WHY FIVE AND NOT EIGHT. GitHub bills each JOB rounded up to the whole minute, so eight
+  # sub-minute jobs cost 10 billed minutes for 269 s of real work (PR #46), 59 % of it per-job
+  # setup. The four Rust jobs did NOT duplicate a compile — `Swatinem/rust-cache` already absorbs
+  # it, and a Rust-heavy PR cost the same 256 s as a README-only one. Do not quote a compile
+  # saving. Accepted cost: steps in one job fail fast, so a rustfmt failure now hides the clippy
+  # and test results that eight parallel jobs would have reported.
   #
-  # WHY FIVE AND NOT EIGHT. `lint`/`type`/`test` became `ci-python`, and
-  # `cargo-fmt`/`cargo-clippy`/`cargo-test` became `ci-rust`. GitHub bills each JOB rounded up to
-  # the whole minute, so eight sub-minute jobs cost 10 billed minutes for 269 s of real work
-  # (PR #46, run 30690967366) and 59 % of that raw time was per-job setup — `Show the pinned
-  # toolchain` alone ran four times. A hypothesis that the four Rust jobs duplicated a COMPILE was
-  # falsified and must not be re-introduced as justification: a Rust-heavy PR cost 256 s,
-  # indistinguishable from a README-only one, because `Swatinem/rust-cache` already absorbs it.
-  # The win is rounding and setup, not compilation.
-  #
-  # WHAT DID NOT MERGE, and why each refusal is deliberate:
+  # WHAT DID NOT MERGE:
   #   * `cargo-doc` — a rustdoc failure and a clippy failure are different answers and must not
-  #     share one red X. Decided by the user on 2026-08-01, not assumed by the implementer.
-  #   * `coverage` — distinct contract (it protects the instrument, not a number), distinct
-  #     toolchain (`cargo-llvm-cov` + `llvm-tools`), and it is the slowest job here; folding it in
-  #     would push `ci-rust` up a rounded minute for nothing.
-  #   * `release-contract` — a different workflow on a `pull_request_target` trigger with a
-  #     different permission scope. `needs:` cannot cross workflow boundaries, so the aggregate
-  #     below cannot absorb it and it stays separately reportable.
+  #     share one red X. User decision, 2026-08-01.
+  #   * `coverage` — distinct contract and toolchain, and the slowest job here.
+  #   * `release-contract` — different workflow, `pull_request_target`, different permissions;
+  #     `needs:` cannot cross workflows.
   #
-  # The accepted cost of consolidation, stated rather than discovered later: steps inside one job
-  # are sequential and fail fast, so a `rustfmt` failure now hides the clippy and test results that
-  # eight jobs would have reported in parallel. That is the trade the billing measurement bought.
+  # The Rust job is NOT named `test`/`lint`: renaming a check that branch protection has registered
+  # leaves the old name required and never reporting again. Nothing is required today, which is
+  # exactly why the renaming and the aggregate happen now, while they are free.
   #
-  # The Rust job is deliberately NOT named `test`/`lint` — renaming a check that branch protection
-  # has registered silently breaks it: the old name stays required and never reports again. Nothing
-  # is required today (`branches/main/protection` -> 404), which is exactly why the renaming and the
-  # aggregate happen NOW, while it is free.
+  # NO `paths:`, `paths-ignore:` OR `if:` ON ANY WORK JOB IN THIS FILE. A skipped check does not
+  # satisfy a required one — it stays pending, wedging a PR at "Expected — waiting for status to be
+  # reported" while CI is entirely green. ruff does gate its cargo jobs on a `determine_changes`
+  # job; its required checks are configured differently, so that is not portable here. The one
+  # `if:` in this file is `ci-required`'s `always()`, which can only make a job run more often. The
+  # path classifier is deferred to `route-ci-jobs-by-changed-paths`.
   #
-  # No `paths:`, `paths-ignore:` or `if:` on any WORK job in this file. A SKIPPED check does not
-  # satisfy a required status check — it stays pending, so a path-filtered gate wedges a PR at
-  # "Expected — waiting for status to be reported" while CI is entirely green. ruff does gate its
-  # cargo jobs on a `determine_changes` job; that practice is NOT portable here, because ruff's
-  # required checks are configured differently.
-  #
-  # The ONE `if:` in this file is `ci-required`'s `always()`, and it is the opposite of a filter: it
-  # can only make the aggregate run more often, never less. A path classifier that would need real
-  # job conditions was DEFERRED on 2026-08-01 (`route-ci-jobs-by-changed-paths`) — its whole measured
-  # saving is the 29 minutes the `wheels` event gate in `build-artifacts.yml` already takes, and its
-  # defect surface is real: a rule of the shape `scripts/** -> artifact stages` routes
-  # `scripts/coverage_report.py`, run only by `Makefile:254`/`:265`, away from the `coverage` job
-  # that is its only consumer, and the path is *recognised*, so no catch-all ever fires.
-  #
-  # AC4's corpus-determinism proof (`make corpus.measure`) deliberately does NOT run here: it clones
-  # the whole pinned corpus, which is hundreds of megabytes and minutes of network on every run.
-  # That check stays a local, manual step; do not "fix" CI by adding it.
+  # `make corpus.measure` deliberately does NOT run here: it clones hundreds of megabytes of pinned
+  # corpus on every run. It stays a local, manual step; do not "fix" CI by adding it.
 
   ci-python:
     name: ci-python
@@ -113,26 +82,16 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          # Full history. The classification artifacts of the anti-false-positive gate name the
-          # commit each measurement was taken on, and `corpus/classification.py` resolves that
-          # commit with `git cat-file` rather than trusting the string — AC9's whole point is that a
-          # provenance nobody can check is not one. Under the default shallow checkout that lookup
-          # fails on a commit that genuinely exists, and a block of tests goes red for an
-          # environment reason. Reproduced locally on 2026-08-01 with `git clone --depth 1` plus
-          # `make test`: **16 failed, 317 passed**, every failure the same message. It was 20 when
-          # the defect was first found; the count drifts with the test suite and is not the point.
+          # Full history. `corpus/classification.py` resolves the commit each measurement names
+          # with `git cat-file` rather than trusting the string, and a shallow checkout fails that
+          # lookup on a commit that genuinely exists:
           #
           #   detector_commit '6242f30…' does not resolve to a commit in /home/runner/work/…
           #
-          # Deliberately NOT fixed by letting the check pass when the repository is shallow. That
-          # would be a guard that fails open, disabled by the checkout depth of whoever runs it, and
-          # this gate has already had two review findings of exactly that shape.
-          #
-          # EVERY job that runs the Python tests needs this, not just this one. `coverage` runs them
-          # too, through `make cov` -> `py.cov`, and it went red for the identical reason after this
-          # job was fixed alone. Enforced by
-          # test_every_job_that_runs_the_python_tests_checks_out_the_full_history, which asks which
-          # jobs run them instead of naming the jobs.
+          # Measured with `git clone --depth 1` plus `make test`: 16 failed, 317 passed. NOT fixed
+          # by letting the check pass when the repository is shallow — that guard would be disabled
+          # by the checkout depth of whoever ran it. EVERY job running the Python tests needs this;
+          # `coverage` does too, and went red for the same reason after this job was fixed alone.
           fetch-depth: 0
 
       - name: Install uv
@@ -150,31 +109,22 @@ jobs:
       - name: make test
         run: make test
 
-      # THE LAST STEP OF EVERY JOB THAT CHECKS OUT, AND IT IS LAST ON PURPOSE.
+      # THE LAST STEP OF EVERY JOB THAT CHECKS OUT, IN THIS WORKFLOW AND IN `build-artifacts.yml`.
       #
-      # A run's `head_sha` is a label the run reports ABOUT ITSELF. Measured: run 30691798694
-      # reports `head_sha=292d8af4` while `actions/checkout` materialised tree `3a1f67fd`. A
-      # workflow triggered at tag `T` but checking out `main` yields `head_sha=T`, `name=CI`,
-      # `conclusion=success`, and a publish precondition reading that field passes over a tag no
-      # ordinary CI ever exercised. So the job asserts, for itself, that the gates above it ran on
-      # the commit the event names.
+      # A run's `head_sha` is a label it reports about itself: run 30691798694 reports
+      # `head_sha=292d8af4` while `actions/checkout` materialised tree `3a1f67fd`. So each job
+      # asserts for itself that its gates ran on the commit the event names.
       #
-      # RUN LAST, because an earlier version recorded HEAD immediately after `actions/checkout` —
-      # which leaves a window where a second checkout inserted afterwards changes what the gates
-      # actually graded while the recorded value stays right. Asserted after the work, the value is
-      # the one the work saw.
+      # LAST, not first. Recorded straight after the checkout, a second checkout inserted afterwards
+      # would change what the gates graded while the record stayed right.
       #
-      # IN THE JOB, not in an aggregate. The previous shape emitted job outputs for `ci-required` to
-      # compare, which could not reach `build-artifacts.yml` at all — `needs:` does not cross
-      # workflows, and job outputs are not returned by the `actions/runs/<id>/jobs` REST endpoint
-      # either. The publishable binaries were the one thing nothing bound. One assertion, in every
-      # job that checks out, needs no plumbing and covers both workflows.
+      # IN THE JOB, not in an aggregate: `needs:` does not cross workflows and job outputs are not
+      # returned by the `actions/runs/<id>/jobs` REST endpoint, so an aggregate could never reach
+      # the workflow that builds the publishable binaries.
       #
-      # WHAT IT DOES NOT PROVE, stated because the wording here was wrong once: `git rev-parse HEAD`
-      # reads the repository's HEAD, NOT the contents of the files on disk. It establishes which
-      # commit the checkout left this job on; it cannot see a step that edited a tracked file
-      # afterwards. A uniform working-tree check is deliberately not added, because
-      # `build-artifacts.yml` legitimately rewrites `README.md` in place before building.
+      # It proves which commit HEAD is on, NOT the contents of the files. A step that edits a
+      # tracked file afterwards is invisible to it, which is why there is no uniform working-tree
+      # check: `build-artifacts.yml` legitimately rewrites `README.md` before building.
       - name: The gates above ran on the commit this event names
         run: |
           set -euo pipefail
@@ -251,9 +201,7 @@ jobs:
           # instead of each saving a near-duplicate one.
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
-      # Cheapest first: rustfmt only parses the source and builds no dependencies. It used to be its
-      # own cache-less job for that reason, and folding it in costs nothing — it reads the cache the
-      # steps below need anyway.
+      # Cheapest first: rustfmt only parses the source and builds no dependencies.
       - name: make rust.fmt.check
         run: make rust.fmt.check
 
@@ -292,10 +240,8 @@ jobs:
   # the rustdoc of `python_files`) named a function that exists nowhere in `src/`; it had been
   # renamed and the doc was never followed.
   #
-  # IT STAYS ITS OWN JOB. That is a recorded user decision of 2026-08-01, taken against the ≈1
-  # billed minute merging it into `ci-rust` would save: a rustdoc failure and a clippy failure are
-  # different answers and should not share a red X. It IS in `ci-required` below, so it gates a
-  # merge exactly as hard as the two work jobs do.
+  # IT STAYS ITS OWN JOB — user decision, 2026-08-01, against the ~1 billed minute merging it into
+  # `ci-rust` would save. It is in `ci-required`, so it gates a merge as hard as the work jobs do.
   cargo-doc:
     name: cargo-doc
     runs-on: ubuntu-latest
@@ -334,10 +280,9 @@ jobs:
   # from both tools. Later audits work against those figures, and a rotted instrument would only be
   # discovered once an audit was already running.
   #
-  # NOT a required status check, deliberately, and that is why it is absent from `ci-required`'s
-  # `needs:` below: it protects a measuring tool, not the shipped artifact. It still carries no
-  # `paths:` and no `if:` — a SKIPPED check does not satisfy a required one, so a path filter added
-  # today would wedge the PR on the day it is registered.
+  # NOT a required status check, which is why it is absent from `ci-required`'s `needs:`. It still
+  # carries no `paths:` and no `if:`: a skipped check does not satisfy a required one, so a filter
+  # added today would wedge the PR on the day it is registered.
   #
   # It re-runs the Rust tests under instrumentation and the Python tests under coverage, so it is
   # the slowest job here.
@@ -401,43 +346,27 @@ jobs:
             exit 1
           fi
 
-  # THE ONE CHECK BRANCH PROTECTION WILL BE POINTED AT: `CI / ci-required`.
+  # THE ONE CHECK BRANCH PROTECTION WILL BE POINTED AT: `CI / ci-required`. It exists before
+  # protection is enabled because GitHub only offers a check that reported successfully within the
+  # preceding seven days, and a required name that stops reporting stays required forever.
   #
-  # It exists BEFORE protection is enabled, on purpose. GitHub only offers a check that has reported
-  # successfully in the preceding seven days, and a required name that stops reporting stays
-  # required forever — so the name has to be final and already reporting before anyone can register
-  # it. The deferred path classifier reuses this name instead of orphaning one.
+  # `if: always()` is what lets it SEE a failure. Without it, a needed job that ends in anything but
+  # success skips this one too — and a skipped check never reports, wedging a protected PR at
+  # "Expected — waiting for status to be reported" instead of going red.
   #
-  # `if: always()` IS WHAT MAKES IT ABLE TO SEE A FAILURE. Without it, a needed job that ends in
-  # anything but success skips this job too, and a skipped check never reports — it wedges a
-  # protected PR at "Expected — waiting for status to be reported" instead of going red. That is the
-  # inverse of a gate.
+  # Only `result == success` passes. `cancelled` and `skipped` are not success, and reading them as
+  # "not failed" is how PR #37's four cancelled artifact checks looked green.
   #
-  # It grades `result`, which for a needed job is one of success/failure/cancelled/skipped, and only
-  # `success` passes. `cancelled` and `skipped` are not success, and reading them as "not failed" is
-  # exactly how PR #37's four cancelled artifact checks looked green.
+  # It fails closed on an empty `needs:`, as its own assertion: a check over an empty expectation
+  # passes having graded nothing, and a populated-set test cannot prove that case.
   #
-  # AND IT FAILS CLOSED ON AN EMPTY `needs:`. A set-equality check over an empty expectation passes
-  # having graded nothing; deleting the `needs:` list would otherwise turn this into a job that
-  # reports success unconditionally. The length check is a separate assertion from the result check
-  # because a populated-set test cannot prove the empty case.
+  # It does NOT check which commit was graded — every job that checks out asserts that for itself.
+  # `coverage` is excluded deliberately (it protects the instrument, not the artifact) and carries
+  # that assertion anyway. `release-contract` cannot be here; `needs:` does not cross workflows.
   #
-  # IT DOES NOT CHECK WHICH COMMIT WAS GRADED, and that is deliberate: every job that checks out
-  # asserts that for itself, as its own last step, in this workflow and in `build-artifacts.yml`
-  # alike. An aggregate could never have covered the artifact workflow — `needs:` does not cross
-  # workflows and job outputs are not returned by the `actions/runs/<id>/jobs` REST endpoint — so
-  # the binding lives where the checkout does, and there is one mechanism rather than two.
-  #
-  # `coverage` is deliberately NOT here: it protects the measuring instrument rather than the
-  # shipped artifact and was never a required check. It still carries the same commit assertion, so
-  # it cannot silently grade a different tree either. `release-contract` cannot be here — `needs:`
-  # does not cross workflow boundaries — and stays separately reportable.
-  #
-  # Today no work job carries an `if:`, so this aggregate can only be red or green, never vacuous.
-  # The shell below is EXECUTED against fixtures by `test_the_shipped_aggregate_*` in
-  # tests/unit/test_workflow_contracts.py, rather than pattern-matched: a token assertion could not
-  # tell `!= "success"` from `== "success"`, and the inverted form turns this gate into "fail if
-  # anything passed" — measured, with all 25 workflow tests still green.
+  # The shell below is EXECUTED against fixtures by `test_the_shipped_aggregate_*`, not
+  # pattern-matched: a token assertion cannot tell `!= "success"` from `== "success"`, and the
+  # inverted form turns this gate into "fail if anything passed".
   ci-required:
     name: ci-required
     runs-on: ubuntu-latest
