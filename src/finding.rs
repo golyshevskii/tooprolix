@@ -490,8 +490,11 @@ impl Report {
     /// documents an impossibility rather than handling a risk.
     #[must_use]
     pub fn to_json(&self) -> String {
-        let mut rendered =
-            serde_json::to_string_pretty(self).expect("a finding contains no non-finite float");
+        // The message names the two things that can make `serde_json` fail, not the non-finite
+        // float the paragraph above measured to be a NON-failure.
+        let mut rendered = serde_json::to_string_pretty(self).expect(
+            "no field of this schema has a fallible Serialize impl or a non-string map key",
+        );
         rendered.push('\n');
         rendered
     }
@@ -499,11 +502,10 @@ impl Report {
 
 #[cfg(test)]
 mod tests {
-    use super::{Finding, Location, MAX_RENDERED_LOCATIONS, Report, Skipped};
+    use super::*;
     use crate::detect::duplicate::duplicates;
     use crate::detect::volume::{Limits, volume};
-    use crate::extract::{ProseKind, extract};
-    use crate::rules::Rule;
+    use crate::extract::extract;
     use std::path::Path;
 
     fn blocks_of(path: &str, source: &str) -> Vec<crate::extract::ProseBlock> {
@@ -842,7 +844,7 @@ mod tests {
             code: Rule::CommentVolume,
             at: at.clone(),
             message: String::new(),
-            detail: super::Detail::Volume {
+            detail: Detail::Volume {
                 words: 1,
                 max_volume: 0,
             },
@@ -851,9 +853,9 @@ mod tests {
             code: Rule::DuplicateProse,
             at,
             message: String::new(),
-            detail: super::Detail::Duplicate {
+            detail: Detail::Duplicate {
                 locations: Vec::new(),
-                weakest: super::Weakest {
+                weakest: Weakest {
                     first: volume_finding.at.clone(),
                     second: volume_finding.at.clone(),
                     similarity: 1.0,
@@ -885,7 +887,7 @@ mod tests {
             at: at.clone(),
             message: "a.py:1-4: TPX001 comment is 151 words long, over the 150-word limit"
                 .to_owned(),
-            detail: super::Detail::Volume {
+            detail: Detail::Volume {
                 words: 151,
                 max_volume: 150,
             },
@@ -895,7 +897,7 @@ mod tests {
             at,
             message: "a.py:1-4: TPX001 comment is 900 words long, over the 150-word limit"
                 .to_owned(),
-            detail: super::Detail::Volume {
+            detail: Detail::Volume {
                 words: 900,
                 max_volume: 150,
             },

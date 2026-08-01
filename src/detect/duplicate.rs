@@ -353,14 +353,14 @@ type Edge = (f64, usize, usize);
 /// can easily give a component whose every edge scores exactly 1.0, and then the tie-break is the
 /// only thing deciding which pair the output names.
 ///
-/// `partial_cmp` cannot return `None` here: `jaccard` is a ratio of two positive counts, so no score
-/// is `NaN`. The fall-through treats an impossible `None` like a tie, which keeps the function total
-/// rather than panicking on an input it cannot receive.
+/// `total_cmp`, so the three arms are the whole domain and no unreachable `None` needs justifying.
+/// It agrees with `partial_cmp` on every score reachable here: `jaccard` is a ratio of two positive
+/// counts and `exact_groups` passes a literal `1.0`, so neither `NaN` nor `-0.0` can arrive.
 fn weaker(left: Edge, right: Edge, blocks: &[ProseBlock]) -> Edge {
-    match left.0.partial_cmp(&right.0) {
-        Some(Ordering::Less) => left,
-        Some(Ordering::Greater) => right,
-        _ => {
+    match left.0.total_cmp(&right.0) {
+        Ordering::Less => left,
+        Ordering::Greater => right,
+        Ordering::Equal => {
             let ends = |edge: Edge| (end_of(&blocks[edge.1]), end_of(&blocks[edge.2]));
             if ends(left) <= ends(right) {
                 left
@@ -598,24 +598,6 @@ pub fn duplicates(blocks: &[ProseBlock]) -> Report<'_> {
     }
 }
 
-/// Connects every group of blocks whose narrative is identical, and returns, per block, the
-/// group it belongs to (its smallest member by [`end_of`], or `None` when it has no exact twin).
-///
-/// Connected arithmetically: `n - 1` edges at score 1.0, with no Jaccard computed. That is a
-/// correctness fix and not a shortcut. `corpus/REPORT.md` records a group of 800 identical blocks
-/// — 320 000 pairs whose score is known before anything is compared — and the same measurement
-/// showed that any candidate-generation shortcut hits *these* groups hardest, because a block with
-/// 800 twins puts all of its shingles in the largest buckets in the index. The content a duplicate
-/// detector exists to find must not be the content its index is most likely to drop.
-///
-/// # Why a star, and why from the smallest member
-///
-/// The `C(n, 2) - (n - 1)` edges this does not record all score exactly 1.0, which is the maximum a
-/// Jaccard can be, so they can never lower the component's minimum: omitting them is free rather
-/// than approximate. They can only matter for the *tie-break* when a whole component scores 1.0,
-/// and that is why the centre of the star is the smallest member by [`end_of`] rather than the
-/// first one to arrive — the recorded edge set is then the same for any permutation of the input,
-/// and so is the pair [`Cluster::weakest`] names.
 /// Whether `TPX003` compares this block at all: its narrative must be able to carry one shingle.
 ///
 /// # The decision this records, and the measurement behind it
@@ -670,6 +652,24 @@ fn is_compared(block: &ProseBlock) -> bool {
     block.narrative.split_whitespace().count() >= SHINGLE_K
 }
 
+/// Connects every group of blocks whose narrative is identical, and returns, per block, the
+/// group it belongs to (its smallest member by [`end_of`], or `None` when it has no exact twin).
+///
+/// Connected arithmetically: `n - 1` edges at score 1.0, with no Jaccard computed. That is a
+/// correctness fix and not a shortcut. `corpus/REPORT.md` records a group of 800 identical blocks
+/// — 320 000 pairs whose score is known before anything is compared — and the same measurement
+/// showed that any candidate-generation shortcut hits *these* groups hardest, because a block with
+/// 800 twins puts all of its shingles in the largest buckets in the index. The content a duplicate
+/// detector exists to find must not be the content its index is most likely to drop.
+///
+/// # Why a star, and why from the smallest member
+///
+/// The `C(n, 2) - (n - 1)` edges this does not record all score exactly 1.0, which is the maximum a
+/// Jaccard can be, so they can never lower the component's minimum: omitting them is free rather
+/// than approximate. They can only matter for the *tie-break* when a whole component scores 1.0,
+/// and that is why the centre of the star is the smallest member by [`end_of`] rather than the
+/// first one to arrive — the recorded edge set is then the same for any permutation of the input,
+/// and so is the pair [`Cluster::weakest`] names.
 fn exact_groups(blocks: &[ProseBlock], components: &mut Components) -> Vec<Option<usize>> {
     // One entry per distinct narrative, so `blocks.len()` is the exact ceiling.
     let mut by_text: HashMap<&str, Vec<usize>> = HashMap::with_capacity(blocks.len());
@@ -2245,8 +2245,16 @@ preserve_existing_api_key: bool = False
     ///
     /// What this does **not** fix, deliberately: the 499 500 Jaccard calls are still made. Candidate
     /// generation is a separate problem, recorded as a risk against the wall-clock budget of
-    /// `validate-detectors-on-reference-corpus`. That is why this test costs ~15 s in a debug build,
-    /// and the cost is the honest price of covering the case at its real size.
+    /// `validate-detectors-on-reference-corpus`. That cost is why this one test is essentially the
+    /// whole `--lib` wall clock, and it is the honest price of covering the case at its real size.
+    ///
+    /// Measured 2026-08-01 at `b7c8ad9`, clean tree, macOS/arm64: **about 1.8 s** for this test and
+    /// **about 1.85 s** for all 132. Two independent sets of runs spanned 1.76–1.85 s and
+    /// 1.83–1.86 s, so the two are within run-to-run noise of each other on a loaded machine and a
+    /// re-run landing at 1.84 s is noise, not a regression — what survives the noise is the
+    /// relationship above, not the digits. The `~15 s` that stood here and the `8.68 s` banked in
+    /// the rust-skills issue are both superseded, and at ~1.8 s the cost does not buy an
+    /// `#[ignore]`, which would take the AC2 guard out of the default run.
     #[test]
     fn a_near_identical_header_in_a_thousand_files_is_one_finding() {
         // Arrange

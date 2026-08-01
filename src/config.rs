@@ -69,7 +69,7 @@ use ignore::overrides::{Override, OverrideBuilder};
 use thiserror::Error as ThisError;
 
 use crate::detect::volume::Limits;
-use crate::rules::Rule;
+use crate::rules::{Rule, shipping_codes};
 
 /// The file the configuration is read from.
 ///
@@ -658,21 +658,10 @@ fn read_limit(value: &toml::Value, key: &str, path: &Path) -> Result<usize, Erro
     })
 }
 
-/// Every shipping code, comma separated, for an error message.
-fn shipping_codes() -> String {
-    Rule::ALL
-        .iter()
-        .map(|rule| rule.code())
-        .collect::<Vec<_>>()
-        .join(", ")
-}
-
 #[cfg(test)]
 mod tests {
-    use super::{Config, Error, from_document};
-    use crate::detect::volume::{DEFAULT_COMMENT_MAX_VOLUME, DEFAULT_DOCSTRING_MAX_VOLUME, Limits};
-    use crate::rules::Rule;
-    use std::path::PathBuf;
+    use super::*;
+    use crate::detect::volume::{DEFAULT_COMMENT_MAX_VOLUME, DEFAULT_DOCSTRING_MAX_VOLUME};
 
     fn parse(toml_text: &str) -> Result<Config, Error> {
         let document: toml::Table = toml_text.parse().expect("the fixture is valid TOML");
@@ -789,7 +778,7 @@ mod tests {
     /// advertised list through the parser, so the second cannot ship.
     #[test]
     fn every_advertised_key_is_actually_accepted() {
-        for key in super::KNOWN_KEYS {
+        for key in KNOWN_KEYS {
             // A value of the right type for each, so only the KEY is under test here.
             let value = match key {
                 "ignore" => "[\"TPX003\"]",
