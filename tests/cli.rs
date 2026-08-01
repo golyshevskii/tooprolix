@@ -3183,6 +3183,24 @@ fn a_panic_in_a_release_build_stays_a_code_and_keeps_its_output() {
             "panic_is_a_controlled_exit",
         ])
         .current_dir(repository_root())
+        // `cargo llvm-cov` does NOT put `-Cinstrument-coverage` in `RUSTFLAGS` — measured with
+        // `cargo llvm-cov show-env`, it sets `RUSTC_WRAPPER` plus `__CARGO_LLVM_COV_RUSTC_WRAPPER_*`
+        // and injects the flags inside the wrapper, where cargo's fingerprint cannot see them. Its
+        // whole isolation is therefore the `--target-dir target/llvm-cov-target` FLAG, and a flag
+        // is exactly what this nested cargo does not inherit. Left alone it builds an instrumented
+        // release example into the shared `target/release/examples/`, which cargo then treats as
+        // fresh forever, so the next plain `cargo test` reuses it.
+        .env_remove("RUSTC_WRAPPER")
+        // With the profile path gone too, an instrumented child has nowhere to write but its
+        // current directory — the repository root. That is what turns the assertion at the end of
+        // this test from an ordering-dependent accident into one that fails in the coverage job as
+        // well as here: measured 2026-08-01, deleting the `RUSTC_WRAPPER` line above and running
+        // `make rust.cov` on a cold `target/release/examples/` exits 2 on that assertion.
+        //
+        // Its ceiling, for the same fingerprint reason: cargo reuses whichever build landed first,
+        // so a warm example built the other way is reused and hides the change until something
+        // else invalidates it. `cargo clean --release -p tooprolix` is what makes a run decisive.
+        .env_remove("LLVM_PROFILE_FILE")
         .output()
         .expect("cargo is on PATH: this test is running under it");
 
@@ -3202,6 +3220,34 @@ fn a_panic_in_a_release_build_stays_a_code_and_keeps_its_output() {
     assert!(
         String::from_utf8_lossy(&output.stderr).contains("panicked at"),
         "the panic message has to reach stderr, not just the exit code"
+    );
+
+    // …and it leaves no coverage artifact in the repository root. Graded on the directory listing
+    // rather than on anything the child reported about itself, and NOT deleted when it fires: a
+    // guard that tidies away its own evidence turns a real leak into a green second run.
+    //
+    // Scope, so nothing reads more into a green run than it earns: ONE snapshot of ONE directory,
+    // taken inside a suite that runs in parallel. It proves the route traced above and nothing
+    // wider — a `tests/*.profraw`, or a root file written after this enumeration, passes it. The
+    // whole-tree postcondition is `CHECK_NO_PROFRAW` in the Makefile, which runs after
+    // `make rust.test` and `make cov` have finished.
+    let leaked: Vec<PathBuf> = std::fs::read_dir(repository_root())
+        .expect("the repository root is readable")
+        .map(|entry| {
+            entry
+                .expect("the repository root stays readable while it is walked")
+                .path()
+        })
+        .filter(|path| {
+            path.extension()
+                .is_some_and(|extension| extension == "profraw")
+        })
+        .collect();
+    assert!(
+        leaked.is_empty(),
+        "the nested cargo ran an instrumented binary in the repository root, so the LLVM profile \
+         runtime wrote {leaked:?} next to Cargo.toml — untracked, ungitignored and one `git add .` \
+         from being committed. Delete them, then keep the instrumentation out of the child build."
     );
 }
 

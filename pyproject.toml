@@ -295,16 +295,28 @@ addopts = [
     "--import-mode=importlib"
 ]
 
-# Coverage of the PRODUCTION Python in this repository, which is `corpus/` and nothing else.
+# Coverage of the PRODUCTION Python in this repository: the corpus tooling and the release scripts.
+#
+# `scripts/` was added on 2026-08-01 and the reason is worth keeping. It is the release-critical
+# Python — `check_artifact.py` grades the built wheel and sdist, `transform_readme.py` rewrites the
+# README that goes to PyPI — and it was the one directory whose failure ships a broken artifact and
+# the one directory with no coverage signal, while `corpus/` (throwaway research tooling, see the
+# Makefile's coverage block) was the whole denominator. Measured 2026-08-01: the three scripts are
+# 88% / 84% / 87% covered in-process by `tests/unit/`, and the total moved 61.4% -> 65.7%.
+# A script executed as a SUBPROCESS is still not attributable — that finding from the 2026-07-29
+# pytest audit stands and is a different case; these three also have in-process unit tests.
 #
 # `source` is the DENOMINATOR, and that is why `tests/unit` is not in it even though the lint and
 # type gates run on both (`LINT_PATHS`/`TY_PATHS` in the Makefile). A denominator that includes the
 # test files makes the badge climb whenever someone writes more test code, which measures the
 # opposite of what a coverage badge is for. `tests/unit` stays the runner's INPUT (`testpaths`
 # above), never its subject.
+#
+# The second, independent statement of this list is `_SOURCE_TREES` in `scripts/coverage_report.py`,
+# which walks the disk and fails the run when the two disagree.
 [tool.coverage.run]
 branch = true
-source = ["corpus"]
+source = ["corpus", "scripts"]
 # coverage.py otherwise drops a `.coverage` SQLite file in the repository root, one `git add .` away
 # from being committed. `target/coverage/` is where the JSON reports already go and `.gitignore`
 # already covers `target`, so one line here beats a new ignore rule. Verified: with this key the

@@ -73,6 +73,22 @@ def rust_report(files: set[str], root: Path = REPO_ROOT) -> dict[str, Any]:
     }
 
 
+def instrumentable_rust_sources(root: Path = REPO_ROOT) -> set[str]:
+    """
+    Walk the Rust sources a REAL `cargo llvm-cov` run puts in its report: the walked set, minus the
+    files whose text defines no function.
+
+    Not a second statement of the denominator contract — that job belongs to `_SOURCE_TREES`. This
+    is what an honest report looks like, and the honest baselines below need it because the guard
+    now rejects a report carrying a file llvm-cov could not have instrumented.
+    """
+    return {
+        name
+        for name in measurable_source_files(root, RUST_REPORT_FORMAT)
+        if "fn " in (root / name).read_text(encoding="utf-8")
+    }
+
+
 def fake_crate(root: Path, sources: dict[str, str]) -> None:
     """Lay out a throwaway `src/` tree so the guard can be tested away from this repository."""
     for name, body in sources.items():
@@ -213,17 +229,40 @@ class TestTheReportIsGradedNotJustRead:
     def test_the_walked_set_is_the_corpus_sources_and_excludes_the_data_trees(self) -> None:
         walked = measurable_source_files(REPO_ROOT, PYTHON_REPORT_FORMAT)
 
-        # Every entry is real, under corpus/, and outside the two data trees. Asserted as
-        # properties rather than as names, so the assertion survives a new source file.
+        # Every entry is real, under one of the two source trees, and outside the two data trees.
+        # Asserted as properties rather than as names, so the assertion survives a new source file.
         assert walked, "walked no Python sources at all"
         for name in walked:
             assert (REPO_ROOT / name).is_file()
-            assert name.startswith("corpus/")
+            assert name.startswith(("corpus/", "scripts/"))
             assert not name.startswith(("corpus/checkouts/", "corpus/fixtures/"))
         # corpus/fixtures/sample.py exists and is test DATA, so its absence is the exclusion working
         # rather than the walk finding nothing.
         assert (REPO_ROOT / "corpus/fixtures/sample.py").is_file()
         assert "corpus/fixtures/sample.py" not in walked
+
+    def test_the_release_scripts_are_in_the_denominator(self) -> None:
+        """
+        `scripts/` is the release-critical Python and it was outside the denominator until
+        2026-08-01, while `corpus/` — described in the Makefile as throwaway research tooling — was
+        the whole of it. Task 1 of this epic found three real defects in `check_artifact.py` (a
+        duplicate `Requires-Python` header failing open, an ungraded `email` parse defect, a
+        declared-but-absent `License-File`) and the Python percentage could not have reflected any
+        of them.
+
+        Attributability was the open question and it is measured, not assumed: run in-process by
+        `tests/unit/`, coverage.py attributes 88% / 84% / 87% of the three scripts (2026-08-01). The
+        2026-07-29 pytest audit's finding — that a script executed as a SUBPROCESS is not
+        attributable — stands and is a different case; these three also have in-process unit tests.
+
+        Walked, never listed, for the same reason as the test above: naming today's three files
+        would keep passing on the day a fourth lands beside them.
+        """
+        walked = measurable_source_files(REPO_ROOT, PYTHON_REPORT_FORMAT)
+        on_disk = {path.name for path in (REPO_ROOT / "scripts").glob("*.py")}
+
+        assert on_disk, "scripts/ holds no Python at all"
+        assert {f"scripts/{name}" for name in on_disk} <= walked
 
     def test_a_report_that_measured_the_whole_tree_is_accepted(self) -> None:
         walked = measurable_source_files(REPO_ROOT, PYTHON_REPORT_FORMAT)
@@ -261,14 +300,14 @@ class TestTheReportIsGradedNotJustRead:
         # The half of the guard that holds for llvm-cov: nothing but the crate's own sources may sit
         # in the denominator. A dependency or a test binary leaking in would move the percentage
         # without moving the code.
-        walked = measurable_source_files(REPO_ROOT, RUST_REPORT_FORMAT)
+        measured = instrumentable_rust_sources()
 
-        assert walked, "walked no Rust sources at all"
-        verify_report_measured_the_source_tree(rust_report(walked), RUST_REPORT_FORMAT, REPO_ROOT)
+        assert measured, "walked no Rust sources at all"
+        verify_report_measured_the_source_tree(rust_report(measured), RUST_REPORT_FORMAT, REPO_ROOT)
 
         with pytest.raises(ValueError, match=r"measured files outside.*tests/cli\.rs"):
             verify_report_measured_the_source_tree(
-                rust_report(walked | {"tests/cli.rs"}), RUST_REPORT_FORMAT, REPO_ROOT
+                rust_report(measured | {"tests/cli.rs"}), RUST_REPORT_FORMAT, REPO_ROOT
             )
 
     def test_a_rust_source_file_with_no_instrumentable_code_may_be_absent(self) -> None:
@@ -292,8 +331,11 @@ class TestTheReportIsGradedNotJustRead:
 
         walked = measurable_source_files(REPO_ROOT, RUST_REPORT_FORMAT)
         assert "src/detect.rs" in walked
+        assert "src/detect.rs" not in instrumentable_rust_sources()
 
-        verify_report_measured_the_source_tree(rust_report(walked - {"src/detect.rs"}), RUST_REPORT_FORMAT, REPO_ROOT)
+        verify_report_measured_the_source_tree(
+            rust_report(instrumentable_rust_sources()), RUST_REPORT_FORMAT, REPO_ROOT
+        )
 
 
 class TestAMissingRustFileIsOnlyExcusedWhenThereIsNothingToInstrument:
@@ -308,8 +350,31 @@ class TestAMissingRustFileIsOnlyExcusedWhenThereIsNothingToInstrument:
     one day gaining a function.
     """
 
+    @pytest.mark.parametrize(
+        "body",
+        [
+            # The shape the substring `"fn "` was written for.
+            "pub fn one() {}\n",
+            # Rustfmt would join these, but nothing normalises an ORPHANED file: it is outside the
+            # module tree, so `cargo fmt` does not walk it either. The file that most needs this
+            # check is therefore the file least likely to be formatted.
+            "pub fn\nrelease_gate() {}\n",
+            # A tab is whitespace to the compiler and is not the space in `"fn "`.
+            "pub fn\trelease_gate() {}\n",
+        ],
+        ids=["space", "newline", "tab"],
+    )
+    def test_the_separator_after_fn_is_any_whitespace(self, tmp_path: Path, body: str) -> None:
+        """`fn` is followed by whitespace, not by a space. `"fn "` missed two of these three."""
+        fake_crate(tmp_path, {"lib.rs": "pub fn go() {}\n", "orphan.rs": body})
+
+        with pytest.raises(ValueError, match=r"never measured.*src/orphan\.rs"):
+            verify_report_measured_the_source_tree(
+                rust_report({"src/lib.rs"}, root=tmp_path), RUST_REPORT_FORMAT, tmp_path
+            )
+
     def test_a_file_with_no_functions_may_be_absent(self, tmp_path: Path) -> None:
-        fake_crate(tmp_path, {"lib.rs": "pub mod wiring;\n", "wiring.rs": "pub mod a;\npub mod b;\n"})
+        fake_crate(tmp_path, {"lib.rs": "pub mod wiring;\npub fn go() {}\n", "wiring.rs": "pub mod a;\npub mod b;\n"})
         walked = measurable_source_files(tmp_path, RUST_REPORT_FORMAT)
 
         assert walked == {"src/lib.rs", "src/wiring.rs"}
@@ -317,11 +382,45 @@ class TestAMissingRustFileIsOnlyExcusedWhenThereIsNothingToInstrument:
         verify_report_measured_the_source_tree(rust_report({"src/lib.rs"}, root=tmp_path), RUST_REPORT_FORMAT, tmp_path)
 
     def test_a_file_that_defines_functions_may_not_be_absent(self, tmp_path: Path) -> None:
-        fake_crate(tmp_path, {"lib.rs": "pub mod a;\n", "orphan.rs": "pub fn one() {}\npub fn two() {}\n"})
+        fake_crate(tmp_path, {"lib.rs": "pub fn go() {}\n", "orphan.rs": "pub fn one() {}\npub fn two() {}\n"})
 
         with pytest.raises(ValueError, match=r"never measured.*src/orphan\.rs"):
             verify_report_measured_the_source_tree(
                 rust_report({"src/lib.rs"}, root=tmp_path), RUST_REPORT_FORMAT, tmp_path
+            )
+
+    def test_a_file_with_no_functions_may_not_be_measured_either(self, tmp_path: Path) -> None:
+        """
+        The same fact read in the other direction, and it is the direction that actually cost 20
+        points of coverage.
+
+        Measured on this repository 2026-08-01 at `ebd7d70`: a `libtooprolix.dylib` left in
+        `target/llvm-cov-target/debug/deps/` by a pyo3 build on 2026-07-29 — the crate is
+        `crate-type = ["rlib"]` today and produces no cdylib — was still being handed to
+        `llvm-cov export` as an object. Its coverage mapping is of an OLDER source tree, so the
+        report gained 1 024 phantom lines at zero coverage and `make cov` printed **78.6%** while
+        the same profraw with that one file removed printed **98.2%** — which is what CI, on a
+        runner with no stale object, had been printing all along. `cargo llvm-cov clean --workspace`
+        does not remove it, `make cov` exits 0, and the guard as it stood saw nothing: the phantom
+        arrived under the filename `src/lib.rs`, which is a real path inside the source tree.
+
+        What gave it away is that `src/lib.rs` here is doc comments and six `pub mod` lines — no
+        function anywhere — so llvm-cov could not have instrumented it from that text. Excusing an
+        absent file for having no functions and accepting a PRESENT one with none is the asymmetry
+        that let this through.
+
+        **This closes that instance, not the shape.** A phantom landing under a function-bearing
+        file still passes: measured 2026-08-01, 1 024 phantom lines injected under `src/cli.rs`
+        into the real report were ACCEPTED and read 78.6%. Do not read a green run here as "the
+        denominator is sound"; read it as "no phantom arrived under a file with nothing to
+        instrument". The comment on the check in `scripts/coverage_report.py` records what closing
+        the shape would take and why two cheaper invariants were measured and rejected.
+        """
+        fake_crate(tmp_path, {"lib.rs": "pub mod wiring;\n", "wiring.rs": "pub fn one() {}\n"})
+
+        with pytest.raises(ValueError, match=r"no function.*src/lib\.rs"):
+            verify_report_measured_the_source_tree(
+                rust_report({"src/lib.rs", "src/wiring.rs"}, root=tmp_path), RUST_REPORT_FORMAT, tmp_path
             )
 
 
