@@ -14,9 +14,25 @@ name: Build artifacts
 # writable, and there is no `id-token`, so no OIDC exchange is available to a step that tried. The
 # publishing task owns the irreversible half and will add a publish job of its own.
 #
-# Manual dispatch, plus `push:` with NO path filter. `workflow_dispatch` alone is not enough:
-# GitHub reads the dispatch definition from the default branch, so on a feature branch that adds
-# this file manual dispatch is not available at all.
+# # Two axes, decided separately: the BRANCH axis is filtered, the PATH axis is not
+#
+# `workflow_dispatch` alone is not enough: GitHub reads the dispatch definition from the default
+# branch, so on a feature branch that adds this file manual dispatch is not available at all.
+#
+# THE BRANCH AXIS IS NARROWED TO `main`, `v*` AND PULL REQUESTS, and that is a change from the bare
+# `push:` this file used to carry. Measured over the `v0.4.6` cycle: **six** full artifact matrices,
+# of which at most two were load-bearing — roughly 204 of the cycle's 226 billed minutes rebuilding
+# trees that were already built or were never released. The cause is the branch axis, not the path
+# axis: GitHub delivers a branch-CREATION push for every release-plz branch, so the base tip is
+# rebuilt before the release commit even exists, and then again on the next release-pr run.
+#
+# `pull_request` is the deliberate preflight, and what it grades is named rather than assumed: it
+# checks out `refs/pull/N/merge`, i.e. the MERGE tree, which is what `ci.yml` tests and NOT
+# necessarily the tree that gets tagged (for `v0.4.6` those were `3a1f67f` and `5d0ceef`). The
+# authoritative full matrix is the one on the `v*` tag; the release-plz PR is the earlier warning.
+# The alternative — `push: branches: ['release-plz-**']`, which would grade the release-commit tree
+# — was rejected because a `push:` branch pattern also matches the branch-CREATION event, so it
+# re-creates the exact duplicate this filter exists to delete.
 #
 # THE `paths:` FILTER WAS REMOVED, AND ITS REMOVAL IS THE FIX. It listed five files —
 # `Cargo.toml`, `pyproject.toml`, this workflow, and the two scripts — under a header claiming those
@@ -57,15 +73,24 @@ name: Build artifacts
 
 on:
   workflow_dispatch:
+  pull_request:
   push:
+    branches: [main]
+    tags: ['v*']
 
 permissions:
   contents: read
 
-# Keyed on the COMMIT, not the ref. This workflow runs on every push with no branch filter, so one
-# logical event can deliver two pushes to one new ref seconds apart — release-plz creates the branch
-# at the base tip and pushes the release commit. Keyed on the ref, the later run cancels the earlier
-# one, and on PR #37 that killed the release commit's build while the base tip's survived.
+# Keyed on the COMMIT, not the ref. One logical event used to deliver two pushes to one new ref
+# seconds apart — release-plz creates the branch at the base tip and pushes the release commit.
+# Keyed on the ref, the later run cancels the earlier one, and on PR #37 that killed the release
+# commit's build while the base tip's survived.
+#
+# The branch filter above now stops those release-branch pushes reaching this workflow at all, so
+# the event that armed PR #37's race no longer fires. THIS KEY STILL DOES NOT GO BACK TO
+# `github.ref`: keying on the commit is correct independently of which events are accepted — it
+# costs nothing, it still collapses duplicate events for one SHA (all `cancel-in-progress` was ever
+# wanted for), and reverting it would silently re-arm the race the day the trigger widens again.
 # Enforced by test_an_artifact_build_is_only_cancelled_by... in tests/unit/test_workflow_contracts.py.
 concurrency:
   group: ${{ github.workflow }}-${{ github.sha }}
@@ -213,10 +238,39 @@ jobs:
             dist
             dist-from-sdist
 
+  # THE THREE WHEEL LEGS RUN ON THE EVENTS THAT PRECEDE A TAG, NOT ON EVERY PULL REQUEST.
+  #
+  # Measured cost of running them everywhere, per PR: sdist 3 + linux 3 + macos 20 (the x10
+  # private-repo multiplier) + windows 6 = 32 billed minutes, of which the three wheel legs are 29.
+  # An ordinary PR keeps the `sdist` job, which is the leg that grades the README transform, the
+  # archive contents and the offline-sdist behaviour — the checks a code change can actually break.
+  #
+  # A cross-platform break is still caught BEFORE the tag and before any publish, because the
+  # release-plz PR runs the full matrix. The tag then runs it again on the tree that is really
+  # released. Nothing is removed from the TAG matrix; each leg there is the only smoke test of the
+  # operating system its wheel tag claims.
+  #
+  # THIS IS AN EVENT CONDITION, NOT A PATH ONE, and the distinction is the whole point. A path
+  # filter would skip the wheels on a README-only change — precisely the change able to break the
+  # transformer that rewrites the description PyPI renders. An event condition cannot be wrong about
+  # which files matter, because it never asks.
+  #
+  # `github.head_ref` is set only on `pull_request`, and `startsWith` on the empty string is false,
+  # so the release-plz clause cannot leak into a push event.
+  #
+  # CONSEQUENCE THAT MUST NOT BE FORGOTTEN WHEN BRANCH PROTECTION IS TURNED ON: these three legs are
+  # now SKIPPED on an ordinary PR, and a skipped check does not satisfy a required status check — it
+  # stays pending forever. `wheel linux-x86_64`, `wheel macos-arm64` and `wheel windows-x86_64` must
+  # therefore never be registered as required checks. The required name is `CI / ci-required`, which
+  # lives in `ci.yml` and carries no condition on any of its work jobs.
   wheels:
     name: wheel ${{ matrix.platform.name }}
     runs-on: ${{ matrix.platform.runner }}
     timeout-minutes: 30
+    if: >-
+      github.event_name == 'workflow_dispatch'
+      || startsWith(github.ref, 'refs/tags/v')
+      || startsWith(github.head_ref, 'release-plz-')
     strategy:
       # `fail-fast: false` so one red platform still leaves the other two measured. AC4's rule is
       # "an artifact that could not be smoked is excluded from the matrix", and deciding that needs

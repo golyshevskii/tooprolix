@@ -1,0 +1,32 @@
+# EVERY JOB THAT MUST HAVE CONCLUDED `success` AT A `v*` TAG BEFORE ANYTHING IS PUBLISHED.
+#
+# This file is the EXPECTATION, pinned where shrinking it is a reviewable diff instead of a silent
+# behaviour change. `scripts/check_tag_jobs.py` compares it to a tag run's jobs by SET EQUALITY —
+# never "contains" — so a job that disappears from CI fails as loudly as a job that goes red, and a
+# job that appears from nowhere fails too. The comparison is refused outright when this list is
+# empty: an expectation of nothing is satisfied by nothing, which is the vacuous-guard hole that a
+# populated-set test cannot detect.
+#
+# The names are the `.name` values the Actions API reports, not the YAML job ids — for a matrix job
+# those differ, and the API is what the check reads.
+#
+#   gh api repos/golyshevskii/tooprolix/actions/runs/<id>/jobs --paginate > ci.json
+#   python scripts/check_tag_jobs.py ci.json artifacts.json
+#
+# Two workflows fire on a `v*` tag: `CI` (.github/workflows/ci.yml) and
+# `Build artifacts` (.github/workflows/build-artifacts.yml). `Release-plz` does not — it triggers on
+# pushes to `main` only — and `release contract` does not, being `pull_request_target`.
+#
+# `coverage` is listed even though it is NOT a required status check. Set equality is the point: it
+# runs at the tag, so leaving it out would make an otherwise complete run fail. Required-check
+# membership is decided by `ci-required`'s `needs:`, not by this file.
+
+ci-python
+ci-rust
+cargo-doc
+coverage
+ci-required
+sdist (+ the wheel built from it)
+wheel linux-x86_64
+wheel macos-arm64
+wheel windows-x86_64
