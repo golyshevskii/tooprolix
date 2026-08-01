@@ -4,14 +4,15 @@ Guards for `corpus/sample_clusters.py`, the sampling rule.
 Precision over a hand-annotated sample of `TPX003` findings is worth only as much as HOW the sample
 is drawn. Three ways of drawing it were measured to be worthless, and this file is one test per way:
 
-  1. **Sampling the whole pool measures a tautology.** 398 of the corpus's 646 clusters have every
+  1. **Sampling the whole pool measures a tautology.** 456 of the corpus's 619 clusters have every
      edge at similarity 1.0 — definitionally identical text. Asking "should one of these copies be
      merged" of identical text is not a question about the detector, and the 0.75 near threshold
      the detector was tuned around never enters the answer. The blocking number is precision over
      NEAR clusters only, so an exact cluster must never reach the sample **by default**.
 
      The anti-false-positive gate is the exception: it measures a *false-positive* share, not
-     precision, and its population includes exact clusters — at `v0.4.0` they are 457 of 617. So
+     precision, and its population includes exact clusters — measured 2026-08-01 they are 456 of
+     619. So
      the exact population is reachable, but only when asked for by name.
      `TestTheExactPopulationIsReachable` below pins that it is opt-in, that the near default above
      is untouched, and that an unrecognised population is fatal rather than silently near.
@@ -145,7 +146,8 @@ class TestTheSampleHasAFloor:
     def test_a_sample_below_the_floor_is_fatal(self) -> None:
         """
         Pools smaller than `--per-repo` shrink the sample silently, and AC1's "≥ 20" then lives only
-        in prose. Moot at today's 224 near clusters — which is exactly when it is cheap to add.
+        in prose. Moot at the 163 near clusters measured 2026-08-01 — which is exactly when it is
+        cheap to add.
         """
         pools = {"one": sample_clusters.tpx003_clusters("one", {"findings": [finding("a.py", 1, 0.8)]})}
         with pytest.raises(sample_clusters.SampleTooSmall, match="1"):
@@ -166,9 +168,9 @@ class TestTheExactPopulationIsReachable:
     AC8 of `close-anti-fp-gate-with-public-reference`: the gate's population **includes exact
     clusters**, and its false-positive share is reported near/exact separately and combined.
 
-    Measured on `corpus/runs/` at `v0.4.0`: **exact is 457 of 617 clusters**, and no number this
-    epic owns — 0.867, 0.750, the 0.667–0.867 band — was ever drawn from one. A sampler that can
-    only reach the near 160 makes the majority of what a user actually sees unmeasurable, so
+    Measured 2026-08-01 on `corpus/runs/` at `7757b20`: **exact is 456 of 619 clusters**, and no
+    number this epic owns — 0.867, 0.750, the 0.667–0.867 band — was ever drawn from one. A sampler
+    that can only reach the near 163 makes the majority of what a user actually sees unmeasurable, so
     "exact is unreachable" is a defect of the measuring instrument, not a property of the corpus.
 
     The near-only default of §1 stands and is asserted above: it is AC1's population, and it is a
