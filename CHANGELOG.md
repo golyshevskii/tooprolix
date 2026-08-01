@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.5](https://github.com/golyshevskii/tooprolix/compare/v0.4.4...v0.4.5) - 2026-08-01
+
+### Other
+
+- trim docs and contributing prose to claims that are pinned or dated ([#42](https://github.com/golyshevskii/tooprolix/pull/42))
+
 ## [0.4.4](https://github.com/golyshevskii/tooprolix/compare/v0.4.3...v0.4.4) - 2026-07-31
 
 ### Other
