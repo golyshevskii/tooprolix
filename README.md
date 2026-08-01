@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/tooprolix.gif" width="128" height="128" alt="Animated tooprolix cube artifact">
+  <img src="assets/tooprolix.gif" width="92" height="92" alt="Animated tooprolix cube artifact">
 </p>
 
 <h1 align="center">tooprolix</h1>
@@ -11,18 +11,25 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/golyshevskii/tooprolix/actions/workflows/ci.yml"><img src="https://github.com/golyshevskii/tooprolix/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-12130f.svg" alt="MIT license"></a>
-  <img src="https://img.shields.io/badge/status-pre--release-f5c2c8.svg?labelColor=12130f" alt="Pre-release">
-  <img src="https://img.shields.io/badge/Rust-powered-12130f.svg?logo=rust&logoColor=e4dfda" alt="Powered by Rust">
+  <img src="https://img.shields.io/badge/status-pre--release-CCCCCC.svg?labelColor=12130f" alt="Pre-release">
+  <img src="https://img.shields.io/badge/Rust-powered-CCCCCC.svg?logo=rust&labelColor=12130f" alt="Powered by Rust">
+  <img src="https://img.shields.io/badge/Python->=3.11-CCCCCC.svg?logo=python&labelColor=12130f" alt="Python">
 </p>
 
 Coding agents over-explain. Comments grow into essays, docstrings restate the code, and the same
 rationale quietly spreads across five files. `tooprolix` turns that into `TPX` diagnostics you can
-act on — it reads only comments and docstrings, never rewrites your **why**, and leaves the call to
+act on. It reads only comments and docstrings, never rewrites your **why**, and leaves the call to
 you.
 
 ## Quick start
+
+Install `tooprolix` with [**uv**](https://docs.astral.sh/uv/):
+
+```console
+$ uv add tooprolix
+```
+
+Then:
 
 ```console
 $ tooprolix check .
@@ -40,7 +47,7 @@ All checks passed!
 ```
 
 Exit codes are the contract: `0` clean, `1` findings, `2` could not start. A tree that was not read
-whole **never** exits 0 — see the [CLI contract](docs/cli-contract.md).
+whole **never** exits 0. See the [CLI contract](docs/cli-contract.md).
 
 ## Rules at a glance
 
@@ -67,7 +74,7 @@ Several codes, blanket suppression, and repository-wide config live in
 
 ## Validation
 
-Rules are exercised on six pinned real repositories — agent frameworks and mature libraries — not
+Rules are exercised on six pinned real repositories agent frameworks and mature libraries not
 only synthetic fixtures. Every threshold is read off that corpus rather than chosen by taste, and
 critical guards are mutation-proved: a test that stays green when its guarantee is broken is deleted,
 not kept for the count.
@@ -80,9 +87,6 @@ Publication is still gated by labelled-corpus validation. See
 - **Repository-wide.** It finds one explanation repeated across otherwise unrelated files.
 - **Deterministic.** The same source produces the same ordered findings, byte for byte.
 - **Local.** No model calls, no network, no probabilistic output.
-
-Ruff checks Python code; `tooprolix` checks the prose beside it, using
-[Ruff](https://github.com/astral-sh/ruff)'s parser as its syntax foundation.
 
 ## Documentation
 
