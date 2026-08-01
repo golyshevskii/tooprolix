@@ -368,13 +368,20 @@ def _the_extractor() -> Any:
     Return the `tooprolix` extractor to measure through — and no honest one can exist here.
 
     # Raises
-    `ModuleNotFoundError` on a clean machine, which is this script's real condition.
-    `StaleExtensionError` if the name resolves at all, naming what resolved.
+    `ModuleNotFoundError` **for this name** — the one outcome meaning nothing answered, and this
+    script's real condition on a clean machine. `StaleExtensionError` for every other outcome,
+    naming what answered: a module that imported, or one that started and then failed.
 
     The pyo3 boundary is gone: `pyproject.toml` ships `bindings = "bin"` and
     `scripts/install-smoke.sh` asserts that `import tooprolix` MUST raise. So anything that answers
     to this name is not the shipped extractor, and extracting through it scores code that is not
     what ships while printing the result as current.
+
+    **An import ends in more ways than "returned a module" and "nothing was there", and reading
+    only the first was a second fail-open.** Measured at `11511c5` through the real CLI: a stale
+    `tooprolix` whose init called `sys.exit(0)` ended the run at **exit 0 with zero bytes of
+    output** — worse than the original defect, because it reads as success — and one whose init
+    raised `ImportError` (the realistic ABI mismatch) produced a raw traceback.
 
     **The import is performed, not predicted, and that is the whole design.** This asked
     `importlib.util.find_spec` first — a forecast of what an import *would* find — and then imported
@@ -388,14 +395,25 @@ def _the_extractor() -> Any:
     stale extension reproduces its own stale findings and reports "reproduced exactly". Pinned by
     `tests/unit/test_units.py::TestAStaleExtensionMayNotProduceNumbers`.
     """
-    # By name because a compiled extension's exports are invisible to a static checker; the
-    # boundary is typed `Any` here and nowhere else.
-    module: Any = importlib.import_module("tooprolix")
-    # `__file__` for a left-over build, `__path__` for a directory of this name on `sys.path` — the
-    # repository directory is itself called `tooprolix`, so a namespace package is a real way for
-    # this to resolve, and telling that reader to delete a `.so` sends them after a file that is
-    # not there. Report what actually resolved.
-    location = getattr(module, "__file__", None) or getattr(module, "__path__", None) or "<no location>"
+    try:
+        # By name because a compiled extension's exports are invisible to a static checker; the
+        # boundary is typed `Any` here and nowhere else.
+        module: Any = importlib.import_module("tooprolix")
+    except BaseException as error:
+        # `BaseException`, not `Exception`: a module whose init calls `sys.exit()` raises
+        # `SystemExit`, which is not an `Exception`, and that is exactly why such a run used to end
+        # at exit 0 with no output at all. The only outcome meaning NOTHING answered to this name
+        # is `ModuleNotFoundError` about this name — the same class raised for a dependency the
+        # left-over module itself imports, which is why the name is checked and not just the class.
+        if isinstance(error, ModuleNotFoundError) and error.name == "tooprolix":
+            raise
+        location = f"something that failed while initialising ({error!r})"
+    else:
+        # `__file__` for a left-over build, `__path__` for a directory of this name on `sys.path` —
+        # the repository directory is itself called `tooprolix`, so a namespace package is a real
+        # way for this to resolve, and telling that reader to delete a `.so` sends them after a
+        # file that is not there. Report what actually resolved.
+        location = getattr(module, "__file__", None) or getattr(module, "__path__", None) or "<no location>"
     raise StaleExtensionError(
         f"`import tooprolix` resolved to {location}, and this repository ships no such module "
         '(`bindings = "bin"`; install-smoke.sh asserts the import raises). Whatever answered is not '

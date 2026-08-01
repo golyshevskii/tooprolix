@@ -47,9 +47,13 @@ def words(count: int, *, first: str = "w") -> str:
     return " ".join(f"{first}{index}" for index in range(count))
 
 
-def run_all_table() -> dict[str, tuple[str, int]]:
+def run_all_table(script: str | None = None) -> dict[str, tuple[str, int]]:
     """
     Return `{run: (walk root, walked .py files)}` parsed out of `corpus/run_all.sh`.
+
+    `script` defaults to the real file and exists so the parser's own failure modes can be fed
+    input the repository does not contain — a parser that is only ever run on data that happens to
+    be well formed is a parser whose error handling nothing has executed.
 
     `run_all.sh` is the only place that verifies the pins, the worktrees and the walked counts, so
     it is the independent source of truth for both users below: the drift assertion, and the
@@ -64,15 +68,20 @@ def run_all_table() -> dict[str, tuple[str, int]]:
     nothing, which is what each caller's `assert table` is for. A parser that quietly matched zero
     rows would turn both checks into no-ops.
     """
-    script = (Path(__file__).resolve().parents[2] / "corpus/run_all.sh").read_text()
-    return {
-        row[0]: (row[1], int(row[4]))
-        for row in (
-            line.strip().strip('"').split("|")
-            for line in script.splitlines()
-            if line.strip().startswith('"') and line.count("|") == 10
-        )
-    }
+    if script is None:
+        script = (Path(__file__).resolve().parents[2] / "corpus/run_all.sh").read_text()
+    rows = [
+        line.strip().strip('"').split("|")
+        for line in script.splitlines()
+        if line.strip().startswith('"') and line.count("|") == 10
+    ]
+    # A dict keeps the last write, so two rows for one run would collapse into whichever came last
+    # and every caller would agree with it. This parser feeds both guards below, so a silent
+    # collapse here disables both at once.
+    names = [row[0] for row in rows]
+    repeated = sorted({name for name in names if names.count(name) > 1})
+    assert not repeated, f"run_all.sh records these runs twice: {', '.join(repeated)}"
+    return {row[0]: (row[1], int(row[4])) for row in rows}
 
 
 class TestEqualAlertVolume:
@@ -225,6 +234,44 @@ class TestOneOwnerForTheRunTable:
             assert table[name] == (root, files), f"units.RUNS disagrees with run_all.sh for {name}"
         for name, root in bench.ROOTS:
             assert table[name][0] == root, f"bench.ROOTS disagrees with run_all.sh for {name}"
+
+    def test_a_duplicated_row_is_refused_rather_than_collapsed(self) -> None:
+        """
+        The parser feeds both guards, so a silent collapse there disables both at once.
+
+        `run_all_table` returns a dict keyed by run name, and a dict quietly keeps the last write.
+        Measured 2026-08-01 at `11511c5`: eight parsed rows became **seven** keys, so a run_all.sh
+        that recorded one run twice — with two different roots or two different counts — would be
+        graded against whichever copy came last, and every check below would agree with it.
+        """
+        script = (Path(__file__).resolve().parents[2] / "corpus/run_all.sh").read_text()
+        rows = [line for line in script.splitlines() if line.strip().startswith('"') and line.count("|") == 10]
+
+        with pytest.raises(AssertionError, match="twice"):
+            run_all_table("\n".join([*rows, rows[0]]))
+
+    def test_every_run_all_sh_row_is_benchmarked_or_excluded_on_the_record(self) -> None:
+        """
+        `bench.ROOTS` is guarded the same way `units.RUNS` now is — by name set, not by iteration.
+
+        This is round 1's finding one constant over, and it is why a second review round was needed:
+        the check beside this one iterates `bench.ROOTS`, so a row's **absence** from it is
+        invisible. Measured 2026-08-01 at `11511c5`: deleting the `pydantic` row from `bench.ROOTS`
+        left **327 passed, exit 0**, while `bench.main` would benchmark five roots instead of six
+        and drop a published research subject in silence. A guard that iterates the collection it
+        is guarding can never see a missing member.
+
+        `crewAI-full` is excluded here for the same recorded reason it is excluded from the AC1b
+        population: it is the same checkout as `crewAI` at a root that cannot be measured at all,
+        exiting **2**, while `bench.EXPECT_EXIT` is **1**. One owner for that exclusion —
+        `units.EXCLUDED_RUNS` — rather than a second list that could drift from it.
+        """
+        import bench
+
+        table = run_all_table()
+        assert table, "the EXPECTED table in run_all.sh could not be parsed"
+
+        assert {name for name, _ in bench.ROOTS} == set(table) - units.EXCLUDED_RUNS
 
     def test_every_run_all_sh_row_is_either_measured_or_excluded_on_the_record(self) -> None:
         """
@@ -477,6 +524,62 @@ class TestAStaleExtensionMayNotProduceNumbers:
         captured = capsys.readouterr()
         assert "/stale/tooprolix.so" in captured.err
         assert captured.out == "", "a table was printed for a run that never loaded a block"
+
+    @pytest.mark.parametrize(
+        ("body", "why"),
+        [
+            ("import sys\nsys.exit(0)\n", "SystemExit is not an Exception, so this exited 0 in silence"),
+            ('raise ImportError("dynamic module does not define module export function")\n', "the ABI mismatch"),
+            ('raise RuntimeError("libpython not found")\n', "any other init failure"),
+        ],
+    )
+    def test_a_module_that_fails_while_initialising_is_still_something_that_answered(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, body: str, why: str
+    ) -> None:
+        """
+        An import ends in more ways than "returned a module" and "nothing was there".
+
+        The refusal read only the *success* outcome, so an import that started and then died was
+        neither refused nor honest. Measured 2026-08-01 at `11511c5` through the real CLI:
+
+            stale tooprolix.py whose init calls sys.exit(0) -> EXIT=0 and ZERO bytes of output
+            stale tooprolix.py whose init raises ImportError -> EXIT=1 and a raw traceback
+
+        **Exit 0 with no output on a run that measured nothing is worse than the fail-open this
+        guard was written to close**, because it reads as success. `ModuleNotFoundError` for this
+        name is the one outcome meaning nothing answered; every other outcome — including
+        `SystemExit`, which is not an `Exception` and is exactly why the first case was silent —
+        means something did.
+        """
+        site = tmp_path / "site"
+        site.mkdir()
+        (site / "tooprolix.py").write_text(body, encoding="utf-8")
+        monkeypatch.syspath_prepend(str(site))
+        runs = tmp_path / "runs"
+        runs.mkdir()
+
+        with pytest.raises(units.StaleExtensionError, match="failed while initialising"):
+            units.load_blocks(tmp_path, runs)
+
+    def test_a_missing_dependency_of_a_stale_module_is_not_read_as_a_clean_machine(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """
+        `ModuleNotFoundError` only means "nothing answered" when it is about **this** name.
+
+        A left-over extension importing a dependency that is no longer installed raises
+        `ModuleNotFoundError` too — for the dependency. Reading the class alone would file that as
+        a clean machine and print the message for one, sending the reader to look for nothing.
+        """
+        site = tmp_path / "site"
+        site.mkdir()
+        (site / "tooprolix.py").write_text("import a_dependency_that_is_not_installed\n", encoding="utf-8")
+        monkeypatch.syspath_prepend(str(site))
+        runs = tmp_path / "runs"
+        runs.mkdir()
+
+        with pytest.raises(units.StaleExtensionError, match="a_dependency_that_is_not_installed"):
+            units.load_blocks(tmp_path, runs)
 
     def test_with_no_extension_present_the_honest_failure_survives(self, tmp_path: Path) -> None:
         """

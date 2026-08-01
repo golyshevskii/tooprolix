@@ -271,8 +271,13 @@ def _absolute(address: str, root: Path) -> str:
     if not target.is_file():
         # Say which of the two things `is_file()` ruled out. Calling a directory "missing" — which
         # is what this said first — asserts a fact the check never determined, and sends a reader
-        # after a path that is right there. A checkout holds regular files, directories and
-        # symlinks to them, so these two words cover every input that can reach here.
+        # after a path that is right there.
+        #
+        # The two words are exhaustive over what `root` can be here, not over the filesystem: this
+        # runs with `root` = the directory holding the README, i.e. a git checkout, and git tracks
+        # regular files, directories and symlinks to them. A character device would be reported as
+        # "missing", which is why the claim is bounded rather than absolute — no branch is added
+        # for a file type this repository cannot contain.
         found = "a directory" if target.is_dir() else "missing"
         message = f"README address {address!r} names no file in the repository ({target} is {found})"
         raise ReadmeNotInExpectedFormatError(message)
