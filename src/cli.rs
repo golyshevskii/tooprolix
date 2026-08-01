@@ -594,11 +594,7 @@ pub fn execute<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<ExitSta
         eprintln!(
             "warning: every rule ({}) is disabled by `ignore` in {}; this run cannot report a \
              finding",
-            Rule::ALL
-                .iter()
-                .map(|rule| rule.code())
-                .collect::<Vec<_>>()
-                .join(", "),
+            rules::shipping_codes(),
             config.source.as_ref().map_or_else(
                 || "the configuration".to_owned(),
                 |p| p.display().to_string()
@@ -1413,18 +1409,11 @@ pub fn findings(sources: Vec<Source>, config: &Config) -> Vec<Finding> {
 
 #[cfg(test)]
 mod tests {
-    use super::{
-        Format, Invocation, Source, findings, parse, python_files, reader_stopped_reading,
-        use_colour,
-    };
-    use crate::config::Config;
+    use super::*;
     use crate::detect::volume::Limits;
     use crate::extract::extract;
-    use crate::rules::{Rule, parse_marker};
-    use std::ffi::{OsStr, OsString};
-    use std::path::{Path, PathBuf};
 
-    fn command(arguments: &[&str]) -> Result<Invocation, super::Error> {
+    fn command(arguments: &[&str]) -> Result<Invocation, Error> {
         parse(arguments.iter().copied().map(OsString::from))
     }
 
@@ -1459,7 +1448,7 @@ mod tests {
             (ErrorKind::PermissionDenied, false, "a refused redirect"),
             (ErrorKind::Other, false, "an unclassified io failure"),
         ] {
-            let error = super::Error::Output(std::io::Error::new(kind, "measured"));
+            let error = Error::Output(std::io::Error::new(kind, "measured"));
 
             assert_eq!(
                 reader_stopped_reading(&error),
@@ -1469,7 +1458,7 @@ mod tests {
         }
 
         assert!(
-            !reader_stopped_reading(&super::Error::Walk {
+            !reader_stopped_reading(&Error::Walk {
                 path: PathBuf::from("."),
                 message: "measured".to_owned(),
             }),

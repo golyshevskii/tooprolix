@@ -497,11 +497,15 @@ mod tests {
         let under_relaxed = volume(&blocks, relaxed);
 
         // Assert
-        assert_eq!(under_strict.overruns.len(), 1, "a raised limit was ignored");
+        assert_eq!(
+            under_strict.overruns.len(),
+            1,
+            "a lowered limit was ignored"
+        );
         assert_eq!(under_strict.overruns[0].max_volume, 100);
         assert!(
             under_relaxed.overruns.is_empty(),
-            "a lowered limit was ignored: {:?}",
+            "a raised limit was ignored: {:?}",
             under_relaxed.overruns
         );
     }

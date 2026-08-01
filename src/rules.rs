@@ -167,9 +167,9 @@ pub enum Rule {
 impl Rule {
     /// Every rule that ships, in code order.
     ///
-    /// The single owner of "which codes exist": [`Self::from_code`] and the "everything is ignored"
-    /// diagnostic both read it, so a fourth rule is one line here rather than three edits that can
-    /// disagree.
+    /// The single owner of "which codes exist": [`Self::from_code`],
+    /// [`crate::config::Config::ignores_everything`] and the private `shipping_codes` below all
+    /// read it, so a fourth rule is one line here rather than several edits that can disagree.
     pub const ALL: [Self; 3] = [
         Self::CommentVolume,
         Self::DocstringVolume,
@@ -208,6 +208,20 @@ impl Rule {
             ProseKind::Docstring => Self::DocstringVolume,
         }
     }
+}
+
+/// Every shipping code, comma separated, for a diagnostic that has to list them.
+///
+/// One owner for what were two spellings of the same fold: [`crate::config`]'s `ignore` rejection
+/// ("shipping rules: …") and [`crate::cli`]'s everything-is-disabled warning. Nothing pinned the
+/// two together — only the second one's list is asserted anywhere — so the first could have drifted
+/// to a different separator with every test green.
+pub(crate) fn shipping_codes() -> String {
+    Rule::ALL
+        .iter()
+        .map(|rule| rule.code())
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 
 /// One row of the catalogue `tooprolix --rules` prints and `--help` embeds.
@@ -654,8 +668,7 @@ fn is_legacy_marker(body: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{CATALOGUE, Rule, parse_marker};
-    use crate::extract::ProseKind;
+    use super::*;
 
     /// The code namespace is a published contract: a rename after 0.1.0 breaks the text output, the
     /// JSON schema and every marker a user has written. Pinning the strings here makes that a red
@@ -833,7 +846,7 @@ mod tests {
     #[test]
     fn squashed_codes_are_not_silently_recovered() {
         assert_eq!(parse_marker("# !TPX001TPX002"), None);
-        assert!(super::is_near_miss("# !TPX001TPX002"));
+        assert!(is_near_miss("# !TPX001TPX002"));
     }
 
     /// Lines that are near-misses must not be markers, or a comment about the tool would silence
@@ -1231,7 +1244,7 @@ mod tests {
                 "prose in somebody else's namespace was read as a marker: {line:?}"
             );
             assert!(
-                !super::is_near_miss(line),
+                !is_near_miss(line),
                 "prose in somebody else's namespace was reported as a near-miss: {line:?}"
             );
         }
@@ -1261,7 +1274,7 @@ mod tests {
             "# !tp",
         ] {
             assert!(
-                super::is_near_miss(line),
+                is_near_miss(line),
                 "a directive aimed at our namespace went unreported: {line:?}"
             );
             assert_eq!(
@@ -1284,7 +1297,7 @@ mod tests {
             "# tooprolix : NOQA",
             "# tooprolix:  noqa  # deliberate",
         ] {
-            assert!(super::is_near_miss(line), "went unreported: {line:?}");
+            assert!(is_near_miss(line), "went unreported: {line:?}");
         }
 
         for line in [
@@ -1295,7 +1308,7 @@ mod tests {
             "# noqa: F401",
         ] {
             assert!(
-                !super::is_near_miss(line),
+                !is_near_miss(line),
                 "prose about the tool was reported as a legacy marker: {line:?}"
             );
         }
@@ -1317,7 +1330,7 @@ mod tests {
 
         assert!(parse_marker("\u{feff}# !TPX*").is_some_and(|m| m.silences(Rule::CommentVolume)));
         assert!(
-            super::is_near_miss("\u{feff}# tooprolix: noqa TPX002"),
+            is_near_miss("\u{feff}# tooprolix: noqa TPX002"),
             "a BOM hid a near-miss as well"
         );
         // ... and a BOM does not turn a shebang into one, which is the pair to the rule above.
@@ -1365,7 +1378,7 @@ mod tests {
             "\u{feff}# tooprolix: noqa TPX002",
             "\u{feff}# TPX002",
         ] {
-            assert!(super::is_near_miss(line), "went unreported: {line:?}");
+            assert!(is_near_miss(line), "went unreported: {line:?}");
         }
 
         for line in [
@@ -1404,7 +1417,7 @@ mod tests {
             "value = 1",
             "",
         ] {
-            assert!(!super::is_near_miss(line), "falsely reported: {line:?}");
+            assert!(!is_near_miss(line), "falsely reported: {line:?}");
         }
     }
 }
