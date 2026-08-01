@@ -13,9 +13,11 @@ Run: make test
 from __future__ import annotations
 
 import json
+import shlex
 from pathlib import Path
 from typing import Any
 
+import check_tag_jobs
 import pytest
 from check_tag_jobs import main
 
@@ -144,7 +146,7 @@ def test_an_expected_job_that_never_ran_blocks_publication(tmp_path: Path) -> No
 
 def test_an_empty_expectation_blocks_publication(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     """
-    🔴 The vacuous-guard hole, and it needs its own test because a populated-set mutation cannot
+    The vacuous-guard hole, and it needs its own test because a populated-set mutation cannot
     reach it: shrink the tag workflow and the manifest to nothing TOGETHER and a set-equality check
     passes having verified that no jobs equal no jobs.
 
@@ -288,7 +290,25 @@ def test_a_tag_sha_that_is_not_a_full_commit_is_refused(
     assert "--tag-sha" in capsys.readouterr().err
 
 
-def test_a_missing_manifest_blocks_publication(tmp_path: Path) -> None:
+def test_the_documented_runbook_command_parses(tmp_path: Path) -> None:
+    """
+    The docstring IS the publication runbook, so it has to be executable, not illustrative.
+
+    Measured before `--tag-name` was added to it: running the documented line gave
+    `error: the following arguments are required: --tag-name`, exit 2. This parses the command out
+    of the module docstring and runs it, so the two cannot drift apart again. The `$(…)` token is
+    substituted with a real SHA because this test is about the ARGUMENT LIST, not about git; the
+    assertion is that argparse accepts it (a graded refusal, 1) rather than rejecting it (2).
+    """
+    documented = next(
+        line.strip() for line in (check_tag_jobs.__doc__ or "").splitlines() if "check_tag_jobs.py --" in line
+    )
+    argv = [
+        TAG_SHA if token.startswith("$(") else token
+        for token in shlex.split(documented.replace("$(git rev-parse v0.4.8^{commit})", "$(sha)"))
+    ][2:]
+
+    assert main(argv) == 1, "the documented command must be refused on its missing payloads, not on its arguments"
     """A guard that cannot find its expectation must refuse, not default to expecting nothing."""
     jobs = payload(tmp_path / "jobs.json", COMPLETE)
     assert (

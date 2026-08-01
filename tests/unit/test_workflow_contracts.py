@@ -187,6 +187,14 @@ def evaluate(expression: str, event_name: str, ref: str, head_ref: str) -> bool:
     # `if: >-` is a folded scalar, so the shipped value arrives with its newlines and indentation
     # intact. YAML folds them to single spaces; so does this.
     expression = " ".join(expression.split())
+
+    # `''` inside a single-quoted GitHub literal is ONE escaped apostrophe. The literal regex below
+    # reads it as two adjacent strings instead, which is a mistranslation — so it is refused rather
+    # than guessed at. Implementing the escape would be the other answer; no shipped expression uses
+    # one, and a loud refusal is the cheaper correct behaviour. Same rule as the whitelist: anything
+    # this cannot translate exactly must stop the test, never quietly produce an answer.
+    assert "''" not in expression, f"escaped apostrophes are not translated: {expression!r}"
+
     context = {"github.event_name": event_name, "github.ref": ref, "github.head_ref": head_ref}
     skeleton = re.sub(r"'[^']*'", "''", expression)
     used = set(re.findall(r"[A-Za-z_][\w.]*", skeleton))
@@ -194,7 +202,7 @@ def evaluate(expression: str, event_name: str, ref: str, head_ref: str) -> bool:
         f"expression uses {used - {'startsWith', *context}}, which is not translated"
     )
 
-    # 🔴 GITHUB COMPARES STRINGS CASE-INSENSITIVELY — `==`, `!=`, `startsWith`, `endsWith` and
+    # GITHUB COMPARES STRINGS CASE-INSENSITIVELY — `==`, `!=`, `startsWith`, `endsWith` and
     # `contains` all do. Python does not, and translating them to Python's operators made this
     # PERMISSIVELY wrong: `|| startsWith(github.ref, 'REFS/HEADS/MAIN')` runs the wheel matrix on
     # every push to `main` in real Actions, and every fixture below passed. A translator that errs
@@ -306,6 +314,17 @@ def test_the_wheel_matrix_is_gated_on_release_events_and_the_sdist_is_not_gated_
 
     gate = job_condition(build["wheels"])
     assert gate is not None, "the wheel matrix is ungated, so every ordinary PR pays for three wheel legs"
+
+
+def test_the_expression_translator_refuses_an_escaped_apostrophe() -> None:
+    """
+    `'it''s'` is ONE GitHub literal containing an apostrophe; the literal regex reads it as two.
+
+    A translator that mistranslates silently is the failure mode this whole function exists to
+    avoid, so the unsupported construct stops the test instead of producing a plausible answer.
+    """
+    with pytest.raises(AssertionError, match="escaped apostrophes"):
+        evaluate("startsWith(github.ref, 'it''s')", "push", "refs/tags/v0.4.8", "")
 
 
 def test_the_expression_translator_folds_case_on_the_context_too() -> None:
@@ -458,7 +477,7 @@ def test_the_shipped_aggregate_refuses_an_empty_needs_list() -> None:
 @pytest.mark.parametrize("workflow", [CI, BUILD_ARTIFACTS])
 def test_every_job_that_checks_out_proves_which_commit_it_graded(workflow: Path) -> None:
     """
-    🔴 The binding AC1 needs, and it has to reach the ARTIFACT workflow, which is where the
+    The binding AC1 needs, and it has to reach the ARTIFACT workflow, which is where the
     publishable binaries are built.
 
     Point `build-artifacts.yml`'s checkout at `ref: main` and every leg builds the wrong tree while
@@ -472,8 +491,14 @@ def test_every_job_that_checks_out_proves_which_commit_it_graded(workflow: Path)
     for name, job in jobs(uncommented(workflow)).items():
         if "actions/checkout@" not in job:
             continue
-        steps = re.findall(r"^ {6}- name: (.+)$", job, re.MULTILINE)
-        assert steps[-1] == COMMIT_ASSERTION_STEP, f"{name}'s last step is {steps[-1]!r}, so nothing binds its checkout"
+        # EVERY step, named or not. Matching `- name:` lines only made "last" mean "last NAMED",
+        # and a step written as a bare `- run: git checkout main` after the assertion is exactly the
+        # second-checkout window the assertion exists to close. Measured: with such a step appended,
+        # `ci-python`'s real last step was `{'run': 'git checkout main'}` and this test still passed.
+        steps = re.findall(r"^ {6}- (\S.*)$", job, re.MULTILINE)
+        assert steps[-1] == f"name: {COMMIT_ASSERTION_STEP}", (
+            f"{name}'s last step is {steps[-1]!r}, so something can run after its checkout is graded"
+        )
 
 
 def test_the_commit_assertion_is_one_script_and_not_six_drifting_copies() -> None:
@@ -695,7 +720,7 @@ def test_the_guard_reproduces_every_historical_release(tag: str, merge: str, hol
     )
 
 
-def a_merge_that_is_not_a_release(root: Path, *, manifest: str | None) -> Path:
+def a_merge_that_is_not_a_release(root: Path, *, manifest: str | None, release_manifest: str | None = None) -> Path:
     """
     Build the shape codex named: fork at A, `main` advances to B, land the PR as a merge commit.
 
@@ -721,6 +746,9 @@ def a_merge_that_is_not_a_release(root: Path, *, manifest: str | None) -> Path:
     git("commit", "-qm", "chore: base")
     git("checkout", "-qb", "feature")
     (repo / "feature.txt").write_text("feature\n", encoding="utf-8")
+    if release_manifest is not None:
+        # Makes the branch commit a genuine RELEASE commit: the package version really moves.
+        (repo / "Cargo.toml").write_text(release_manifest, encoding="utf-8")
     git("add", "-A")
     git("commit", "-qm", "feat: the feature this PR proposes")
     git("checkout", "-q", "main")
@@ -737,7 +765,7 @@ def a_merge_that_is_not_a_release(root: Path, *, manifest: str | None) -> Path:
 
 def test_a_non_release_merge_does_not_redden_main(tmp_path: Path) -> None:
     """
-    🔴 The guard must refuse RELEASES, not refuse MERGES.
+    The guard must refuse RELEASES, not refuse MERGES.
 
     Comparing unconditionally paints `main` red for every merge-commit PR forever, and release-plz
     would not have tagged anything on any of them. The release is identified from the version in
@@ -772,6 +800,36 @@ def test_a_merge_whose_package_version_cannot_be_read_is_refused(
 
     assert result.returncode != 0, f"{shape} passed:\n{result.stdout}{result.stderr}"
     assert "OK" not in result.stdout, result.stdout
+
+
+def test_an_ambiguous_package_version_is_refused(tmp_path: Path) -> None:
+    """
+    The fail-open the lexical read had: a decoy `version = "…"` above `[package]`.
+
+    The fixture is a GENUINE release — the package version moves 0.3.4 -> 0.4.0 and the tree is
+    stale — carrying a `[workspace.package]` table whose own version never changes. Reading the
+    first match graded 9.9.9 on both sides, concluded "not a release commit", and skipped the tree
+    comparison: measured, exit 0 with `OK: … leaves the package version at 9.9.9`.
+
+    Refusing beats picking a winner. There is no reading of an ambiguous manifest that is safe to
+    guess at, and this guard's whole job is to be the thing that does not guess.
+
+    🔴 THE DIAGNOSIS IS ASSERTED, NOT ONLY THE EXIT CODE, and an earlier version of this test that
+    checked only the exit code was carried by a neighbour: this fixture's tree is also stale, so
+    with the ambiguity refusal disabled the two multi-line version strings still differ, the guard
+    classifies it as a release, reaches the TREE comparison and exits 1 anyway. Measured — with
+    `if [ "$before_n" != "1" ] …` replaced by `if false`, the exit-code-only test reported
+    `1 passed`. The counts in the message are what only this guard can produce.
+    """
+    decoy = '[workspace.package]\nversion = "9.9.9"\n\n[package]\nname = "fixture"\nversion = "0.3.4"\n'
+    released = decoy.replace('version = "0.3.4"', 'version = "0.4.0"')
+
+    result = run_guard(a_merge_that_is_not_a_release(tmp_path, manifest=decoy, release_manifest=released))
+
+    assert result.returncode != 0, f"an ambiguous manifest passed:\n{result.stdout}{result.stderr}"
+    assert "OK" not in result.stdout, result.stdout
+    assert "exactly one top-of-line" in result.stderr, f"refused for some other reason:\n{result.stderr}"
+    assert "found 2 at" in result.stderr, f"the refusal did not report the ambiguity it found:\n{result.stderr}"
 
 
 def test_the_guard_fails_when_it_cannot_resolve_what_it_is_grading(tmp_path: Path) -> None:

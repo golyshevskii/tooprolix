@@ -156,10 +156,24 @@ jobs:
             exit 0
           fi
 
-          before=$(git show "$release^:Cargo.toml" | sed -n 's/^version = "\(.*\)"$/\1/p' | head -1)
-          after=$(git show "$release:Cargo.toml" | sed -n 's/^version = "\(.*\)"$/\1/p' | head -1)
-          if [ -z "$before" ] || [ -z "$after" ]; then
-            echo "FAIL: cannot read the package version around $release (before='$before' after='$after')." >&2
+          before=$(git show "$release^:Cargo.toml" | sed -n 's/^version = "\(.*\)"$/\1/p')
+          after=$(git show "$release:Cargo.toml" | sed -n 's/^version = "\(.*\)"$/\1/p')
+
+          # EXACTLY ONE `version = "…"` PER MANIFEST, OR REFUSE. This read is lexical, and `head -1`
+          # was a fail-open: add a `[workspace.package]` or a `[dependencies.x]` table with its own
+          # top-of-line `version = "…"` above `[package]` and it grades THAT one. It does not move
+          # between the two commits, so the detector concludes "no bump", classifies a genuine
+          # release as an ordinary merge, and skips the tree comparison altogether. Measured on a
+          # fixture: a real release with a stale tree and a decoy `version = "9.9.9"` printed
+          # `OK: … leaves the package version at 9.9.9` and exited 0.
+          #
+          # Zero matches is refused by the same test, which is what an inherited
+          # `version.workspace = true` looks like. Ambiguity is not a thing to pick a winner from.
+          before_n=$(printf '%s' "$before" | grep -c . || true)
+          after_n=$(printf '%s' "$after" | grep -c . || true)
+          if [ "$before_n" != "1" ] || [ "$after_n" != "1" ]; then
+            echo "FAIL: Cargo.toml must hold exactly one top-of-line 'version = \"…\"' for this check to" >&2
+            echo "      be unambiguous; found $before_n at $release^ and $after_n at $release." >&2
             exit 1
           fi
 

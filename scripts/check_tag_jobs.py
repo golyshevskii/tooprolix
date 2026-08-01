@@ -40,21 +40,28 @@ WHAT THIS CANNOT ESTABLISH, said plainly because the whole point is not to grade
     `git rev-parse HEAD == $GITHUB_SHA` after its gates have run. That assertion cannot be read from
     here — job outputs and step logs are not returned by this REST endpoint — which is exactly why
     it fails the job rather than reporting to anyone.
-  * **the run's EVENT is not in this payload.** `actions/runs/<id>/jobs` carries `workflow_name`,
-    `head_branch`, `head_sha`, `run_id` and `run_attempt`, but not `event` — that lives on
-    `actions/runs/<id>`. So a `workflow_dispatch` launched against the tag ref is indistinguishable
-    here from the tag push. It is a small residual: a dispatch at the tag ref runs the same workflow
-    files at the same commit, so it does the same work. Closing it means feeding this the run object
-    too, and that is the publication task's call.
+  * **the run's EVENT is not in this payload, and `workflow_name` is only a display label.**
+    `actions/runs/<id>/jobs` carries `workflow_name`, `head_branch`, `head_sha`, `run_id` and
+    `run_attempt`, but not `event` — that lives on `actions/runs/<id>`. Two consequences, both
+    accepted as residuals rather than closed here:
+      - a `workflow_dispatch` launched against the tag ref is indistinguishable from the tag push;
+      - a DECOY workflow file whose `name:` is `CI` or `Build artifacts`, dispatched at the tag,
+        satisfies both the section names and `head_branch`. `workflow_name` is what the workflow
+        calls itself, not which file ran.
+    Closing either means a second API call for the run object and grading its `event` and
+    `path`. That is the publication task's design problem, and it is recorded as such.
   * the payload is trusted to have come from `gh api`. This reads a file; it does not authenticate
     the API.
   * nothing here checks that the run executed the workflow file that is on the tag.
 
-Usage, once per tag, before anything is uploaded:
+Usage, once per tag, before anything is uploaded. The publication runbook copies this verbatim, so
+`test_the_documented_runbook_command_parses` executes the argument list parsed out of this docstring
+— an earlier revision of it omitted `--tag-name` and exited 2 on `error: the following arguments are
+required`, which is a defect rather than a typo when a runbook is the only reader:
 
     gh api repos/golyshevskii/tooprolix/actions/runs/<ci-run>/jobs --paginate > ci.json
     gh api repos/golyshevskii/tooprolix/actions/runs/<artifact-run>/jobs --paginate > artifacts.json
-    python scripts/check_tag_jobs.py --tag-sha "$(git rev-parse 'v0.4.8^{commit}')" ci.json artifacts.json
+    python scripts/check_tag_jobs.py --tag-sha $(git rev-parse v0.4.8^{commit}) --tag-name v0.4.8 ci.json artifacts.json
 """
 
 from __future__ import annotations
