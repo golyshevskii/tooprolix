@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.7](https://github.com/golyshevskii/tooprolix/compare/v0.4.6...v0.4.7) - 2026-08-01
+
+### Other
+
+- audit the Python surface and close three guards that could not fail ([#50](https://github.com/golyshevskii/tooprolix/pull/50))
+
 ## [0.4.6](https://github.com/golyshevskii/tooprolix/compare/v0.4.5...v0.4.6) - 2026-08-01
 
 ### Other
