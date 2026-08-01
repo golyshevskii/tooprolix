@@ -350,6 +350,29 @@ class TestAMissingRustFileIsOnlyExcusedWhenThereIsNothingToInstrument:
     one day gaining a function.
     """
 
+    @pytest.mark.parametrize(
+        "body",
+        [
+            # The shape the substring `"fn "` was written for.
+            "pub fn one() {}\n",
+            # Rustfmt would join these, but nothing normalises an ORPHANED file: it is outside the
+            # module tree, so `cargo fmt` does not walk it either. The file that most needs this
+            # check is therefore the file least likely to be formatted.
+            "pub fn\nrelease_gate() {}\n",
+            # A tab is whitespace to the compiler and is not the space in `"fn "`.
+            "pub fn\trelease_gate() {}\n",
+        ],
+        ids=["space", "newline", "tab"],
+    )
+    def test_the_separator_after_fn_is_any_whitespace(self, tmp_path: Path, body: str) -> None:
+        """`fn` is followed by whitespace, not by a space. `"fn "` missed two of these three."""
+        fake_crate(tmp_path, {"lib.rs": "pub fn go() {}\n", "orphan.rs": body})
+
+        with pytest.raises(ValueError, match=r"never measured.*src/orphan\.rs"):
+            verify_report_measured_the_source_tree(
+                rust_report({"src/lib.rs"}, root=tmp_path), RUST_REPORT_FORMAT, tmp_path
+            )
+
     def test_a_file_with_no_functions_may_be_absent(self, tmp_path: Path) -> None:
         fake_crate(tmp_path, {"lib.rs": "pub mod wiring;\npub fn go() {}\n", "wiring.rs": "pub mod a;\npub mod b;\n"})
         walked = measurable_source_files(tmp_path, RUST_REPORT_FORMAT)
@@ -382,10 +405,16 @@ class TestAMissingRustFileIsOnlyExcusedWhenThereIsNothingToInstrument:
         arrived under the filename `src/lib.rs`, which is a real path inside the source tree.
 
         What gave it away is that `src/lib.rs` here is doc comments and six `pub mod` lines — no
-        `fn ` anywhere — so llvm-cov could not have instrumented it from that text. Excusing an
+        function anywhere — so llvm-cov could not have instrumented it from that text. Excusing an
         absent file for having no functions and accepting a PRESENT one with none is the asymmetry
-        that let this through; the ceiling (a module whose functions arrive from a macro expansion)
-        is unchanged but now fails loudly in both directions instead of silently in one.
+        that let this through.
+
+        **This closes that instance, not the shape.** A phantom landing under a function-bearing
+        file still passes: measured 2026-08-01, 1 024 phantom lines injected under `src/cli.rs`
+        into the real report were ACCEPTED and read 78.6%. Do not read a green run here as "the
+        denominator is sound"; read it as "no phantom arrived under a file with nothing to
+        instrument". The comment on the check in `scripts/coverage_report.py` records what closing
+        the shape would take and why two cheaper invariants were measured and rejected.
         """
         fake_crate(tmp_path, {"lib.rs": "pub mod wiring;\n", "wiring.rs": "pub fn one() {}\n"})
 

@@ -36,6 +36,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from decimal import ROUND_DOWN, Decimal
 from pathlib import Path
 from typing import Any
@@ -100,8 +101,22 @@ def percent_from_report(report: Path, report_format: str) -> float:
 # archive and rewrites the README that goes to PyPI — and it was outside the denominator while
 # `corpus/`, which the Makefile calls throwaway research tooling, was the whole of it. Measured
 # 2026-08-01: the three scripts are 88% / 84% / 87% covered in-process by `tests/unit/`, so they are
-# attributable; the total moved 61.4% -> 65.7%. Pinned by
-# `test_the_release_scripts_are_in_the_denominator`.
+# attributable; the total moved 61.4% -> 65.7%.
+#
+# TWO enforcers, each catching a different edit. Both measured 2026-08-01 by making the edit; do
+# not name only one, and do not name the wrong one.
+#
+#   - narrow `[tool.coverage.run] source` back to `["corpus"]`, leave this list alone:
+#     `test_the_release_scripts_are_in_the_denominator` stays GREEN (23 passed) — it reads this
+#     list, not pyproject. `make py.cov` exits 2 from
+#     `verify_report_measured_the_source_tree`: "never measured 3 source file(s) that exist on
+#     disk: scripts/…".
+#   - narrow THIS list, leave pyproject alone: the test goes RED (1 failed, 22 passed), and
+#     `make py.cov` exits 2 as well — first because pytest runs that test, and independently
+#     because the script then rejects the report from the other side: "measured files outside the
+#     source tree: scripts/…".
+#
+# So the pair is what holds the denominator, and neither statement alone is the enforcer.
 _SOURCE_TREES: dict[str, tuple[tuple[str, ...], str, tuple[str, ...]]] = {
     RUST_REPORT_FORMAT: (("src",), ".rs", ()),
     PYTHON_REPORT_FORMAT: (("corpus", "scripts"), ".py", ("checkouts", "fixtures")),
@@ -161,13 +176,25 @@ def _measured_files(data: Any, report_format: str, repo_root: Path) -> set[str]:
 
 
 def _defines_functions(repo_root: Path, name: str) -> bool:
-    """
+    r"""
     Whether a source file's own text defines something `cargo llvm-cov` could have instrumented.
 
     One fact, used in both directions by `verify_report_measured_the_source_tree`: a file with no
-    `fn ` is legitimately absent from an llvm-cov report, and is illegitimately present in one.
+    function is legitimately absent from an llvm-cov report, and is illegitimately present in one.
+
+    `\bfn\s` rather than the literal `"fn "` this used to be. `pub fn\nrelease_gate() {}` and
+    `fn\trelease_gate()` are both valid Rust that the substring missed, and the direction that
+    matters is the excusing one: a file missed here is EXCUSED for being absent, so the substring
+    let an orphaned module leave the denominator in silence. Rustfmt would join those lines — but
+    an orphaned file is outside the module tree, so `cargo fmt` does not walk it either, and the
+    file most in need of this check is the one least likely to have been normalised.
+
+    Known ceiling, unchanged and deliberate: a module whose functions arrive from a macro expansion
+    has instrumentable code and no `fn` token of its own. It is not closed in code because no
+    `macro_rules!` or `#[proc_macro]` exists in `src/` (measured 2026-08-01), and a guard for a
+    defect that cannot occur is cost without cover. Both directions fail closed if one ever does.
     """
-    return "fn " in (repo_root / name).read_text(encoding="utf-8")
+    return re.search(r"\bfn\s", (repo_root / name).read_text(encoding="utf-8")) is not None
 
 
 def verify_report_measured_the_source_tree(data: Any, report_format: str, repo_root: Path) -> None:
@@ -196,16 +223,31 @@ def verify_report_measured_the_source_tree(data: Any, report_format: str, repo_r
     measured = _measured_files(data, report_format, repo_root)
 
     missing = expected - measured
-    # The same `fn ` fact read in the other direction, and it is the direction that cost 20 points.
-    # `cargo llvm-cov` hands `llvm-cov export` every object it finds in the target directory,
-    # including ones no current target produces: a `libtooprolix.dylib` from a removed pyo3 build
-    # survived here from 2026-07-29, carried a coverage mapping of an older source tree, and added
-    # 1 024 phantom lines at zero coverage under the real filename `src/lib.rs`. `make cov` printed
-    # 78.6% instead of the 98.2% the same profraw gives without it, exited 0, and nothing below
-    # noticed — the phantom is inside the source tree, so the `extra` check cannot see it, and
-    # `src/lib.rs` was not missing, so neither could the check after this one. Excusing an ABSENT
-    # file for having no functions while accepting a PRESENT one with none was the asymmetry. The
-    # ceiling is the same one named below and it is now fail-closed.
+    # The same function fact read in the other direction. It caught a real 20-point error and it is
+    # NOT a denominator-integrity guarantee — read the next paragraph before trusting it.
+    #
+    # What happened: `cargo llvm-cov` hands `llvm-cov export` the objects it finds in the target
+    # directory, including ones no current target produces. A `libtooprolix.dylib` from a removed
+    # pyo3 build survived from 2026-07-29, carried a coverage mapping of an older source tree, and
+    # added 1 024 phantom lines at zero coverage under the real filename `src/lib.rs`. `make cov`
+    # printed 78.6% instead of the 98.2% the same profraw gives without it, exited 0, and nothing
+    # noticed: the phantom is inside the source tree so the `extra` check cannot see it, and
+    # `src/lib.rs` was not missing so the check after this one could not either.
+    #
+    # WHAT THIS CATCHES: a phantom landing under a file whose text the compiler cannot have
+    # instrumented. WHAT IT DOES NOT CATCH: a phantom landing under any function-bearing file.
+    # Measured 2026-08-01 — 1 024 phantom lines injected under `src/cli.rs` into the real report:
+    # this function ACCEPTED it and the number read 78.6%, the same wrong figure. So 98.2% is
+    # trustworthy today partly because of which filename the stale object happened to carry.
+    #
+    # The shape — a denominator carrying records no current build produced — is not closed, and the
+    # two cheap invariants were measured and rejected rather than assumed: instrumented lines vs
+    # physical lines of the file (`src/cli.rs` is 1 883 physical against 716 instrumented, so the
+    # phantom fits underneath), and any line-NUMBER bound, which needs per-line `segments` that the
+    # `--summary-only` report the Makefile grades does not carry at all.
+    # ponytail: closing it means grading the report against the `-object` list `llvm-cov export`
+    # was given, cross-referenced with what cargo currently builds. That is a feature, not a guard;
+    # build it when a phantom lands under a function-bearing file, not before.
     if report_format == RUST_REPORT_FORMAT and (
         phantom := {name for name in measured & expected if not _defines_functions(repo_root, name)}
     ):

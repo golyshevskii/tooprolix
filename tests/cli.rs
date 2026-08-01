@@ -3225,6 +3225,12 @@ fn a_panic_in_a_release_build_stays_a_code_and_keeps_its_output() {
     // …and it leaves no coverage artifact in the repository root. Graded on the directory listing
     // rather than on anything the child reported about itself, and NOT deleted when it fires: a
     // guard that tidies away its own evidence turns a real leak into a green second run.
+    //
+    // Scope, so nothing reads more into a green run than it earns: ONE snapshot of ONE directory,
+    // taken inside a suite that runs in parallel. It proves the route traced above and nothing
+    // wider — a `tests/*.profraw`, or a root file written after this enumeration, passes it. The
+    // whole-tree postcondition is `CHECK_NO_PROFRAW` in the Makefile, which runs after
+    // `make rust.test` and `make cov` have finished.
     let leaked: Vec<PathBuf> = std::fs::read_dir(repository_root())
         .expect("the repository root is readable")
         .map(|entry| {
