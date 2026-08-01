@@ -37,6 +37,17 @@ COV_DIR ?= target/coverage
 # Measured 2026-08-01: `touch tests/default_planted_0_1.profraw` then `make rust.test` exited 0 and
 # said nothing, while `git status` showed the file untracked — `*.profraw` is deliberately NOT
 # gitignored, since `git status` noticing is the only reason the original leak was ever found.
+#
+# Wired into `rust.test`, `rust.cov` and `cov`. `rust.cov` needs it in its own right: cargo runs a
+# BUILD SCRIPT with cwd = the package root, so a `build-script-build` compiled under instrumentation
+# writes its profile next to Cargo.toml the moment a plain build re-runs it. Three such executables
+# were found in `target/release/build/tooprolix-*/` on 2026-08-01, all dated before the fix in
+# `tests/cli.rs` landed; cargo's fingerprint cannot see the instrumentation, so they are reused
+# until `cargo clean --release -p tooprolix` removes them.
+#
+# TWO LIMITS, stated rather than papered over. It is a postcondition, so make skips it whenever the
+# preceding command fails — a run that BOTH fails and leaks reports only the failure. And it is a
+# snapshot after the fact, not a watch: it says a profile is there, never which process wrote it.
 CHECK_NO_PROFRAW = @found=$$(find . -name '*.profraw' -not -path './target/*' -not -path './.git/*'); \
 	if [ -n "$$found" ]; then \
 		echo "error: an instrumented binary wrote an LLVM profile into the working tree:" >&2; \
@@ -242,6 +253,7 @@ rust.cov: ## Measure Rust line coverage and print it
 		--json --output-path $(COV_DIR)/llvm-cov.json
 	@$(UV) run --no-project python3 scripts/coverage_report.py \
 		--report $(COV_DIR)/llvm-cov.json --format llvm-cov
+	$(CHECK_NO_PROFRAW)
 
 py.cov: ## Measure Python coverage of corpus/ and scripts/ and print it
 	@mkdir -p $(COV_DIR)

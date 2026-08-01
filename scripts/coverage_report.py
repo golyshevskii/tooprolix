@@ -25,6 +25,16 @@ test still passing:
      refuses a report that measured less than the whole source tree, or measured it with branch
      coverage off, and nothing is printed when it does.
 
+**What is NOT refused, said here because this is the part that gets read first.** Everything above
+is about a report measuring LESS. A report can also measure MORE than the build produced: llvm-cov
+merges the coverage mappings of every object it is handed, including objects no current target
+builds, and the extra records arrive under real source filenames. That inflates the denominator and
+DEFLATES the percentage — it cost this repository 20 points on 2026-08-01 and nobody noticed for
+three days. Only one shape of it is rejected (a phantom under a file that defines no function); a
+phantom under a function-bearing file is accepted, measured. Denominator integrity is therefore
+partial, and the comment on that check in `verify_report_measured_the_source_tree` is the honest
+account of what closing it would take.
+
 Usage (this is the exact invocation in the Makefile's `rust.cov` recipe):
 
     python3 scripts/coverage_report.py --report target/coverage/llvm-cov.json --format llvm-cov
@@ -192,7 +202,22 @@ def _defines_functions(repo_root: Path, name: str) -> bool:
     Known ceiling, unchanged and deliberate: a module whose functions arrive from a macro expansion
     has instrumentable code and no `fn` token of its own. It is not closed in code because no
     `macro_rules!` or `#[proc_macro]` exists in `src/` (measured 2026-08-01), and a guard for a
-    defect that cannot occur is cost without cover. Both directions fail closed if one ever does.
+    defect that cannot occur is cost without cover.
+
+    **Neither direction handles that module correctly, and an earlier revision of this docstring
+    claimed both fail closed. That was false.** Measured 2026-08-01 on a file containing only
+    `make_fn!(release_gate);`, which returns False here:
+
+      - ABSENT from the report: EXCUSED, so it leaves the denominator in silence. Fail-OPEN, in the
+        exact direction the old sentence promised was closed.
+      - PRESENT in the report: rejected — but by the phantom check, whose message blames a stale
+        object. Fail-closed on the outcome, wrong on the cause, so a human debugging it is sent to
+        the target directory to look for something that is not there.
+
+    Lexical blindness is a separate and PRE-EXISTING property of any substring predicate: `fn ` in
+    a doc comment, a line comment or a string literal matches, and matched under the literal
+    `"fn "` too. This regex neither introduced nor widened it — measured over ten cases, the only
+    behavioural change is the two real-function shapes above.
     """
     return re.search(r"\bfn\s", (repo_root / name).read_text(encoding="utf-8")) is not None
 
