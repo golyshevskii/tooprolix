@@ -233,16 +233,53 @@ def _render(text: str) -> str:
 
 
 def _absolute(address: str, root: Path) -> str:
-    """Make `address` absolute, or raise if it is not a file inside this repository."""
+    """
+    Make `address` absolute, or raise if it is not a file inside this repository.
+
+    The address is split the same way [`_is_relative`] judged it. One string parsed two ways is
+    how a `docs/cli-contract.md#exit-codes` link used to stop the build: `_is_relative` is
+    URL-aware and split the fragment off, then this function handed the **raw** string to the
+    filesystem, which looked for a file literally named `cli-contract.md#exit-codes`, and the
+    README was refused with a message blaming a document that is present. A fragment or query
+    addresses a place *inside* the document, so only the path half names a file — and the whole
+    address, fragment included, is what the rewritten URL must carry.
+
+    **A file, not merely something that exists.** The check was `Path.exists()`, which is true of
+    directories, so `.`, `./`, `docs`, `docs/..` and `docs/.` were all rewritten into blob URLs
+    pointing at a directory listing or at the repository root. Splitting the fragment off made one
+    more of them reachable — `LICENSE/..#missing` used to be refused because the raw path carried
+    the `#`, and normalising it lands on the root. One word closes the whole class, and it is the
+    word the sentence above and the error message below both already used.
+
+    **What the published URL carries, decided rather than left implicit:** the author's spelling,
+    verbatim. The path is normalised only to *decide*, never to rewrite, because the fragment and
+    query must survive into the URL and a README address is the author's text. `docs/../LICENSE`
+    is therefore published as written; it resolves to a real file, and an address that resolves
+    outside the repository is refused above. No normaliser is built for a spelling nobody uses.
+    """
     resolved_root = root.resolve()
-    target = (resolved_root / address).resolve()
+    path = urlsplit(address).path
+    if not path:
+        message = f"README address {address!r} carries no path, so it names nothing to resolve"
+        raise ReadmeNotInExpectedFormatError(message)
+    target = (resolved_root / path).resolve()
     # Resolved on both sides before comparing: `docs/../../secrets` and a symlink out of the tree
     # both pass a lexical `startswith` on the raw text.
     if not target.is_relative_to(resolved_root):
         message = f"README address {address!r} points outside the repository, to {target}"
         raise ReadmeNotInExpectedFormatError(message)
-    if not target.exists():
-        message = f"README address {address!r} names no file in the repository ({target} is missing)"
+    if not target.is_file():
+        # Say which of the two things `is_file()` ruled out. Calling a directory "missing" — which
+        # is what this said first — asserts a fact the check never determined, and sends a reader
+        # after a path that is right there.
+        #
+        # The two words are exhaustive over what `root` can be here, not over the filesystem: this
+        # runs with `root` = the directory holding the README, i.e. a git checkout, and git tracks
+        # regular files, directories and symlinks to them. A character device would be reported as
+        # "missing", which is why the claim is bounded rather than absolute — no branch is added
+        # for a file type this repository cannot contain.
+        found = "a directory" if target.is_dir() else "missing"
+        message = f"README address {address!r} names no file in the repository ({target} is {found})"
         raise ReadmeNotInExpectedFormatError(message)
 
     base = RAW if target.suffix.lower() in IMAGE_SUFFIXES else BLOB

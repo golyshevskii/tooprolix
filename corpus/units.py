@@ -17,6 +17,12 @@ it is built around four constraints:
    measured, `CORPUS_ROOT=/tmp python corpus/units.py --verify` →
    `ModuleNotFoundError: No module named 'tooprolix'`. The numbers this file produced are recorded
    in `corpus/REPORT.md`; reproducing them needs the extraction re-routed through the CLI first.
+
+   **A machine still holding a pre-removal build is refused, not measured.** Left to import, it
+   would answer `prose_blocks` out of an older extractor and every number below would describe
+   code that no longer ships — and `--verify` could not tell, because the `corpus/runs/` findings
+   it compares against were recorded by that same older code. `load_blocks` therefore treats a
+   *successful* import as the error; see [`_the_extractor`].
 2. **The word count is checked against the CLI before anything is built on it.** `--verify` replays
    the shipped limits (200 docstring / 150 comment, strictly greater) over these blocks and
    compares the resulting addresses with the `TPX001`/`TPX002` findings in `corpus/runs/`. If they
@@ -120,6 +126,10 @@ class LabelError(RuntimeError):
 
 class PopulationError(RuntimeError):
     """The walk did not produce the file set `corpus/run_all.sh` recorded."""
+
+
+class StaleExtensionError(RuntimeError):
+    """An importable `tooprolix` module can only be a stale pre-removal pyo3 extension."""
 
 
 def count_words(block: Block) -> int:
@@ -353,16 +363,76 @@ def check_population(counts: Mapping[str, int]) -> None:
         raise PopulationError("; ".join(drift))
 
 
+def _the_extractor() -> Any:
+    """
+    Return the `tooprolix` extractor to measure through — and no honest one can exist here.
+
+    # Raises
+    `ModuleNotFoundError` **for this name** — the one outcome meaning nothing answered, and this
+    script's real condition on a clean machine. `StaleExtensionError` for every other outcome,
+    naming what answered: a module that imported, or one that started and then failed.
+
+    The pyo3 boundary is gone: `pyproject.toml` ships `bindings = "bin"` and
+    `scripts/install-smoke.sh` asserts that `import tooprolix` MUST raise. So anything that answers
+    to this name is not the shipped extractor, and extracting through it scores code that is not
+    what ships while printing the result as current.
+
+    **An import ends in more ways than "returned a module" and "nothing was there", and reading
+    only the first was a second fail-open.** Measured at `11511c5` through the real CLI: a stale
+    `tooprolix` whose init called `sys.exit(0)` ended the run at **exit 0 with zero bytes of
+    output** — worse than the original defect, because it reads as success — and one whose init
+    raised `ImportError` (the realistic ABI mismatch) produced a raw traceback.
+
+    **The import is performed, not predicted, and that is the whole design.** This asked
+    `importlib.util.find_spec` first — a forecast of what an import *would* find — and then imported
+    separately, which is two decisions about one question. A stateful meta-path finder answered
+    `None` to the forecast and supplied a stale module to the import, and the guard let it through
+    (measured 2026-08-01 at `9c660c5`: `load_blocks` returned a block reading `STALE OUTPUT`).
+    Grading a prediction instead of the act is recurring defect #6. One operation, one fact.
+
+    `verify` cannot catch a stale extractor either: it compares the replayed limits against the CLI
+    findings in `corpus/runs/`, which were themselves recorded by that older code, so a consistent
+    stale extension reproduces its own stale findings and reports "reproduced exactly". Pinned by
+    `tests/unit/test_units.py::TestAStaleExtensionMayNotProduceNumbers`.
+    """
+    try:
+        # By name because a compiled extension's exports are invisible to a static checker; the
+        # boundary is typed `Any` here and nowhere else.
+        module: Any = importlib.import_module("tooprolix")
+    except BaseException as error:
+        # `BaseException`, not `Exception`: a module whose init calls `sys.exit()` raises
+        # `SystemExit`, which is not an `Exception`, and that is exactly why such a run used to end
+        # at exit 0 with no output at all. The only outcome meaning NOTHING answered to this name
+        # is `ModuleNotFoundError` about this name — the same class raised for a dependency the
+        # left-over module itself imports, which is why the name is checked and not just the class.
+        if isinstance(error, ModuleNotFoundError) and error.name == "tooprolix":
+            raise
+        location = f"something that failed while initialising ({error!r})"
+    else:
+        # `__file__` for a left-over build, `__path__` for a directory of this name on `sys.path` —
+        # the repository directory is itself called `tooprolix`, so a namespace package is a real
+        # way for this to resolve, and telling that reader to delete a `.so` sends them after a
+        # file that is not there. Report what actually resolved.
+        location = getattr(module, "__file__", None) or getattr(module, "__path__", None) or "<no location>"
+    raise StaleExtensionError(
+        f"`import tooprolix` resolved to {location}, and this repository ships no such module "
+        '(`bindings = "bin"`; install-smoke.sh asserts the import raises). Whatever answered is not '
+        "the shipped extractor — a stale pre-removal pyo3 build, or a directory of that name on "
+        "sys.path — and measuring through it would score code that is not what ships. Take it off "
+        "the import path, then re-route extraction through the CLI."
+    )
+
+
 def load_blocks(corpus_root: Path, runs_dir: Path) -> list[Block]:
     """
     Extract every prose block of every measured run through the `tooprolix` Python export.
 
-    **Raises `ModuleNotFoundError` as it stands**: that export was the pyo3 extension module, which
-    the distribution no longer carries (`bindings = "bin"`). See the module docstring.
+    **Raises as it stands, and which error it raises is the point.** That export was the pyo3
+    extension module, which the distribution no longer carries (`bindings = "bin"`), so on a clean
+    machine this is `ModuleNotFoundError` — see the module docstring. On a machine where the name
+    resolves it is [`StaleExtensionError`] rather than a silent measurement of the wrong code.
     """
-    # The import is by name because a compiled extension's exports are invisible to a static
-    # checker; the boundary is typed `Any` here and nowhere else.
-    tooprolix: Any = importlib.import_module("tooprolix")
+    tooprolix: Any = _the_extractor()
     blocks: list[Block] = []
     counts: dict[str, int] = {}
     for run in sorted(runs_dir.glob("*.json")):
@@ -432,13 +502,15 @@ def verify(blocks: Sequence[Block], runs_dir: Path) -> bool:
     return False
 
 
-def _units(blocks: Sequence[Block]) -> dict[str, Unit]:
+def _units() -> dict[str, Unit]:
+    """Return the four candidate units by name. Takes no blocks: a unit is a function, not a fit."""
     tokens_norm, tokens_raw = token_counters()
     return {"words": count_words, "chars_norm": count_chars_norm, "tokens_norm": tokens_norm, "tokens_raw": tokens_raw}
 
 
-def _report_calibration(blocks: Sequence[Block]) -> tuple[dict[str, set[Block]], dict[str, Unit]]:
-    units = _units(blocks)
+def _report_calibration(blocks: Sequence[Block]) -> dict[str, set[Block]]:
+    """Print the calibration table and return `{unit: firing set}`."""
+    units = _units()
     words_firing = {block for block in blocks if count_words(block) > SHIPPED_LIMITS.get(block.kind, 10**9)}
     alerts_by_kind: dict[str, int] = {}
     for block in words_firing:
@@ -460,7 +532,7 @@ def _report_calibration(blocks: Sequence[Block]) -> tuple[dict[str, set[Block]],
             # property is enforced by `CalibrationError`, but the printed evidence proved nothing.
             measured = sum(1 for block in fired[name] if block.kind == kind)
             print(f"| {name} | {kind} | {thresholds[kind]} | {measured} | {alerts_by_kind.get(kind, 0)} |")
-    return fired, units
+    return fired
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -482,6 +554,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     except PopulationError as error:
         print(f"error: the walk is not the one run_all.sh recorded — {error}", file=sys.stderr)
         return 1
+    except StaleExtensionError as error:
+        # An actionable message the CLI does not deliver is not delivered. Uncaught, this escaped
+        # as a traceback — the same thing a reader saw before the refusal existed, only longer.
+        print(f"error: {error}", file=sys.stderr)
+        return 1
     print(f"blocks: {len(blocks)} from {len({block.repo for block in blocks})} runs", file=sys.stderr)
 
     if not verify(blocks, args.runs):
@@ -489,7 +566,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.verify:
         return 0
 
-    fired, _ = _report_calibration(blocks)
+    fired = _report_calibration(blocks)
     words_firing = fired["words"]
     union: set[Block] = set()
     print()

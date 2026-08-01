@@ -69,8 +69,9 @@ class TestTheShippedArtifactDescribesTheShippedRuns:
         """
         The pre-registered shape of the dry run, asserted as a number rather than described.
 
-        20 exact / 10 near is not arbitrary: exact is 457 of the corpus's 617 `TPX003` clusters at
-        `v0.4.0` and its precision had never been measured, so the ratio is deliberately weighted
+        20 exact / 10 near is not arbitrary: exact is 456 of the corpus's 619 `TPX003` clusters
+        (measured 2026-08-01) and its precision had never been measured, so the ratio is deliberately
+        weighted
         towards the half of the population no number in this epic covers.
         """
         artifact = classification.load(ARTIFACT)

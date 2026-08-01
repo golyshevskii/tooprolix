@@ -25,6 +25,10 @@ Run: make test
 
 from __future__ import annotations
 
+import importlib.abc
+import importlib.machinery
+import sys
+import types
 from pathlib import Path
 
 import pytest
@@ -41,6 +45,43 @@ def block(normalized: str, *, kind: str = "docstring", path: str = "a.py", line:
 def words(count: int, *, first: str = "w") -> str:
     """Return `count` distinct words, so the text is also a usable identity."""
     return " ".join(f"{first}{index}" for index in range(count))
+
+
+def run_all_table(script: str | None = None) -> dict[str, tuple[str, int]]:
+    """
+    Return `{run: (walk root, walked .py files)}` parsed out of `corpus/run_all.sh`.
+
+    `script` defaults to the real file and exists so the parser's own failure modes can be fed
+    input the repository does not contain — a parser that is only ever run on data that happens to
+    be well formed is a parser whose error handling nothing has executed.
+
+    `run_all.sh` is the only place that verifies the pins, the worktrees and the walked counts, so
+    it is the independent source of truth for both users below: the drift assertion, and the
+    population that `check_population` must accept.
+
+    The row shape is pinned by its separator count, and that is load-bearing rather than
+    incidental: the columns are
+    `name|root|checkout|exit|files|skipped|TPX001|TPX002|TPX003|near|exact`, so **ten** pipes. It
+    was seven until `make-check-graceful-on-unreadable-files` added the `skipped` column, and eight
+    until `close-anti-fp-gate-with-public-reference` added the near/exact split — and each time the
+    stale count made the caller fail loudly with an empty parse instead of silently agreeing with
+    nothing, which is what each caller's `assert table` is for. A parser that quietly matched zero
+    rows would turn both checks into no-ops.
+    """
+    if script is None:
+        script = (Path(__file__).resolve().parents[2] / "corpus/run_all.sh").read_text()
+    rows = [
+        line.strip().strip('"').split("|")
+        for line in script.splitlines()
+        if line.strip().startswith('"') and line.count("|") == 10
+    ]
+    # A dict keeps the last write, so two rows for one run would collapse into whichever came last
+    # and every caller would agree with it. This parser feeds both guards below, so a silent
+    # collapse here disables both at once.
+    names = [row[0] for row in rows]
+    repeated = sorted({name for name in names if names.count(name) > 1})
+    assert not repeated, f"run_all.sh records these runs twice: {', '.join(repeated)}"
+    return {row[0]: (row[1], int(row[4])) for row in rows}
 
 
 class TestEqualAlertVolume:
@@ -183,33 +224,76 @@ class TestOneOwnerForTheRunTable:
         so every Python restatement of "which root, how many files" has to answer to it. Two owners
         for one fact is the defect this epic keeps paying for; this is the machine check that keeps
         it to one owner plus mirrors.
-
-        The row shape is pinned by its separator count, and that is load-bearing rather than
-        incidental: the columns are
-        `name|root|checkout|exit|files|skipped|TPX001|TPX002|TPX003|near|exact`, so **ten** pipes.
-        It was seven until `make-check-graceful-on-unreadable-files` added the `skipped` column, and
-        eight until `close-anti-fp-gate-with-public-reference` added the near/exact split — and each
-        time the stale count made this test fail loudly with an empty parse instead of silently
-        agreeing with nothing, which is exactly what the `assert table` line below is for. Keep
-        both: a parser that quietly matches zero rows would turn this whole check into a no-op.
         """
         import bench
 
-        script = (Path(__file__).resolve().parents[2] / "corpus/run_all.sh").read_text()
-        table = {
-            row[0]: (row[1], int(row[4]))
-            for row in (
-                line.strip().strip('"').split("|")
-                for line in script.splitlines()
-                if line.strip().startswith('"') and line.count("|") == 10
-            )
-        }
+        table = run_all_table()
         assert table, "the EXPECTED table in run_all.sh could not be parsed"
 
         for name, (root, files) in units.RUNS.items():
             assert table[name] == (root, files), f"units.RUNS disagrees with run_all.sh for {name}"
         for name, root in bench.ROOTS:
             assert table[name][0] == root, f"bench.ROOTS disagrees with run_all.sh for {name}"
+
+    def test_a_duplicated_row_is_refused_rather_than_collapsed(self) -> None:
+        """
+        The parser feeds both guards, so a silent collapse there disables both at once.
+
+        `run_all_table` returns a dict keyed by run name, and a dict quietly keeps the last write.
+        Measured 2026-08-01 at `11511c5`: eight parsed rows became **seven** keys, so a run_all.sh
+        that recorded one run twice — with two different roots or two different counts — would be
+        graded against whichever copy came last, and every check below would agree with it.
+        """
+        script = (Path(__file__).resolve().parents[2] / "corpus/run_all.sh").read_text()
+        rows = [line for line in script.splitlines() if line.strip().startswith('"') and line.count("|") == 10]
+
+        with pytest.raises(AssertionError, match="twice"):
+            run_all_table("\n".join([*rows, rows[0]]))
+
+    def test_every_run_all_sh_row_is_benchmarked_or_excluded_on_the_record(self) -> None:
+        """
+        `bench.ROOTS` is guarded the same way `units.RUNS` now is — by name set, not by iteration.
+
+        This is round 1's finding one constant over, and it is why a second review round was needed:
+        the check beside this one iterates `bench.ROOTS`, so a row's **absence** from it is
+        invisible. Measured 2026-08-01 at `11511c5`: deleting the `pydantic` row from `bench.ROOTS`
+        left **327 passed, exit 0**, while `bench.main` would benchmark five roots instead of six
+        and drop a published research subject in silence. A guard that iterates the collection it
+        is guarding can never see a missing member.
+
+        `crewAI-full` is excluded here for the same recorded reason it is excluded from the AC1b
+        population: it is the same checkout as `crewAI` at a root that cannot be measured at all,
+        exiting **2**, while `bench.EXPECT_EXIT` is **1**. One owner for that exclusion —
+        `units.EXCLUDED_RUNS` — rather than a second list that could drift from it.
+        """
+        import bench
+
+        table = run_all_table()
+        assert table, "the EXPECTED table in run_all.sh could not be parsed"
+
+        assert {name for name, _ in bench.ROOTS} == set(table) - units.EXCLUDED_RUNS
+
+    def test_every_run_all_sh_row_is_either_measured_or_excluded_on_the_record(self) -> None:
+        """
+        The drift check above runs one way only, and one way is not enough.
+
+        Everything else here iterates `units.RUNS`, so a row that exists in `run_all.sh` and is
+        **absent** from `RUNS` is invisible — and `load_blocks` independently skips run JSON whose
+        stem is not in `RUNS`, so the run would vanish from every threshold, every disagreement set
+        and every published number with the whole suite green. Measured 2026-08-01 at `9c660c5`:
+        deleting the `pydantic` row from `RUNS` left **326 passed, exit 0**.
+
+        Equality against `RUNS` alone would be wrong today: `crewAI-full` is a real `run_all.sh` row
+        that is deliberately not in the population, and the reason is already recorded on
+        `units.EXCLUDED_RUNS` — the same checkout as `crewAI` at a root that cannot be measured at
+        all (exit 2, five unparsable Jinja templates; see `corpus/run_all.sh`). So the rule is
+        "measured, or excluded **on the record**", which fails loudly for a genuinely new row while
+        the known alternative measurement stays out with its reason attached.
+        """
+        table = run_all_table()
+        assert table, "the EXPECTED table in run_all.sh could not be parsed"
+
+        assert set(table) == set(units.RUNS) | units.EXCLUDED_RUNS
 
 
 class TestThePopulationIsPinned:
@@ -227,9 +311,20 @@ class TestThePopulationIsPinned:
         with pytest.raises(units.PopulationError, match="requests"):
             units.check_population({"requests": 36})
 
-    def test_the_recorded_counts_pass(self) -> None:
-        counts = {name: files for name, (_, files) in units.RUNS.items()}
-        units.check_population(counts)
+    def test_the_population_run_all_sh_recorded_is_accepted(self) -> None:
+        """
+        The positive control, with an input that does not come from `units.RUNS`.
+
+        It used to build `counts` **from** `units.RUNS` and check it **against** `units.RUNS`, so it
+        passed by construction whatever `RUNS` said — satisfied even by a `check_population` that
+        returns unconditionally. Reading the counts out of `corpus/run_all.sh` instead makes it able
+        to fail: it is now the guard that a `check_population` which rejects a correct population
+        cannot ship, and the negative case below is what catches one that accepts everything.
+        """
+        table = run_all_table()
+        assert table, "the EXPECTED table in run_all.sh could not be parsed"
+
+        units.check_population({name: files for name, (_, files) in table.items()})
 
 
 class TestCalibrationTolerance:
@@ -259,6 +354,245 @@ class TestCalibrationTolerance:
         blocks.append(block(words(10), path="small.py"))
         with pytest.raises(units.CalibrationError):
             units.calibrate(blocks, units.count_words, {"docstring": 2})
+
+
+class TestAStaleExtensionMayNotProduceNumbers:
+    """
+    `import tooprolix` succeeding is itself the defect, not the happy path.
+
+    The pyo3 boundary is gone — `pyproject.toml` ships `bindings = "bin"` and
+    `scripts/install-smoke.sh` asserts that `import tooprolix` MUST raise — so the only module
+    that name can resolve to on any machine is a **stale pre-removal extension**. Left to import,
+    it answers `prose_blocks` out of an older extractor and every threshold, disagreement set and
+    precision number below it would describe code that no longer ships, printed as current.
+
+    That is a guard failing open: the run cannot tell that it measured the wrong thing, and
+    `--verify` cannot catch it either, because a consistent old extractor reproduces its own old
+    findings. So the import is refused rather than trusted.
+    """
+
+    def _stale(self, monkeypatch: pytest.MonkeyPatch) -> list[str]:
+        """Put a fake pre-removal extension on the import path and record what it is asked for."""
+        consulted: list[str] = []
+        extension = types.ModuleType("tooprolix")
+        extension.__file__ = "/stale/tooprolix.so"
+
+        def prose_blocks(path: str, source: str) -> list[tuple[str, int, int, str]]:
+            """Answer in the shape the removed export had: `(kind, start, end, normalised)`."""
+            consulted.append(path)
+            return [("docstring", 1, 2, "stale prose from an extractor that no longer ships")]
+
+        extension.prose_blocks = prose_blocks  # ty: ignore[unresolved-attribute]
+        monkeypatch.setitem(sys.modules, "tooprolix", extension)
+        return consulted
+
+    def test_an_importable_tooprolix_is_refused_instead_of_measured(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """Without the refusal this returns blocks — old numbers, reported as today's."""
+        consulted = self._stale(monkeypatch)
+        monkeypatch.setattr(units, "RUNS", {"r": ("r", 1)})
+        monkeypatch.setattr(units, "walked_files", lambda corpus_root, root: ["r/a.py"])
+        (tmp_path / "r").mkdir()
+        (tmp_path / "r/a.py").write_text('"""d"""\n', encoding="utf-8")
+        runs = tmp_path / "runs"
+        runs.mkdir()
+        (runs / "r.json").write_text("{}", encoding="utf-8")
+
+        with pytest.raises(units.StaleExtensionError):
+            units.load_blocks(tmp_path, runs)
+
+        assert consulted == [], "the stale extractor was asked for blocks before the run was refused"
+
+    def test_the_refusal_names_the_file_to_delete(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+        """A machine-level residue needs the path, or the reader cannot act on the message."""
+        self._stale(monkeypatch)
+        runs = tmp_path / "runs"
+        runs.mkdir()
+
+        with pytest.raises(units.StaleExtensionError, match="/stale/tooprolix.so"):
+            units.load_blocks(tmp_path, runs)
+
+    def test_a_module_that_only_appears_at_import_time_is_still_refused(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """
+        The guard must grade the **import**, not a prediction about the import.
+
+        `importlib.util.find_spec` answers "what would an import find?" — a forecast. The import is
+        the fact, and the two can disagree: a meta-path finder that returns `None` once and a real
+        spec afterwards slips a stale extension past a `find_spec` guard and hands it to the code
+        underneath. That is recurring defect #6, a validator grading a self-report, one layer down.
+
+        Measured 2026-08-01 at `9c660c5` with exactly this finder: the name was resolved **twice**
+        and `load_blocks` returned **1 block** reading `STALE OUTPUT`. Not exotic — any lazy or
+        caching importer is stateful.
+
+        Asking once is the fix, so asking once is what is asserted. Whichever answer that single
+        question gets is then the fact the run acts on: `None` means `ModuleNotFoundError` and
+        nothing is measured, a spec means `StaleExtensionError` and nothing is measured. There is
+        no third outcome for a stateful finder to steer the run into, which is the property a
+        predict-then-import pair cannot have.
+        """
+        consulted: list[str] = []
+
+        class Loader(importlib.abc.Loader):
+            def create_module(self, spec: importlib.machinery.ModuleSpec) -> types.ModuleType:
+                module = types.ModuleType("tooprolix")
+                module.__file__ = "/stale/tooprolix.so"
+                module.prose_blocks = lambda path, source: (  # ty: ignore[unresolved-attribute]
+                    consulted.append(path),
+                    [("docstring", 1, 2, "STALE OUTPUT")],
+                )[1]
+                return module
+
+            def exec_module(self, module: types.ModuleType) -> None:
+                """Nothing to execute: `create_module` already produced the whole fake."""
+
+        class AnswersDifferentlyTheSecondTime(importlib.abc.MetaPathFinder):
+            """`None` for the first question asked, a real spec for every one after it."""
+
+            asked = 0
+
+            def find_spec(
+                self, name: str, path: object = None, target: object = None
+            ) -> importlib.machinery.ModuleSpec | None:
+                if name != "tooprolix":
+                    return None
+                type(self).asked += 1
+                if type(self).asked == 1:
+                    return None
+                return importlib.machinery.ModuleSpec("tooprolix", Loader(), origin="/stale/tooprolix.so")
+
+        finder = AnswersDifferentlyTheSecondTime()
+        AnswersDifferentlyTheSecondTime.asked = 0
+        monkeypatch.setattr(sys, "meta_path", [finder, *sys.meta_path])
+        monkeypatch.setattr(units, "RUNS", {"r": ("r", 1)})
+        monkeypatch.setattr(units, "walked_files", lambda corpus_root, root: ["r/a.py"])
+        (tmp_path / "r").mkdir()
+        (tmp_path / "r/a.py").write_text('"""d"""\n', encoding="utf-8")
+        runs = tmp_path / "runs"
+        runs.mkdir()
+        (runs / "r.json").write_text("{}", encoding="utf-8")
+
+        with pytest.raises((units.StaleExtensionError, ModuleNotFoundError)):
+            units.load_blocks(tmp_path, runs)
+
+        assert AnswersDifferentlyTheSecondTime.asked == 1, "the name was resolved more than once"
+        assert consulted == [], "the stale extractor produced blocks before the run was refused"
+
+    def test_a_module_with_no_file_is_reported_for_what_it_is(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """
+        Not everything that resolves is a compiled left-over, and the message may not pretend it is.
+
+        The repository directory is itself named `tooprolix`, so putting its parent on `sys.path`
+        makes the name resolve as a **namespace package** — legitimate, and carrying no `__file__`.
+        Telling that reader to delete a stale `.so` sends them hunting a file that does not exist.
+        Measured 2026-08-01 at `9c660c5`: the message read `resolved to <unknown location>`.
+
+        Refusing is still right — a namespace package has no `prose_blocks` either — but the
+        refusal has to name what actually resolved.
+        """
+        package = types.ModuleType("tooprolix")
+        package.__path__ = ["/somewhere/on/sys/path/tooprolix"]
+        monkeypatch.setitem(sys.modules, "tooprolix", package)
+        runs = tmp_path / "runs"
+        runs.mkdir()
+
+        with pytest.raises(units.StaleExtensionError, match=r"/somewhere/on/sys/path/tooprolix"):
+            units.load_blocks(tmp_path, runs)
+
+    def test_the_entry_point_turns_the_refusal_into_an_exit_code(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], tmp_path: Path
+    ) -> None:
+        """
+        An actionable message the CLI does not deliver is not delivered.
+
+        `main` caught `PopulationError` alone, so the refusal escaped as a traceback — the same
+        thing a reader saw before the guard existed, only longer. A stack trace is not a diagnosis.
+        """
+        self._stale(monkeypatch)
+        monkeypatch.setenv("CORPUS_ROOT", str(tmp_path))
+        runs = tmp_path / "runs"
+        runs.mkdir()
+
+        code = units.main(["--verify", "--runs", str(runs)])
+
+        assert code == 1
+        captured = capsys.readouterr()
+        assert "/stale/tooprolix.so" in captured.err
+        assert captured.out == "", "a table was printed for a run that never loaded a block"
+
+    @pytest.mark.parametrize(
+        ("body", "why"),
+        [
+            ("import sys\nsys.exit(0)\n", "SystemExit is not an Exception, so this exited 0 in silence"),
+            ('raise ImportError("dynamic module does not define module export function")\n', "the ABI mismatch"),
+            ('raise RuntimeError("libpython not found")\n', "any other init failure"),
+        ],
+    )
+    def test_a_module_that_fails_while_initialising_is_still_something_that_answered(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, body: str, why: str
+    ) -> None:
+        """
+        An import ends in more ways than "returned a module" and "nothing was there".
+
+        The refusal read only the *success* outcome, so an import that started and then died was
+        neither refused nor honest. Measured 2026-08-01 at `11511c5` through the real CLI:
+
+            stale tooprolix.py whose init calls sys.exit(0) -> EXIT=0 and ZERO bytes of output
+            stale tooprolix.py whose init raises ImportError -> EXIT=1 and a raw traceback
+
+        **Exit 0 with no output on a run that measured nothing is worse than the fail-open this
+        guard was written to close**, because it reads as success. `ModuleNotFoundError` for this
+        name is the one outcome meaning nothing answered; every other outcome — including
+        `SystemExit`, which is not an `Exception` and is exactly why the first case was silent —
+        means something did.
+        """
+        site = tmp_path / "site"
+        site.mkdir()
+        (site / "tooprolix.py").write_text(body, encoding="utf-8")
+        monkeypatch.syspath_prepend(str(site))
+        runs = tmp_path / "runs"
+        runs.mkdir()
+
+        with pytest.raises(units.StaleExtensionError, match="failed while initialising"):
+            units.load_blocks(tmp_path, runs)
+
+    def test_a_missing_dependency_of_a_stale_module_is_not_read_as_a_clean_machine(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """
+        `ModuleNotFoundError` only means "nothing answered" when it is about **this** name.
+
+        A left-over extension importing a dependency that is no longer installed raises
+        `ModuleNotFoundError` too — for the dependency. Reading the class alone would file that as
+        a clean machine and print the message for one, sending the reader to look for nothing.
+        """
+        site = tmp_path / "site"
+        site.mkdir()
+        (site / "tooprolix.py").write_text("import a_dependency_that_is_not_installed\n", encoding="utf-8")
+        monkeypatch.syspath_prepend(str(site))
+        runs = tmp_path / "runs"
+        runs.mkdir()
+
+        with pytest.raises(units.StaleExtensionError, match="a_dependency_that_is_not_installed"):
+            units.load_blocks(tmp_path, runs)
+
+    def test_with_no_extension_present_the_honest_failure_survives(self, tmp_path: Path) -> None:
+        """
+        The guard must not mask the ordinary dead state, which is what the module docstring documents.
+
+        `ModuleNotFoundError` here is the script's real condition on a clean machine; turning it
+        into the stale-extension error would send a reader hunting a file that is not there.
+        """
+        runs = tmp_path / "runs"
+        runs.mkdir()
+
+        with pytest.raises(ModuleNotFoundError):
+            units.load_blocks(tmp_path, runs)
 
 
 class TestTheEntryPointRefusesWithoutASubject:

@@ -35,7 +35,9 @@ from pathlib import Path
 
 #: `(run name, walk root)`, ordered by size. `crewAI` is the narrowed root the whole repository
 #: cannot be measured at (five unparsable Jinja templates, exit 2). `corpus/run_all.sh` owns these
-#: pairs; `tests/unit/test_bench.py` fails if this copy drifts from that table.
+#: pairs; `tests/unit/test_units.py::TestOneOwnerForTheRunTable` fails if this copy drifts from that
+#: table. It named `test_bench.py`, which never mentions `ROOTS` — a comment naming the wrong
+#: enforcer is the shape this epic keeps finding, and it points at the file a reader would search.
 ROOTS: tuple[tuple[str, str], ...] = (
     ("requests", "requests"),
     ("pydantic", "pydantic"),

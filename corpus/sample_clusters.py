@@ -13,7 +13,9 @@ script owns both:
   nothing.
 
   **This is a default, not a ceiling.** `--population exact|all` exists because the exact clusters
-  need measuring too — at `v0.4.0` they are **457 of 617**. The population actually used is printed
+  need measuring too — measured 2026-08-01 on `corpus/runs/` at `7757b20`, they are **456 of 619**
+  (they were 457 of 617 at `v0.4.0`; the runs moved after that tag, the shape did not). The
+  population actually used is printed
   in the sample's own heading, so a number can never be read under the wrong one.
 * **Round-robin over repositories.** A global prefix over `(repo, path, line)` in ASCII order lies
   entirely inside `OpenHands` and never reaches `langgraph` or `pydantic`.

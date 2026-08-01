@@ -43,6 +43,7 @@ from transform_readme import (
     BLOB,
     RAW,
     ReadmeNotInExpectedFormatError,
+    _absolute,
     code_content,
     relative_addresses,
     rendered_addresses,
@@ -51,6 +52,26 @@ from transform_readme import (
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = REPO_ROOT / "scripts" / "transform_readme.py"
+
+
+def unresolvable_addresses(text: str) -> list[str]:
+    """
+    Return the relative addresses of `text` that do not name something in this repository.
+
+    **One owner for the resolution, and it is the script's own.** This check used to spell its own
+    predicate — `(REPO_ROOT / address).exists()` on the RAW address — which is the exact defect
+    `_absolute` was fixed for: a `docs/cli-contract.md#exit-codes` link is accepted by the script
+    and called missing here, so the artifact test would have blocked the release on a README the
+    transformer is happy with. A second predicate for one question is how the fix gets applied in
+    one place and its copy left behind.
+    """
+    missing: list[str] = []
+    for address in relative_addresses(text):
+        try:
+            _absolute(address, REPO_ROOT)
+        except ReadmeNotInExpectedFormatError as error:
+            missing.append(f"{address}: {error}")
+    return missing
 
 
 class TestRelativeAddressesAreMadeAbsolute:
@@ -78,6 +99,37 @@ class TestRelativeAddressesAreMadeAbsolute:
         assert transform(text, root=REPO_ROOT) == (
             f'<a href="{BLOB}LICENSE"><img src="https://img.shields.io/badge/license-MIT-12130f.svg" alt="MIT"></a>\n'
         )
+
+    @pytest.mark.parametrize(
+        ("address", "target"),
+        [
+            ("docs/cli-contract.md#exit-codes", "docs/cli-contract.md"),
+            ("docs/rules-and-configuration.md?plain=1", "docs/rules-and-configuration.md"),
+            ("docs/cli-contract.md?plain=1#exit-codes", "docs/cli-contract.md"),
+        ],
+    )
+    def test_a_link_to_a_section_of_a_document_resolves_against_the_document(self, address: str, target: str) -> None:
+        """
+        One address, two parsers, and the second one decides — the compare-before-normalise shape.
+
+        `_is_relative` is URL-aware (`urlsplit`, which is the whole argument of its docstring), so a
+        `#fragment` or `?query` is correctly split off and the address is judged relative. `_absolute`
+        then took the **raw** string and asked the filesystem for it, so `docs/cli-contract.md#x`
+        was looked up as a file literally named `cli-contract.md#x`, found missing, and the build was
+        stopped with a message blaming a file that is present.
+
+        Measured 2026-08-01 through the real entry path on a copy of the repository README with one
+        anchor added: `scripts/transform_readme.py` exited **1** with *"names no file in the
+        repository"*. A section link is the most ordinary thing a README grows, and this script
+        gates the README that goes to PyPI, so the false positive stops a release.
+
+        The rewritten URL must keep the fragment: it is the reader's destination, and only the
+        filesystem lookup has any business ignoring it.
+        """
+        text = f"see the [contract]({address}).\n"
+
+        assert transform(text, root=REPO_ROOT) == f"see the [contract]({BLOB}{address}).\n"
+        assert (REPO_ROOT / target).is_file(), "the fixture must name a document that really exists"
 
     @pytest.mark.parametrize(
         "address",
@@ -126,13 +178,20 @@ class TestTheRealReadmeIsFullyResolved:
     def test_every_relative_address_in_the_readme_names_a_file_that_exists(self) -> None:
         # Not a list of today's filenames: the set is read out of the README and checked against the
         # filesystem, so a link added tomorrow is covered by the same assertion.
-        missing = [
-            address
-            for address in relative_addresses((REPO_ROOT / "README.md").read_text(encoding="utf-8"))
-            if not (REPO_ROOT / address).exists()
-        ]
+        assert unresolvable_addresses((REPO_ROOT / "README.md").read_text(encoding="utf-8")) == []
 
-        assert missing == []
+    def test_a_section_link_would_pass_this_check_too(self) -> None:
+        """
+        The artifact check must accept exactly what the transformer accepts.
+
+        `README.md` carries no fragment link today, so nothing here is red on the real file — and
+        that is the point: the moment someone adds `[contract](docs/cli-contract.md#exit-codes)`,
+        `transform` accepts it and a check spelling its own raw-path predicate would fail the
+        release on a document that is present. Measured 2026-08-01 at `9c660c5`:
+        `(REPO_ROOT / 'docs/cli-contract.md#exit-codes').exists()` is **False** while `_absolute`
+        returns the blob URL.
+        """
+        assert unresolvable_addresses("see the [contract](docs/cli-contract.md#exit-codes).\n") == []
 
 
 class TestTheShapesTheSharedRegexWasBlindTo:
@@ -269,8 +328,48 @@ class TestItFailsLoudRatherThanSilently:
             transform("# tooprolix\n\nAll [absolute](https://example.com/x).\n", root=REPO_ROOT)
 
     def test_a_relative_address_naming_a_missing_file_is_a_build_failure(self) -> None:
-        with pytest.raises(ReadmeNotInExpectedFormatError, match="docs/moved-away.md"):
+        # The other half of the reason wording: an address that really is absent must still be
+        # called missing. Pinning only the directory branch would let both cases collapse onto one
+        # word again, in whichever direction the next edit happens to push.
+        with pytest.raises(ReadmeNotInExpectedFormatError, match="docs/moved-away.md.* is missing"):
             transform("see [the contract](docs/moved-away.md).\n", root=REPO_ROOT)
+
+    @pytest.mark.parametrize("address", ["docs", "docs/", ".", "./", "docs/..", "docs/.", "LICENSE/..#missing"])
+    def test_an_address_that_resolves_to_a_directory_is_a_build_failure(self, address: str) -> None:
+        """
+        `_absolute` says "or raise if it is not a **file**", and its error says "names no **file**".
+
+        It asked `Path.exists()`, which is true of directories, so all seven of these were accepted
+        and rewritten into blob URLs pointing at a directory listing or at the repository root.
+        `LICENSE/..#missing` is the one this task introduced: before the fragment split the raw
+        path carried the `#` and was refused, and splitting it normalised the address into the root.
+        The other six are pre-existing, and they die on the same word.
+
+        Measured 2026-08-01 at `9c660c5`: all seven returned a `blob/main/…` URL, e.g.
+        `.` → `…/blob/main/.`.
+
+        **The message is asserted, not only the exception type.** The first version of this fix
+        rejected directories with the wording it had used for absent files — `docs is missing`,
+        `<repo root> is missing` — which is a message asserting a fact the code never determined,
+        and it sends a reader looking for a path that is right there. Matching on the reason is
+        what stops that drifting back.
+        """
+        with pytest.raises(ReadmeNotInExpectedFormatError, match="names no file .* is a directory"):
+            transform(f"[real](LICENSE) [bad]({address})\n", root=REPO_ROOT)
+
+    @pytest.mark.parametrize("address", ["?plain=1", "?raw=true"])
+    def test_a_query_with_no_document_in_front_of_it_is_a_build_failure(self, address: str) -> None:
+        """
+        The one address the fragment/query split must NOT wave through.
+
+        Splitting the path off for the filesystem lookup means an address that is *only* a query has
+        an empty path, and `root / ""` is the repository root — which exists, so it would resolve
+        and be rewritten to a `blob/main/?plain=1` URL that points at nothing. Reachable, not
+        hypothetical: `relative_addresses('[x](?plain=1) …')` returns `['?plain=1', 'LICENSE']`
+        (measured 2026-08-01), so the rewriter really does hand this to the resolver.
+        """
+        with pytest.raises(ReadmeNotInExpectedFormatError, match="carries no path"):
+            transform(f"[real](LICENSE) [bad]({address})\n", root=REPO_ROOT)
 
     @pytest.mark.parametrize("address", ["1:missing.md", "2024:notes.md", "9:x/y.md"])
     def test_a_colon_that_is_not_a_url_scheme_is_still_a_relative_address(self, address: str) -> None:
