@@ -2248,10 +2248,13 @@ preserve_existing_api_key: bool = False
     /// `validate-detectors-on-reference-corpus`. That cost is why this one test is essentially the
     /// whole `--lib` wall clock, and it is the honest price of covering the case at its real size.
     ///
-    /// Measured 2026-08-01 on `87aa67e`, macOS/arm64, three runs: **1.78–1.81 s** for this test
-    /// against **1.82–1.83 s** for all 132. The `~15 s` that stood here and the `8.68 s` banked in
-    /// the rust-skills issue are both superseded. At 1.8 s the cost does not buy an `#[ignore]`,
-    /// which would take the AC2 guard out of the default run.
+    /// Measured 2026-08-01 at `b7c8ad9`, clean tree, macOS/arm64: **about 1.8 s** for this test and
+    /// **about 1.85 s** for all 132. Two independent sets of runs spanned 1.76–1.85 s and
+    /// 1.83–1.86 s, so the two are within run-to-run noise of each other on a loaded machine and a
+    /// re-run landing at 1.84 s is noise, not a regression — what survives the noise is the
+    /// relationship above, not the digits. The `~15 s` that stood here and the `8.68 s` banked in
+    /// the rust-skills issue are both superseded, and at ~1.8 s the cost does not buy an
+    /// `#[ignore]`, which would take the AC2 guard out of the default run.
     #[test]
     fn a_near_identical_header_in_a_thousand_files_is_one_finding() {
         // Arrange
