@@ -25,6 +25,7 @@ Run: make test
 
 from __future__ import annotations
 
+import importlib.abc
 import importlib.machinery
 import sys
 import types
@@ -225,6 +226,28 @@ class TestOneOwnerForTheRunTable:
         for name, root in bench.ROOTS:
             assert table[name][0] == root, f"bench.ROOTS disagrees with run_all.sh for {name}"
 
+    def test_every_run_all_sh_row_is_either_measured_or_excluded_on_the_record(self) -> None:
+        """
+        The drift check above runs one way only, and one way is not enough.
+
+        Everything else here iterates `units.RUNS`, so a row that exists in `run_all.sh` and is
+        **absent** from `RUNS` is invisible — and `load_blocks` independently skips run JSON whose
+        stem is not in `RUNS`, so the run would vanish from every threshold, every disagreement set
+        and every published number with the whole suite green. Measured 2026-08-01 at `9c660c5`:
+        deleting the `pydantic` row from `RUNS` left **326 passed, exit 0**.
+
+        Equality against `RUNS` alone would be wrong today: `crewAI-full` is a real `run_all.sh` row
+        that is deliberately not in the population, and the reason is already recorded on
+        `units.EXCLUDED_RUNS` — the same checkout as `crewAI` at a root that cannot be measured at
+        all (exit 2, five unparsable Jinja templates; see `corpus/run_all.sh`). So the rule is
+        "measured, or excluded **on the record**", which fails loudly for a genuinely new row while
+        the known alternative measurement stays out with its reason attached.
+        """
+        table = run_all_table()
+        assert table, "the EXPECTED table in run_all.sh could not be parsed"
+
+        assert set(table) == set(units.RUNS) | units.EXCLUDED_RUNS
+
 
 class TestThePopulationIsPinned:
     """`--verify` compares finding addresses, which leaves 97% of the blocks unconstrained."""
@@ -305,10 +328,7 @@ class TestAStaleExtensionMayNotProduceNumbers:
         """Put a fake pre-removal extension on the import path and record what it is asked for."""
         consulted: list[str] = []
         extension = types.ModuleType("tooprolix")
-        # A real left-over build is a loaded extension, so it carries a spec with an origin. The
-        # fake models that rather than the bare `ModuleType` default of `__spec__ = None`, which
-        # no importable module on a real machine has.
-        extension.__spec__ = importlib.machinery.ModuleSpec("tooprolix", loader=None, origin="/stale/tooprolix.so")
+        extension.__file__ = "/stale/tooprolix.so"
 
         def prose_blocks(path: str, source: str) -> list[tuple[str, int, int, str]]:
             """Answer in the shape the removed export had: `(kind, start, end, normalised)`."""
@@ -345,6 +365,118 @@ class TestAStaleExtensionMayNotProduceNumbers:
 
         with pytest.raises(units.StaleExtensionError, match="/stale/tooprolix.so"):
             units.load_blocks(tmp_path, runs)
+
+    def test_a_module_that_only_appears_at_import_time_is_still_refused(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """
+        The guard must grade the **import**, not a prediction about the import.
+
+        `importlib.util.find_spec` answers "what would an import find?" — a forecast. The import is
+        the fact, and the two can disagree: a meta-path finder that returns `None` once and a real
+        spec afterwards slips a stale extension past a `find_spec` guard and hands it to the code
+        underneath. That is recurring defect #6, a validator grading a self-report, one layer down.
+
+        Measured 2026-08-01 at `9c660c5` with exactly this finder: the name was resolved **twice**
+        and `load_blocks` returned **1 block** reading `STALE OUTPUT`. Not exotic — any lazy or
+        caching importer is stateful.
+
+        Asking once is the fix, so asking once is what is asserted. Whichever answer that single
+        question gets is then the fact the run acts on: `None` means `ModuleNotFoundError` and
+        nothing is measured, a spec means `StaleExtensionError` and nothing is measured. There is
+        no third outcome for a stateful finder to steer the run into, which is the property a
+        predict-then-import pair cannot have.
+        """
+        consulted: list[str] = []
+
+        class Loader(importlib.abc.Loader):
+            def create_module(self, spec: importlib.machinery.ModuleSpec) -> types.ModuleType:
+                module = types.ModuleType("tooprolix")
+                module.__file__ = "/stale/tooprolix.so"
+                module.prose_blocks = lambda path, source: (  # ty: ignore[unresolved-attribute]
+                    consulted.append(path),
+                    [("docstring", 1, 2, "STALE OUTPUT")],
+                )[1]
+                return module
+
+            def exec_module(self, module: types.ModuleType) -> None:
+                """Nothing to execute: `create_module` already produced the whole fake."""
+
+        class AnswersDifferentlyTheSecondTime(importlib.abc.MetaPathFinder):
+            """`None` for the first question asked, a real spec for every one after it."""
+
+            asked = 0
+
+            def find_spec(
+                self, name: str, path: object = None, target: object = None
+            ) -> importlib.machinery.ModuleSpec | None:
+                if name != "tooprolix":
+                    return None
+                type(self).asked += 1
+                if type(self).asked == 1:
+                    return None
+                return importlib.machinery.ModuleSpec("tooprolix", Loader(), origin="/stale/tooprolix.so")
+
+        finder = AnswersDifferentlyTheSecondTime()
+        AnswersDifferentlyTheSecondTime.asked = 0
+        monkeypatch.setattr(sys, "meta_path", [finder, *sys.meta_path])
+        monkeypatch.setattr(units, "RUNS", {"r": ("r", 1)})
+        monkeypatch.setattr(units, "walked_files", lambda corpus_root, root: ["r/a.py"])
+        (tmp_path / "r").mkdir()
+        (tmp_path / "r/a.py").write_text('"""d"""\n', encoding="utf-8")
+        runs = tmp_path / "runs"
+        runs.mkdir()
+        (runs / "r.json").write_text("{}", encoding="utf-8")
+
+        with pytest.raises((units.StaleExtensionError, ModuleNotFoundError)):
+            units.load_blocks(tmp_path, runs)
+
+        assert AnswersDifferentlyTheSecondTime.asked == 1, "the name was resolved more than once"
+        assert consulted == [], "the stale extractor produced blocks before the run was refused"
+
+    def test_a_module_with_no_file_is_reported_for_what_it_is(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """
+        Not everything that resolves is a compiled left-over, and the message may not pretend it is.
+
+        The repository directory is itself named `tooprolix`, so putting its parent on `sys.path`
+        makes the name resolve as a **namespace package** — legitimate, and carrying no `__file__`.
+        Telling that reader to delete a stale `.so` sends them hunting a file that does not exist.
+        Measured 2026-08-01 at `9c660c5`: the message read `resolved to <unknown location>`.
+
+        Refusing is still right — a namespace package has no `prose_blocks` either — but the
+        refusal has to name what actually resolved.
+        """
+        package = types.ModuleType("tooprolix")
+        package.__path__ = ["/somewhere/on/sys/path/tooprolix"]
+        monkeypatch.setitem(sys.modules, "tooprolix", package)
+        runs = tmp_path / "runs"
+        runs.mkdir()
+
+        with pytest.raises(units.StaleExtensionError, match=r"/somewhere/on/sys/path/tooprolix"):
+            units.load_blocks(tmp_path, runs)
+
+    def test_the_entry_point_turns_the_refusal_into_an_exit_code(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], tmp_path: Path
+    ) -> None:
+        """
+        An actionable message the CLI does not deliver is not delivered.
+
+        `main` caught `PopulationError` alone, so the refusal escaped as a traceback — the same
+        thing a reader saw before the guard existed, only longer. A stack trace is not a diagnosis.
+        """
+        self._stale(monkeypatch)
+        monkeypatch.setenv("CORPUS_ROOT", str(tmp_path))
+        runs = tmp_path / "runs"
+        runs.mkdir()
+
+        code = units.main(["--verify", "--runs", str(runs)])
+
+        assert code == 1
+        captured = capsys.readouterr()
+        assert "/stale/tooprolix.so" in captured.err
+        assert captured.out == "", "a table was printed for a run that never loaded a block"
 
     def test_with_no_extension_present_the_honest_failure_survives(self, tmp_path: Path) -> None:
         """

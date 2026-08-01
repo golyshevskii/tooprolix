@@ -243,6 +243,19 @@ def _absolute(address: str, root: Path) -> str:
     README was refused with a message blaming a document that is present. A fragment or query
     addresses a place *inside* the document, so only the path half names a file — and the whole
     address, fragment included, is what the rewritten URL must carry.
+
+    **A file, not merely something that exists.** The check was `Path.exists()`, which is true of
+    directories, so `.`, `./`, `docs`, `docs/..` and `docs/.` were all rewritten into blob URLs
+    pointing at a directory listing or at the repository root. Splitting the fragment off made one
+    more of them reachable — `LICENSE/..#missing` used to be refused because the raw path carried
+    the `#`, and normalising it lands on the root. One word closes the whole class, and it is the
+    word the sentence above and the error message below both already used.
+
+    **What the published URL carries, decided rather than left implicit:** the author's spelling,
+    verbatim. The path is normalised only to *decide*, never to rewrite, because the fragment and
+    query must survive into the URL and a README address is the author's text. `docs/../LICENSE`
+    is therefore published as written; it resolves to a real file, and an address that resolves
+    outside the repository is refused above. No normaliser is built for a spelling nobody uses.
     """
     resolved_root = root.resolve()
     path = urlsplit(address).path
@@ -255,8 +268,13 @@ def _absolute(address: str, root: Path) -> str:
     if not target.is_relative_to(resolved_root):
         message = f"README address {address!r} points outside the repository, to {target}"
         raise ReadmeNotInExpectedFormatError(message)
-    if not target.exists():
-        message = f"README address {address!r} names no file in the repository ({target} is missing)"
+    if not target.is_file():
+        # Say which of the two things `is_file()` ruled out. Calling a directory "missing" — which
+        # is what this said first — asserts a fact the check never determined, and sends a reader
+        # after a path that is right there. A checkout holds regular files, directories and
+        # symlinks to them, so these two words cover every input that can reach here.
+        found = "a directory" if target.is_dir() else "missing"
+        message = f"README address {address!r} names no file in the repository ({target} is {found})"
         raise ReadmeNotInExpectedFormatError(message)
 
     base = RAW if target.suffix.lower() in IMAGE_SUFFIXES else BLOB

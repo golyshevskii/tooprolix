@@ -22,7 +22,7 @@ it is built around four constraints:
    would answer `prose_blocks` out of an older extractor and every number below would describe
    code that no longer ships — and `--verify` could not tell, because the `corpus/runs/` findings
    it compares against were recorded by that same older code. `load_blocks` therefore treats a
-   *successful* import as the error; see [`_refuse_a_stale_extension`].
+   *successful* import as the error; see [`_the_extractor`].
 2. **The word count is checked against the CLI before anything is built on it.** `--verify` replays
    the shipped limits (200 docstring / 150 comment, strictly greater) over these blocks and
    compares the resulting addresses with the `TPX001`/`TPX002` findings in `corpus/runs/`. If they
@@ -53,7 +53,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import importlib
-import importlib.util
 import json
 import os
 import subprocess
@@ -364,32 +363,45 @@ def check_population(counts: Mapping[str, int]) -> None:
         raise PopulationError("; ".join(drift))
 
 
-def _refuse_a_stale_extension() -> None:
+def _the_extractor() -> Any:
     """
-    Refuse to extract through an importable `tooprolix`, because no honest one can exist here.
+    Return the `tooprolix` extractor to measure through — and no honest one can exist here.
 
     # Raises
-    `StaleExtensionError`, naming the file to delete.
+    `ModuleNotFoundError` on a clean machine, which is this script's real condition.
+    `StaleExtensionError` if the name resolves at all, naming what resolved.
 
     The pyo3 boundary is gone: `pyproject.toml` ships `bindings = "bin"` and
-    `scripts/install-smoke.sh` asserts that `import tooprolix` MUST raise. So on any machine this
-    name resolves at all, it resolves to a **left-over pre-removal build**, and extracting through
-    it scores an older extractor against today's corpus and prints the result as current.
+    `scripts/install-smoke.sh` asserts that `import tooprolix` MUST raise. So anything that answers
+    to this name is not the shipped extractor, and extracting through it scores code that is not
+    what ships while printing the result as current.
 
-    `verify` cannot catch that: it compares the replayed limits against the CLI findings in
-    `corpus/runs/`, which were themselves recorded by that older code, so a consistent stale
-    extension reproduces its own stale findings and reports "reproduced exactly". Pinned by
-    `tests/unit/test_units.py::TestAStaleExtensionMayNotProduceNumbers` — without this refusal
-    `load_blocks` returns blocks and exits 0 (measured 2026-08-01).
+    **The import is performed, not predicted, and that is the whole design.** This asked
+    `importlib.util.find_spec` first — a forecast of what an import *would* find — and then imported
+    separately, which is two decisions about one question. A stateful meta-path finder answered
+    `None` to the forecast and supplied a stale module to the import, and the guard let it through
+    (measured 2026-08-01 at `9c660c5`: `load_blocks` returned a block reading `STALE OUTPUT`).
+    Grading a prediction instead of the act is recurring defect #6. One operation, one fact.
+
+    `verify` cannot catch a stale extractor either: it compares the replayed limits against the CLI
+    findings in `corpus/runs/`, which were themselves recorded by that older code, so a consistent
+    stale extension reproduces its own stale findings and reports "reproduced exactly". Pinned by
+    `tests/unit/test_units.py::TestAStaleExtensionMayNotProduceNumbers`.
     """
-    spec = importlib.util.find_spec("tooprolix")
-    if spec is None:
-        return
+    # By name because a compiled extension's exports are invisible to a static checker; the
+    # boundary is typed `Any` here and nowhere else.
+    module: Any = importlib.import_module("tooprolix")
+    # `__file__` for a left-over build, `__path__` for a directory of this name on `sys.path` — the
+    # repository directory is itself called `tooprolix`, so a namespace package is a real way for
+    # this to resolve, and telling that reader to delete a `.so` sends them after a file that is
+    # not there. Report what actually resolved.
+    location = getattr(module, "__file__", None) or getattr(module, "__path__", None) or "<no location>"
     raise StaleExtensionError(
-        f"`import tooprolix` resolved to {spec.origin or '<unknown location>'}, and this repository "
-        'ships no such module (`bindings = "bin"`; install-smoke.sh asserts the import raises). '
-        "It is a stale pre-removal pyo3 extension, and measuring through it would score an older "
-        "extractor against today's corpus. Delete it, then re-route extraction through the CLI."
+        f"`import tooprolix` resolved to {location}, and this repository ships no such module "
+        '(`bindings = "bin"`; install-smoke.sh asserts the import raises). Whatever answered is not '
+        "the shipped extractor — a stale pre-removal pyo3 build, or a directory of that name on "
+        "sys.path — and measuring through it would score code that is not what ships. Take it off "
+        "the import path, then re-route extraction through the CLI."
     )
 
 
@@ -399,13 +411,10 @@ def load_blocks(corpus_root: Path, runs_dir: Path) -> list[Block]:
 
     **Raises as it stands, and which error it raises is the point.** That export was the pyo3
     extension module, which the distribution no longer carries (`bindings = "bin"`), so on a clean
-    machine this is `ModuleNotFoundError` — see the module docstring. On a machine still holding a
-    pre-removal build it is [`StaleExtensionError`] rather than a silent measurement of old code.
+    machine this is `ModuleNotFoundError` — see the module docstring. On a machine where the name
+    resolves it is [`StaleExtensionError`] rather than a silent measurement of the wrong code.
     """
-    _refuse_a_stale_extension()
-    # The import is by name because a compiled extension's exports are invisible to a static
-    # checker; the boundary is typed `Any` here and nowhere else.
-    tooprolix: Any = importlib.import_module("tooprolix")
+    tooprolix: Any = _the_extractor()
     blocks: list[Block] = []
     counts: dict[str, int] = {}
     for run in sorted(runs_dir.glob("*.json")):
@@ -526,6 +535,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         blocks = load_blocks(Path(corpus_root), args.runs)
     except PopulationError as error:
         print(f"error: the walk is not the one run_all.sh recorded — {error}", file=sys.stderr)
+        return 1
+    except StaleExtensionError as error:
+        # An actionable message the CLI does not deliver is not delivered. Uncaught, this escaped
+        # as a traceback — the same thing a reader saw before the refusal existed, only longer.
+        print(f"error: {error}", file=sys.stderr)
         return 1
     print(f"blocks: {len(blocks)} from {len({block.repo for block in blocks})} runs", file=sys.stderr)
 
