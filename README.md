@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/tooprolix.gif" width="92" height="92" alt="Animated tooprolix cube artifact">
+  <img src="assets/tooprolix.gif" width="72" height="72" alt="#TPX">
 </p>
 
 <h1 align="center">tooprolix</h1>
