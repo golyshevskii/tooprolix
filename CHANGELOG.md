@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.8](https://github.com/golyshevskii/tooprolix/compare/v0.4.7...v0.4.8) - 2026-08-01
+
+### Other
+
+- run ordinary CI on the exact tag, refuse a stale release tree, and stop rebuilding what is already built ([#52](https://github.com/golyshevskii/tooprolix/pull/52))
+
 ## [0.4.7](https://github.com/golyshevskii/tooprolix/compare/v0.4.6...v0.4.7) - 2026-08-01
 
 ### Other
