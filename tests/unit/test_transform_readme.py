@@ -80,6 +80,37 @@ class TestRelativeAddressesAreMadeAbsolute:
         )
 
     @pytest.mark.parametrize(
+        ("address", "target"),
+        [
+            ("docs/cli-contract.md#exit-codes", "docs/cli-contract.md"),
+            ("docs/rules-and-configuration.md?plain=1", "docs/rules-and-configuration.md"),
+            ("docs/cli-contract.md?plain=1#exit-codes", "docs/cli-contract.md"),
+        ],
+    )
+    def test_a_link_to_a_section_of_a_document_resolves_against_the_document(self, address: str, target: str) -> None:
+        """
+        One address, two parsers, and the second one decides — the compare-before-normalise shape.
+
+        `_is_relative` is URL-aware (`urlsplit`, which is the whole argument of its docstring), so a
+        `#fragment` or `?query` is correctly split off and the address is judged relative. `_absolute`
+        then took the **raw** string and asked the filesystem for it, so `docs/cli-contract.md#x`
+        was looked up as a file literally named `cli-contract.md#x`, found missing, and the build was
+        stopped with a message blaming a file that is present.
+
+        Measured 2026-08-01 through the real entry path on a copy of the repository README with one
+        anchor added: `scripts/transform_readme.py` exited **1** with *"names no file in the
+        repository"*. A section link is the most ordinary thing a README grows, and this script
+        gates the README that goes to PyPI, so the false positive stops a release.
+
+        The rewritten URL must keep the fragment: it is the reader's destination, and only the
+        filesystem lookup has any business ignoring it.
+        """
+        text = f"see the [contract]({address}).\n"
+
+        assert transform(text, root=REPO_ROOT) == f"see the [contract]({BLOB}{address}).\n"
+        assert (REPO_ROOT / target).is_file(), "the fixture must name a document that really exists"
+
+    @pytest.mark.parametrize(
         "address",
         [
             "https://github.com/astral-sh/ruff",
@@ -271,6 +302,20 @@ class TestItFailsLoudRatherThanSilently:
     def test_a_relative_address_naming_a_missing_file_is_a_build_failure(self) -> None:
         with pytest.raises(ReadmeNotInExpectedFormatError, match="docs/moved-away.md"):
             transform("see [the contract](docs/moved-away.md).\n", root=REPO_ROOT)
+
+    @pytest.mark.parametrize("address", ["?plain=1", "?raw=true"])
+    def test_a_query_with_no_document_in_front_of_it_is_a_build_failure(self, address: str) -> None:
+        """
+        The one address the fragment/query split must NOT wave through.
+
+        Splitting the path off for the filesystem lookup means an address that is *only* a query has
+        an empty path, and `root / ""` is the repository root — which exists, so it would resolve
+        and be rewritten to a `blob/main/?plain=1` URL that points at nothing. Reachable, not
+        hypothetical: `relative_addresses('[x](?plain=1) …')` returns `['?plain=1', 'LICENSE']`
+        (measured 2026-08-01), so the rewriter really does hand this to the resolver.
+        """
+        with pytest.raises(ReadmeNotInExpectedFormatError, match="carries no path"):
+            transform(f"[real](LICENSE) [bad]({address})\n", root=REPO_ROOT)
 
     @pytest.mark.parametrize("address", ["1:missing.md", "2024:notes.md", "9:x/y.md"])
     def test_a_colon_that_is_not_a_url_scheme_is_still_a_relative_address(self, address: str) -> None:

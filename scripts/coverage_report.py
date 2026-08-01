@@ -140,7 +140,11 @@ _SOURCE_TREES: dict[str, tuple[tuple[str, ...], str, tuple[str, ...]]] = {
 # excused there, but only when the file defines no functions — see the check below, which applies
 # that condition instead of exempting the whole format. Both formats are checked in the other
 # direction (nothing outside the source tree may be in the denominator) unconditionally.
-_FORMATS_THAT_REPORT_UNEXECUTED_FILES = {PYTHON_REPORT_FORMAT}
+#
+# Spelled at the one call site as `== RUST_REPORT_FORMAT` rather than held in a one-element
+# `_FORMATS_THAT_REPORT_UNEXECUTED_FILES` set with a single reader. The two are equivalent over the
+# two formats `--format` accepts, and the positive spelling is the fail-closed one: a third format
+# added later gets the unconditional requirement instead of inheriting llvm-cov's excuse by default.
 
 
 def measurable_source_files(repo_root: Path, report_format: str) -> set[str]:
@@ -282,7 +286,7 @@ def verify_report_measured_the_source_tree(data: Any, report_format: str, repo_r
             f"text, so the denominator carries records from a stale object; clear the target "
             f"directory of artifacts no current target builds and measure again"
         )
-    if missing and report_format not in _FORMATS_THAT_REPORT_UNEXECUTED_FILES:
+    if missing and report_format == RUST_REPORT_FORMAT:
         # llvm-cov reports what the compiler instrumented, so a source file with nothing to
         # instrument is legitimately absent — `src/detect.rs` is module documentation and two
         # `pub mod` declarations, nothing else. That is the ONLY excuse, and it is checked rather than
@@ -291,9 +295,10 @@ def verify_report_measured_the_source_tree(data: Any, report_format: str, repo_r
         # does not enable. `cargo fmt`, `clippy` and `cargo test` all walk the module tree, so none
         # of them would notice either.
         #
-        # `fn ` in the file text is the whole test. Its known ceiling is a `fn` appearing only
-        # inside a doc-comment example, which would demand an entry llvm-cov will never produce —
-        # that fails loudly and is fixed by wiring the module up or saying why it has no code.
+        # The excuse is `_defines_functions`, and its ceilings are stated there rather than
+        # restated here. This comment used to carry its own copy of the predicate — "`fn ` in the
+        # file text is the whole test" — which stayed behind when the literal became `\bfn\s`, so
+        # the call site described a narrower check than the one it makes. One owner for the fact.
         missing = {name for name in missing if _defines_functions(repo_root, name)}
     if missing:
         raise ValueError(

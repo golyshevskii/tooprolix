@@ -233,9 +233,23 @@ def _render(text: str) -> str:
 
 
 def _absolute(address: str, root: Path) -> str:
-    """Make `address` absolute, or raise if it is not a file inside this repository."""
+    """
+    Make `address` absolute, or raise if it is not a file inside this repository.
+
+    The address is split the same way [`_is_relative`] judged it. One string parsed two ways is
+    how a `docs/cli-contract.md#exit-codes` link used to stop the build: `_is_relative` is
+    URL-aware and split the fragment off, then this function handed the **raw** string to the
+    filesystem, which looked for a file literally named `cli-contract.md#exit-codes`, and the
+    README was refused with a message blaming a document that is present. A fragment or query
+    addresses a place *inside* the document, so only the path half names a file — and the whole
+    address, fragment included, is what the rewritten URL must carry.
+    """
     resolved_root = root.resolve()
-    target = (resolved_root / address).resolve()
+    path = urlsplit(address).path
+    if not path:
+        message = f"README address {address!r} carries no path, so it names nothing to resolve"
+        raise ReadmeNotInExpectedFormatError(message)
+    target = (resolved_root / path).resolve()
     # Resolved on both sides before comparing: `docs/../../secrets` and a symlink out of the tree
     # both pass a lexical `startswith` on the raw text.
     if not target.is_relative_to(resolved_root):

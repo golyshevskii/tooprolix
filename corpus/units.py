@@ -17,6 +17,12 @@ it is built around four constraints:
    measured, `CORPUS_ROOT=/tmp python corpus/units.py --verify` →
    `ModuleNotFoundError: No module named 'tooprolix'`. The numbers this file produced are recorded
    in `corpus/REPORT.md`; reproducing them needs the extraction re-routed through the CLI first.
+
+   **A machine still holding a pre-removal build is refused, not measured.** Left to import, it
+   would answer `prose_blocks` out of an older extractor and every number below would describe
+   code that no longer ships — and `--verify` could not tell, because the `corpus/runs/` findings
+   it compares against were recorded by that same older code. `load_blocks` therefore treats a
+   *successful* import as the error; see [`_refuse_a_stale_extension`].
 2. **The word count is checked against the CLI before anything is built on it.** `--verify` replays
    the shipped limits (200 docstring / 150 comment, strictly greater) over these blocks and
    compares the resulting addresses with the `TPX001`/`TPX002` findings in `corpus/runs/`. If they
@@ -47,6 +53,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import importlib
+import importlib.util
 import json
 import os
 import subprocess
@@ -120,6 +127,10 @@ class LabelError(RuntimeError):
 
 class PopulationError(RuntimeError):
     """The walk did not produce the file set `corpus/run_all.sh` recorded."""
+
+
+class StaleExtensionError(RuntimeError):
+    """An importable `tooprolix` module can only be a stale pre-removal pyo3 extension."""
 
 
 def count_words(block: Block) -> int:
@@ -353,13 +364,45 @@ def check_population(counts: Mapping[str, int]) -> None:
         raise PopulationError("; ".join(drift))
 
 
+def _refuse_a_stale_extension() -> None:
+    """
+    Refuse to extract through an importable `tooprolix`, because no honest one can exist here.
+
+    # Raises
+    `StaleExtensionError`, naming the file to delete.
+
+    The pyo3 boundary is gone: `pyproject.toml` ships `bindings = "bin"` and
+    `scripts/install-smoke.sh` asserts that `import tooprolix` MUST raise. So on any machine this
+    name resolves at all, it resolves to a **left-over pre-removal build**, and extracting through
+    it scores an older extractor against today's corpus and prints the result as current.
+
+    `verify` cannot catch that: it compares the replayed limits against the CLI findings in
+    `corpus/runs/`, which were themselves recorded by that older code, so a consistent stale
+    extension reproduces its own stale findings and reports "reproduced exactly". Pinned by
+    `tests/unit/test_units.py::TestAStaleExtensionMayNotProduceNumbers` — without this refusal
+    `load_blocks` returns blocks and exits 0 (measured 2026-08-01).
+    """
+    spec = importlib.util.find_spec("tooprolix")
+    if spec is None:
+        return
+    raise StaleExtensionError(
+        f"`import tooprolix` resolved to {spec.origin or '<unknown location>'}, and this repository "
+        'ships no such module (`bindings = "bin"`; install-smoke.sh asserts the import raises). '
+        "It is a stale pre-removal pyo3 extension, and measuring through it would score an older "
+        "extractor against today's corpus. Delete it, then re-route extraction through the CLI."
+    )
+
+
 def load_blocks(corpus_root: Path, runs_dir: Path) -> list[Block]:
     """
     Extract every prose block of every measured run through the `tooprolix` Python export.
 
-    **Raises `ModuleNotFoundError` as it stands**: that export was the pyo3 extension module, which
-    the distribution no longer carries (`bindings = "bin"`). See the module docstring.
+    **Raises as it stands, and which error it raises is the point.** That export was the pyo3
+    extension module, which the distribution no longer carries (`bindings = "bin"`), so on a clean
+    machine this is `ModuleNotFoundError` — see the module docstring. On a machine still holding a
+    pre-removal build it is [`StaleExtensionError`] rather than a silent measurement of old code.
     """
+    _refuse_a_stale_extension()
     # The import is by name because a compiled extension's exports are invisible to a static
     # checker; the boundary is typed `Any` here and nowhere else.
     tooprolix: Any = importlib.import_module("tooprolix")
@@ -432,13 +475,15 @@ def verify(blocks: Sequence[Block], runs_dir: Path) -> bool:
     return False
 
 
-def _units(blocks: Sequence[Block]) -> dict[str, Unit]:
+def _units() -> dict[str, Unit]:
+    """Return the four candidate units by name. Takes no blocks: a unit is a function, not a fit."""
     tokens_norm, tokens_raw = token_counters()
     return {"words": count_words, "chars_norm": count_chars_norm, "tokens_norm": tokens_norm, "tokens_raw": tokens_raw}
 
 
-def _report_calibration(blocks: Sequence[Block]) -> tuple[dict[str, set[Block]], dict[str, Unit]]:
-    units = _units(blocks)
+def _report_calibration(blocks: Sequence[Block]) -> dict[str, set[Block]]:
+    """Print the calibration table and return `{unit: firing set}`."""
+    units = _units()
     words_firing = {block for block in blocks if count_words(block) > SHIPPED_LIMITS.get(block.kind, 10**9)}
     alerts_by_kind: dict[str, int] = {}
     for block in words_firing:
@@ -460,7 +505,7 @@ def _report_calibration(blocks: Sequence[Block]) -> tuple[dict[str, set[Block]],
             # property is enforced by `CalibrationError`, but the printed evidence proved nothing.
             measured = sum(1 for block in fired[name] if block.kind == kind)
             print(f"| {name} | {kind} | {thresholds[kind]} | {measured} | {alerts_by_kind.get(kind, 0)} |")
-    return fired, units
+    return fired
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -489,7 +534,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.verify:
         return 0
 
-    fired, _ = _report_calibration(blocks)
+    fired = _report_calibration(blocks)
     words_firing = fired["words"]
     union: set[Block] = set()
     print()

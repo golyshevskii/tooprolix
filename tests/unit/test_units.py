@@ -25,6 +25,9 @@ Run: make test
 
 from __future__ import annotations
 
+import importlib.machinery
+import sys
+import types
 from pathlib import Path
 
 import pytest
@@ -41,6 +44,34 @@ def block(normalized: str, *, kind: str = "docstring", path: str = "a.py", line:
 def words(count: int, *, first: str = "w") -> str:
     """Return `count` distinct words, so the text is also a usable identity."""
     return " ".join(f"{first}{index}" for index in range(count))
+
+
+def run_all_table() -> dict[str, tuple[str, int]]:
+    """
+    Return `{run: (walk root, walked .py files)}` parsed out of `corpus/run_all.sh`.
+
+    `run_all.sh` is the only place that verifies the pins, the worktrees and the walked counts, so
+    it is the independent source of truth for both users below: the drift assertion, and the
+    population that `check_population` must accept.
+
+    The row shape is pinned by its separator count, and that is load-bearing rather than
+    incidental: the columns are
+    `name|root|checkout|exit|files|skipped|TPX001|TPX002|TPX003|near|exact`, so **ten** pipes. It
+    was seven until `make-check-graceful-on-unreadable-files` added the `skipped` column, and eight
+    until `close-anti-fp-gate-with-public-reference` added the near/exact split — and each time the
+    stale count made the caller fail loudly with an empty parse instead of silently agreeing with
+    nothing, which is what each caller's `assert table` is for. A parser that quietly matched zero
+    rows would turn both checks into no-ops.
+    """
+    script = (Path(__file__).resolve().parents[2] / "corpus/run_all.sh").read_text()
+    return {
+        row[0]: (row[1], int(row[4]))
+        for row in (
+            line.strip().strip('"').split("|")
+            for line in script.splitlines()
+            if line.strip().startswith('"') and line.count("|") == 10
+        )
+    }
 
 
 class TestEqualAlertVolume:
@@ -183,27 +214,10 @@ class TestOneOwnerForTheRunTable:
         so every Python restatement of "which root, how many files" has to answer to it. Two owners
         for one fact is the defect this epic keeps paying for; this is the machine check that keeps
         it to one owner plus mirrors.
-
-        The row shape is pinned by its separator count, and that is load-bearing rather than
-        incidental: the columns are
-        `name|root|checkout|exit|files|skipped|TPX001|TPX002|TPX003|near|exact`, so **ten** pipes.
-        It was seven until `make-check-graceful-on-unreadable-files` added the `skipped` column, and
-        eight until `close-anti-fp-gate-with-public-reference` added the near/exact split — and each
-        time the stale count made this test fail loudly with an empty parse instead of silently
-        agreeing with nothing, which is exactly what the `assert table` line below is for. Keep
-        both: a parser that quietly matches zero rows would turn this whole check into a no-op.
         """
         import bench
 
-        script = (Path(__file__).resolve().parents[2] / "corpus/run_all.sh").read_text()
-        table = {
-            row[0]: (row[1], int(row[4]))
-            for row in (
-                line.strip().strip('"').split("|")
-                for line in script.splitlines()
-                if line.strip().startswith('"') and line.count("|") == 10
-            )
-        }
+        table = run_all_table()
         assert table, "the EXPECTED table in run_all.sh could not be parsed"
 
         for name, (root, files) in units.RUNS.items():
@@ -227,9 +241,20 @@ class TestThePopulationIsPinned:
         with pytest.raises(units.PopulationError, match="requests"):
             units.check_population({"requests": 36})
 
-    def test_the_recorded_counts_pass(self) -> None:
-        counts = {name: files for name, (_, files) in units.RUNS.items()}
-        units.check_population(counts)
+    def test_the_population_run_all_sh_recorded_is_accepted(self) -> None:
+        """
+        The positive control, with an input that does not come from `units.RUNS`.
+
+        It used to build `counts` **from** `units.RUNS` and check it **against** `units.RUNS`, so it
+        passed by construction whatever `RUNS` said — satisfied even by a `check_population` that
+        returns unconditionally. Reading the counts out of `corpus/run_all.sh` instead makes it able
+        to fail: it is now the guard that a `check_population` which rejects a correct population
+        cannot ship, and the negative case below is what catches one that accepts everything.
+        """
+        table = run_all_table()
+        assert table, "the EXPECTED table in run_all.sh could not be parsed"
+
+        units.check_population({name: files for name, (_, files) in table.items()})
 
 
 class TestCalibrationTolerance:
@@ -259,6 +284,80 @@ class TestCalibrationTolerance:
         blocks.append(block(words(10), path="small.py"))
         with pytest.raises(units.CalibrationError):
             units.calibrate(blocks, units.count_words, {"docstring": 2})
+
+
+class TestAStaleExtensionMayNotProduceNumbers:
+    """
+    `import tooprolix` succeeding is itself the defect, not the happy path.
+
+    The pyo3 boundary is gone — `pyproject.toml` ships `bindings = "bin"` and
+    `scripts/install-smoke.sh` asserts that `import tooprolix` MUST raise — so the only module
+    that name can resolve to on any machine is a **stale pre-removal extension**. Left to import,
+    it answers `prose_blocks` out of an older extractor and every threshold, disagreement set and
+    precision number below it would describe code that no longer ships, printed as current.
+
+    That is a guard failing open: the run cannot tell that it measured the wrong thing, and
+    `--verify` cannot catch it either, because a consistent old extractor reproduces its own old
+    findings. So the import is refused rather than trusted.
+    """
+
+    def _stale(self, monkeypatch: pytest.MonkeyPatch) -> list[str]:
+        """Put a fake pre-removal extension on the import path and record what it is asked for."""
+        consulted: list[str] = []
+        extension = types.ModuleType("tooprolix")
+        # A real left-over build is a loaded extension, so it carries a spec with an origin. The
+        # fake models that rather than the bare `ModuleType` default of `__spec__ = None`, which
+        # no importable module on a real machine has.
+        extension.__spec__ = importlib.machinery.ModuleSpec("tooprolix", loader=None, origin="/stale/tooprolix.so")
+
+        def prose_blocks(path: str, source: str) -> list[tuple[str, int, int, str]]:
+            """Answer in the shape the removed export had: `(kind, start, end, normalised)`."""
+            consulted.append(path)
+            return [("docstring", 1, 2, "stale prose from an extractor that no longer ships")]
+
+        extension.prose_blocks = prose_blocks  # ty: ignore[unresolved-attribute]
+        monkeypatch.setitem(sys.modules, "tooprolix", extension)
+        return consulted
+
+    def test_an_importable_tooprolix_is_refused_instead_of_measured(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """Without the refusal this returns blocks — old numbers, reported as today's."""
+        consulted = self._stale(monkeypatch)
+        monkeypatch.setattr(units, "RUNS", {"r": ("r", 1)})
+        monkeypatch.setattr(units, "walked_files", lambda corpus_root, root: ["r/a.py"])
+        (tmp_path / "r").mkdir()
+        (tmp_path / "r/a.py").write_text('"""d"""\n', encoding="utf-8")
+        runs = tmp_path / "runs"
+        runs.mkdir()
+        (runs / "r.json").write_text("{}", encoding="utf-8")
+
+        with pytest.raises(units.StaleExtensionError):
+            units.load_blocks(tmp_path, runs)
+
+        assert consulted == [], "the stale extractor was asked for blocks before the run was refused"
+
+    def test_the_refusal_names_the_file_to_delete(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+        """A machine-level residue needs the path, or the reader cannot act on the message."""
+        self._stale(monkeypatch)
+        runs = tmp_path / "runs"
+        runs.mkdir()
+
+        with pytest.raises(units.StaleExtensionError, match="/stale/tooprolix.so"):
+            units.load_blocks(tmp_path, runs)
+
+    def test_with_no_extension_present_the_honest_failure_survives(self, tmp_path: Path) -> None:
+        """
+        The guard must not mask the ordinary dead state, which is what the module docstring documents.
+
+        `ModuleNotFoundError` here is the script's real condition on a clean machine; turning it
+        into the stale-extension error would send a reader hunting a file that is not there.
+        """
+        runs = tmp_path / "runs"
+        runs.mkdir()
+
+        with pytest.raises(ModuleNotFoundError):
+            units.load_blocks(tmp_path, runs)
 
 
 class TestTheEntryPointRefusesWithoutASubject:

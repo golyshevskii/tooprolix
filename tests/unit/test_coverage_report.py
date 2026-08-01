@@ -41,6 +41,7 @@ import pytest
 from coverage_report import (
     PYTHON_REPORT_FORMAT,
     RUST_REPORT_FORMAT,
+    _defines_functions,
     format_percent,
     measurable_source_files,
     percent_from_report,
@@ -74,19 +75,23 @@ def rust_report(files: set[str], root: Path = REPO_ROOT) -> dict[str, Any]:
 
 
 def instrumentable_rust_sources(root: Path = REPO_ROOT) -> set[str]:
-    """
+    r"""
     Walk the Rust sources a REAL `cargo llvm-cov` run puts in its report: the walked set, minus the
     files whose text defines no function.
 
     Not a second statement of the denominator contract — that job belongs to `_SOURCE_TREES`. This
     is what an honest report looks like, and the honest baselines below need it because the guard
     now rejects a report carrying a file llvm-cov could not have instrumented.
+
+    It calls the guard's own `_defines_functions` rather than re-spelling it. This held its own
+    `"fn " in text` copy, which is the predicate the script REPLACED with `\bfn\s`: the two agree
+    on all 10 files in `src/` today, so the suite was green by coincidence, and the day a source
+    gains `pub fn\nfoo()` or `fn\tfoo()` — the two shapes
+    `TestAMissingRustFileIsOnlyExcusedWhenThereIsNothingToInstrument` exists to cover — this helper
+    would have dropped it from the baseline while the guard demanded it, reddening a neighbouring
+    test for a reason unrelated to its subject.
     """
-    return {
-        name
-        for name in measurable_source_files(root, RUST_REPORT_FORMAT)
-        if "fn " in (root / name).read_text(encoding="utf-8")
-    }
+    return {name for name in measurable_source_files(root, RUST_REPORT_FORMAT) if _defines_functions(root, name)}
 
 
 def fake_crate(root: Path, sources: dict[str, str]) -> None:
@@ -327,7 +332,10 @@ class TestTheReportIsGradedNotJustRead:
         detect = (REPO_ROOT / "src/detect.rs").read_text(encoding="utf-8")
 
         assert "pub mod " in detect
-        assert "fn " not in detect
+        # Asked of the guard's own predicate, not of a substring: `"fn " not in detect` would keep
+        # passing on a `src/detect.rs` that grew `pub fn\nfoo()`, which is a file the guard treats
+        # as instrumentable and this test as inert.
+        assert not _defines_functions(REPO_ROOT, "src/detect.rs")
 
         walked = measurable_source_files(REPO_ROOT, RUST_REPORT_FORMAT)
         assert "src/detect.rs" in walked
