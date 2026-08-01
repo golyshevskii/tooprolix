@@ -29,6 +29,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          # WHERE THE STALE TAG IS BORN. By default this checks out `github.sha`, the push that
+          # triggered the run; with `cancel-in-progress: false` a queued run starts minutes later
+          # and still forks the release branch from that older tip. On `v0.4.6` the branch was
+          # created at `0e1b710` while `main` was already `e9af7ed`, and the tag inherited the stale
+          # tree. `ref: main` resolves the branch when the job actually runs.
+          #
+          # CONFIGURATION, not a guard: it removes the usual cause but cannot refuse an outcome.
+          # The `release` job below refuses the outcome. Both, deliberately.
+          ref: main
           # release-plz reads every commit since the last tag to compute the bump; a shallow clone
           # gives it nothing to read.
           fetch-depth: 0
@@ -71,6 +80,102 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+
+      # INVARIANT A: THE TREE ABOUT TO BE TAGGED MUST BE THE TREE THAT LANDED ON MAIN.
+      #
+      # release-plz PRs merge with a MERGE COMMIT (task PRs are squashed), so the release commit
+      # keeps whatever `main` tip release-plz forked from and everything merged after that fork is
+      # absent from the tag. Three of the first five releases shipped such a tree; `v0.4.6` is
+      # missing PR #48 entirely, 6 files and +88/-83.
+      #
+      #   tag     tag tree    merge tree   invariant A
+      #   v0.4.2  b242d719    b242d719     TRUE
+      #   v0.4.3  65a7ca70    db496fb3     FALSE
+      #   v0.4.4  edfe3539    edfe3539     TRUE
+      #   v0.4.5  68cdf923    cf8d4ea8     FALSE
+      #   v0.4.6  5d0ceefb    3a1f67fd     FALSE
+      #   v0.4.7  1c89006c    1c89006c     TRUE
+      #
+      # It is NOT an ancestry claim: with a merge-commit release the tag target is an ancestor of
+      # `main` on every release, good and bad alike.
+      #
+      # WHAT IT COMPARES. This job runs on the push of the merge commit, so HEAD is that merge and
+      # `HEAD^2` is the commit release-plz tags — true of all six tags. When HEAD is not a merge
+      # there is no second candidate and the invariant holds by construction.
+      #
+      # IT REFUSES RELEASES, NOT MERGES. An ordinary merge-commit PR forks at A, `main` advances to
+      # B, and the merge's two trees differ exactly as a stale release's do — while
+      # `release_always = false` means release-plz would tag nothing. So the release commit is
+      # identified first, FROM AN ARTIFACT, NOT FROM PROSE: the version in `Cargo.toml` is what
+      # release-plz acts on (no bump, no tag) and cannot drift with a message template, whereas an
+      # earlier subject-text reading would have switched the guard off silently. Measured over all
+      # 13 merge commits on `main`: the version moves for all twelve releases, v0.3.5 to v0.4.7, and
+      # not for the one genuine non-release merge, `68ab88f`.
+      #
+      # IT RUNS BEFORE THE TAGGING ACTION, because afterwards there is nothing left to refuse.
+      #
+      # AND IT FAILS CLOSED. The first version ignored git's exit status, so two unresolvable refs
+      # compared EQUAL and it printed `OK`. `set -e`, `--verify` and the emptiness check are why it
+      # now exits non-zero when it cannot resolve what it is grading. Exercised by
+      # `tests/unit/test_workflow_contracts.py`, which executes THIS shell against all six releases
+      # and against a directory that is not a repository.
+      - name: Refuse to tag a tree that is not main's
+        run: |
+          set -euo pipefail
+
+          head=$(git rev-parse --verify "HEAD^{commit}")
+          head_tree=$(git rev-parse --verify "HEAD^{tree}")
+          if [ -z "$head" ] || [ -z "$head_tree" ]; then
+            echo "FAIL: unresolved input (main commit '$head', main tree '$head_tree')." >&2
+            exit 1
+          fi
+
+          if ! release=$(git rev-parse --verify --quiet "HEAD^2"); then
+            echo "OK: HEAD is not a merge commit, so the only commit release-plz can tag is HEAD."
+            exit 0
+          fi
+
+          before=$(git show "$release^:Cargo.toml" | sed -n 's/^version = "\(.*\)"$/\1/p')
+          after=$(git show "$release:Cargo.toml" | sed -n 's/^version = "\(.*\)"$/\1/p')
+
+          # EXACTLY ONE `version = "…"` PER MANIFEST, OR REFUSE. This read is lexical, so a
+          # `[workspace.package]` or `[dependencies.x]` table with its own top-of-line version above
+          # `[package]` would be graded instead — and being unchanged between the two commits it
+          # reads as "no bump", classifying a genuine release as an ordinary merge and skipping the
+          # tree comparison. Measured on a fixture: a real release with a stale tree and a decoy
+          # `version = "9.9.9"` printed `OK: … leaves the package version at 9.9.9` and exited 0.
+          # Zero matches (an inherited `version.workspace = true`) is refused by the same test.
+          before_n=$(printf '%s' "$before" | grep -c . || true)
+          after_n=$(printf '%s' "$after" | grep -c . || true)
+          if [ "$before_n" != "1" ] || [ "$after_n" != "1" ]; then
+            echo "FAIL: Cargo.toml must hold exactly one top-of-line 'version = \"…\"' for this check to" >&2
+            echo "      be unambiguous; found $before_n at $release^ and $after_n at $release." >&2
+            exit 1
+          fi
+
+          if [ "$before" = "$after" ]; then
+            echo "OK: $release leaves the package version at $after, so it is not a release commit."
+            echo "    release_always = false, so this push creates no tag and there is no tree to guard."
+            exit 0
+          fi
+
+          release_tree=$(git rev-parse --verify "$release^{tree}")
+          if [ -z "$release_tree" ]; then
+            echo "FAIL: unresolved input (release tree of $release is empty)." >&2
+            exit 1
+          fi
+
+          echo "main            $head ($head_tree)"
+          echo "to be tagged    $release ($release_tree)"
+
+          if [ "$release_tree" != "$head_tree" ]; then
+            echo "FAIL: $release would be tagged with tree $release_tree, but main carries $head_tree." >&2
+            echo "      Everything merged after the release branch forked is missing from the tag:" >&2
+            git diff --stat "$release" "$head" >&2
+            exit 1
+          fi
+
+          echo "OK: the commit release-plz will tag carries main's tree."
 
       - name: Run release-plz
         uses: release-plz/action@2eb1d8bcb770b4c48ccfaad919734b38b51958c9 # v0.5.131

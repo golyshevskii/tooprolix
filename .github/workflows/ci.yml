@@ -9,6 +9,14 @@ on:
   pull_request:
   push:
     branches: [main]
+    # THE TAG IS WHAT GETS PUBLISHED, SO THE TAG IS WHAT HAS TO BE TESTED. Before this, five tags
+    # produced five runs and every one was `Build artifacts`: no lint/type/test/cargo job had ever
+    # run at a tag SHA. The release PR's CI is no substitute — `pull_request` checks out
+    # `refs/pull/N/merge`, tree `3a1f67fd` for `v0.4.6`, while the tag's tree was `5d0ceefb`.
+    #
+    # `branches: [main]` stays while branch protection is absent (`branches/main/protection` -> 404):
+    # nothing else would notice a direct push. Removing it needs a 200 from that API first.
+    tags: ['v*']
 
 # Key on the ref so a re-push cancels the stale run instead of racing it.
 # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
@@ -34,37 +42,39 @@ env:
   RUSTUP_MAX_RETRIES: "10"
 
 jobs:
-  # Eight jobs: three Python (lint/type/test), four Rust (cargo-fmt,
-  # cargo-clippy, cargo-test, cargo-doc) and coverage.
+  # FIVE JOBS: `ci-python`, `ci-rust`, `cargo-doc`, `coverage`, `ci-required`. Keep the count
+  # honest; this comment has miscounted the file it sits in three times.
   #
-  # Keep this count honest. It read "Six jobs" while there were seven — the
-  # `coverage` job was added without updating it — and then eight when
-  # `cargo-doc` landed. It briefly read "Nine" for a `pr-title` job that now
-  # lives in `.github/workflows/release-contract.yml` instead, because that
-  # gate needs a `pull_request: types: [… edited]` trigger and putting it on
-  # this shared one would re-run all eight jobs on every description typo. A
-  # comment that miscounts the file it sits in is the cheapest possible thing
-  # to get wrong and the easiest to believe.
+  # WHY FIVE AND NOT EIGHT. GitHub bills each JOB rounded up to the whole minute, so eight
+  # sub-minute jobs cost 10 billed minutes for 269 s of real work (PR #46), 59 % of it per-job
+  # setup. The four Rust jobs did NOT duplicate a compile — `Swatinem/rust-cache` already absorbs
+  # it, and a Rust-heavy PR cost the same 256 s as a README-only one. Do not quote a compile
+  # saving. Accepted cost: steps in one job fail fast, so a rustfmt failure now hides the clippy
+  # and test results that eight parallel jobs would have reported.
   #
-  # The Rust jobs are deliberately NOT named `test`/`lint` — those names are
-  # already taken by the Python jobs above and are registered as required
-  # status checks in branch protection. Renaming any existing job silently
-  # breaks that rule: the old name stays required and never reports again.
+  # WHAT DID NOT MERGE:
+  #   * `cargo-doc` — a rustdoc failure and a clippy failure are different answers and must not
+  #     share one red X. User decision, 2026-08-01.
+  #   * `coverage` — distinct contract and toolchain, and the slowest job here.
+  #   * `release-contract` — different workflow, `pull_request_target`, different permissions;
+  #     `needs:` cannot cross workflows.
   #
-  # No `paths:`, `paths-ignore:` or `if:` on ANY job in this file. A SKIPPED
-  # check does not satisfy a required status check — it stays pending, so a
-  # path-filtered gate wedges a PR at "Expected — waiting for status to be
-  # reported" while CI is entirely green. ruff does gate its cargo jobs on a
-  # `determine_changes` job; that practice is NOT portable here, because ruff's
-  # required checks are configured differently.
+  # The Rust job is NOT named `test`/`lint`: renaming a check that branch protection has registered
+  # leaves the old name required and never reporting again. Nothing is required today, which is
+  # exactly why the renaming and the aggregate happen now, while they are free.
   #
-  # AC4's corpus-determinism proof (`make corpus.measure`) deliberately does
-  # NOT run here: it clones the whole pinned corpus, which is hundreds of
-  # megabytes and minutes of network on every run. That check stays a local,
-  # manual step; do not "fix" CI by adding it.
+  # NO `paths:`, `paths-ignore:` OR `if:` ON ANY WORK JOB IN THIS FILE. A skipped check does not
+  # satisfy a required one — it stays pending, wedging a PR at "Expected — waiting for status to be
+  # reported" while CI is entirely green. ruff does gate its cargo jobs on a `determine_changes`
+  # job; its required checks are configured differently, so that is not portable here. The one
+  # `if:` in this file is `ci-required`'s `always()`, which can only make a job run more often. The
+  # path classifier is deferred to `route-ci-jobs-by-changed-paths`.
+  #
+  # `make corpus.measure` deliberately does NOT run here: it clones hundreds of megabytes of pinned
+  # corpus on every run. It stays a local, manual step; do not "fix" CI by adding it.
 
-  lint:
-    name: lint
+  ci-python:
+    name: ci-python
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -72,6 +82,17 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # Full history. `corpus/classification.py` resolves the commit each measurement names
+          # with `git cat-file` rather than trusting the string, and a shallow checkout fails that
+          # lookup on a commit that genuinely exists:
+          #
+          #   detector_commit '6242f30…' does not resolve to a commit in /home/runner/work/…
+          #
+          # Measured with `git clone --depth 1` plus `make test`: 16 failed, 317 passed. NOT fixed
+          # by letting the check pass when the repository is shallow — that guard would be disabled
+          # by the checkout depth of whoever ran it. EVERY job running the Python tests needs this;
+          # `coverage` does too, and went red for the same reason after this job was fixed alone.
+          fetch-depth: 0
 
       - name: Install uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
@@ -82,139 +103,49 @@ jobs:
       - name: make lint.check
         run: make lint.check
 
-  type:
-    name: type
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          enable-cache: true
-
       - name: make type
         run: make type
-
-  test:
-    name: test
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          # Full history, and ONLY this job needs it. The classification artifacts of the
-          # anti-false-positive gate name the commit each measurement was taken on, and
-          # `corpus/classification.py` resolves that commit with `git cat-file` rather than trusting
-          # the string — AC9's whole point is that a provenance nobody can check is not one. Under
-          # the default shallow checkout that lookup fails on a commit that genuinely exists, and
-          # 20 tests go red for an environment reason:
-          #
-          #   detector_commit '6242f30…' does not resolve to a commit in /home/runner/work/…
-          #
-          # Deliberately NOT fixed by letting the check pass when the repository is shallow. That
-          # would be a guard that fails open, disabled by the checkout depth of whoever runs it,
-          # and this gate has already had two review findings of exactly that shape.
-          #
-          # EVERY job that runs the Python tests needs this, not just this one. `coverage` runs
-          # them too, through `make cov` -> `py.cov`, and it went red for the identical reason after
-          # this job was fixed alone. Found by grepping the workflow for the jobs that actually run
-          # them rather than by assuming; `grep -n 'run: make' .github/workflows/ci.yml` is the check.
-          fetch-depth: 0
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          enable-cache: true
 
       - name: make test
         run: make test
 
+      # THE LAST STEP OF EVERY JOB THAT CHECKS OUT, IN THIS WORKFLOW AND IN `build-artifacts.yml`.
+      #
+      # A run's `head_sha` is a label it reports about itself: run 30691798694 reports
+      # `head_sha=292d8af4` while `actions/checkout` materialised tree `3a1f67fd`. So each job
+      # asserts for itself that its gates ran on the commit the event names.
+      #
+      # LAST, not first. Recorded straight after the checkout, a second checkout inserted afterwards
+      # would change what the gates graded while the record stayed right.
+      #
+      # IN THE JOB, not in an aggregate: `needs:` does not cross workflows and job outputs are not
+      # returned by the `actions/runs/<id>/jobs` REST endpoint, so an aggregate could never reach
+      # the workflow that builds the publishable binaries.
+      #
+      # It proves which commit HEAD is on, NOT the contents of the files. A step that edits a
+      # tracked file afterwards is invisible to it, which is why there is no uniform working-tree
+      # check: `build-artifacts.yml` legitimately rewrites `README.md` before building.
+      - name: The gates above ran on the commit this event names
+        run: |
+          set -euo pipefail
+          sha=$(git rev-parse HEAD)
+          echo "graded commit $sha, tree $(git rev-parse "HEAD^{tree}")"
+          if [ "$sha" != "${GITHUB_SHA:-}" ]; then
+            echo "FAIL: this job graded $sha, but the event names ${GITHUB_SHA:-<unset>}." >&2
+            exit 1
+          fi
+
   # ---------------------------------------------------------------------------
-  # Rust gates. The toolchain is NOT chosen here: rust-toolchain.toml pins
+  # The Rust gates. The toolchain is NOT chosen here: rust-toolchain.toml pins
   # 1.97.0 plus the clippy/rustfmt components, and rustup honours it on first
   # `cargo` invocation. The pinned ruff_* crates require rustc >= 1.95, so a
   # runner default of `stable` is not guaranteed to be enough.
   # ---------------------------------------------------------------------------
 
-  cargo-fmt:
-    name: cargo-fmt
+  ci-rust:
+    name: ci-rust
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      # No rust-cache here on purpose: rustfmt parses the source and builds no
-      # dependencies, so there is nothing worth caching.
-      - name: Show the pinned toolchain
-        run: rustup show
-
-      - name: make rust.fmt.check
-        run: make rust.fmt.check
-
-  cargo-clippy:
-    name: cargo-clippy
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    # No uv and no `UV_MANAGED_PYTHON` here, and their absence is the point: with the pyo3 boundary
-    # gone `make rust.lint` compiles nothing that looks for an interpreter, so a
-    # Python setup step would only be a step that can fail for a reason this gate does not care
-    # about. Same for `cargo-doc` below, which only documents.
-    #
-    # It is NOT the same for `cargo-test`, and the first version of this comment said it was —
-    # which is what made deleting uv there look safe. It went red on PR #34. Compiling against an
-    # interpreter and *executing* something that shells out to one are different questions: two
-    # tests run `uv` for reasons unrelated to pyo3. See the note on that job.
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Show the pinned toolchain
-        run: rustup show
-
-      # v2.9.1 — SHA verified against the source repo, not copied on trust:
-      # `git/ref/tags/v2.9.1` -> tag 23869a5b -> commit c1937114.
-      - name: Cache Rust artifacts
-        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
-        with:
-          # Only `main` writes the cache, so parallel PRs read a stable entry
-          # instead of each saving a near-duplicate one.
-          save-if: ${{ github.ref == 'refs/heads/main' }}
-
-      - name: make rust.lint
-        run: make rust.lint
-
-      # The linkage guard: it reads the binary cargo just linked and fails on any dynamic dependency
-      # naming Python. It rides in this job rather than a new one because a new job would be a new
-      # required status check.
-      #
-      # WHAT IT DOES NOT COVER, said plainly because it is easy to read this as a promise about the
-      # shipped wheel: `make rust.build` runs `cargo build --locked` with no `--release`, and this
-      # job is `runs-on: ubuntu-latest`. So it grades ONE artifact — a Linux x86_64 DEBUG executable
-      # — while `build-artifacts.yml` ships release builds for linux-x86_64, macos-arm64 and
-      # windows-x86_64. A linkage that appeared only under `--release`, or only on macOS or Windows,
-      # would pass here and still reach a published wheel. What actually exercises the shipped
-      # artifacts is `scripts/install-smoke.sh` in `build-artifacts.yml`, which runs each one.
-      - name: make rust.build
-        run: make rust.build
-
-  cargo-test:
-    name: cargo-test
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     env:
       # An insta snapshot that is NEW or CHANGED must FAIL this job, never be written. This is the
       # setting rust-skills `test-snapshot-testing` names for CI. Verified by deleting a committed
@@ -228,29 +159,30 @@ jobs:
         with:
           persist-credentials: false
 
-      # KEEP THIS. It was deleted with the pyo3 boundary and this job went red on PR #34 —
+      # KEEP THIS. It was deleted with the pyo3 boundary and the Rust test job went red on PR #34 —
       # `uv run python3 is available in this environment: Os { code: 2, kind: NotFound }`.
       #
-      # The deletion was reasoned from the build: with pyo3 gone nothing here
-      # *compiles* against an interpreter, which is true. But two TESTS shell out to `uv`, for
-      # reasons that have nothing to do with pyo3 and predate this task:
+      # The deletion was reasoned from the build: with pyo3 gone nothing here *compiles* against an
+      # interpreter, which is true. But two TESTS shell out to `uv`, for reasons that have nothing
+      # to do with pyo3 and predate that task:
       #
-      #   * `tests/cli.rs:559` runs `uv run python3` to prove the `schema_version: "2"` JSON
-      #     document is genuinely consumable by a Python consumer — the whole point of the schema
-      #     bump in `make-check-graceful-on-unreadable-files`;
-      #   * `tests/ruff_compatibility.rs:51` runs `uv run --only-group lint ruff` to prove the
-      #     `# !TPX00N` marker grammar stays invisible to ruff (`rename-noqa-marker-to-drop-prefix`).
-      #     It carries no `#[ignore]`; on PR #34 it simply never ran, because the run aborted at
-      #     `tests/cli.rs` first.
+      #   * `tests/cli.rs` runs `uv run python3` to prove the `schema_version: "2"` JSON document is
+      #     genuinely consumable by a Python consumer — the whole point of the schema bump in
+      #     `make-check-graceful-on-unreadable-files`;
+      #   * `tests/ruff_compatibility.rs` runs `uv run --only-group lint ruff` to prove the
+      #     `# !TPX00N` marker grammar stays invisible to ruff. It carries no `#[ignore]`; on PR #34
+      #     it simply never ran, because the run aborted at `tests/cli.rs` first.
       #
-      # The measurement that settles it, from the same workflow: `coverage` kept its `uv` and stayed
-      # GREEN while running the identical tests through `cargo llvm-cov`. Two jobs, same tests, one
-      # difference. So the rule for this job is **"does anything it executes shell out to `uv`?"**,
-      # not "does anything it builds need an interpreter?" — `git grep 'Command::new("uv")'` is the
-      # check, and it currently returns two hits.
+      # The measurement that settles it, from this same workflow: `coverage` kept its `uv` and
+      # stayed GREEN while running the identical tests through `cargo llvm-cov`. Two jobs, same
+      # tests, one difference. So the rule is **"does anything this job EXECUTES shell out to
+      # `uv`?"**, not "does anything it builds need an interpreter?" — `git grep 'Command::new("uv")'`
+      # is the check, it returns two hits, and both are executed here.
       #
-      # `cargo-clippy` and `cargo-doc` are correctly WITHOUT uv: they compile and document, they run
-      # no tests, and neither `make rust.lint` nor `make rust.doc` shells out.
+      # `cargo-doc` below is correctly WITHOUT uv: it documents, it runs no tests, and `make
+      # rust.doc` shells out to nothing. Enforced by
+      # test_the_job_that_runs_the_rust_tests_installs_uv, which derives the requirement from the
+      # Rust sources instead of from a job name.
       - name: Install uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
@@ -260,29 +192,56 @@ jobs:
       - name: Show the pinned toolchain
         run: rustup show
 
+      # v2.9.1 — SHA verified against the source repo, not copied on trust:
+      # `git/ref/tags/v2.9.1` -> tag 23869a5b -> commit c1937114.
       - name: Cache Rust artifacts
         uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
         with:
+          # Only `main` writes the cache, so parallel PRs read a stable entry
+          # instead of each saving a near-duplicate one.
           save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      # Cheapest first: rustfmt only parses the source and builds no dependencies.
+      - name: make rust.fmt.check
+        run: make rust.fmt.check
+
+      - name: make rust.lint
+        run: make rust.lint
+
+      # The linkage guard: it reads the binary cargo just linked and fails on any dynamic dependency
+      # naming Python.
+      #
+      # WHAT IT DOES NOT COVER, said plainly because it is easy to read this as a promise about the
+      # shipped wheel: `make rust.build` runs `cargo build --locked` with no `--release`, and this
+      # job is `runs-on: ubuntu-latest`. So it grades ONE artifact — a Linux x86_64 DEBUG executable
+      # — while `build-artifacts.yml` ships release builds for linux-x86_64, macos-arm64 and
+      # windows-x86_64. A linkage that appeared only under `--release`, or only on macOS or Windows,
+      # would pass here and still reach a published wheel. What actually exercises the shipped
+      # artifacts is `scripts/install-smoke.sh` in `build-artifacts.yml`, which runs each one.
+      - name: make rust.build
+        run: make rust.build
 
       - name: make rust.test
         run: make rust.test
 
-  # The rustdoc gate. NEW in the /rust-skills audit: before it, `.github/workflows/ci.yml` contained
-  # zero mentions of `cargo doc`/`rustdoc`, and `cargo doc` exits 0 on a broken intra-doc link — so
-  # `main` at 962678d carried 5 rustdoc diagnostics with all seven jobs green. One of them
-  # (`[`render_failures`]` in the rustdoc of `python_files`) named a function that exists nowhere in
-  # `src/`; it had been renamed and the doc was never followed.
+      - name: The gates above ran on the commit this event names
+        run: |
+          set -euo pipefail
+          sha=$(git rev-parse HEAD)
+          echo "graded commit $sha, tree $(git rev-parse "HEAD^{tree}")"
+          if [ "$sha" != "${GITHUB_SHA:-}" ]; then
+            echo "FAIL: this job graded $sha, but the event names ${GITHUB_SHA:-<unset>}." >&2
+            exit 1
+          fi
+
+  # The rustdoc gate. NEW in the /rust-skills audit: before it, this file contained zero mentions of
+  # `cargo doc`/`rustdoc`, and `cargo doc` exits 0 on a broken intra-doc link — so `main` at 962678d
+  # carried 5 rustdoc diagnostics with all seven jobs green. One of them (`[`render_failures`]` in
+  # the rustdoc of `python_files`) named a function that exists nowhere in `src/`; it had been
+  # renamed and the doc was never followed.
   #
-  # It is its OWN job rather than a step inside cargo-clippy, which is the opposite of the choice
-  # `make rust.build` made. The reason that choice was made there — "a new job would be a
-  # new required status check" — is not true of this repository today: it is private without GitHub
-  # Pro, so `branches/main/protection` is 404 and no check is required at all. A separate job is
-  # therefore free right now, and it is the shape task #14 will want once protection exists, because
-  # a rustdoc failure and a clippy failure are different answers and should not share a red X.
-  #
-  # No `paths:` and no `if:`, like every other job in this file: a SKIPPED check does not satisfy a
-  # required status check, so a filter added today wedges the PR on the day protection is enabled.
+  # IT STAYS ITS OWN JOB — user decision, 2026-08-01, against the ~1 billed minute merging it into
+  # `ci-rust` would save. It is in `ci-required`, so it gates a merge as hard as the work jobs do.
   cargo-doc:
     name: cargo-doc
     runs-on: ubuntu-latest
@@ -304,26 +263,35 @@ jobs:
       - name: make rust.doc
         run: make rust.doc
 
+      - name: The gates above ran on the commit this event names
+        run: |
+          set -euo pipefail
+          sha=$(git rev-parse HEAD)
+          echo "graded commit $sha, tree $(git rev-parse "HEAD^{tree}")"
+          if [ "$sha" != "${GITHUB_SHA:-}" ]; then
+            echo "FAIL: this job graded $sha, but the event names ${GITHUB_SHA:-<unset>}." >&2
+            exit 1
+          fi
+
   # There are no coverage badges and nothing here to diff, so what this job protects is the
   # INSTRUMENT rather than a number: it is the only place proving that the coverage toolchain still
   # resolves on Linux — the `llvm-tools` component from rust-toolchain.toml and the pinned
   # `cargo-llvm-cov` install — and that `scripts/coverage_report.py` still accepts a real report
-  # from both tools. Tasks 9-11 audit against those figures, and a rotted instrument would only be
+  # from both tools. Later audits work against those figures, and a rotted instrument would only be
   # discovered once an audit was already running.
   #
-  # NOT a required status check, deliberately: it protects a measuring tool, not the shipped
-  # artifact. It still carries no `paths:` and no `if:` — a SKIPPED check does not satisfy a
-  # required one, so a path filter added today would wedge the PR on the day it is registered.
+  # NOT a required status check, which is why it is absent from `ci-required`'s `needs:`. It still
+  # carries no `paths:` and no `if:`: a skipped check does not satisfy a required one, so a filter
+  # added today would wedge the PR on the day it is registered.
   #
   # It re-runs the Rust tests under instrumentation and the Python tests under coverage, so it is
   # the slowest job here.
   #
-  # It is NOT a repeat of the whole `cargo-test` job: `cargo llvm-cov` does not run doctests
-  # without `--doctests`, which needs a nightly toolchain, so the `Doc-tests tooprolix` target is
-  # absent from this job entirely and `cargo-test` above remains the only job that executes it. No
-  # count is given here on purpose — nothing enforces one, and the pair of numbers that used to
-  # stand here had drifted. Written down in the Makefile's coverage block too, next to the other
-  # exclusions.
+  # It is NOT a repeat of `ci-rust`'s test step: `cargo llvm-cov` does not run doctests without
+  # `--doctests`, which needs a nightly toolchain, so the `Doc-tests tooprolix` target is absent
+  # from this job entirely and `ci-rust` remains the only job that executes it. No count is given
+  # here on purpose — nothing enforces one, and the pair of numbers that used to stand here had
+  # drifted. Written down in the Makefile's coverage block too, next to the other exclusions.
   coverage:
     name: coverage
     runs-on: ubuntu-latest
@@ -334,8 +302,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # `make cov` runs `py.cov`, which runs the same Python tests as the `test` job, so this
-          # job needs the same full history for the same reason — see the note on `test` above.
+          # `make cov` runs `py.cov`, which runs the same Python tests as `ci-python`, so this job
+          # needs the same full history for the same reason — see the note on that job above.
           fetch-depth: 0
           persist-credentials: false
 
@@ -367,3 +335,62 @@ jobs:
 
       - name: make cov
         run: make cov
+
+      - name: The gates above ran on the commit this event names
+        run: |
+          set -euo pipefail
+          sha=$(git rev-parse HEAD)
+          echo "graded commit $sha, tree $(git rev-parse "HEAD^{tree}")"
+          if [ "$sha" != "${GITHUB_SHA:-}" ]; then
+            echo "FAIL: this job graded $sha, but the event names ${GITHUB_SHA:-<unset>}." >&2
+            exit 1
+          fi
+
+  # THE ONE CHECK BRANCH PROTECTION WILL BE POINTED AT: `CI / ci-required`. It exists before
+  # protection is enabled because GitHub only offers a check that reported successfully within the
+  # preceding seven days, and a required name that stops reporting stays required forever.
+  #
+  # `if: always()` is what lets it SEE a failure. Without it, a needed job that ends in anything but
+  # success skips this one too — and a skipped check never reports, wedging a protected PR at
+  # "Expected — waiting for status to be reported" instead of going red.
+  #
+  # Only `result == success` passes. `cancelled` and `skipped` are not success, and reading them as
+  # "not failed" is how PR #37's four cancelled artifact checks looked green.
+  #
+  # It fails closed on an empty `needs:`, as its own assertion: a check over an empty expectation
+  # passes having graded nothing, and a populated-set test cannot prove that case.
+  #
+  # It does NOT check which commit was graded — every job that checks out asserts that for itself.
+  # `coverage` is excluded deliberately (it protects the instrument, not the artifact) and carries
+  # that assertion anyway. `release-contract` cannot be here; `needs:` does not cross workflows.
+  #
+  # The shell below is EXECUTED against fixtures by `test_the_shipped_aggregate_*`, not
+  # pattern-matched: a token assertion cannot tell `!= "success"` from `== "success"`, and the
+  # inverted form turns this gate into "fail if anything passed".
+  ci-required:
+    name: ci-required
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [ci-python, ci-rust, cargo-doc]
+    if: always()
+    steps:
+      - name: Every required job must have concluded success
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          set -euo pipefail
+          echo "$RESULTS"
+
+          graded=$(jq 'length' <<<"$RESULTS")
+          if [ "$graded" -eq 0 ]; then
+            echo "FAIL: this job needed nothing, so it graded nothing." >&2
+            exit 1
+          fi
+
+          unsuccessful=$(jq -r 'to_entries[] | select(.value.result != "success") | "\(.key)=\(.value.result)"' <<<"$RESULTS")
+          if [ -n "$unsuccessful" ]; then
+            echo "FAIL: not every required job succeeded: $unsuccessful" >&2
+            exit 1
+          fi
+
+          echo "OK: $graded required job(s), every one of them success."

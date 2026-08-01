@@ -14,9 +14,22 @@ name: Build artifacts
 # writable, and there is no `id-token`, so no OIDC exchange is available to a step that tried. The
 # publishing task owns the irreversible half and will add a publish job of its own.
 #
-# Manual dispatch, plus `push:` with NO path filter. `workflow_dispatch` alone is not enough:
-# GitHub reads the dispatch definition from the default branch, so on a feature branch that adds
-# this file manual dispatch is not available at all.
+# # Two axes, decided separately: the BRANCH axis is filtered, the PATH axis is not
+#
+# `workflow_dispatch` alone is not enough: GitHub reads the dispatch definition from the default
+# branch, so on a feature branch that adds this file manual dispatch is not available at all.
+#
+# THE BRANCH AXIS IS NARROWED TO `main`, `v*` AND PULL REQUESTS. Under the bare `push:` this file
+# used to carry, the `v0.4.6` cycle ran six full artifact matrices of which at most two were
+# load-bearing — about 204 of its 226 billed minutes rebuilt trees already built or never released.
+# The cause is the branch axis: GitHub delivers a branch-CREATION push for every release-plz branch,
+# so the base tip is built before the release commit even exists.
+#
+# `pull_request` is the preflight, and what it grades is named rather than assumed: it checks out
+# `refs/pull/N/merge`, the MERGE tree, which is not necessarily the tree that gets tagged (for
+# `v0.4.6`, `3a1f67f` against `5d0ceef`). The `v*` tag is the authoritative matrix. The alternative
+# `push: branches: ['release-plz-**']` was rejected because a branch pattern also matches the
+# branch-CREATION event — the exact duplicate this filter exists to delete.
 #
 # THE `paths:` FILTER WAS REMOVED, AND ITS REMOVAL IS THE FIX. It listed five files —
 # `Cargo.toml`, `pyproject.toml`, this workflow, and the two scripts — under a header claiming those
@@ -57,15 +70,23 @@ name: Build artifacts
 
 on:
   workflow_dispatch:
+  pull_request:
   push:
+    branches: [main]
+    tags: ['v*']
 
 permissions:
   contents: read
 
-# Keyed on the COMMIT, not the ref. This workflow runs on every push with no branch filter, so one
-# logical event can deliver two pushes to one new ref seconds apart — release-plz creates the branch
-# at the base tip and pushes the release commit. Keyed on the ref, the later run cancels the earlier
-# one, and on PR #37 that killed the release commit's build while the base tip's survived.
+# Keyed on the COMMIT, not the ref. One logical event used to deliver two pushes to one new ref
+# seconds apart — release-plz creates the branch at the base tip and pushes the release commit.
+# Keyed on the ref, the later run cancels the earlier one; on PR #37 that killed the release
+# commit's build while the base tip's survived.
+#
+# The branch filter above now stops those pushes reaching this workflow, so that race no longer
+# fires. THE KEY STILL DOES NOT GO BACK TO `github.ref`: keying on the commit is correct whatever
+# events are accepted, still collapses duplicates for one SHA, and reverting it would re-arm the
+# race the day the trigger widens.
 # Enforced by test_an_artifact_build_is_only_cancelled_by... in tests/unit/test_workflow_contracts.py.
 concurrency:
   group: ${{ github.workflow }}-${{ github.sha }}
@@ -213,10 +234,52 @@ jobs:
             dist
             dist-from-sdist
 
+      # THE BINARIES THIS JOB UPLOADS ARE WHAT ACTUALLY GETS PUBLISHED, so this job proves for
+      # itself which commit it built. Change this workflow's checkout to `ref: main` and every leg
+      # builds the wrong tree while every REST job still self-reports `head_sha=<tag>` — the tag-job
+      # grader would accept it, because `head_sha` is a label the run attaches to itself.
+      #
+      # LAST, after the artifacts are built and smoked, so a second checkout inserted between the
+      # checkout and the build cannot leave a correct-looking record of a tree nobody built. Same
+      # step, same shell, as every job in `ci.yml`.
+      - name: The gates above ran on the commit this event names
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha=$(git rev-parse HEAD)
+          echo "graded commit $sha, tree $(git rev-parse "HEAD^{tree}")"
+          if [ "$sha" != "${GITHUB_SHA:-}" ]; then
+            echo "FAIL: this job graded $sha, but the event names ${GITHUB_SHA:-<unset>}." >&2
+            exit 1
+          fi
+
+  # THE THREE WHEEL LEGS RUN ON THE EVENTS THAT PRECEDE A TAG, NOT ON EVERY PULL REQUEST.
+  #
+  # Per PR, running them everywhere costs sdist 3 + linux 3 + macos 20 (the x10 private-repo
+  # multiplier) + windows 6 = 32 billed minutes, of which the wheels are 29. An ordinary PR keeps
+  # `sdist`, which grades the README transform, the archive contents and the offline-sdist
+  # behaviour. A cross-platform break is still caught before the tag, because the release-plz PR
+  # runs the full matrix. Nothing is removed from the TAG matrix — each leg there is the only smoke
+  # test of the operating system its wheel tag claims.
+  #
+  # AN EVENT CONDITION, NOT A PATH ONE. A path filter would skip the wheels on a README-only change,
+  # precisely the change able to break the transformer that rewrites the description PyPI renders.
+  # `github.head_ref` is set only on `pull_request` and `startsWith` on the empty string is false,
+  # so the release-plz clause cannot leak into a push event.
+  #
+  # THESE LEGS MUST NEVER BE REGISTERED AS REQUIRED CHECKS. They are skipped on an ordinary PR, and
+  # a skipped check does not satisfy a required one — it stays pending forever. Worse, GitHub does
+  # not expand the matrix of a skipped job: on PR #52 it reported as ONE check named literally
+  # `wheel ${{ matrix.platform.name }}`, so the skipped name and the three running names are
+  # different strings and none of them is safe to require. The required name is `CI / ci-required`.
   wheels:
     name: wheel ${{ matrix.platform.name }}
     runs-on: ${{ matrix.platform.runner }}
     timeout-minutes: 30
+    if: >-
+      github.event_name == 'workflow_dispatch'
+      || startsWith(github.ref, 'refs/tags/v')
+      || startsWith(github.head_ref, 'release-plz-')
     strategy:
       # `fail-fast: false` so one red platform still leaves the other two measured. AC4's rule is
       # "an artifact that could not be smoked is excluded from the matrix", and deciding that needs
@@ -340,3 +403,14 @@ jobs:
         with:
           name: artifacts-${{ matrix.platform.name }}
           path: dist
+
+      - name: The gates above ran on the commit this event names
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha=$(git rev-parse HEAD)
+          echo "graded commit $sha, tree $(git rev-parse "HEAD^{tree}")"
+          if [ "$sha" != "${GITHUB_SHA:-}" ]; then
+            echo "FAIL: this job graded $sha, but the event names ${GITHUB_SHA:-<unset>}." >&2
+            exit 1
+          fi
