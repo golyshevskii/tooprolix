@@ -90,14 +90,21 @@ def percent_from_report(report: Path, report_format: str) -> float:
     raise ValueError(f"unknown report format: {report_format!r}")
 
 
-# The measurement contract, per language: (source directory, extension, subdirectories that are test
-# DATA rather than code). Deliberately NOT read out of `[tool.coverage.run]` — a check that reads the
-# same configuration as the thing it checks agrees with any edit to that configuration, which is the
-# whole defect. This is the second, independent statement of the denominator, and
+# The measurement contract, per language: (source directories, extension, subdirectories that are
+# test DATA rather than code). Deliberately NOT read out of `[tool.coverage.run]` — a check that
+# reads the same configuration as the thing it checks agrees with any edit to that configuration,
+# which is the whole defect. This is the second, independent statement of the denominator, and
 # `verify_report_measured_the_source_tree` is where the two are made to agree.
-_SOURCE_TREES: dict[str, tuple[str, str, tuple[str, ...]]] = {
-    RUST_REPORT_FORMAT: ("src", ".rs", ()),
-    PYTHON_REPORT_FORMAT: ("corpus", ".py", ("checkouts", "fixtures")),
+#
+# `scripts/` joined `corpus/` on 2026-08-01. It is the release-critical Python — it grades the built
+# archive and rewrites the README that goes to PyPI — and it was outside the denominator while
+# `corpus/`, which the Makefile calls throwaway research tooling, was the whole of it. Measured
+# 2026-08-01: the three scripts are 88% / 84% / 87% covered in-process by `tests/unit/`, so they are
+# attributable; the total moved 61.4% -> 65.7%. Pinned by
+# `test_the_release_scripts_are_in_the_denominator`.
+_SOURCE_TREES: dict[str, tuple[tuple[str, ...], str, tuple[str, ...]]] = {
+    RUST_REPORT_FORMAT: (("src",), ".rs", ()),
+    PYTHON_REPORT_FORMAT: (("corpus", "scripts"), ".py", ("checkouts", "fixtures")),
 }
 
 # Formats whose reports list source files that were never executed, so "every file on disk must
@@ -120,17 +127,17 @@ def measurable_source_files(repo_root: Path, report_format: str) -> set[str]:
     discover unexecuted files inside a directory that is not an importable package, so the file
     would leave the denominator and push the percentage UP with nothing to show for it.
     """
-    root_name, suffix, excluded = _SOURCE_TREES[report_format]
-    root = repo_root / root_name
+    root_names, suffix, excluded = _SOURCE_TREES[report_format]
     return {
         path.relative_to(repo_root).as_posix()
-        for path in root.rglob(f"*{suffix}")
+        for root_name in root_names
+        for path in (repo_root / root_name).rglob(f"*{suffix}")
         # `parts[:1]` — the TOP-level directory only, matching the shape of the `omit` globs in
         # pyproject.toml (`corpus/checkouts/*`, `corpus/fixtures/*`). Skipping any directory named
         # `fixtures` at any depth would make the two statements of the contract disagree the day
         # production code lands in `corpus/pkg/fixtures/`, and the guard would then reject the run
         # with a message about test data, about a file that is not test data.
-        if path.is_file() and not set(path.relative_to(root).parts[:1]) & set(excluded)
+        if path.is_file() and not set(path.relative_to(repo_root / root_name).parts[:1]) & set(excluded)
     }
 
 
@@ -151,6 +158,16 @@ def _measured_files(data: Any, report_format: str, repo_root: Path) -> set[str]:
             else path.as_posix()
         )
     return measured
+
+
+def _defines_functions(repo_root: Path, name: str) -> bool:
+    """
+    Whether a source file's own text defines something `cargo llvm-cov` could have instrumented.
+
+    One fact, used in both directions by `verify_report_measured_the_source_tree`: a file with no
+    `fn ` is legitimately absent from an llvm-cov report, and is illegitimately present in one.
+    """
+    return "fn " in (repo_root / name).read_text(encoding="utf-8")
 
 
 def verify_report_measured_the_source_tree(data: Any, report_format: str, repo_root: Path) -> None:
@@ -179,6 +196,25 @@ def verify_report_measured_the_source_tree(data: Any, report_format: str, repo_r
     measured = _measured_files(data, report_format, repo_root)
 
     missing = expected - measured
+    # The same `fn ` fact read in the other direction, and it is the direction that cost 20 points.
+    # `cargo llvm-cov` hands `llvm-cov export` every object it finds in the target directory,
+    # including ones no current target produces: a `libtooprolix.dylib` from a removed pyo3 build
+    # survived here from 2026-07-29, carried a coverage mapping of an older source tree, and added
+    # 1 024 phantom lines at zero coverage under the real filename `src/lib.rs`. `make cov` printed
+    # 78.6% instead of the 98.2% the same profraw gives without it, exited 0, and nothing below
+    # noticed — the phantom is inside the source tree, so the `extra` check cannot see it, and
+    # `src/lib.rs` was not missing, so neither could the check after this one. Excusing an ABSENT
+    # file for having no functions while accepting a PRESENT one with none was the asymmetry. The
+    # ceiling is the same one named below and it is now fail-closed.
+    if report_format == RUST_REPORT_FORMAT and (
+        phantom := {name for name in measured & expected if not _defines_functions(repo_root, name)}
+    ):
+        raise ValueError(
+            f"the coverage report measured {len(phantom)} source file(s) that define no "
+            f"function: {', '.join(sorted(phantom))} — llvm-cov cannot have instrumented that "
+            f"text, so the denominator carries records from a stale object; clear the target "
+            f"directory of artifacts no current target builds and measure again"
+        )
     if missing and report_format not in _FORMATS_THAT_REPORT_UNEXECUTED_FILES:
         # llvm-cov reports what the compiler instrumented, so a source file with nothing to
         # instrument is legitimately absent — `src/detect.rs` is module documentation and two
@@ -191,7 +227,7 @@ def verify_report_measured_the_source_tree(data: Any, report_format: str, repo_r
         # `fn ` in the file text is the whole test. Its known ceiling is a `fn` appearing only
         # inside a doc-comment example, which would demand an entry llvm-cov will never produce —
         # that fails loudly and is fixed by wiring the module up or saying why it has no code.
-        missing = {name for name in missing if "fn " in (repo_root / name).read_text(encoding="utf-8")}
+        missing = {name for name in missing if _defines_functions(repo_root, name)}
     if missing:
         raise ValueError(
             f"the coverage report never measured {len(missing)} source file(s) that exist on disk: "

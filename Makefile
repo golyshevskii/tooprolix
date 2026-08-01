@@ -13,10 +13,10 @@ CARGO ?= cargo
 # corpus measurement, and `scripts/coverage_report.py`, which reads the coverage reports.
 #
 # These are LINT paths and they are deliberately NOT the coverage denominator, which is
-# `[tool.coverage.run] source` in pyproject.toml and lists `corpus` alone. The overlap is a
-# coincidence of two tools looking at the same directory for different reasons: lint asks "is this
-# file well formed", coverage asks "how much of this file did the tests run". Putting `tests/unit`
-# in the second one would make the percentage climb every time someone writes more test code.
+# `[tool.coverage.run] source` in pyproject.toml and lists `corpus` and `scripts`. The two lists
+# overlap but are not the same question: lint asks "is this file well formed", coverage asks "how
+# much of this file did the tests run". `tests/unit` is linted and deliberately NOT in the
+# denominator, because a denominator holding the tests climbs whenever someone writes more of them.
 LINT_PATHS ?= corpus scripts tests/unit
 TY_PATHS ?= corpus scripts tests/unit
 
@@ -154,9 +154,10 @@ rust.build: ## Build the binary and prove it links no libpython (it must run wit
 	echo "ok: $$binary links no libpython"
 
 # -----------------------------------------------------------------------------------------------
-# Coverage. Two numbers, never one: the Rust crate is the product and `corpus/` is throwaway
-# research tooling, so a combined percentage would average two things measured against unrelated
-# denominators and look more precise than either (EPIC scope guard).
+# Coverage. Two numbers, never one: the Rust crate is the product and the Python side is `corpus/`
+# throwaway research tooling plus the `scripts/` release gates, so a combined percentage would
+# average things measured against unrelated denominators and look more precise than either
+# (EPIC scope guard).
 #
 # These targets PRINT a number and write a JSON report to `$(COV_DIR)`; there is no badge. The
 # repository is private until the PyPI flip so no badge host can read it, and the projects worth
@@ -175,7 +176,18 @@ rust.build: ## Build the binary and prove it links no libpython (it must run wit
 # everything it could:
 #   - `build.rs` is a BUILD SCRIPT. cargo compiles and runs it on the host before the crate exists,
 #     so `cargo llvm-cov` does not instrument it and it appears in no row of the Rust report. Its
-#     ~190 lines of civil-date arithmetic and git containment are therefore unmeasured, not 100%.
+#     198 lines of civil-date arithmetic and git containment are therefore unmeasured, not 100%
+#     (`wc -l build.rs`, 2026-08-01 at `ebd7d70`; verified instrumentation-free the same day —
+#     the build-script executable in the llvm-cov target dir carries no `__llvm_prf` section).
+#   - A STALE OBJECT IN THE TARGET DIRECTORY IS PART OF THE DENOMINATOR. `cargo llvm-cov` hands
+#     `llvm-cov export` the objects it finds, including ones no current target builds, and their
+#     coverage mappings merge in by FILENAME. Measured 2026-08-01: a `libtooprolix.dylib` left by a
+#     removed pyo3 build on 2026-07-29 (the crate is `crate-type = ["rlib"]`) added 1 024 phantom
+#     lines at zero coverage and made this target print 78.6% where the same profraw prints 98.2% —
+#     the figure CI, on a clean runner, had been printing all along. `cargo llvm-cov clean
+#     --workspace` does NOT remove it. `scripts/coverage_report.py` now rejects the report, because
+#     the phantom arrived as `src/lib.rs`, a file whose text contains no `fn ` at all
+#     (`test_a_file_with_no_functions_may_not_be_measured_either`).
 #   - `tests/volume_corpus.rs`'s `volume_finds_something_on_the_corpus` is `#[ignore]`d (it needs
 #     `corpus/checkouts/` on disk), so the lines only it reaches count as uncovered. That is the
 #     truth about a test that does not run in CI, and un-ignoring it here would be buying coverage
@@ -206,11 +218,11 @@ rust.cov: ## Measure Rust line coverage and print it
 	@$(UV) run --no-project python3 scripts/coverage_report.py \
 		--report $(COV_DIR)/llvm-cov.json --format llvm-cov
 
-py.cov: ## Measure Python coverage of corpus/ and print it
+py.cov: ## Measure Python coverage of corpus/ and scripts/ and print it
 	@mkdir -p $(COV_DIR)
 	@# `--cov` with no argument means "use [tool.coverage.run] from pyproject.toml", which is where
-	@# the denominator (`source = ["corpus"]`, NOT tests/unit) and `branch = true` are pinned and
-	@# commented. Passing paths here instead would put the denominator in two places.
+	@# the denominator (`source = ["corpus", "scripts"]`, NOT tests/unit) and `branch = true` are
+	@# pinned and commented. Passing paths here would put the denominator in two places.
 	@$(UV) run --only-group test pytest --cov --cov-report=term \
 		--cov-report=json:$(COV_DIR)/coverage.json
 	@$(UV) run --no-project python3 scripts/coverage_report.py \
