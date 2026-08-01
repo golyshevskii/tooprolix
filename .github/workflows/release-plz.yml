@@ -114,18 +114,22 @@ jobs:
       # advances to B, and the PR lands as merge M: `M^{tree}` holds both changes and `M^2^{tree}`
       # lacks B, so the trees differ — and `release_always = false` means release-plz would tag
       # nothing at all. Comparing unconditionally would paint `main` red for a merge that is not a
-      # release. So the release commit is IDENTIFIED first, on two independent signals, and both
-      # were measured over every merge commit this repository has:
+      # release. So the release commit is IDENTIFIED first.
       #
-      #   * `HEAD^2`'s subject is `chore: release …` — true for all TWELVE releases (v0.3.5..v0.4.7);
-      #   * the merge's own subject names a `release-plz-…` branch — true for the ten that GitHub
-      #     merged rather than squashed.
+      # IDENTIFIED FROM AN ARTIFACT, NOT FROM PROSE. An earlier version read the commit SUBJECT
+      # (`chore: release …`) and the merge's branch name, and that was a fail-open this guard
+      # introduced: release-plz owns those strings, so a template change would silently switch the
+      # guard off and it would print `OK` forever. The version in `Cargo.toml` is the thing
+      # release-plz actually acts on — no bump, no tag — and it cannot drift with a message.
       #
-      # The one non-release merge on `main` (`68ab88f`, PR #19) matches NEITHER. The residual is
-      # named rather than hidden: a release whose commit subject template changed AND that was
-      # merged without `release-plz-` in the merge subject would skip the comparison. Both signals
-      # would have to change together, and `test_a_non_release_merge_does_not_redden_main` plus the
-      # six historical releases pin the behaviour in both directions.
+      # Measured over EVERY merge commit on `main` (13): the version differs between the release
+      # commit and its own parent for all TWELVE releases, v0.3.5 through v0.4.7, and does not for
+      # the one genuine non-release merge, `68ab88f` (PR #19), which leaves it at 0.3.4. Both
+      # directions are pinned by tests: the six historical releases, and a synthetic non-release
+      # merge whose trees genuinely differ.
+      #
+      # Unreadable inputs FAIL rather than fall through to "not a release" — the whole point of not
+      # having a fail-open here.
       #
       # IT RUNS BEFORE THE TAGGING ACTION, because afterwards there is nothing left to refuse: a tag
       # is not a proposal, and deleting a published one is not a CI problem any more.
@@ -152,13 +156,15 @@ jobs:
             exit 0
           fi
 
-          release_subject=$(git log -1 --format=%s "$release")
-          merge_subject=$(git log -1 --format=%s "$head")
-          is_release=no
-          case "$release_subject" in "chore: release "*) is_release=yes ;; esac
-          case "$merge_subject" in *"release-plz-"*) is_release=yes ;; esac
-          if [ "$is_release" != "yes" ]; then
-            echo "OK: HEAD^2 is '$release_subject', which is not a release-plz release commit."
+          before=$(git show "$release^:Cargo.toml" | sed -n 's/^version = "\(.*\)"$/\1/p' | head -1)
+          after=$(git show "$release:Cargo.toml" | sed -n 's/^version = "\(.*\)"$/\1/p' | head -1)
+          if [ -z "$before" ] || [ -z "$after" ]; then
+            echo "FAIL: cannot read the package version around $release (before='$before' after='$after')." >&2
+            exit 1
+          fi
+
+          if [ "$before" = "$after" ]; then
+            echo "OK: $release leaves the package version at $after, so it is not a release commit."
             echo "    release_always = false, so this push creates no tag and there is no tree to guard."
             exit 0
           fi

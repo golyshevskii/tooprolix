@@ -22,6 +22,10 @@ from check_tag_jobs import main
 #: The tag being published, and a commit that is not it.
 TAG_SHA: str = "a1" * 20
 OTHER_SHA: str = "b2" * 20
+TAG_NAME: str = "v0.4.8"
+
+#: The workflow the fixture jobs belong to. A tag fires two; `CI` is the one most tests need.
+WORKFLOW: str = "CI"
 
 #: A tag run in which everything the manifest names ran and succeeded.
 COMPLETE: tuple[tuple[str, str], ...] = (
@@ -52,15 +56,19 @@ def payload(
     jobs: tuple[tuple[str, Any], ...],
     *,
     head_sha: str | None = TAG_SHA,
+    head_branch: str | None = TAG_NAME,
+    workflow_name: str = WORKFLOW,
     run_id: int | None = 111,
     run_attempt: int | None = 1,
 ) -> Path:
-    """Write a file shaped like `gh api repos/…/actions/runs/<id>/jobs`."""
+    """Write a file shaped like `gh api repos/…/actions/runs/<id>/jobs` — the real field set."""
     entries: list[dict[str, Any]] = []
     for name, conclusion in jobs:
-        entry: dict[str, Any] = {"name": name, "conclusion": conclusion}
+        entry: dict[str, Any] = {"name": name, "conclusion": conclusion, "workflow_name": workflow_name}
         if head_sha is not None:
             entry["head_sha"] = head_sha
+        if head_branch is not None:
+            entry["head_branch"] = head_branch
         if run_id is not None:
             entry["run_id"] = run_id
         if run_attempt is not None:
@@ -70,8 +78,10 @@ def payload(
     return path
 
 
-def manifest(path: Path, names: tuple[str, ...]) -> Path:
-    path.write_text("# the tracked expectation\n" + "".join(f"{name}\n" for name in names), encoding="utf-8")
+def manifest(path: Path, names: tuple[str, ...], workflow: str = WORKFLOW) -> Path:
+    """Write the sectioned expectation: a `[workflow name]` header, then its job names."""
+    body = f"[{workflow}]\n" + "".join(f"{name}\n" for name in names) if names else ""
+    path.write_text("# the tracked expectation\n" + body, encoding="utf-8")
     return path
 
 
@@ -81,15 +91,19 @@ def grade(
     expected: tuple[str, ...],
     *,
     tag_sha: str = TAG_SHA,
+    tag_name: str = TAG_NAME,
+    expected_workflow: str = WORKFLOW,
     **payload_kwargs: Any,
 ) -> int:
     return main(
         [
             str(payload(tmp_path / "jobs.json", jobs, **payload_kwargs)),
             "--manifest",
-            str(manifest(tmp_path / "expected.txt", expected)),
+            str(manifest(tmp_path / "expected.txt", expected, expected_workflow)),
             "--tag-sha",
             tag_sha,
+            "--tag-name",
+            tag_name,
         ]
     )
 
@@ -128,13 +142,18 @@ def test_an_expected_job_that_never_ran_blocks_publication(tmp_path: Path) -> No
     assert grade(tmp_path, COMPLETE[1:], names()) == 1
 
 
-def test_an_empty_expectation_blocks_publication(tmp_path: Path) -> None:
+def test_an_empty_expectation_blocks_publication(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     """
     🔴 The vacuous-guard hole, and it needs its own test because a populated-set mutation cannot
     reach it: shrink the tag workflow and the manifest to nothing TOGETHER and a set-equality check
     passes having verified that no jobs equal no jobs.
+
+    The DIAGNOSIS is asserted, not only the exit code, and that became necessary when the payload
+    reader learned to refuse a run with no jobs at all: with both empty, that newer guard also fires,
+    so an exit-code-only assertion stayed green with the manifest check deleted. Measured.
     """
     assert grade(tmp_path, (), ()) == 1
+    assert "expects no jobs at all" in capsys.readouterr().err
 
 
 def test_an_unexpected_job_blocks_publication(tmp_path: Path) -> None:
@@ -181,36 +200,70 @@ def test_a_payload_stitched_from_two_runs_blocks_publication(tmp_path: Path) -> 
     `--paginate` walks the pages of ONE run, so jobs disagreeing about `run_id` were assembled by
     hand. Pooling them would let a green job from any other run stand in for a missing one.
     """
+
+    def job(name: str, run_id: int) -> dict[str, Any]:
+        return {
+            "name": name,
+            "conclusion": "success",
+            "workflow_name": WORKFLOW,
+            "head_sha": TAG_SHA,
+            "head_branch": TAG_NAME,
+            "run_id": run_id,
+            "run_attempt": 1,
+        }
+
     stitched = tmp_path / "jobs.json"
-    stitched.write_text(
-        json.dumps(
-            {
-                "jobs": [
-                    {
-                        "name": "ci-python",
-                        "conclusion": "success",
-                        "head_sha": TAG_SHA,
-                        "run_id": 111,
-                        "run_attempt": 1,
-                    },
-                    {"name": "ci-rust", "conclusion": "success", "head_sha": TAG_SHA, "run_id": 222, "run_attempt": 1},
-                ]
-            }
-        ),
-        encoding="utf-8",
-    )
-    assert (
-        main(
-            [
-                str(stitched),
-                "--manifest",
-                str(manifest(tmp_path / "e.txt", ("ci-python", "ci-rust"))),
-                "--tag-sha",
-                TAG_SHA,
-            ]
-        )
-        == 1
-    )
+    stitched.write_text(json.dumps({"jobs": [job("ci-python", 111), job("ci-rust", 222)]}), encoding="utf-8")
+    expectation = manifest(tmp_path / "e.txt", ("ci-python", "ci-rust"))
+
+    assert main([str(stitched), "--manifest", str(expectation), "--tag-sha", TAG_SHA, "--tag-name", TAG_NAME]) == 1
+
+
+def test_a_run_of_another_workflow_blocks_publication(tmp_path: Path) -> None:
+    """
+    The same commit does not establish that the TAG-PUSH workflows ran.
+
+    Measured before the manifest carried workflow names: a payload with every expected job name, the
+    right `head_sha`, and `workflow_name: Some other workflow` dispatched on `main`, exited 0.
+    """
+    assert grade(tmp_path, COMPLETE, names(), workflow_name="Some other workflow") == 1
+
+
+def test_a_run_of_a_branch_at_the_same_commit_blocks_publication(tmp_path: Path) -> None:
+    """
+    A tag and a branch can point at the same commit, and a run of the branch is not a run of the tag.
+
+    `head_branch` is the tag name on a tag-push run — verified against the live API for `v0.4.7`,
+    run 30703436113, where every job reports `head_branch: v0.4.7`.
+    """
+    assert grade(tmp_path, COMPLETE, names(), head_branch="main") == 1
+
+
+@pytest.mark.parametrize("given", ["", "0.4.8", "release-v0.4.8"])
+def test_a_tag_name_that_is_not_a_v_tag_is_refused(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], given: str
+) -> None:
+    """`v*` is the pattern both workflows trigger on, so anything else is not a tag they ran for."""
+    assert grade(tmp_path, COMPLETE, names(), tag_name=given) == 1
+    assert "--tag-name" in capsys.readouterr().err
+
+
+def test_a_manifest_listing_a_job_before_any_workflow_header_is_refused(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """
+    A job with no workflow above it has no workflow binding at all, so it must not be silently
+    attached to whatever section happens to follow — or defaulted to one.
+
+    The DIAGNOSIS is asserted, not only the exit code: a version that quietly attached the orphan to
+    `CI` still exited 1 here, through the set-equality check downstream, and left this test green.
+    """
+    broken = tmp_path / "expected.txt"
+    broken.write_text("ci-python\n[CI]\nci-rust\n", encoding="utf-8")
+    jobs = payload(tmp_path / "jobs.json", COMPLETE)
+
+    assert main([str(jobs), "--manifest", str(broken), "--tag-sha", TAG_SHA, "--tag-name", TAG_NAME]) == 1
+    assert "before any [workflow name] header" in capsys.readouterr().err
 
 
 def test_a_payload_that_names_no_run_blocks_publication(tmp_path: Path) -> None:
@@ -238,7 +291,9 @@ def test_a_tag_sha_that_is_not_a_full_commit_is_refused(
 def test_a_missing_manifest_blocks_publication(tmp_path: Path) -> None:
     """A guard that cannot find its expectation must refuse, not default to expecting nothing."""
     jobs = payload(tmp_path / "jobs.json", COMPLETE)
-    assert main([str(jobs), "--manifest", str(tmp_path / "absent.txt"), "--tag-sha", TAG_SHA]) == 1
+    assert (
+        main([str(jobs), "--manifest", str(tmp_path / "absent.txt"), "--tag-sha", TAG_SHA, "--tag-name", TAG_NAME]) == 1
+    )
 
 
 @pytest.mark.parametrize(
@@ -268,7 +323,15 @@ def test_a_payload_that_is_not_a_jobs_response_blocks_publication(
     broken = tmp_path / "jobs.json"
     broken.write_text(document, encoding="utf-8")
 
-    argv = [str(broken), "--manifest", str(manifest(tmp_path / "expected.txt", ("ci-python",))), "--tag-sha", TAG_SHA]
+    argv = [
+        str(broken),
+        "--manifest",
+        str(manifest(tmp_path / "expected.txt", ("ci-python",))),
+        "--tag-sha",
+        TAG_SHA,
+        "--tag-name",
+        TAG_NAME,
+    ]
     assert main(argv) == 1
     assert diagnosis in capsys.readouterr().err
 
@@ -283,4 +346,6 @@ def test_the_two_workflows_a_tag_fires_are_graded_together(tmp_path: Path) -> No
     artifacts = payload(tmp_path / "artifacts.json", (("wheel macos-arm64", "success"),), run_id=222)
     expected = manifest(tmp_path / "expected.txt", (*names(), "wheel macos-arm64"))
 
-    assert main([str(ci), str(artifacts), "--manifest", str(expected), "--tag-sha", TAG_SHA]) == 0
+    assert (
+        main([str(ci), str(artifacts), "--manifest", str(expected), "--tag-sha", TAG_SHA, "--tag-name", TAG_NAME]) == 0
+    )

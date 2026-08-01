@@ -238,6 +238,25 @@ jobs:
             dist
             dist-from-sdist
 
+      # THE BINARIES THIS JOB UPLOADS ARE WHAT ACTUALLY GETS PUBLISHED, so this job proves for
+      # itself which commit it built. Change this workflow's checkout to `ref: main` and every leg
+      # builds the wrong tree while every REST job still self-reports `head_sha=<tag>` — the tag-job
+      # grader would accept it, because `head_sha` is a label the run attaches to itself.
+      #
+      # LAST, after the artifacts are built and smoked, so a second checkout inserted between the
+      # checkout and the build cannot leave a correct-looking record of a tree nobody built. Same
+      # step, same shell, as every job in `ci.yml`.
+      - name: The gates above ran on the commit this event names
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha=$(git rev-parse HEAD)
+          echo "graded commit $sha, tree $(git rev-parse "HEAD^{tree}")"
+          if [ "$sha" != "${GITHUB_SHA:-}" ]; then
+            echo "FAIL: this job graded $sha, but the event names ${GITHUB_SHA:-<unset>}." >&2
+            exit 1
+          fi
+
   # THE THREE WHEEL LEGS RUN ON THE EVENTS THAT PRECEDE A TAG, NOT ON EVERY PULL REQUEST.
   #
   # Measured cost of running them everywhere, per PR: sdist 3 + linux 3 + macos 20 (the x10
@@ -394,3 +413,14 @@ jobs:
         with:
           name: artifacts-${{ matrix.platform.name }}
           path: dist
+
+      - name: The gates above ran on the commit this event names
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha=$(git rev-parse HEAD)
+          echo "graded commit $sha, tree $(git rev-parse "HEAD^{tree}")"
+          if [ "$sha" != "${GITHUB_SHA:-}" ]; then
+            echo "FAIL: this job graded $sha, but the event names ${GITHUB_SHA:-<unset>}." >&2
+            exit 1
+          fi

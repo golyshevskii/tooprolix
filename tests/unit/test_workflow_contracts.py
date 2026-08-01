@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from check_tag_jobs import read_manifest
 
 REPO: Path = Path(__file__).parents[2]
 WORKFLOWS: Path = REPO / ".github" / "workflows"
@@ -34,10 +35,8 @@ CONCURRENCY_GROUP = re.compile(r"^concurrency:\n\s+group:\s*(?P<group>.+)$", re.
 #: The steps whose shell IS the guard. The tests below execute that shell rather than
 #: re-implementing it, so a mutation to the workflow is what they grade.
 STALE_TREE_GUARD_STEP = "Refuse to tag a tree that is not main's"
-AGGREGATE_STEP = "Every required job succeeded, on the commit the event named"
-
-#: The commit a fixture event names, i.e. what `github.sha` would hold.
-EVENT_SHA: str = "e5" * 20
+AGGREGATE_STEP = "Every required job must have concluded success"
+COMMIT_ASSERTION_STEP = "The gates above ran on the commit this event names"
 
 #: Every `make` target `ci.yml` ran before the eight jobs were consolidated into four. The
 #: consolidation's one real risk is dropping a gate while the run still goes green, and a job count
@@ -49,6 +48,9 @@ EXPECTED_MAKE_TARGETS: frozenset[str] = frozenset(
 #: `(tag, the merge commit that landed it on main, whether invariant A holds)`, measured at
 #: `bb327cc`. Invariant A: the tag's tree equals the tree of the merge commit that landed it.
 #: The three FALSE rows are real releases that shipped a tree `main` never had.
+#: What an ordinary (non-release) PR's manifest looks like: a readable version that never moves.
+VERSIONED_MANIFEST: str = '[package]\nname = "fixture"\nversion = "0.3.4"\n'
+
 RELEASE_MERGES: tuple[tuple[str, str, bool], ...] = (
     ("v0.4.2", "3ee7001", True),
     ("v0.4.3", "fbe760a", False),
@@ -114,7 +116,7 @@ def make_targets(job: str) -> set[str]:
     return set(re.findall(r"^\s+run: make (\S+)$", job, re.MULTILINE))
 
 
-def step_script(workflow: Path, step: str) -> str:
+def step_scripts(workflow: Path, step: str) -> list[str]:
     """
     Extract a step's `run: |` shell, so the tests EXECUTE the shipped artifact instead of matching it.
 
@@ -125,12 +127,19 @@ def step_script(workflow: Path, step: str) -> str:
     # The `(?: +[^\n]*\n)*?` skips whatever the step declares between its name and its script —
     # `id:`, `env:` and their children — without letting the match run past this step, because it is
     # non-greedy and anchored on the first `run: |` that follows the name.
-    body = re.search(
-        rf"- name: {re.escape(step)}\n(?: +[^\n]*\n)*?(?P<pad> +)run: \|\n(?P<script>(?:(?P=pad) +.*\n|[ \t]*\n)+)",
-        workflow.read_text(encoding="utf-8"),
-    )
-    assert body is not None, f"{workflow.name} has no `{step}` step with a `run: |` script"
-    return textwrap.dedent(body.group("script"))
+    found = [
+        textwrap.dedent(body.group("script"))
+        for body in re.finditer(
+            rf"- name: {re.escape(step)}\n(?: +[^\n]*\n)*?(?P<pad> +)run: \|\n(?P<script>(?:(?P=pad) +.*\n|[ \t]*\n)+)",
+            workflow.read_text(encoding="utf-8"),
+        )
+    ]
+    assert found, f"{workflow.name} has no `{step}` step with a `run: |` script"
+    return found
+
+
+def step_script(workflow: Path, step: str) -> str:
+    return step_scripts(workflow, step)[0]
 
 
 def run_guard(cwd: Path) -> subprocess.CompletedProcess[str]:
@@ -138,21 +147,31 @@ def run_guard(cwd: Path) -> subprocess.CompletedProcess[str]:
     return subprocess.run(["bash", "-c", script], cwd=cwd, capture_output=True, text=True, check=False)
 
 
-def run_aggregate(needs: dict[str, dict[str, Any]], event_sha: str = EVENT_SHA) -> subprocess.CompletedProcess[str]:
+def run_aggregate(needs: dict[str, dict[str, Any]]) -> subprocess.CompletedProcess[str]:
     """Execute `ci-required`'s shipped shell against a `needs` context, exactly as Actions would."""
     return subprocess.run(
         ["bash", "-c", step_script(CI, AGGREGATE_STEP)],
-        env={**os.environ, "RESULTS": json.dumps(needs), "EVENT_SHA": event_sha},
+        env={**os.environ, "RESULTS": json.dumps(needs)},
         capture_output=True,
         text=True,
         check=False,
     )
 
 
-def succeeded(*jobs: str, sha: str = EVENT_SHA) -> dict[str, dict[str, Any]]:
-    return {
-        job: {"result": "success", "outputs": {"checked_out_sha": sha, "checked_out_tree": "t" * 40}} for job in jobs
-    }
+def run_commit_assertion(cwd: Path, event_sha: str) -> subprocess.CompletedProcess[str]:
+    """Execute the shipped per-job commit assertion in a real checkout, as Actions would."""
+    return subprocess.run(
+        ["bash", "-c", step_script(CI, COMMIT_ASSERTION_STEP)],
+        cwd=cwd,
+        env={**os.environ, "GITHUB_SHA": event_sha},
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
+def succeeded(*jobs: str) -> dict[str, dict[str, Any]]:
+    return {job: {"result": "success"} for job in jobs}
 
 
 def evaluate(expression: str, event_name: str, ref: str, head_ref: str) -> bool:
@@ -175,9 +194,21 @@ def evaluate(expression: str, event_name: str, ref: str, head_ref: str) -> bool:
         f"expression uses {used - {'startsWith', *context}}, which is not translated"
     )
 
-    translated = expression.replace("||", " or ").replace("&&", " and ")
+    # 🔴 GITHUB COMPARES STRINGS CASE-INSENSITIVELY — `==`, `!=`, `startsWith`, `endsWith` and
+    # `contains` all do. Python does not, and translating them to Python's operators made this
+    # PERMISSIVELY wrong: `|| startsWith(github.ref, 'REFS/HEADS/MAIN')` runs the wheel matrix on
+    # every push to `main` in real Actions, and every fixture below passed. A translator that errs
+    # towards "the gate is fine" makes a green test certify a broken gate, which is worse than no
+    # test at all. Case-folding BOTH sides restores GitHub's semantics exactly for this subset,
+    # whose only operations are string equality and prefix tests.
+    #
+    # `||`/`&&` become `or`/`and`, whose relative precedence and short-circuit order match
+    # GitHub's; `bool()` on the result matches GitHub's truthiness for strings (empty is false).
+    # The whitelist above keeps anything whose translation is not obvious out of this function.
+    translated = re.sub(r"'([^']*)'", lambda literal: repr(literal.group(1).casefold()), expression)
+    translated = translated.replace("||", " or ").replace("&&", " and ")
     for name, value in context.items():
-        translated = translated.replace(name, repr(value))
+        translated = translated.replace(name, repr(value.casefold()))
     return bool(eval(translated, {"__builtins__": {}}, {"startsWith": lambda text, prefix: text.startswith(prefix)}))
 
 
@@ -275,6 +306,47 @@ def test_the_wheel_matrix_is_gated_on_release_events_and_the_sdist_is_not_gated_
 
     gate = job_condition(build["wheels"])
     assert gate is not None, "the wheel matrix is ungated, so every ordinary PR pays for three wheel legs"
+
+
+def test_the_expression_translator_folds_case_on_the_context_too() -> None:
+    """
+    Case-insensitivity has two sides, and folding only the LITERALS leaves the other one wrong.
+
+    Measured: with the context left as-is, every literal-side fixture stayed green. A ref that
+    arrives upper-cased must still match a lower-case prefix, and must still fail a different one.
+    """
+    assert evaluate("startsWith(github.ref, 'refs/tags/v')", "PUSH", "REFS/TAGS/V0.4.8", "") is True
+    assert evaluate("github.event_name == 'push'", "PUSH", "REFS/TAGS/V0.4.8", "") is True
+    assert evaluate("startsWith(github.ref, 'refs/heads/')", "PUSH", "REFS/TAGS/V0.4.8", "") is False
+
+
+@pytest.mark.parametrize(
+    ("expression", "holds"),
+    [
+        # GitHub compares strings CASE-INSENSITIVELY. A translator that used Python's operators was
+        # permissively wrong: codex's exploit `|| startsWith(github.ref, 'REFS/HEADS/MAIN')` runs the
+        # wheel matrix on every push to main in real Actions, and every fixture below still passed.
+        ("startsWith(github.ref, 'refs/tags/v')", True),
+        ("startsWith(github.ref, 'REFS/TAGS/V')", True),
+        ("github.event_name == 'push'", True),
+        ("github.event_name == 'PUSH'", True),
+        ("startsWith(github.head_ref, 'release-plz-')", False),
+        # `&&` binds tighter than `||`, as `and` does over `or`. Under the wrong grouping —
+        # `A && (B || C)` — this would be false rather than true.
+        (
+            "github.event_name == 'pull_request' && startsWith(github.ref, 'refs/') || startsWith(github.ref, 'refs/tags/v')",
+            True,
+        ),
+    ],
+)
+def test_the_expression_translator_reproduces_github_semantics(expression: str, holds: bool) -> None:
+    """
+    The translator is itself a guard, so its semantics are pinned rather than assumed.
+
+    A permissively wrong translator makes a green test certify a broken gate, which is strictly
+    worse than having no test: the gate below is only as trustworthy as this function.
+    """
+    assert evaluate(expression, event_name="push", ref="refs/tags/v0.4.8", head_ref="") is holds
 
 
 @pytest.mark.parametrize(
@@ -383,55 +455,54 @@ def test_the_shipped_aggregate_refuses_an_empty_needs_list() -> None:
     assert run_aggregate({}).returncode == 1
 
 
-def test_the_shipped_aggregate_refuses_a_job_that_graded_another_commit() -> None:
+@pytest.mark.parametrize("workflow", [CI, BUILD_ARTIFACTS])
+def test_every_job_that_checks_out_proves_which_commit_it_graded(workflow: Path) -> None:
     """
-    🔴 The binding AC1 needs, and the reason the `checked_out_sha` outputs are not decoration.
+    🔴 The binding AC1 needs, and it has to reach the ARTIFACT workflow, which is where the
+    publishable binaries are built.
 
-    Job outputs are not returned by the `actions/runs/<id>/jobs` REST endpoint, so nothing outside
-    the run can read them — the comparison has to happen here. A `ref:` mistake in any required job
-    makes it grade a tree the event never named, and every gate inside that job still passes.
+    Point `build-artifacts.yml`'s checkout at `ref: main` and every leg builds the wrong tree while
+    every REST job still self-reports `head_sha=<tag>` — a grader reading that field accepts it,
+    because it is a label the run attaches to itself. An aggregate cannot cover this: `needs:` does
+    not cross workflows and job outputs are not returned by the jobs REST endpoint.
+
+    LAST STEP, not first. Recording HEAD right after the checkout leaves a window where a second
+    checkout inserted afterwards changes what the gates graded while the record stays correct.
     """
-    needs = succeeded("ci-python", "ci-rust", "cargo-doc")
-    needs["cargo-doc"]["outputs"]["checked_out_sha"] = "f0" * 20
-
-    assert run_aggregate(needs).returncode == 1
-
-
-def test_the_shipped_aggregate_refuses_a_job_that_emitted_nothing() -> None:
-    """A job that reports no checkout cannot be shown to have graded the right tree, so it blocks."""
-    needs = succeeded("ci-python", "ci-rust", "cargo-doc")
-    needs["ci-python"]["outputs"] = {}
-
-    assert run_aggregate(needs).returncode == 1
+    for name, job in jobs(uncommented(workflow)).items():
+        if "actions/checkout@" not in job:
+            continue
+        steps = re.findall(r"^ {6}- name: (.+)$", job, re.MULTILINE)
+        assert steps[-1] == COMMIT_ASSERTION_STEP, f"{name}'s last step is {steps[-1]!r}, so nothing binds its checkout"
 
 
-def test_the_shipped_aggregate_refuses_an_event_that_names_no_commit() -> None:
+def test_the_commit_assertion_is_one_script_and_not_six_drifting_copies() -> None:
     """
-    A guard whose reference value is empty must refuse, not compare everything to nothing.
-
-    The fixture emits NOTHING as well as naming nothing, and that pairing is the whole point: with
-    real `checked_out_sha` values the comparison fails on its own and this test passes whether or
-    not the emptiness check exists — measured, it stayed green when the check was deleted. Empty
-    against empty is the vacuous case, where `"" == ""` and the binding silently certifies nothing.
+    Six jobs carry it, so a fix applied to one copy and not the others would leave a hole that the
+    per-job test above cannot see — it checks placement, not content.
     """
-    silent = {job: {"result": "success", "outputs": {}} for job in ("ci-python", "ci-rust", "cargo-doc")}
+    copies = step_scripts(CI, COMMIT_ASSERTION_STEP) + step_scripts(BUILD_ARTIFACTS, COMMIT_ASSERTION_STEP)
 
-    assert run_aggregate(silent, event_sha="").returncode == 1
+    assert len(copies) == 6, f"expected the assertion in all six checkout-carrying jobs, found {len(copies)}"
+    # Stripped: the extractor swallows the blank line that separates a step from the next block, so
+    # a copy at the end of a job differs from one in the middle by trailing whitespace alone.
+    assert len({copy.strip() for copy in copies}) == 1, "the copies have drifted apart"
 
 
-def test_every_job_the_aggregate_needs_emits_what_it_checked_out() -> None:
+def test_the_shipped_commit_assertion_accepts_only_the_commit_the_event_names() -> None:
     """
-    The aggregate can only compare what the jobs declare. A required job that checks out
-    independently and declares no `outputs:` would make the comparison silently vacuous for itself.
+    Executed in a real checkout against the shipped shell, because the point is behaviour: a job
+    that graded some other commit must go red, and a job whose event names nothing must go red too
+    rather than compare a real SHA against an empty one and call it a mismatch by luck.
     """
-    ci = jobs(uncommented(CI))
-    needed = re.search(r"^ {4}needs:\s*\[(?P<list>[^\]]*)\]", ci["ci-required"], re.MULTILINE)
-    assert needed is not None
+    with checkout_of("bb327cc") as worktree:
+        graded = subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=worktree, capture_output=True, text=True, check=True
+        ).stdout.strip()
 
-    for name in (entry.strip() for entry in needed.group("list").split(",")):
-        assert "checked_out_sha: ${{ steps.checked-out.outputs.checked_out_sha }}" in ci[name], (
-            f"{name} is required but declares no checkout evidence, so the aggregate cannot bind it"
-        )
+        assert run_commit_assertion(worktree, graded).returncode == 0
+        assert run_commit_assertion(worktree, "f0" * 20).returncode == 1
+        assert run_commit_assertion(worktree, "").returncode == 1
 
 
 def test_only_the_aggregate_carries_a_job_condition() -> None:
@@ -548,44 +619,27 @@ def test_the_consolidation_kept_every_hardening_setting() -> None:
     )
 
 
-def test_a_ci_run_emits_the_commit_and_tree_it_actually_checked_out() -> None:
-    """
-    The run's `head_sha` is a label the run reports ABOUT ITSELF, and it is not evidence.
-
-    Measured: run `30691798694` reports `head_sha=292d8af4` while `actions/checkout` materialised
-    tree `3a1f67fd`. A workflow triggered at tag `T` but checking out `main` yields `head_sha=T`,
-    `name=CI`, `conclusion=success` — and a publish precondition reading that field passes over a tag
-    no ordinary CI ever exercised. An emitted `git rev-parse HEAD` is read off the real working tree
-    at the moment the gates run, so it is the artifact; the Actions metadata is the story about it.
-    """
-    emitting = {
-        name: job
-        for name, job in jobs(uncommented(CI)).items()
-        if "git rev-parse HEAD" in job and "$GITHUB_OUTPUT" in job
-    }
-    assert emitting, "no job emits what it checked out, so the tag evidence is Actions metadata alone"
-
-    for name, job in emitting.items():
-        assert "HEAD^{tree}" in job, f"{name} emits a commit but not the tree that was graded"
-        assert make_targets(job), f"{name} emits a tree it never tested, which is the defect being closed"
-
-
 def test_the_expected_tag_job_manifest_names_every_ci_job() -> None:
     """
-    The manifest is the publish precondition's expectation, and it is graded by SET EQUALITY, so a
-    job added to `ci.yml` without being added here turns every future release red at the tag —
-    after the tag exists. This moves that discovery to the pull request that adds the job.
+    The manifest is the publish precondition's expectation, graded by SET EQUALITY over
+    `(workflow name, job name)` pairs, so a job added to `ci.yml` without being added here turns
+    every future release red at the tag — after the tag exists. This moves that discovery to the
+    pull request that adds the job.
+
+    Read with the SHIPPED parser rather than a second one written here. A duplicate reader cannot
+    see a `[workflow]` header going missing, and that omission silently reassigns four artifact jobs
+    to `CI` — measured: a second reader left this test green through exactly that deletion.
 
     Only `ci.yml`'s names are checked from this direction: `build-artifacts.yml`'s wheel legs are
     matrix-expanded, so their reported names are not readable out of the YAML.
     """
-    expected = {
-        stripped
-        for line in (REPO / ".github" / "expected-tag-jobs.txt").read_text(encoding="utf-8").splitlines()
-        if (stripped := line.strip()) and not stripped.startswith("#")
-    }
-    assert expected, "the manifest expects nothing, so it would be satisfied by a run that did nothing"
-    assert set(jobs(uncommented(CI))) <= expected, f"missing from the manifest: {set(jobs(uncommented(CI))) - expected}"
+    expected = read_manifest(REPO / ".github" / "expected-tag-jobs.txt")
+
+    assert {workflow for workflow, _ in expected} == {"CI", "Build artifacts"}, (
+        "a `v*` tag fires exactly these two workflows; a missing section reassigns its jobs to another"
+    )
+    in_ci = {job for workflow, job in expected if workflow == "CI"}
+    assert set(jobs(uncommented(CI))) <= in_ci, f"missing from the manifest: {set(jobs(uncommented(CI))) - in_ci}"
 
 
 # ---------------------------------------------------------------------------------------------
@@ -641,19 +695,14 @@ def test_the_guard_reproduces_every_historical_release(tag: str, merge: str, hol
     )
 
 
-def test_a_non_release_merge_does_not_redden_main(tmp_path: Path) -> None:
+def a_merge_that_is_not_a_release(root: Path, *, manifest: str | None) -> Path:
     """
-    🔴 The guard must refuse RELEASES, not refuse MERGES.
+    Build the shape codex named: fork at A, `main` advances to B, land the PR as a merge commit.
 
-    An ordinary merge-commit PR forks at A, `main` advances to B, and the PR lands as merge M.
-    `M^{tree}` holds both changes and `M^2^{tree}` lacks B, so the trees differ exactly as a stale
-    release's do — while `release_always = false` means release-plz would tag nothing at all.
-    Comparing unconditionally paints `main` red for every merge-commit PR forever.
-
-    The fixture asserts the trees really DO differ before asserting the guard passes; otherwise it
-    would prove only that a clean merge is clean, which is a different test.
+    `HEAD^{tree}` then holds both changes and `HEAD^2^{tree}` lacks B, so the trees differ exactly
+    as a stale release's do — while release-plz, with `release_always = false`, would tag nothing.
     """
-    repo = tmp_path / "repo"
+    repo = root / "repo"
     repo.mkdir()
 
     def git(*args: str) -> str:
@@ -664,6 +713,10 @@ def test_a_non_release_merge_does_not_redden_main(tmp_path: Path) -> None:
     git("config", "user.email", "fixture@example.com")
     git("config", "user.name", "fixture")
     (repo / "base.txt").write_text("base\n", encoding="utf-8")
+    if manifest is not None:
+        # The guard identifies a release from the version in Cargo.toml, not from the commit
+        # subject, so the fixture carries one and never bumps it — an ordinary PR's shape.
+        (repo / "Cargo.toml").write_text(manifest, encoding="utf-8")
     git("add", "-A")
     git("commit", "-qm", "chore: base")
     git("checkout", "-qb", "feature")
@@ -679,9 +732,46 @@ def test_a_non_release_merge_does_not_redden_main(tmp_path: Path) -> None:
     assert git("rev-parse", "HEAD^{tree}") != git("rev-parse", "HEAD^2^{tree}"), (
         "the fixture's trees agree, so it cannot show the guard distinguishing a merge from a release"
     )
+    return repo
 
-    result = run_guard(repo)
+
+def test_a_non_release_merge_does_not_redden_main(tmp_path: Path) -> None:
+    """
+    🔴 The guard must refuse RELEASES, not refuse MERGES.
+
+    Comparing unconditionally paints `main` red for every merge-commit PR forever, and release-plz
+    would not have tagged anything on any of them. The release is identified from the version in
+    `Cargo.toml` — the artifact release-plz acts on — rather than from a commit subject it owns and
+    could reword at any time.
+    """
+    result = run_guard(a_merge_that_is_not_a_release(tmp_path, manifest=VERSIONED_MANIFEST))
+
     assert result.returncode == 0, f"a non-release merge reddened main:\n{result.stdout}{result.stderr}"
+
+
+@pytest.mark.parametrize(
+    ("manifest", "shape"),
+    [
+        (None, "no Cargo.toml at all"),
+        # A manifest that EXISTS and declares no readable `version` is the case `set -o pipefail`
+        # does NOT catch: `git show` succeeds and `sed` simply prints nothing. Measured — with the
+        # emptiness check deleted, the missing-file fixture alone still went red and proved nothing.
+        ('[package]\nname = "fixture"\nversion.workspace = true\n', "a version this guard cannot read"),
+    ],
+)
+def test_a_merge_whose_package_version_cannot_be_read_is_refused(
+    tmp_path: Path, manifest: str | None, shape: str
+) -> None:
+    """
+    The classification itself must fail CLOSED.
+
+    "I could not tell whether this is a release" has to mean refuse, never "not a release, so
+    nothing to check" — that is the fail-open the subject-text detector had, one level down.
+    """
+    result = run_guard(a_merge_that_is_not_a_release(tmp_path, manifest=manifest))
+
+    assert result.returncode != 0, f"{shape} passed:\n{result.stdout}{result.stderr}"
+    assert "OK" not in result.stdout, result.stdout
 
 
 def test_the_guard_fails_when_it_cannot_resolve_what_it_is_grading(tmp_path: Path) -> None:

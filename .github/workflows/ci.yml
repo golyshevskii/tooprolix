@@ -108,9 +108,6 @@ jobs:
     name: ci-python
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    outputs:
-      checked_out_sha: ${{ steps.checked-out.outputs.checked_out_sha }}
-      checked_out_tree: ${{ steps.checked-out.outputs.checked_out_tree }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -138,39 +135,6 @@ jobs:
           # jobs run them instead of naming the jobs.
           fetch-depth: 0
 
-      # WHAT WAS REALLY MATERIALISED, EMITTED BY THE JOB THAT THEN GRADES IT.
-      #
-      # A run's `head_sha` is a label the run reports ABOUT ITSELF. Measured: run 30691798694
-      # reports `head_sha=292d8af4` while `actions/checkout` materialised tree `3a1f67fd`. A
-      # workflow triggered at tag `T` but checking out `main` yields `head_sha=T`, `name=CI`,
-      # `conclusion=success`, and a publish precondition reading that field passes over a tag no
-      # ordinary CI ever exercised.
-      #
-      # `git rev-parse` here reads the real working tree at the moment the gates below run, so it is
-      # the artifact rather than the story about it. THE RESIDUAL, named rather than left for a
-      # reader to assume closed: this is still produced by the job being graded — a workflow could
-      # test one tree and then emit another. What bounds that is the workflow definition itself,
-      # which is tracked in git and reviewed in a PR; `head_sha` is not a reviewable object at all.
-      # The named upgrade path is "test and build once, then publish that exact attested digest",
-      # which belongs to the publication task.
-      #
-      # AND IT IS CONSUMED, WHICH IS THE HALF THAT WAS MISSING. An emitted value nobody compares is
-      # decoration, and it cannot be compared from outside either: job outputs are NOT returned by
-      # the `actions/runs/<id>/jobs` REST endpoint, so externally only the log line below is
-      # reachable. The comparison therefore happens INSIDE the workflow, in `ci-required`, which
-      # already `needs:` this job and can read `needs.ci-python.outputs.*`. `ci-rust` and
-      # `cargo-doc` emit the same pair for the same reason — they check out independently, so a
-      # `ref:` mistake in one of them would otherwise stay green and invisible.
-      - name: Record what was actually checked out
-        id: checked-out
-        run: |
-          set -euo pipefail
-          sha=$(git rev-parse HEAD)
-          tree=$(git rev-parse "HEAD^{tree}")
-          echo "checked_out_sha=$sha" >> "$GITHUB_OUTPUT"
-          echo "checked_out_tree=$tree" >> "$GITHUB_OUTPUT"
-          echo "checked out commit $sha, tree $tree"
-
       - name: Install uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
@@ -186,6 +150,41 @@ jobs:
       - name: make test
         run: make test
 
+      # THE LAST STEP OF EVERY JOB THAT CHECKS OUT, AND IT IS LAST ON PURPOSE.
+      #
+      # A run's `head_sha` is a label the run reports ABOUT ITSELF. Measured: run 30691798694
+      # reports `head_sha=292d8af4` while `actions/checkout` materialised tree `3a1f67fd`. A
+      # workflow triggered at tag `T` but checking out `main` yields `head_sha=T`, `name=CI`,
+      # `conclusion=success`, and a publish precondition reading that field passes over a tag no
+      # ordinary CI ever exercised. So the job asserts, for itself, that the gates above it ran on
+      # the commit the event names.
+      #
+      # RUN LAST, because an earlier version recorded HEAD immediately after `actions/checkout` —
+      # which leaves a window where a second checkout inserted afterwards changes what the gates
+      # actually graded while the recorded value stays right. Asserted after the work, the value is
+      # the one the work saw.
+      #
+      # IN THE JOB, not in an aggregate. The previous shape emitted job outputs for `ci-required` to
+      # compare, which could not reach `build-artifacts.yml` at all — `needs:` does not cross
+      # workflows, and job outputs are not returned by the `actions/runs/<id>/jobs` REST endpoint
+      # either. The publishable binaries were the one thing nothing bound. One assertion, in every
+      # job that checks out, needs no plumbing and covers both workflows.
+      #
+      # WHAT IT DOES NOT PROVE, stated because the wording here was wrong once: `git rev-parse HEAD`
+      # reads the repository's HEAD, NOT the contents of the files on disk. It establishes which
+      # commit the checkout left this job on; it cannot see a step that edited a tracked file
+      # afterwards. A uniform working-tree check is deliberately not added, because
+      # `build-artifacts.yml` legitimately rewrites `README.md` in place before building.
+      - name: The gates above ran on the commit this event names
+        run: |
+          set -euo pipefail
+          sha=$(git rev-parse HEAD)
+          echo "graded commit $sha, tree $(git rev-parse "HEAD^{tree}")"
+          if [ "$sha" != "${GITHUB_SHA:-}" ]; then
+            echo "FAIL: this job graded $sha, but the event names ${GITHUB_SHA:-<unset>}." >&2
+            exit 1
+          fi
+
   # ---------------------------------------------------------------------------
   # The Rust gates. The toolchain is NOT chosen here: rust-toolchain.toml pins
   # 1.97.0 plus the clippy/rustfmt components, and rustup honours it on first
@@ -197,9 +196,6 @@ jobs:
     name: ci-rust
     runs-on: ubuntu-latest
     timeout-minutes: 25
-    outputs:
-      checked_out_sha: ${{ steps.checked-out.outputs.checked_out_sha }}
-      checked_out_tree: ${{ steps.checked-out.outputs.checked_out_tree }}
     env:
       # An insta snapshot that is NEW or CHANGED must FAIL this job, never be written. This is the
       # setting rust-skills `test-snapshot-testing` names for CI. Verified by deleting a committed
@@ -212,18 +208,6 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-
-      # This job checks out on its own, so it emits its own evidence — see the long note in
-      # `ci-python`. `ci-required` compares all three against the commit the event named.
-      - name: Record what was actually checked out
-        id: checked-out
-        run: |
-          set -euo pipefail
-          sha=$(git rev-parse HEAD)
-          tree=$(git rev-parse "HEAD^{tree}")
-          echo "checked_out_sha=$sha" >> "$GITHUB_OUTPUT"
-          echo "checked_out_tree=$tree" >> "$GITHUB_OUTPUT"
-          echo "checked out commit $sha, tree $tree"
 
       # KEEP THIS. It was deleted with the pyo3 boundary and the Rust test job went red on PR #34 —
       # `uv run python3 is available in this environment: Os { code: 2, kind: NotFound }`.
@@ -292,6 +276,16 @@ jobs:
       - name: make rust.test
         run: make rust.test
 
+      - name: The gates above ran on the commit this event names
+        run: |
+          set -euo pipefail
+          sha=$(git rev-parse HEAD)
+          echo "graded commit $sha, tree $(git rev-parse "HEAD^{tree}")"
+          if [ "$sha" != "${GITHUB_SHA:-}" ]; then
+            echo "FAIL: this job graded $sha, but the event names ${GITHUB_SHA:-<unset>}." >&2
+            exit 1
+          fi
+
   # The rustdoc gate. NEW in the /rust-skills audit: before it, this file contained zero mentions of
   # `cargo doc`/`rustdoc`, and `cargo doc` exits 0 on a broken intra-doc link — so `main` at 962678d
   # carried 5 rustdoc diagnostics with all seven jobs green. One of them (`[`render_failures`]` in
@@ -306,26 +300,11 @@ jobs:
     name: cargo-doc
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    outputs:
-      checked_out_sha: ${{ steps.checked-out.outputs.checked_out_sha }}
-      checked_out_tree: ${{ steps.checked-out.outputs.checked_out_tree }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-
-      # This job checks out on its own, so it emits its own evidence — see the long note in
-      # `ci-python`. `ci-required` compares all three against the commit the event named.
-      - name: Record what was actually checked out
-        id: checked-out
-        run: |
-          set -euo pipefail
-          sha=$(git rev-parse HEAD)
-          tree=$(git rev-parse "HEAD^{tree}")
-          echo "checked_out_sha=$sha" >> "$GITHUB_OUTPUT"
-          echo "checked_out_tree=$tree" >> "$GITHUB_OUTPUT"
-          echo "checked out commit $sha, tree $tree"
 
       - name: Show the pinned toolchain
         run: rustup show
@@ -337,6 +316,16 @@ jobs:
 
       - name: make rust.doc
         run: make rust.doc
+
+      - name: The gates above ran on the commit this event names
+        run: |
+          set -euo pipefail
+          sha=$(git rev-parse HEAD)
+          echo "graded commit $sha, tree $(git rev-parse "HEAD^{tree}")"
+          if [ "$sha" != "${GITHUB_SHA:-}" ]; then
+            echo "FAIL: this job graded $sha, but the event names ${GITHUB_SHA:-<unset>}." >&2
+            exit 1
+          fi
 
   # There are no coverage badges and nothing here to diff, so what this job protects is the
   # INSTRUMENT rather than a number: it is the only place proving that the coverage toolchain still
@@ -402,6 +391,16 @@ jobs:
       - name: make cov
         run: make cov
 
+      - name: The gates above ran on the commit this event names
+        run: |
+          set -euo pipefail
+          sha=$(git rev-parse HEAD)
+          echo "graded commit $sha, tree $(git rev-parse "HEAD^{tree}")"
+          if [ "$sha" != "${GITHUB_SHA:-}" ]; then
+            echo "FAIL: this job graded $sha, but the event names ${GITHUB_SHA:-<unset>}." >&2
+            exit 1
+          fi
+
   # THE ONE CHECK BRANCH PROTECTION WILL BE POINTED AT: `CI / ci-required`.
   #
   # It exists BEFORE protection is enabled, on purpose. GitHub only offers a check that has reported
@@ -423,18 +422,15 @@ jobs:
   # reports success unconditionally. The length check is a separate assertion from the result check
   # because a populated-set test cannot prove the empty case.
   #
-  # IT ALSO BINDS WHAT WAS TESTED TO WHAT THE EVENT NAMED, and that binding is the point of the
-  # `checked_out_sha` outputs above. `github.sha` is the commit the event is about — for a `v*` tag
-  # push it IS the tag's target, and for a pull request it is the merge commit `actions/checkout`
-  # materialises. Comparing each required job's EMITTED `git rev-parse HEAD` against it turns a
-  # `ref:` mistake, in any one of the three, into a red X instead of a green run over a tree nobody
-  # asked for. The check has to live here because job outputs are not exposed by the
-  # `actions/runs/<id>/jobs` REST endpoint — nothing outside the run can read them.
+  # IT DOES NOT CHECK WHICH COMMIT WAS GRADED, and that is deliberate: every job that checks out
+  # asserts that for itself, as its own last step, in this workflow and in `build-artifacts.yml`
+  # alike. An aggregate could never have covered the artifact workflow — `needs:` does not cross
+  # workflows and job outputs are not returned by the `actions/runs/<id>/jobs` REST endpoint — so
+  # the binding lives where the checkout does, and there is one mechanism rather than two.
   #
   # `coverage` is deliberately NOT here: it protects the measuring instrument rather than the
-  # shipped artifact, was never a required check, and produces nothing that is published — so a
-  # checkout mistake there cannot reach a release. That is the residual, and it is bounded by what
-  # the job is allowed to affect rather than by hope. `release-contract` cannot be here — `needs:`
+  # shipped artifact and was never a required check. It still carries the same commit assertion, so
+  # it cannot silently grade a different tree either. `release-contract` cannot be here — `needs:`
   # does not cross workflow boundaries — and stays separately reportable.
   #
   # Today no work job carries an `if:`, so this aggregate can only be red or green, never vacuous.
@@ -449,18 +445,12 @@ jobs:
     needs: [ci-python, ci-rust, cargo-doc]
     if: always()
     steps:
-      - name: Every required job succeeded, on the commit the event named
+      - name: Every required job must have concluded success
         env:
           RESULTS: ${{ toJSON(needs) }}
-          EVENT_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
           echo "$RESULTS"
-
-          if [ -z "${EVENT_SHA:-}" ]; then
-            echo "FAIL: the event named no commit, so there is nothing to bind the jobs to." >&2
-            exit 1
-          fi
 
           graded=$(jq 'length' <<<"$RESULTS")
           if [ "$graded" -eq 0 ]; then
@@ -474,12 +464,4 @@ jobs:
             exit 1
           fi
 
-          elsewhere=$(jq -r --arg sha "$EVENT_SHA" \
-            'to_entries[] | select((.value.outputs.checked_out_sha // "") != $sha)
-             | "\(.key)=\(.value.outputs.checked_out_sha // "<emitted nothing>")"' <<<"$RESULTS")
-          if [ -n "$elsewhere" ]; then
-            echo "FAIL: a required job graded a commit the event did not name ($EVENT_SHA): $elsewhere" >&2
-            exit 1
-          fi
-
-          echo "OK: $graded required job(s), every one success and every one checked out $EVENT_SHA."
+          echo "OK: $graded required job(s), every one of them success."

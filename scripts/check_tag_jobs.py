@@ -26,13 +26,26 @@ feature-branch runs would have certified a tag nothing tested. Every job must no
 own commit, and the jobs of one payload must all belong to one run and one attempt, so a file
 stitched together from several runs is refused rather than averaged.
 
+**And it binds the jobs to the WORKFLOWS a tag push fires**, because the same commit does not
+establish that those workflows ran. Measured: a payload carrying every expected job name with
+`workflow_name: Some other workflow`, dispatched on `main`, exited 0 before the manifest was
+sectioned by workflow. The expectation is now `(workflow name, job name)` pairs, and every job's
+`head_branch` must be the tag itself — on a real tag-push run it is (`v0.4.7`, run 30703436113).
+
 WHAT THIS CANNOT ESTABLISH, said plainly because the whole point is not to grade a self-report:
 
   * `head_sha` is still a label the RUN attaches to itself. It proves the run claims the tag; it
-    does not prove `actions/checkout` materialised it. What proves that is `ci-required` in
-    `.github/workflows/ci.yml`, which compares each required job's emitted `git rev-parse HEAD`
-    against `github.sha` INSIDE the run — job outputs are not reachable through this REST endpoint,
-    so the comparison cannot be made from here.
+    does not prove `actions/checkout` materialised it. What proves that is the last step of every
+    job that checks out, in `ci.yml` AND `build-artifacts.yml`, which asserts
+    `git rev-parse HEAD == $GITHUB_SHA` after its gates have run. That assertion cannot be read from
+    here — job outputs and step logs are not returned by this REST endpoint — which is exactly why
+    it fails the job rather than reporting to anyone.
+  * **the run's EVENT is not in this payload.** `actions/runs/<id>/jobs` carries `workflow_name`,
+    `head_branch`, `head_sha`, `run_id` and `run_attempt`, but not `event` — that lives on
+    `actions/runs/<id>`. So a `workflow_dispatch` launched against the tag ref is indistinguishable
+    here from the tag push. It is a small residual: a dispatch at the tag ref runs the same workflow
+    files at the same commit, so it does the same work. Closing it means feeding this the run object
+    too, and that is the publication task's call.
   * the payload is trusted to have come from `gh api`. This reads a file; it does not authenticate
     the API.
   * nothing here checks that the run executed the workflow file that is on the tag.
@@ -66,9 +79,13 @@ class TagJobsError(AssertionError):
     """The tag's jobs are not the jobs that were promised, or did not all succeed."""
 
 
-def read_manifest(path: Path) -> set[str]:
+def read_manifest(path: Path) -> set[tuple[str, str]]:
     """
-    Read the expected job names, ignoring blank lines and `#` comments.
+    Read the expected `(workflow name, job name)` pairs, ignoring blank lines and `#` comments.
+
+    The WORKFLOW half is what stops a run of some other workflow — or a hand-dispatched one —
+    satisfying the expectation just by carrying the right job names. Measured before it existed: a
+    payload whose `workflow_name` was `Some other workflow`, dispatched on `main`, exited 0.
 
     Empties are NOT tolerated here rather than at the comparison: a manifest that reads as the empty
     set is an unusable expectation whatever the run did, and saying so at the point of reading names
@@ -76,11 +93,18 @@ def read_manifest(path: Path) -> set[str]:
     """
     if not path.is_file():
         raise TagJobsError(f"no expected-job manifest at {path}")
-    expected = {
-        stripped
-        for line in path.read_text(encoding="utf-8").splitlines()
-        if (stripped := line.strip()) and not stripped.startswith("#")
-    }
+    expected: set[tuple[str, str]] = set()
+    workflow: str | None = None
+    for line in path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if section := re.fullmatch(r"\[(?P<workflow>.+)\]", stripped):
+            workflow = section.group("workflow")
+            continue
+        if workflow is None:
+            raise TagJobsError(f"{path} lists {stripped!r} before any [workflow name] header")
+        expected.add((workflow, stripped))
     if not expected:
         raise TagJobsError(f"{path} expects no jobs at all, so it would be satisfied by a run that did nothing")
     return expected
@@ -131,15 +155,20 @@ def read_jobs(paths: list[Path]) -> list[dict[str, Any]]:
     return collected
 
 
-def failures(expected: set[str], observed: list[dict[str, Any]], tag_sha: str) -> list[str]:
+def failures(expected: set[tuple[str, str]], observed: list[dict[str, Any]], tag_sha: str, tag_name: str) -> list[str]:
     """Return every reason the tag must not be published, or an empty list when there is none."""
     reasons: list[str] = []
 
     # THE BINDING TO THE TAG. Without it this graded a SHAPE — the right names with the right
-    # conclusions — and any two old green runs satisfied it.
+    # conclusions — and any two old green runs satisfied it. The SHA says which commit; the ref says
+    # the run was of the tag rather than of a branch that happened to point at the same commit.
     strangers = sorted({str(job.get("head_sha")) for job in observed if job.get("head_sha") != tag_sha})
     if strangers:
         reasons.append(f"job(s) belong to a run of {strangers}, not of the tag {tag_sha}")
+
+    elsewhere = sorted({str(job.get("head_branch")) for job in observed if job.get("head_branch") != tag_name})
+    if elsewhere:
+        reasons.append(f"job(s) belong to a run of ref {elsewhere}, not of {tag_name}")
 
     malformed = [
         job for job in observed if not isinstance(job.get("name"), str) or not isinstance(job.get("conclusion"), str)
@@ -150,7 +179,7 @@ def failures(expected: set[str], observed: list[dict[str, Any]], tag_sha: str) -
             f"conclusion, and 'not yet failed' is not 'succeeded')"
         )
 
-    ran = {job["name"] for job in observed if isinstance(job.get("name"), str)}
+    ran = {(str(job.get("workflow_name")), job["name"]) for job in observed if isinstance(job.get("name"), str)}
     if missing := sorted(expected - ran):
         reasons.append(f"expected job(s) that did not run at all: {missing}")
     if unexpected := sorted(ran - expected):
@@ -172,6 +201,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("payload", nargs="+", type=Path, help="`gh api .../actions/runs/<id>/jobs` output")
     parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST, help="the tracked expected-job list")
     parser.add_argument("--tag-sha", required=True, help="the tag's target commit, `git rev-parse 'v0.4.8^{commit}'`")
+    parser.add_argument("--tag-name", required=True, help="the tag itself, e.g. v0.4.8")
     parsed = parser.parse_args(argv)
 
     try:
@@ -179,19 +209,24 @@ def main(argv: list[str] | None = None) -> int:
         # job's `head_sha`, or — worse, if the comparison were ever loosened — match many.
         if not re.fullmatch(r"[0-9a-f]{40}", parsed.tag_sha):
             raise TagJobsError(f"--tag-sha {parsed.tag_sha!r} is not a full 40-character commit SHA")
+        # `v*` is the pattern both workflows trigger on, so anything else is not a tag they ran for.
+        if not re.fullmatch(r"v\S+", parsed.tag_name):
+            raise TagJobsError(f"--tag-name {parsed.tag_name!r} is not a v* tag")
         expected = read_manifest(parsed.manifest)
         observed = read_jobs(parsed.payload)
     except TagJobsError as error:
         print(f"FAIL: {error}", file=sys.stderr)
         return 1
 
-    if reasons := failures(expected, observed, parsed.tag_sha):
+    if reasons := failures(expected, observed, parsed.tag_sha, parsed.tag_name):
         for reason in reasons:
             print(f"FAIL: {reason}", file=sys.stderr)
         return 1
 
     runs = sorted({str(job.get("run_id")) for job in observed})
-    print(f"OK: all {len(expected)} expected job(s) of {parsed.tag_sha} ran and concluded {SUCCESS} (runs {runs}).")
+    print(
+        f"OK: all {len(expected)} expected job(s) of {parsed.tag_name} ({parsed.tag_sha}) concluded {SUCCESS} (runs {runs})."
+    )
     return 0
 
 
