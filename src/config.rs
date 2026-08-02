@@ -580,10 +580,20 @@ fn normalise_glob(glob: &str) -> Result<String, String> {
     // function exists to prevent.
     if glob.starts_with('/') {
         let name = segments.join("/");
+        // Name the fix only when the fix is takeable. `read_exclude` refuses a `!` prefix and any
+        // `\` a few lines later, so recommending `./!vendor` would hand one exit 2 off to another.
+        // ponytail: those two are the whole set of later guards, 30 lines away in the same file; if
+        // a third arrives, this is the line it has to be added to.
+        let advice = if name.starts_with('!') || name.contains('\\') {
+            "remove it".to_owned()
+        } else {
+            format!(
+                "write `./{name}` for the one beside this file, or `{name}` to match it at any depth"
+            )
+        };
         return Err(format!(
             "is anchored with a leading `/`, which ruff does not honour and this tool does not \
-             accept; write `./{name}` for the one beside this file, or `{name}` to match it at any \
-             depth"
+             accept; {advice}"
         ));
     }
 
@@ -600,10 +610,14 @@ fn normalise_glob(glob: &str) -> Result<String, String> {
 
 /// The walk filter for [`Config::exclude`], with the configuration file's directory as its base.
 ///
-/// **The base is the configuration file's own directory** — ruff's rule — and not the working
-/// directory and not the walk root. One project, one file, one meaning for `vendor/`, whether CI
-/// runs `tooprolix check .` at the root or `tooprolix check .` inside a package. [`crate::cli`] is
-/// what makes that reachable, by matching against paths rooted at the same canonical tree.
+/// **The base is the configuration file's own directory** and not the working directory or the walk
+/// root, so `vendor/` means one thing whether CI runs `tooprolix check .` at the root or inside a
+/// package. [`crate::cli`] is what makes that reachable, by matching against paths rooted at the
+/// same canonical tree.
+///
+/// The scope of that claim is exactly [`discover`]: one file, found by walking UP from the checked
+/// path. This is not ruff's per-file hierarchical model — a `pyproject.toml` below the walk root is
+/// never read, so a run started above it applies no `exclude` at all.
 ///
 /// Returns a matcher that is [`Override::is_empty`] when nothing is excluded, which is the signal
 /// [`crate::cli`] uses to keep the untouched walk untouched.

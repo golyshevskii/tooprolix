@@ -156,8 +156,13 @@ every measurable file is legal and reported on stderr.
 
 ### `exclude` path shapes
 
-Globs are resolved against the directory of the `pyproject.toml` they are written in, never the
-working directory. The shape of the entry decides the depth:
+Exactly **one** `pyproject.toml` is used per run: the nearest one at or above the path being
+checked. Every glob in it is resolved against that file's own directory, not against the working
+directory — so one rule means the same thing run from the project root and run from a package inside
+it. Configuration is not hierarchical: a `pyproject.toml` that sits *below* the checked path is
+never read, and its `exclude` does not apply to a run started above it.
+
+The shape of the entry decides the depth:
 
 | entry | what it selects |
 |---|---|

@@ -228,8 +228,9 @@ Opt out of a rule for the whole project, in pyproject.toml:
   comment-max-volume = 150
   docstring-max-volume = 200
 
-  The nearest pyproject.toml at or above the checked path is used. A rule listed in
-  `ignore` cannot be switched back on by a marker.
+  The nearest pyproject.toml at or above the checked path is used — exactly one, and
+  never a second one further down, so configuration is not hierarchical. A rule listed
+  in `ignore` cannot be switched back on by a marker.
 
   `exclude` takes .gitignore-syntax globs, resolved relative to the directory of
   the pyproject.toml they are written in — so one rule means the same thing from
