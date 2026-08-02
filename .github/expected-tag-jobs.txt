@@ -1,8 +1,10 @@
-# EVERY JOB THAT MUST HAVE CONCLUDED `success` AT A `v*` TAG BEFORE ANYTHING IS PUBLISHED.
+# EVERY JOB THAT MUST HAVE CONCLUDED `success` AT A `v*` TAG BEFORE PUBLISHING IS APPROVED.
 #
 # The expectation is pinned here so that shrinking it is a reviewable diff.
-# `scripts/check_tag_jobs.py` compares it to a tag run's jobs by SET EQUALITY, never "contains", and
-# refuses an empty list outright — an expectation of nothing is satisfied by nothing.
+# `scripts/check_tag_jobs.py` compares it to a tag run's prerequisite jobs by SET EQUALITY, never
+# "contains", and refuses an empty list outright — an expectation of nothing is satisfied by
+# nothing. It excludes exactly the environment-gated `Build artifacts / Publish to PyPI` job: that
+# job has no conclusion while it waits for the approval this list is the precondition for.
 #
 # `[section]` headers are `workflow_name` as the Actions API reports it; the lines under them are
 # `.name` values, not YAML job ids, which differ for a matrix job. Pairing the two is what stops a
@@ -18,6 +20,10 @@
 # `coverage` is listed although it is NOT a required status check: it runs at the tag, and under set
 # equality omitting it would fail an otherwise complete run. Required-check membership is decided by
 # `ci-required`'s `needs:`.
+#
+# Run `check_tag_jobs.py` before approving the `pypi` environment. The manifest below is the last
+# required preapproval job. After upload, separately confirm that `Publish to PyPI` concluded
+# `success`; it is deliberately not allowed to certify itself here.
 
 [CI]
 ci-python
@@ -32,4 +38,3 @@ wheel linux-x86_64
 wheel macos-arm64
 wheel windows-x86_64
 PyPI release manifest
-Publish to PyPI

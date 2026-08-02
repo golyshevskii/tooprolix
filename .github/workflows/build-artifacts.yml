@@ -425,7 +425,7 @@ jobs:
   release-manifest:
     name: PyPI release manifest
     needs: [sdist, wheels]
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -444,8 +444,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [[ "${GITHUB_REF:-}" != refs/tags/v* || "${GITHUB_REF_NAME:-}" != v* ]]; then
-            echo "FAIL: release candidates require a v* tag event." >&2
+          if [ "${GITHUB_EVENT_NAME:-}" != "push" ] \
+            || [[ "${GITHUB_REF:-}" != refs/tags/v* || "${GITHUB_REF_NAME:-}" != v* ]]; then
+            echo "FAIL: release candidates require a v* tag push event." >&2
             exit 1
           fi
           version="${GITHUB_REF_NAME#v}"
@@ -526,7 +527,7 @@ jobs:
   publish-pypi:
     name: Publish to PyPI
     needs: [sdist, wheels, release-manifest]
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment:
@@ -552,8 +553,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [[ "${GITHUB_REF:-}" != refs/tags/v* || "${GITHUB_REF_NAME:-}" != v* ]]; then
-            echo "FAIL: publishing requires a v* tag event." >&2
+          if [ "${GITHUB_EVENT_NAME:-}" != "push" ] \
+            || [[ "${GITHUB_REF:-}" != refs/tags/v* || "${GITHUB_REF_NAME:-}" != v* ]]; then
+            echo "FAIL: publishing requires a v* tag push event." >&2
             exit 1
           fi
           if [ "$(wc -l < release-manifest.txt | tr -d ' ')" -ne 10 ] \

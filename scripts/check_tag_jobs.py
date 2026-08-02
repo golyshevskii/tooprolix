@@ -1,5 +1,6 @@
 """
-Refuse to publish a `v*` tag unless every expected job of that tag ran and RAW-concluded `success`.
+Refuse to approve publication of a `v*` tag unless every expected prerequisite of that tag ran and
+RAW-concluded `success`.
 
 The defect this closes is grading a self-report: a run's `head_sha` is a label the run attaches to
 itself, and an expected-job list derived from the run agrees with whatever the run did. Run
@@ -12,7 +13,8 @@ looked green.
 Three ways a weaker version passes while the guarantee is broken, all refused here:
 
   * a conclusion flipped to `cancelled` — the raw value is compared to `success`, not to `failure`;
-  * an expected job absent from the run — the comparison is SET EQUALITY, never "contains", so a
+  * an expected job absent from the run — the comparison is SET EQUALITY after excluding exactly
+    the environment-gated `Build artifacts / Publish to PyPI` job, never "contains", so any other
     superset fails as loudly as a subset;
   * the expectation reduced to `[]` — refused by its own assertion, because a set-equality check
     over an empty expectation passes having verified nothing and no populated-set test can see it.
@@ -31,14 +33,13 @@ WHAT THIS CANNOT ESTABLISH:
     after its gates have run — unreadable from here, which is why it fails the job instead.
   * the run's EVENT is not in this payload, and `workflow_name` is only a display label.
     `actions/runs/<id>/jobs` carries `workflow_name`, `head_branch`, `head_sha`, `run_id` and
-    `run_attempt`, but `event` lives on `actions/runs/<id>`. So a `workflow_dispatch` at the tag ref
-    is indistinguishable from the tag push, and a decoy workflow whose `name:` is `CI` or
-    `Build artifacts` satisfies both the section names and `head_branch`. Closing either needs a
-    second API call grading the run's `event` and `path`: the publication task's problem.
+    `run_attempt`, but `event` lives on `actions/runs/<id>`. The release-manifest and publish jobs
+    therefore independently require `push` both in their job conditions and shipped shell guards;
+    a dispatch at the tag ref cannot produce the required manifest job.
   * the payload is trusted to have come from `gh api`. This reads a file; it authenticates nothing.
   * nothing here checks that the run executed the workflow file that is on the tag.
 
-Usage, once per tag, before anything is uploaded. The publication runbook copies this verbatim, and
+Usage, once per tag, before the `pypi` environment is approved. The publication runbook copies this verbatim, and
 `test_the_documented_runbook_command_parses` executes the argument list parsed out of it:
 
     gh api repos/golyshevskii/tooprolix/actions/runs/<ci-run>/jobs --paginate > ci.json
@@ -62,6 +63,11 @@ DEFAULT_MANIFEST: Path = Path(__file__).parents[1] / ".github" / "expected-tag-j
 #: The only conclusion that means the job did its work. Everything else — `failure`, `cancelled`,
 #: `skipped`, `timed_out`, `action_required`, `neutral`, or a null for a job still running — blocks.
 SUCCESS: str = "success"
+
+#: The only job outside the preapproval proof. It is waiting on the approval this script informs,
+#: so requiring its raw success here would make the gate circular. All other observed jobs remain
+#: under set equality and raw-success checks.
+PREAPPROVAL_EXCLUDED_JOBS: frozenset[tuple[str, str]] = frozenset({("Build artifacts", "Publish to PyPI")})
 
 
 class TagJobsError(AssertionError):
@@ -149,8 +155,15 @@ def failures(expected: set[tuple[str, str]], observed: list[dict[str, Any]], tag
     if elsewhere:
         reasons.append(f"job(s) belong to a run of ref {elsewhere}, not of {tag_name}")
 
+    prerequisites = [
+        job
+        for job in observed
+        if (str(job.get("workflow_name")), str(job.get("name"))) not in PREAPPROVAL_EXCLUDED_JOBS
+    ]
     malformed = [
-        job for job in observed if not isinstance(job.get("name"), str) or not isinstance(job.get("conclusion"), str)
+        job
+        for job in prerequisites
+        if not isinstance(job.get("name"), str) or not isinstance(job.get("conclusion"), str)
     ]
     if malformed:
         reasons.append(
@@ -158,7 +171,7 @@ def failures(expected: set[tuple[str, str]], observed: list[dict[str, Any]], tag
             f"conclusion, and 'not yet failed' is not 'succeeded')"
         )
 
-    ran = {(str(job.get("workflow_name")), job["name"]) for job in observed if isinstance(job.get("name"), str)}
+    ran = {(str(job.get("workflow_name")), job["name"]) for job in prerequisites if isinstance(job.get("name"), str)}
     if missing := sorted(expected - ran):
         reasons.append(f"expected job(s) that did not run at all: {missing}")
     if unexpected := sorted(ran - expected):
@@ -166,7 +179,7 @@ def failures(expected: set[tuple[str, str]], observed: list[dict[str, Any]], tag
 
     unsuccessful = sorted(
         f"{job['name']}={job['conclusion']}"
-        for job in observed
+        for job in prerequisites
         if isinstance(job.get("name"), str) and isinstance(job.get("conclusion"), str) and job["conclusion"] != SUCCESS
     )
     if unsuccessful:

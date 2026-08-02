@@ -160,6 +160,42 @@ def test_an_unexpected_job_blocks_publication(tmp_path: Path) -> None:
     assert grade(tmp_path, (*COMPLETE, ("mystery", "success")), names()) == 1
 
 
+def test_the_environment_gated_publish_job_is_not_a_circular_preapproval_requirement(tmp_path: Path) -> None:
+    """The manifest can be approved while Publish is waiting and therefore has no conclusion."""
+    ci = payload(tmp_path / "ci.json", COMPLETE, run_id=111)
+    artifact_names = (
+        "sdist (+ the wheel built from it)",
+        "wheel linux-x86_64",
+        "wheel macos-arm64",
+        "wheel windows-x86_64",
+        "PyPI release manifest",
+    )
+    artifacts = payload(
+        tmp_path / "artifacts.json",
+        (*((name, "success") for name in artifact_names), ("Publish to PyPI", None)),
+        workflow_name="Build artifacts",
+        run_id=222,
+    )
+    expectation = tmp_path / "expected.txt"
+    expectation.write_text(
+        "[CI]\n"
+        + "".join(f"{name}\n" for name in names())
+        + "[Build artifacts]\n"
+        + "".join(f"{name}\n" for name in artifact_names),
+        encoding="utf-8",
+    )
+
+    assert (
+        main([str(ci), str(artifacts), "--manifest", str(expectation), "--tag-sha", TAG_SHA, "--tag-name", TAG_NAME])
+        == 0
+    )
+
+
+def test_only_the_named_publish_job_is_exempt_from_preapproval_success(tmp_path: Path) -> None:
+    """Any other pending or unexpected job still fails closed."""
+    assert grade(tmp_path, (*COMPLETE, ("publish-lookalike", None)), names()) == 1
+
+
 def test_a_job_that_has_not_finished_blocks_publication(tmp_path: Path) -> None:
     """A running job reports `conclusion: null`, and "not yet failed" is not "succeeded"."""
     assert grade(tmp_path, concluding("ci-python", None), names()) == 1

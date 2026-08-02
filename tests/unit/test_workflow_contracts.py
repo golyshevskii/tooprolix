@@ -217,6 +217,7 @@ def release_fixture(tmp_path: Path) -> tuple[Path, dict[str, str]]:
         (directory / filename).write_bytes(f"artifact:{filename}\n".encode())
 
     return root, {
+        "GITHUB_EVENT_NAME": "push",
         "GITHUB_REF": "refs/tags/v0.5.1",
         "GITHUB_REF_NAME": "v0.5.1",
         "GITHUB_RUN_ID": "424242",
@@ -443,6 +444,7 @@ def test_manifest_and_publish_are_tag_only_and_wait_for_every_build() -> None:
         assert condition is not None
         expression = condition.removeprefix(">").removeprefix("-").strip()
         assert evaluate(expression, "push", "refs/tags/v0.5.1", "") is True
+        assert evaluate(expression, "workflow_dispatch", "refs/tags/v0.5.1", "") is False
         assert evaluate(expression, "push", "refs/heads/main", "") is False
         assert evaluate(expression, "pull_request", "refs/pull/56/merge", "release-plz-0.5.1") is False
 
@@ -567,6 +569,20 @@ def test_the_shipped_publish_verification_accepts_the_unchanged_candidate(tmp_pa
     verified = run_build_artifact_step(VERIFY_RELEASE_STEP, root, environment)
 
     assert verified.returncode == 0, f"{verified.stdout}{verified.stderr}"
+
+
+@pytest.mark.parametrize("step", [ASSEMBLE_RELEASE_STEP, VERIFY_RELEASE_STEP])
+def test_the_shipped_release_shells_refuse_dispatch_even_at_the_tag(tmp_path: Path, step: str) -> None:
+    """A manual dispatch at a tag ref is not the authoritative tag-push release run."""
+    root, environment = release_fixture(tmp_path)
+    if step == VERIFY_RELEASE_STEP:
+        assembled = run_build_artifact_step(ASSEMBLE_RELEASE_STEP, root, environment)
+        assert assembled.returncode == 0, f"{assembled.stdout}{assembled.stderr}"
+    environment["GITHUB_EVENT_NAME"] = "workflow_dispatch"
+
+    result = run_build_artifact_step(step, root, environment)
+
+    assert result.returncode != 0, f"{step} accepted workflow_dispatch:\n{result.stdout}{result.stderr}"
 
 
 def test_the_release_day_readme_no_longer_claims_the_project_is_unpublished() -> None:
@@ -855,8 +871,18 @@ def test_the_expected_tag_job_manifest_names_every_ci_job() -> None:
         "wheel macos-arm64",
         "wheel windows-x86_64",
         "PyPI release manifest",
-        "Publish to PyPI",
     }
+
+
+def test_the_release_day_runbook_checks_preapproval_jobs_before_approval_and_publish_afterward() -> None:
+    """The environment-gated publish job cannot be its own precondition."""
+    contributing = CONTRIBUTING.read_text(encoding="utf-8")
+    runbook = contributing[contributing.index("## First PyPI release day") :]
+
+    preapproval_check = runbook.index("python scripts/check_tag_jobs.py")
+    approval = runbook.index("Approve the `pypi` environment")
+    postpublish_check = runbook.index("Confirm `Publish to PyPI` concluded `success`")
+    assert preapproval_check < approval < postpublish_check
 
 
 # ---------------------------------------------------------------------------------------------

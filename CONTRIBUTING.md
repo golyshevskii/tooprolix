@@ -61,6 +61,26 @@ The two registries have deliberately different contracts:
 
 `release-plz.yml` still withholds `CARGO_REGISTRY_TOKEN` as a crates.io backstop.
 
+## First PyPI release day
+
+Treat environment approval as the boundary between verification and upload:
+
+1. Wait for `CI` and `Build artifacts` through `PyPI release manifest` to finish for the tag push.
+   Download both runs' raw job payloads, then run:
+
+   ```bash
+   python scripts/check_tag_jobs.py --tag-sha "$(git rev-parse 'v0.5.1^{commit}')" \
+     --tag-name v0.5.1 ci.json artifacts.json
+   ```
+
+2. Review `release-manifest-<run-id>` against the tag target/tree SHA, run ID, exact four filenames,
+   sizes and SHA-256 hashes. `PyPI release manifest` is the last required preapproval job;
+   `Publish to PyPI` is intentionally absent from that list because it is waiting for this approval.
+3. Approve the `pypi` environment only after steps 1–2 pass.
+4. Confirm `Publish to PyPI` concluded `success` in that same tag-push run. Then download the four
+   files from PyPI and separately compare their filenames, sizes and SHA-256 hashes with the approved
+   manifest. `check_tag_jobs.py` is the preapproval verifier; it does not certify the upload.
+
 > **Do not add `publish = false` to `Cargo.toml`.** It reads like the obvious way to say "not
 > published yet", and it silently disables release-plz entirely — no version bump, no changelog, no
 > tag, no release, and `release-plz update` still exits 0. `Cargo.toml` has a comment at that spot
