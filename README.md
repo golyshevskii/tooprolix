@@ -13,7 +13,7 @@
 <p align="center">
   <img src="https://img.shields.io/pypi/v/tooprolix?color=CCCCCC&labelColor=12130f" alt="PyPI">
   <img src="https://img.shields.io/badge/Rust-powered-CCCCCC.svg?logo=rust&labelColor=12130f" alt="Powered by Rust">
-  <img src="https://img.shields.io/pypi/pyversions/tooprolix?color=CCCCCC&logo=python&labelColor=12130f" alt="Python">
+  <img src="https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Fgolyshevskii%2Ftooprolix%2Fmain%2Fpyproject.toml&color=CCCCCC&logo=python&labelColor=12130f" alt="Python">
 </p>
 
 Coding agents over-explain. Comments grow into essays, docstrings restate the code, and the same
