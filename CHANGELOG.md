@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1](https://github.com/golyshevskii/tooprolix/compare/v0.5.0...v0.5.1) - 2026-08-02
+
+### Other
+
+- prepare trusted PyPI publishing ([#59](https://github.com/golyshevskii/tooprolix/pull/59))
+- bundle third-party license texts ([#58](https://github.com/golyshevskii/tooprolix/pull/58))
+- *(ci)* align protection contract with current checks ([#57](https://github.com/golyshevskii/tooprolix/pull/57))
+- Create FUNDING.yml
+
 ## [0.5.0](https://github.com/golyshevskii/tooprolix/compare/v0.4.8...v0.5.0) - 2026-08-02
 
 ### Added
