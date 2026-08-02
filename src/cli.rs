@@ -228,15 +228,17 @@ Opt out of a rule for the whole project, in pyproject.toml:
   comment-max-volume = 150
   docstring-max-volume = 200
 
-  The nearest pyproject.toml at or above the checked path is used — exactly one, and
-  never a second one further down, so configuration is not hierarchical. A rule listed
-  in `ignore` cannot be switched back on by a marker.
+  The nearest pyproject.toml at or above the checked path is used — at MOST one, never
+  a second one further down, so configuration is not hierarchical. If the search reaches
+  the filesystem root without finding one, none is read and the defaults apply. A rule
+  listed in `ignore` cannot be switched back on by a marker.
 
   `exclude` takes .gitignore-syntax globs, resolved relative to the directory of
   the pyproject.toml they are written in — so one rule means the same thing from
   the project root and from a package inside it. `vendor` matches at any depth;
   `vendor/` and `./vendor` match only the one beside that file; a leading `/` is
-  refused, because ruff matches nothing for it. Matches are never read, so they
+  refused, because ruff's reading of it flips with the shape — `/vendor` excludes
+  nothing there, `/*.py` excludes everything. Matches are never read, so they
   are neither checked nor able to fail the run; this is how a repository that
   legitimately contains invalid Python (a parser corpus, a fixture tree) can be
   checked at all. It ADDS to .gitignore rather than replacing it, and a path named

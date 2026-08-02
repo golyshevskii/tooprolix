@@ -34,10 +34,11 @@
 //! # Where the file is looked for, and the answer is one answer
 //!
 //! **The nearest `pyproject.toml` at or above the checked path**, searching upwards to the
-//! filesystem root, first match wins. Not "the current directory": with a cwd rule,
-//! `tooprolix check src/api.py` and `cd src && tooprolix check api.py` would apply different
-//! limits to the same file, and a CI job that changed directory would silently change the
-//! thresholds it was enforcing.
+//! filesystem root, first match wins — at most one, and none at all if the search runs out, which
+//! is the ordinary unconfigured case and applies the defaults. Not "the current directory": with a
+//! cwd rule, `tooprolix check src/api.py` and `cd src && tooprolix check api.py` would apply
+//! different limits to the same file, and a CI job that changed directory would silently change
+//! the thresholds it was enforcing.
 //!
 //! **The path is canonicalised before anything is compared or walked.** `..` components and
 //! symlinks defeat every lexical answer to "which directory is this in", and that is a recorded
@@ -56,7 +57,7 @@
 //! | a key the tool does not know | **exit 2**, naming the key | a key that does nothing looks exactly like a key that works, which is the whole reason `ty` rejects unknown keys too |
 //! | a code in `ignore` that no rule answers to | **exit 2**, naming the code | a gate switched off by a typo. Fatal here and merely loud in a marker, because this file belongs to the tool and there is one of it |
 //! | an `exclude` entry that is empty, blank, starts with `!`, or is not a glob | **exit 2**, naming the entry | measured against the walker: `""` and `"   "` build a matcher that excludes **nothing**, and `"!vendor"` cancels the exclusion into a no-op. All three look exactly like a rule that works, and the second class silently un-excludes the tree the project meant to put out of scope |
-//! | an `exclude` entry starting with `/` | **exit 2**, naming `./x` and `x` | measured against ruff 0.16.0: `/vendor` excludes neither the root nor a nested `vendor` there. Accepting it would ship a private extension that silently disagrees with the tool this one is compared against |
+//! | an `exclude` entry starting with `/` | **exit 2**, naming `./x` — the entry as written, minus the slash — unless a later guard would refuse that too, in which case it only says to remove it | measured against ruff 0.16.0, a leading `/` is not one behaviour there but two opposite ones: `/vendor` excludes NOTHING, `/*.py` and `/**/*.py` exclude EVERYTHING. There is no single interpretation to copy, so the class is refused rather than guessed at |
 //! | a limit that is not an integer, or is negative | **exit 2**, naming the key and what was found | `docstring-max-volume = "200"` silently falling back to the default is the same defect one type further out |
 //! | a limit of `0` | **accepted**: every block of that kind is a finding | `0` is the literal meaning of the key — "no words allowed" — and the core is already fail-closed there. `ignore` is how a rule is switched off; a limit that quietly meant "off" would be the trap |
 //! | `ignore` naming every shipping code | **accepted**, and [`crate::cli`] prints a diagnostic | the exit code is honestly 0 — there really are no findings — but a run that measured nothing must not be silent about it |
@@ -527,6 +528,17 @@ fn read_exclude(value: &toml::Value, path: &Path) -> Result<Vec<String>, Error> 
                 ),
             });
         }
+        // Compile it HERE, where `raw` is still in hand. `exclude_matcher` sees only the normalised
+        // form, so its message echoed `/a[` at a user who wrote `./a[` — a string they never typed
+        // and one the leading-slash guard above would itself refuse. Every message in this function
+        // quotes the entry as written; this was the one that had stopped.
+        OverrideBuilder::new(".")
+            .add(&format!("!{normalised}"))
+            .map_err(|error| Error::BadValue {
+                path: path.to_path_buf(),
+                key: "exclude".to_owned(),
+                problem: format!("`{raw}` is not a valid glob: {error}"),
+            })?;
         excluded.push(normalised);
     }
 
@@ -546,8 +558,9 @@ fn read_exclude(value: &toml::Value, path: &Path) -> Result<Vec<String>, Error> 
 ///   leading `/`. That is not cosmetic: gitignore anchors a pattern whose `/` is not merely
 ///   trailing, so the leading slash is what turns `vendor/` from "every `vendor` at any depth" into
 ///   "the root one". A trailing `/` is still kept on top of it, because it means "directory only".
-/// * `/x` is **refused**. It reads as an anchor and ruff excludes neither depth for it, so
-///   accepting it would ship a private extension that silently disagrees with ruff.
+/// * `/x` is **refused**. Ruff's handling of it depends on the shape — `/vendor` excludes nothing,
+///   `/*.py` excludes everything — so there is no one meaning to copy, and guessing would silently
+///   disagree with ruff either way.
 /// * A `..` component is refused: it walks out of the tree the base names, so nothing the walk can
 ///   yield will match it — measured as a no-op.
 /// * An entry that normalises away to nothing (`.`, `./`, `/`) is refused. This one is load-bearing:
@@ -575,25 +588,29 @@ fn normalise_glob(glob: &str) -> Result<String, String> {
     if segments.is_empty() {
         return Err("names no path at all; an empty glob would exclude the whole tree".to_owned());
     }
-    // Refused rather than mapped onto `./x`: a leading `/` looks like the root-anchored form and
-    // ruff matches nothing at all for it, so guessing would be the silent disagreement this whole
-    // function exists to prevent.
+    // Refused rather than mapped onto `./x`. Measured with ruff 0.16.0: a leading `/` is not one
+    // behaviour there but two opposite ones — `/vendor` excludes NOTHING, `/*.py` and `/**/*.py`
+    // exclude EVERYTHING. Refusing the class beats picking one of them and being silently wrong.
     if glob.starts_with('/') {
-        let name = segments.join("/");
+        // The suggestion is the user's own entry with the slash trimmed off, never a string rebuilt
+        // from `segments`: rebuilding dropped the trailing `/`, and `./x` is a WIDER rule than
+        // `./x/` — it eats the file of that name too, which is the silent over-exclusion this whole
+        // function exists to prevent. No any-depth alternative is offered, because a glob carrying a
+        // `/` is matched as one base-relative path and never matches at any depth.
+        let suggestion = glob.trim_start_matches('/').trim_start_matches("./");
         // Name the fix only when the fix is takeable. `read_exclude` refuses a `!` prefix and any
         // `\` a few lines later, so recommending `./!vendor` would hand one exit 2 off to another.
         // ponytail: those two are the whole set of later guards, 30 lines away in the same file; if
-        // a third arrives, this is the line it has to be added to.
-        let advice = if name.starts_with('!') || name.contains('\\') {
+        // a third arrives, this is the line it has to be added to. A malformed glob is deliberately
+        // NOT covered — the compiler's own message names that defect better than a predicate here.
+        let advice = if suggestion.starts_with('!') || suggestion.contains('\\') {
             "remove it".to_owned()
         } else {
-            format!(
-                "write `./{name}` for the one beside this file, or `{name}` to match it at any depth"
-            )
+            format!("write `./{suggestion}` instead")
         };
         return Err(format!(
-            "is anchored with a leading `/`, which ruff does not honour and this tool does not \
-             accept; {advice}"
+            "is anchored with a leading `/`, which this tool does not accept because ruff's own \
+             reading of it depends on the shape; {advice}"
         ));
     }
 
@@ -966,6 +983,14 @@ mod tests {
                 "[tool.tooprolix]\nexclude = [\"a[\"]\n",
                 "a[",
                 "a glob that does not compile",
+            ),
+            // Every message here echoes what the user WROTE. `./a[` reaches the glob compiler as
+            // the anchored `/a[`, and echoing that hands back a string they never typed — one this
+            // tool refuses at the leading-slash guard, so the advice would be unusable twice over.
+            (
+                "[tool.tooprolix]\nexclude = [\"./a[\"]\n",
+                "./a[",
+                "a malformed glob behind a `./` hop, echoed as written",
             ),
             (
                 "[tool.tooprolix]\nexclude = \"vendor\"\n",

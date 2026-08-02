@@ -2080,17 +2080,26 @@ fn each_exclude_spelling_selects_the_depth_it_names() {
 
 /// A leading `/` is refused, and the message hands back the spelling that works.
 ///
-/// It reads as "anchor to the project root", and ruff 0.16.0 excludes NEITHER depth for it —
-/// keeping it would ship a private extension that quietly disagrees with the tool this one is
-/// compared against. It is a separate test from the `..` table because it is a different verdict:
-/// `..` can never match anything, `/vendor` matches fine and is refused on contract grounds, so it
-/// carries an extra assertion the `..` entries do not have.
+/// It reads as "anchor to the project root", and ruff 0.16.0 gives it two opposite meanings
+/// depending on the shape — measured, `/vendor` excludes nothing there and `/*.py` excludes
+/// everything — so there is no one reading to copy and the class is refused. It is a separate test
+/// from the `..` table because it is a different verdict: `..` can never match anything, `/vendor`
+/// matches fine and is refused on contract grounds, so it carries assertions the `..` entries
+/// do not have.
 #[test]
 fn a_leading_slash_is_refused_and_names_the_spelling_that_works() {
     let scratch = Scratch::new("exclude-leading-slash");
     scratch.write("vendor/root_only.py", &long_comment("root retry policy"));
 
-    for entry in ["/vendor", "/vendor/", "/./vendor"] {
+    // The advice is the user's OWN entry minus the slash, never a string rebuilt from its parts —
+    // a rebuilt one dropped the trailing `/`, and `./generated.py` is a WIDER rule than
+    // `./generated.py/`: it also eats the file of that name, silently shrinking the denominator.
+    for (entry, advice) in [
+        ("/vendor", "./vendor"),
+        ("/vendor/", "./vendor/"),
+        ("/./vendor", "./vendor"),
+        ("/vendor/generated", "./vendor/generated"),
+    ] {
         scratch.write(
             "pyproject.toml",
             &format!("[tool.tooprolix]\nexclude = [\"{entry}\"]\n"),
@@ -2101,17 +2110,32 @@ fn a_leading_slash_is_refused_and_names_the_spelling_that_works() {
         assert_eq!(
             output.status.code(),
             Some(2),
-            "`{entry}` anchors in a way ruff does not honour and was accepted anyway: {output:?}"
+            "`{entry}` anchors in a way ruff reads inconsistently and was accepted anyway: \
+             {output:?}"
         );
         let stderr = stderr_of(&output);
         assert!(
             stderr.contains("exclude") && stderr.contains("pyproject.toml"),
             "`{entry}`: the message names neither the key nor the file: {stderr:?}"
         );
+        // The whole sentence AND the end of the message. `contains("./vendor")` was also satisfied
+        // by `././vendor`, so the double-hop row could not fail when the advice regressed to
+        // exactly that; `ends_with` additionally refuses a second clause appended after the advice,
+        // which is how the false any-depth promise got in. An assertion a longer wrong string still
+        // passes is not an assertion.
         assert!(
-            stderr.contains("./vendor"),
-            "`{entry}`: the message refuses without naming `./vendor`, the spelling that does what \
-             the user meant: {stderr:?}"
+            stderr
+                .trim_end()
+                .ends_with(&format!("write `{advice}` instead")),
+            "`{entry}`: the message does not end by advising exactly `{advice}`, the spelling that \
+             does what the user meant: {stderr:?}"
+        );
+        // `vendor/generated` excludes only the root one — a glob carrying a `/` is matched as a
+        // whole base-relative path, so an any-depth clause is false for every multi-component name.
+        assert!(
+            !stderr.contains("any depth"),
+            "`{entry}`: the message promises an any-depth spelling that does not match at any \
+             depth: {stderr:?}"
         );
     }
 }
