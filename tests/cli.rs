@@ -620,9 +620,18 @@ fn a_marker_silences_its_own_block_and_only_its_own_rule() {
 
     // Assert
     assert_eq!(output.status.code(), Some(1), "{output:?}");
-    let flagged: Vec<&str> = stdout_of(&output)
-        .lines()
-        .filter_map(|line| line.strip_prefix("tests/fixtures/optout/"))
+    let lines: Vec<&str> = stdout_of(&output).lines().collect();
+    let (summary, findings) = lines.split_last().expect("findings plus a summary");
+    assert_eq!(
+        *summary, "Found 4 findings (TPX001: 3, TPX002: 1).",
+        "the final line is not the expected summary: {lines:#?}"
+    );
+    let flagged: Vec<&str> = findings
+        .iter()
+        .map(|line| {
+            line.strip_prefix("tests/fixtures/optout/")
+                .expect("every line before the summary is a fixture finding")
+        })
         .collect();
 
     assert_eq!(
@@ -1060,17 +1069,15 @@ fn the_walk_does_not_follow_symlinks() {
 
     // Assert
     assert_eq!(output.status.code(), Some(1), "{output:?}");
+    let lines: Vec<&str> = stdout_of(&output).lines().collect();
     assert_eq!(
-        stdout_of(&output)
-            .lines()
-            .filter(|line| line.contains(": TPX"))
-            .count(),
-        1,
-        "{}",
-        stdout_of(&output)
+        lines.len(),
+        2,
+        "stdout must be exactly one finding and its summary: {lines:#?}"
     );
+    assert_eq!(lines[1], "Found 1 findings (TPX003: 1).");
     assert!(
-        stdout_of(&output).contains("in 2 places"),
+        lines[0].contains(": TPX003 ") && lines[0].contains("in 2 places"),
         "the same file was counted twice through a symlink: {}",
         stdout_of(&output)
     );
@@ -1191,15 +1198,17 @@ fn the_project_configuration_changes_what_is_reported() {
     let silenced = scratch.check(&[]);
 
     // Assert
+    let default_lines: Vec<&str> = stdout_of(&defaults).lines().collect();
     assert_eq!(
-        stdout_of(&defaults)
-            .lines()
-            .filter(|line| line.contains(": TPX"))
-            .count(),
-        1,
-        "{defaults:?}"
+        default_lines.len(),
+        2,
+        "stdout must be one finding and one summary: {defaults:?}"
     );
-    assert!(stdout_of(&defaults).contains("TPX003"));
+    assert!(
+        default_lines[0].starts_with("./") && default_lines[0].contains(": TPX003 "),
+        "the line before the summary is not the expected finding: {default_lines:#?}"
+    );
+    assert_eq!(default_lines[1], "Found 1 findings (TPX003: 1).");
     assert!(
         !stdout_of(&defaults).contains("TPX001"),
         "the rationale is under the default limit and must not fire: {}",
@@ -1207,9 +1216,23 @@ fn the_project_configuration_changes_what_is_reported() {
     );
 
     assert_eq!(tightened.status.code(), Some(1));
+    let tightened_lines: Vec<&str> = stdout_of(&tightened).lines().collect();
+    let (tightened_summary, tightened_findings) = tightened_lines
+        .split_last()
+        .expect("findings plus a summary");
     assert_eq!(
-        stdout_of(&tightened)
-            .lines()
+        *tightened_summary,
+        "Found 3 findings (TPX001: 2, TPX003: 1)."
+    );
+    assert!(
+        tightened_findings
+            .iter()
+            .all(|line| line.starts_with("./") && line.contains(": TPX")),
+        "an unexpected stdout line preceded the summary: {tightened_lines:#?}"
+    );
+    assert_eq!(
+        tightened_findings
+            .iter()
             .filter(|line| line.contains(": TPX001 "))
             .count(),
         2,
@@ -1681,15 +1704,14 @@ fn exclude_does_not_make_the_walk_follow_symlinks() {
     let output = scratch.check(&[]);
 
     // Assert — one file behind two names is still one file.
+    let lines: Vec<&str> = stdout_of(&output).lines().collect();
     assert_eq!(
-        stdout_of(&output)
-            .lines()
-            .filter(|line| line.contains(": TPX"))
-            .count(),
-        1,
-        "the same source was counted twice, so the walk followed a symlink: {}",
-        stdout_of(&output)
+        lines.len(),
+        2,
+        "stdout must be exactly one finding and one summary: {lines:#?}"
     );
+    assert!(lines[0].starts_with("./pkg/a.py") && lines[0].contains(": TPX001 "));
+    assert_eq!(lines[1], "Found 1 findings (TPX001: 1).");
     assert!(
         !stdout_of(&output).contains("alias"),
         "the walk descended through a symlink: {}",
@@ -3676,7 +3698,7 @@ fn two_reporting_flags_at_once_are_refused_rather_than_ranked() {
     }
 }
 
-/// A consumer that stops reading gets exit 0 and silence, not a panic — in BOTH formats.
+/// A consumer that stops reading gets exit 0 and no output error, without losing skip diagnostics.
 ///
 /// `tooprolix check big/ | head -5` used to exit **101** and print
 /// `thread 'main' panicked at ... failed printing to stdout: Broken pipe (os error 32)`, because
@@ -3688,9 +3710,9 @@ fn two_reporting_flags_at_once_are_refused_rather_than_ranked() {
 /// has no race in it. Both formats are covered because the JSON path is a single large `write_all`
 /// and the text path is a loop — different code, same contract.
 ///
-/// The stderr assertion is not decoration: exiting 0 while still printing a panic to stderr would
-/// satisfy an exit-code-only test and still be the defect. So is the finding count — a handler that
-/// swallowed every io error would make `| cat` green too, which is why
+/// The stderr assertions are not decoration: exiting 0 while printing a panic, or swallowing a
+/// partial run's skip reason, would satisfy an exit-code-only test and still be a defect. So is the
+/// finding count — a handler that swallowed every io error would make `| cat` green too, which is why
 /// `a_readable_pipe_still_reports_findings` sits beside this and asserts exit 1.
 #[test]
 fn a_consumer_that_stops_reading_is_not_an_error() {
@@ -3731,6 +3753,31 @@ fn a_consumer_that_stops_reading_is_not_an_error() {
         assert!(
             !stderr.contains("panicked") && !stderr.contains("Broken pipe"),
             "{arguments:?}: the panic reached the user: {stderr:?}"
+        );
+    }
+
+    for path in [
+        "tests/fixtures/broken/syntax_error.py",
+        "tests/fixtures/broken",
+    ] {
+        let mut child = Command::new(env!("CARGO_BIN_EXE_tooprolix"))
+            .args(["check", path])
+            .current_dir(repository_root())
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped())
+            .spawn()
+            .expect("the binary cargo just built is executable");
+        drop(child.stdout.take().expect("stdout was piped"));
+
+        let output = child
+            .wait_with_output()
+            .expect("the partial child is waitable after its pipe is closed");
+        let stderr = String::from_utf8_lossy(&output.stderr);
+
+        assert_eq!(output.status.code(), Some(0), "{path}: {output:?}");
+        assert!(
+            stderr.contains("syntax_error.py") && stderr.contains("could not parse Python source"),
+            "{path}: a closed stdout swallowed the skip detail: {stderr:?}"
         );
     }
 }

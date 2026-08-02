@@ -679,6 +679,11 @@ pub fn execute<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<ExitSta
         ExitStatus::Incomplete
     };
 
+    // Report refusals before stdout. A consumer may close stdout deliberately, and `emit` then
+    // returns early through the clean BrokenPipe path; the skipped filename and reason must still
+    // reach stderr for both partial shapes and both formats.
+    report_skipped(&skipped, &config);
+
     // JSON is always a document. Text is findings plus a human aggregate, except that a complete
     // clean run keeps its established success line below.
     match format {
@@ -725,10 +730,6 @@ pub fn execute<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<ExitSta
         }
     }
 
-    // After the findings, and on stderr in BOTH formats: a document on stdout still needs its
-    // diagnostics somewhere a `| jq` does not eat them, and every other warning in this file is
-    // already there.
-    report_skipped(&skipped, &config);
     Ok(status)
 }
 
