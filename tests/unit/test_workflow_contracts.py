@@ -30,6 +30,7 @@ BUILD_ARTIFACTS: Path = WORKFLOWS / "build-artifacts.yml"
 CI: Path = WORKFLOWS / "ci.yml"
 RELEASE_PLZ: Path = WORKFLOWS / "release-plz.yml"
 CONTRIBUTING: Path = REPO / "CONTRIBUTING.md"
+GITATTRIBUTES: Path = REPO / ".gitattributes"
 
 CONCURRENCY_GROUP = re.compile(r"^concurrency:\n\s+group:\s*(?P<group>.+)$", re.MULTILINE)
 
@@ -285,6 +286,23 @@ def test_the_wheel_matrix_is_gated_on_release_events_and_the_sdist_is_not_gated_
 
     gate = job_condition(build["wheels"])
     assert gate is not None, "the wheel matrix is ungated, so every ordinary PR pays for three wheel legs"
+
+
+def test_every_wheel_waits_for_the_sdist_freshness_gate() -> None:
+    """No wheel may upload if the independently generated third-party bundle is stale."""
+    wheel = jobs(uncommented(BUILD_ARTIFACTS))["wheels"]
+
+    assert re.search(r"^ {4}needs:\s+sdist\s*$", wheel, re.MULTILINE), (
+        "the wheel matrix can build and upload even when the sdist freshness gate failed"
+    )
+
+
+def test_required_licence_files_are_pinned_to_lf_in_every_checkout() -> None:
+    """Archive byte checks need canonical Git blobs on Windows as well as Unix runners."""
+    expected = ("LICENSE text eol=lf", "THIRD-PARTY-LICENSES.html text eol=lf")
+    rules = tuple(line for line in GITATTRIBUTES.read_text(encoding="utf-8").splitlines() if line)
+
+    assert rules == expected
 
 
 def test_the_expression_translator_refuses_an_escaped_apostrophe() -> None:

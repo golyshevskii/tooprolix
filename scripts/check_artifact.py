@@ -2,8 +2,8 @@
 Grade a built wheel or sdist by opening it, not by re-reading the configuration that produced it.
 
 **This exists because three acceptance criteria were true only because somebody looked once.**
-AC3 (MIT metadata, a physical `LICENSE`, `docs/` in the sdist) and AC8 (the shipped description is
-the *transformed* README) were verified by hand and written into a report, and nothing in the
+AC3 (MIT metadata, physical project/third-party licence files, `docs/` in the sdist) and AC8 (the
+shipped description is the *transformed* README) were verified by hand and written into a report, and nothing in the
 repository asserted any of it. `twine check --strict` validates the METADATA envelope and the
 description's markup; it never asks what the licence says or which file the description came from.
 
@@ -37,10 +37,10 @@ from pathlib import Path
 
 #: Metadata the project promises and PyPI shows. PEP 639 spellings, which is what maturin emits.
 #: `Requires-Python` is the distribution floor, not `MIN_INTERPRETER`; test_measure.py keeps them apart.
-REQUIRED_HEADERS: dict[str, str] = {"License-Expression": "MIT", "License-File": "LICENSE", "Requires-Python": ">=3.11"}
+REQUIRED_HEADERS: dict[str, str] = {"License-Expression": "MIT", "Requires-Python": ">=3.11"}
 
-#: Of those, the ones core metadata allows more than once: required to be PRESENT, not unique.
-MULTI_USE_HEADERS: frozenset[str] = frozenset({"License-File"})
+#: PEP 639 paths that must be declared and physically present in both distribution archives.
+REQUIRED_LICENSE_FILES: tuple[str, ...] = ("LICENSE", "THIRD-PARTY-LICENSES.html")
 
 #: Documents `README.md` links to that must travel with the source. The README's own links are
 #: rewritten to GitHub URLs for the project page, so the sdist is the only place a consumer without
@@ -135,6 +135,20 @@ def _sdist(path: Path) -> tuple[list[str], bytes]:
         return names, handle.read()
 
 
+def _member_bytes(path: Path, member: str) -> bytes:
+    """Read one named member from a wheel or sdist."""
+    if path.suffix == ".whl":
+        with zipfile.ZipFile(path) as archive:
+            return archive.read(member)
+
+    with tarfile.open(path) as archive:
+        handle = archive.extractfile(member)
+        if handle is None:
+            message = f"{path.name}: {member} is not a regular file"
+            raise ArtifactError(message)
+        return handle.read()
+
+
 def _normalise(text: str) -> str:
     """
     Return `text` with line endings flattened and surrounding blank space removed.
@@ -171,17 +185,23 @@ def _problems(path: Path, readme: Path, expect_tag: str | None) -> Iterator[str]
     # `get_all`, never `get`: `get` answers with the FIRST occurrence, hiding a duplicated header.
     for header, expected in REQUIRED_HEADERS.items():
         actual = message.get_all(header) or []
-        if header in MULTI_USE_HEADERS:
-            if expected not in actual:
-                yield f"{header}: expected {expected!r} among {actual!r}"
-        elif actual != [expected]:
+        if actual != [expected]:
             yield f"{header}: expected exactly one {expected!r}, archive says {actual!r}"
 
     # The header is the claim; the archive member is the fact. EVERY declared licence file is graded,
     # by its declared PATH — which subsumes the old basename-only `LICENSE` check, now deleted.
-    for declared in message.get_all("License-File") or []:
-        if not any(name == declared or name.endswith(f"/{declared}") for name in names):
+    declared_license_files = message.get_all("License-File") or []
+    for required in REQUIRED_LICENSE_FILES:
+        if required not in declared_license_files:
+            yield f"License-File: expected {required!r} among {declared_license_files!r}"
+    for declared in declared_license_files:
+        member = next((name for name in names if name == declared or name.endswith(f"/{declared}")), None)
+        if member is None:
             yield f"License-File declares {declared!r}, which is not in the archive"
+        elif declared in REQUIRED_LICENSE_FILES:
+            expected = (Path(__file__).resolve().parents[1] / declared).read_bytes()
+            if _member_bytes(path, member) != expected:
+                yield f"License-File {declared!r} does not match the committed file byte-for-byte"
 
     if not is_wheel:
         for document in REQUIRED_SDIST_DOCUMENTS:
@@ -234,7 +254,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  - {problem}", file=sys.stderr)
         return 1
 
-    print(f"check_artifact: {artifact.name} carries MIT metadata, its LICENSE, and the transformed README")
+    print(f"check_artifact: {artifact.name} carries MIT metadata, required licence files, and the transformed README")
     return 0
 
 

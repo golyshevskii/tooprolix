@@ -2,8 +2,8 @@
 Guards for `scripts/check_artifact.py`, the gate that opens a built wheel or sdist and grades it.
 
 The script exists because AC3 and AC8 were true only because somebody looked once — no committed
-code asserted the licence metadata, the physical `LICENSE`, `docs/` in the sdist, or that the
-shipped description is the *transformed* README. This file is the level above that: it stops the
+code asserted the licence metadata, the physical project/third-party licence files, `docs/` in the
+sdist, or that the shipped description is the *transformed* README. This file is the level above that: it stops the
 gate itself from being quietly gutted, because a check deleted from `_problems` would otherwise turn
 every one of those promises back into a thing nobody verifies.
 
@@ -23,12 +23,16 @@ import zipfile
 from pathlib import Path
 
 import pytest
-from check_artifact import MULTI_USE_HEADERS, REQUIRED_HEADERS, main, tag_set
+from check_artifact import REQUIRED_HEADERS, REQUIRED_LICENSE_FILES, main, tag_set
 
 DESCRIPTION = "# tooprolix\n\nThe transformed README.\n"
+EXPECTED_LICENSE_FILES = ("LICENSE", "THIRD-PARTY-LICENSES.html")
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+EXPECTED_LICENSE_BYTES = {path: (PROJECT_ROOT / path).read_bytes() for path in EXPECTED_LICENSE_FILES}
+LICENSE_HEADERS = "".join(f"License-File: {path}\n" for path in EXPECTED_LICENSE_FILES)
 HEADERS = (
     "Metadata-Version: 2.4\nName: tooprolix\nVersion: 0.0.0\n"
-    "License-Expression: MIT\nLicense-File: LICENSE\nRequires-Python: >=3.11\n"
+    f"License-Expression: MIT\n{LICENSE_HEADERS}Requires-Python: >=3.11\n"
 )
 
 
@@ -49,6 +53,9 @@ def _wheel(
     *,
     metadata: bytes | None = None,
     licence: bool = True,
+    third_party_licences: bool = True,
+    licence_bytes: bytes | None = None,
+    third_party_licence_bytes: bytes | None = None,
     compressed: str = "py3-none-any",
     wheel_file: str | None = None,
 ) -> Path:
@@ -58,11 +65,30 @@ def _wheel(
         archive.writestr("tooprolix-0.0.0.dist-info/WHEEL", wheel_file or f"Wheel-Version: 1.0\nTag: {compressed}\n")
         archive.writestr("tooprolix-0.0.0.data/scripts/tooprolix", b"\x7fELF")
         if licence:
-            archive.writestr("tooprolix-0.0.0.dist-info/licenses/LICENSE", "MIT\n")
+            archive.writestr(
+                "tooprolix-0.0.0.dist-info/licenses/LICENSE",
+                EXPECTED_LICENSE_BYTES["LICENSE"] if licence_bytes is None else licence_bytes,
+            )
+        if third_party_licences:
+            archive.writestr(
+                "tooprolix-0.0.0.dist-info/licenses/THIRD-PARTY-LICENSES.html",
+                EXPECTED_LICENSE_BYTES["THIRD-PARTY-LICENSES.html"]
+                if third_party_licence_bytes is None
+                else third_party_licence_bytes,
+            )
     return wheel
 
 
-def _sdist(path: Path, *, metadata: bytes | None = None, licence: bool = True, docs: bool = True) -> Path:
+def _sdist(
+    path: Path,
+    *,
+    metadata: bytes | None = None,
+    licence: bool = True,
+    third_party_licences: bool = True,
+    licence_bytes: bytes | None = None,
+    third_party_licence_bytes: bytes | None = None,
+    docs: bool = True,
+) -> Path:
     sdist = path / "tooprolix-0.0.0.tar.gz"
     with tarfile.open(sdist, "w:gz") as archive:
 
@@ -73,7 +99,16 @@ def _sdist(path: Path, *, metadata: bytes | None = None, licence: bool = True, d
 
         add("tooprolix-0.0.0/PKG-INFO", metadata or _metadata())
         if licence:
-            add("tooprolix-0.0.0/LICENSE", b"MIT\n")
+            add(
+                "tooprolix-0.0.0/LICENSE", EXPECTED_LICENSE_BYTES["LICENSE"] if licence_bytes is None else licence_bytes
+            )
+        if third_party_licences:
+            add(
+                "tooprolix-0.0.0/THIRD-PARTY-LICENSES.html",
+                EXPECTED_LICENSE_BYTES["THIRD-PARTY-LICENSES.html"]
+                if third_party_licence_bytes is None
+                else third_party_licence_bytes,
+            )
         if docs:
             add("tooprolix-0.0.0/docs/cli-contract.md", b"x\n")
             add("tooprolix-0.0.0/docs/rules-and-configuration.md", b"x\n")
@@ -96,6 +131,9 @@ class TestAnHonestArtifactPasses:
     def test_a_complete_sdist_passes(self, tmp_path: Path, readme: Path) -> None:
         assert main([str(_sdist(tmp_path)), str(readme)]) == 0
 
+    def test_the_required_licence_paths_are_the_release_contract(self) -> None:
+        assert REQUIRED_LICENSE_FILES == EXPECTED_LICENSE_FILES
+
 
 class TestEachPromiseIsRefusedSeparately:
     """
@@ -103,17 +141,50 @@ class TestEachPromiseIsRefusedSeparately:
     only the first thing and would let the other three ship.
     """
 
-    def test_a_wheel_without_the_licence_file_fails(self, tmp_path: Path, readme: Path) -> None:
-        # The measured exploit: `license-files = []` produces exactly this — no header, no file,
-        # `twine check --strict` PASSED, install-smoke OK.
-        headers = HEADERS.replace("License-File: LICENSE\n", "")
+    @pytest.mark.parametrize("kind", ["wheel", "sdist"])
+    @pytest.mark.parametrize("required", EXPECTED_LICENSE_FILES)
+    def test_each_required_licence_declaration_is_required(
+        self, tmp_path: Path, readme: Path, kind: str, required: str
+    ) -> None:
+        headers = HEADERS.replace(f"License-File: {required}\n", "")
+        archive = (
+            _wheel(tmp_path, metadata=_metadata(headers))
+            if kind == "wheel"
+            else _sdist(tmp_path, metadata=_metadata(headers))
+        )
 
-        assert main([str(_wheel(tmp_path, metadata=_metadata(headers), licence=False)), str(readme)]) == 1
+        assert main([str(archive), str(readme)]) == 1
 
-    def test_a_licence_header_naming_a_file_that_is_not_there_fails(self, tmp_path: Path, readme: Path) -> None:
-        # The self-report shape: METADATA claims a LICENSE, the archive has none. The header alone
-        # would satisfy a check that only read METADATA.
-        assert main([str(_wheel(tmp_path, licence=False)), str(readme)]) == 1
+    @pytest.mark.parametrize("kind", ["wheel", "sdist"])
+    @pytest.mark.parametrize("required", EXPECTED_LICENSE_FILES)
+    def test_each_declared_required_licence_file_must_exist(
+        self, tmp_path: Path, readme: Path, kind: str, required: str
+    ) -> None:
+        has_project_licence = required != "LICENSE"
+        has_third_party_licences = required != "THIRD-PARTY-LICENSES.html"
+        archive = (
+            _wheel(tmp_path, licence=has_project_licence, third_party_licences=has_third_party_licences)
+            if kind == "wheel"
+            else _sdist(tmp_path, licence=has_project_licence, third_party_licences=has_third_party_licences)
+        )
+
+        assert main([str(archive), str(readme)]) == 1
+
+    @pytest.mark.parametrize("kind", ["wheel", "sdist"])
+    @pytest.mark.parametrize("required", EXPECTED_LICENSE_FILES)
+    @pytest.mark.parametrize("contents", [b"", b"not the committed licence bytes\n"])
+    def test_each_required_licence_file_must_match_the_committed_bytes(
+        self, tmp_path: Path, readme: Path, kind: str, required: str, contents: bytes
+    ) -> None:
+        licence_bytes = contents if required == "LICENSE" else None
+        third_party_licence_bytes = contents if required == "THIRD-PARTY-LICENSES.html" else None
+        archive = (
+            _wheel(tmp_path, licence_bytes=licence_bytes, third_party_licence_bytes=third_party_licence_bytes)
+            if kind == "wheel"
+            else _sdist(tmp_path, licence_bytes=licence_bytes, third_party_licence_bytes=third_party_licence_bytes)
+        )
+
+        assert main([str(archive), str(readme)]) == 1
 
     def test_a_licence_that_is_not_mit_fails(self, tmp_path: Path, readme: Path) -> None:
         headers = HEADERS.replace("License-Expression: MIT", "License-Expression: Apache-2.0")
@@ -139,7 +210,7 @@ class TestEachPromiseIsRefusedSeparately:
         assert main([str(archive), str(readme)]) == 1
 
     @pytest.mark.parametrize("kind", ["wheel", "sdist"])
-    @pytest.mark.parametrize("header", sorted(set(REQUIRED_HEADERS) - MULTI_USE_HEADERS))
+    @pytest.mark.parametrize("header", sorted(REQUIRED_HEADERS))
     def test_a_header_stated_twice_fails_even_when_the_first_value_is_right(
         self, tmp_path: Path, readme: Path, kind: str, header: str
     ) -> None:
@@ -171,11 +242,9 @@ class TestEachPromiseIsRefusedSeparately:
     def test_a_second_license_file_is_accepted_when_its_file_is_in_the_archive(
         self, tmp_path: Path, readme: Path
     ) -> None:
-        # Core metadata makes `License-File` MULTIPLE-USE: `LICENSE` plus `NOTICE` is a valid
-        # Metadata 2.4 document, and this project will ship one the day a copyleft crate enters the
-        # graph (see `[tool.maturin]` in pyproject.toml). Refusing it would be a guard enforcing a
-        # rule the spec does not have — so only PRESENCE is required here, while the genuinely
-        # single-use headers above still have to appear exactly once.
+        # Core metadata makes `License-File` MULTIPLE-USE. Refusing an additional declared file
+        # would enforce a rule the spec does not have, so every required path must be present while
+        # any extra declaration is accepted only when its file is also in the archive.
         wheel = _wheel(tmp_path, metadata=_metadata(f"{HEADERS}License-File: NOTICE\n"))
         with zipfile.ZipFile(wheel, "a") as archive:
             archive.writestr("tooprolix-0.0.0.dist-info/licenses/NOTICE", "third-party notices\n")
