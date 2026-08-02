@@ -267,11 +267,10 @@ jobs:
   # `github.head_ref` is set only on `pull_request` and `startsWith` on the empty string is false,
   # so the release-plz clause cannot leak into a push event.
   #
-  # THESE LEGS MUST NEVER BE REGISTERED AS REQUIRED CHECKS. They are skipped on an ordinary PR, and
-  # a skipped check does not satisfy a required one — it stays pending forever. Worse, GitHub does
-  # not expand the matrix of a skipped job: on PR #52 it reported as ONE check named literally
-  # `wheel ${{ matrix.platform.name }}`, so the skipped name and the three running names are
-  # different strings and none of them is safe to require. The required name is `CI / ci-required`.
+  # THESE LEGS MUST NEVER BE REGISTERED AS REQUIRED CHECKS. GitHub does not expand a skipped matrix
+  # job: on ordinary PR #52 it reported one `skipped` check named literally
+  # `wheel ${{ matrix.platform.name }}`, while release events report three platform-specific names.
+  # Any one of those contexts disappears on the other event. The required name is `ci-required`.
   wheels:
     name: wheel ${{ matrix.platform.name }}
     runs-on: ${{ matrix.platform.runner }}

@@ -14,8 +14,8 @@ on:
     # run at a tag SHA. The release PR's CI is no substitute — `pull_request` checks out
     # `refs/pull/N/merge`, tree `3a1f67fd` for `v0.4.6`, while the tag's tree was `5d0ceefb`.
     #
-    # `branches: [main]` stays while branch protection is absent (`branches/main/protection` -> 404):
-    # nothing else would notice a direct push. Removing it needs a 200 from that API first.
+    # Keep post-merge CI on `main`: protection grades the proposed merge, while this run grades the
+    # exact commit that actually landed on the default branch.
     tags: ['v*']
 
 # Key on the ref so a re-push cancels the stale run instead of racing it.
@@ -60,15 +60,15 @@ jobs:
   #     `needs:` cannot cross workflows.
   #
   # The Rust job is NOT named `test`/`lint`: renaming a check that branch protection has registered
-  # leaves the old name required and never reporting again. Nothing is required today, which is
-  # exactly why the renaming and the aggregate happen now, while they are free.
+  # leaves the old name required and never reporting again. Any future rename must migrate the
+  # required context atomically.
   #
-  # NO `paths:`, `paths-ignore:` OR `if:` ON ANY WORK JOB IN THIS FILE. A skipped check does not
-  # satisfy a required one — it stays pending, wedging a PR at "Expected — waiting for status to be
-  # reported" while CI is entirely green. ruff does gate its cargo jobs on a `determine_changes`
-  # job; its required checks are configured differently, so that is not portable here. The one
-  # `if:` in this file is `ci-required`'s `always()`, which can only make a job run more often. The
-  # path classifier is deferred to `route-ci-jobs-by-changed-paths`.
+  # NO `paths:`, `paths-ignore:` OR `if:` ON ANY WORK JOB IN THIS FILE. A job skipped by a job-level
+  # `if:` reports `skipped`, which satisfies protection. A workflow skipped by a workflow-level
+  # filter never reports its checks, leaving a PR at "Expected — waiting for status to be reported".
+  # A job whose dependency failed or was skipped does not run unless it uses `if: always()`, which
+  # is why `ci-required` carries it. The path classifier is deferred to
+  # `route-ci-jobs-by-changed-paths`.
   #
   # `make corpus.measure` deliberately does NOT run here: it clones hundreds of megabytes of pinned
   # corpus on every run. It stays a local, manual step; do not "fix" CI by adding it.
@@ -281,8 +281,7 @@ jobs:
   # discovered once an audit was already running.
   #
   # NOT a required status check, which is why it is absent from `ci-required`'s `needs:`. It still
-  # carries no `paths:` and no `if:`: a skipped check does not satisfy a required one, so a filter
-  # added today would wedge the PR on the day it is registered.
+  # carries no `paths:` and no `if:` because path-aware routing is deliberately deferred.
   #
   # It re-runs the Rust tests under instrumentation and the Python tests under coverage, so it is
   # the slowest job here.
@@ -346,13 +345,13 @@ jobs:
             exit 1
           fi
 
-  # THE ONE CHECK BRANCH PROTECTION WILL BE POINTED AT: `CI / ci-required`. It exists before
-  # protection is enabled because GitHub only offers a check that reported successfully within the
-  # preceding seven days, and a required name that stops reporting stays required forever.
+  # THE ONE CI CHECK BRANCH PROTECTION REQUIRES WHEN ENABLED: `ci-required`. It reported
+  # successfully before registration because a required name that stops reporting stays required
+  # forever.
   #
   # `if: always()` is what lets it SEE a failure. Without it, a needed job that ends in anything but
-  # success skips this one too — and a skipped check never reports, wedging a protected PR at
-  # "Expected — waiting for status to be reported" instead of going red.
+  # success skips this one too — and protection accepts a skipped required job. `always()` makes the
+  # aggregate run and turn the dependency result into a real failure.
   #
   # Only `result == success` passes. `cancelled` and `skipped` are not success, and reading them as
   # "not failed" is how PR #37's four cancelled artifact checks looked green.

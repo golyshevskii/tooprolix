@@ -29,6 +29,7 @@ WORKFLOWS: Path = REPO / ".github" / "workflows"
 BUILD_ARTIFACTS: Path = WORKFLOWS / "build-artifacts.yml"
 CI: Path = WORKFLOWS / "ci.yml"
 RELEASE_PLZ: Path = WORKFLOWS / "release-plz.yml"
+CONTRIBUTING: Path = REPO / "CONTRIBUTING.md"
 
 CONCURRENCY_GROUP = re.compile(r"^concurrency:\n\s+group:\s*(?P<group>.+)$", re.MULTILINE)
 
@@ -372,15 +373,14 @@ def test_ordinary_ci_runs_on_the_exact_v_tag() -> None:
 
     assert re.search(r"tags:\s*\[\s*'v\*'\s*\]", push), f"ci.yml does not run on v* tags: {push!r}"
     assert re.search(r"branches:\s*\[\s*main\s*\]", push), (
-        "post-merge CI on main stays while branch protection is absent — nothing stops a direct push"
+        "post-merge CI on main must grade the exact commit that actually landed"
     )
 
 
 def test_ci_reports_the_four_work_jobs_and_one_aggregate() -> None:
     """
     A required check name that stops reporting stays required forever, so the names are pinned here.
-    Renaming is free only while `branches/main/protection` is 404, which is why `CI / ci-required`
-    is created and named now, before anyone can register it.
+    Protection requires `ci-required`, so changing that name needs an atomic rules migration.
     """
     assert set(jobs(uncommented(CI))) == {"ci-python", "ci-rust", "cargo-doc", "coverage", "ci-required"}
 
@@ -388,9 +388,9 @@ def test_ci_reports_the_four_work_jobs_and_one_aggregate() -> None:
 def test_the_aggregate_is_unconditional_and_covers_every_required_job() -> None:
     """
     Without `if: always()` the aggregate is itself skipped the moment a needed job does not succeed,
-    and a skipped check never reports — it wedges a protected PR at "Expected — waiting for status
-    to be reported" instead of going red. `coverage` is outside `needs:` deliberately: it protects
-    the measuring instrument, not the shipped artifact.
+    and protection accepts a skipped required job. `always()` makes the aggregate turn that result
+    into a real failure. `coverage` is outside `needs:` deliberately: it protects the measuring
+    instrument, not the shipped artifact.
     """
     aggregate = jobs(uncommented(CI))["ci-required"]
 
@@ -480,13 +480,26 @@ def test_the_shipped_commit_assertion_accepts_only_the_commit_the_event_names() 
 
 def test_only_the_aggregate_carries_a_job_condition() -> None:
     """
-    A skipped check does not satisfy a required one — it stays pending, so a conditional work job
-    wedges a PR at "Expected — waiting for status to be reported" while CI is entirely green. The
-    path classifier that would need such conditions is deferred. The aggregate is the only job
+    The current aggregate rejects every skipped dependency, so no work job is conditional yet. The
+    path classifier that would define legitimate skips is deferred. The aggregate is the only job
     allowed a condition, and `always()` can only ever add work.
     """
     conditional = {name: job_condition(job) for name, job in jobs(uncommented(CI)).items() if job_condition(job)}
     assert conditional == {"ci-required": "always()"}, conditional
+
+
+def test_ci_explains_the_two_different_skipped_check_semantics() -> None:
+    """Keep the routing warning precise: job skips pass protection; workflow skips never report."""
+    text = " ".join(
+        line.lstrip().removeprefix("#").strip()
+        for line in CI.read_text(encoding="utf-8").splitlines()
+        if line.lstrip().startswith("#")
+    )
+
+    assert "A job skipped by a job-level `if:` reports `skipped`, which satisfies protection." in text
+    assert "A workflow skipped by a workflow-level filter never reports its checks" in text
+    workflow_comments = " ".join(path.read_text(encoding="utf-8") for path in (CI, BUILD_ARTIFACTS)).casefold()
+    assert "a skipped check does not satisfy a required" not in workflow_comments
 
 
 @pytest.mark.parametrize("workflow", [CI, BUILD_ARTIFACTS])
@@ -509,6 +522,21 @@ def test_every_make_target_that_ran_before_the_consolidation_still_runs() -> Non
     assert ran == EXPECTED_MAKE_TARGETS, (
         f"missing {EXPECTED_MAKE_TARGETS - ran}, unexpected {ran - EXPECTED_MAKE_TARGETS}"
     )
+
+
+def test_contributing_names_the_job_that_actually_runs_each_documented_gate() -> None:
+    """A contributor should be able to map a local failure to the check they see on the PR."""
+    documented = re.findall(
+        r'^make (?P<target>\S+).*-> CI job "(?P<job>[^"]+)"$', CONTRIBUTING.read_text(encoding="utf-8"), re.MULTILINE
+    )
+    assert documented, "CONTRIBUTING.md documents no local-gate to CI-job mappings"
+
+    workflow_jobs = jobs(uncommented(CI))
+    for target, documented_job in documented:
+        actual_jobs = {name for name, body in workflow_jobs.items() if target in make_targets(body)}
+        assert actual_jobs == {documented_job}, (
+            f"make {target} is documented as {documented_job!r}, but runs in {sorted(actual_jobs)}"
+        )
 
 
 def test_every_job_that_runs_the_python_tests_checks_out_the_full_history() -> None:
