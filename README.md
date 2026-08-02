@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/tooprolix.gif" width="72" height="72" alt="#TPX">
+  <img src="assets/tooprolix.gif" width="72" height="72" alt="">
 </p>
 
 <h1 align="center">tooprolix</h1>
@@ -23,26 +23,27 @@ you.
 
 ## Quick start
 
-Install `tooprolix` with [**uv**](https://docs.astral.sh/uv/):
+Run `tooprolix` without installing it with [**uv**](https://docs.astral.sh/uv/):
 
 ```console
-$ uv add tooprolix
-```
-
-Then:
-
-```console
-$ tooprolix check .
+$ uvx tooprolix check .
 src/config.py:1-26: TPX002 docstring is 243 words long, over the 200-word limit — shorten it, or mark it with `# !TPX002` on the line above it
-src/client.py:14-31: TPX003 same explanation in 3 places: src/poller.py:38-52, src/worker.py:91-104 (weakest src/client.py:14-31 ~ src/worker.py:91-104, similarity 0.812)
+Found 1 findings (TPX002: 1).
 ```
 
 Each finding points to `path:start-end`, so you know how big the block is before you open it.
 
+For an existing uv project, pin the tool as a development dependency and run it through uv:
+
+```console
+$ uv add --dev tooprolix
+$ uv run tooprolix check .
+```
+
 And when the whole tree came back clean:
 
 ```console
-$ tooprolix check .
+$ uvx tooprolix check .
 All checks passed!
 ```
 
