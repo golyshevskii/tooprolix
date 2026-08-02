@@ -223,7 +223,8 @@ fn an_unreadable_path_is_an_error_and_not_a_clean_tree() {
     );
 }
 
-/// All three shipping codes render, sorted by address, and the run is byte-identical.
+/// All three shipping codes render, sorted by address, with an ordered aggregate, and the run is
+/// byte-identical.
 #[test]
 fn the_findings_are_ordered_and_the_run_is_reproducible() {
     // Act — both formats, twice each. The JSON half is not decoration: the text line carries the
@@ -268,6 +269,7 @@ fn the_findings_are_ordered_and_the_run_is_reproducible() {
             "tests/fixtures/dup-corpus/legacy.py:2-20: TPX001 comment is 238 words long, over \
              the 150-word limit \u{2014} shorten it, or mark it with `# !TPX001` on the line \
              above it",
+            "Found 3 findings (TPX001: 1, TPX002: 1, TPX003: 1).",
         ]
     );
 }
@@ -357,14 +359,12 @@ fn a_clean_full_run_says_so_and_a_pipe_receives_no_escape_codes() {
     );
 }
 
-/// A run that could not read part of the tree never claims the tree passed — even with nothing
-/// to report.
+/// A run that could not read part of the tree says no findings were reachable without claiming the
+/// tree passed.
 ///
 /// This is the success line seen from the side that makes it dangerous. The exit code is already
 /// 1 here (task 5's guarantee), so the only thing left that could call this tree clean is a line
-/// of text, and the line would be asserting completeness the run does not have. stdout is
-/// asserted **empty**, not merely free of the success sentence, so a differently-worded claim
-/// fails too.
+/// of text. The summary must therefore carry the incomplete state in the same stdout answer.
 #[test]
 fn a_partial_run_with_nothing_to_report_prints_no_success_line() {
     // Arrange — one file, unparsable, and nothing else in the tree to find.
@@ -378,8 +378,8 @@ fn a_partial_run_with_nothing_to_report_prints_no_success_line() {
     assert_eq!(output.status.code(), Some(1), "{output:?}");
     assert_eq!(
         stdout_of(&output),
-        "",
-        "a tree that was not read whole was reported as passing"
+        "No findings; check incomplete: 1 file skipped.\n",
+        "a tree that was not read whole lost its incomplete summary"
     );
     assert!(
         stderr_of(&output).contains("broken.py"),
@@ -495,6 +495,24 @@ fn the_json_document_is_valid_versioned_and_carries_both_shapes() {
     let document: serde_json::Value =
         serde_json::from_str(stdout_of(&output)).expect("stdout is one JSON document");
 
+    let mut keys: Vec<&str> = document
+        .as_object()
+        .expect("the document is an object")
+        .keys()
+        .map(String::as_str)
+        .collect();
+    keys.sort_unstable();
+    assert_eq!(
+        keys,
+        [
+            "complete",
+            "excluded",
+            "findings",
+            "schema_version",
+            "skipped"
+        ],
+        "the schema-v2 top-level shape changed: {document:#}"
+    );
     assert_eq!(document["schema_version"], "2");
     let findings = document["findings"]
         .as_array()
@@ -540,15 +558,20 @@ fn the_json_document_is_valid_versioned_and_carries_both_shapes() {
     );
     assert_eq!(findings[2]["code"], "TPX001");
 
-    // Every finding renders the same sentence the text format prints, so the two cannot drift.
+    // Every finding renders the same sentence the text format prints, so the two cannot drift. The
+    // final line is the human-only aggregate and is deliberately absent from the JSON document.
     // The length is asserted BEFORE the zip: `zip` stops at the shorter side, so zero text lines
     // would make the loop run zero times and the claim hold vacuously.
     let text = tooprolix(&["check", "tests/fixtures/dup-corpus"]);
     let lines: Vec<&str> = stdout_of(&text).lines().collect();
-    assert_eq!(lines.len(), findings.len(), "{lines:#?}");
-    for (finding, line) in findings.iter().zip(lines) {
-        assert_eq!(finding["message"], line);
+    assert_eq!(lines.len(), findings.len() + 1, "{lines:#?}");
+    for (finding, line) in findings.iter().zip(&lines) {
+        assert_eq!(finding["message"], *line);
     }
+    assert_eq!(
+        lines.last(),
+        Some(&"Found 3 findings (TPX001: 1, TPX002: 1, TPX003: 1).")
+    );
 }
 
 /// AC3's own gate, run the way the acceptance criterion words it: through a real Python parser.
@@ -599,10 +622,7 @@ fn a_marker_silences_its_own_block_and_only_its_own_rule() {
     assert_eq!(output.status.code(), Some(1), "{output:?}");
     let flagged: Vec<&str> = stdout_of(&output)
         .lines()
-        .map(|line| {
-            line.strip_prefix("tests/fixtures/optout/")
-                .expect("every finding is inside the fixture")
-        })
+        .filter_map(|line| line.strip_prefix("tests/fixtures/optout/"))
         .collect();
 
     assert_eq!(
@@ -1041,7 +1061,10 @@ fn the_walk_does_not_follow_symlinks() {
     // Assert
     assert_eq!(output.status.code(), Some(1), "{output:?}");
     assert_eq!(
-        stdout_of(&output).lines().count(),
+        stdout_of(&output)
+            .lines()
+            .filter(|line| line.contains(": TPX"))
+            .count(),
         1,
         "{}",
         stdout_of(&output)
@@ -1168,7 +1191,14 @@ fn the_project_configuration_changes_what_is_reported() {
     let silenced = scratch.check(&[]);
 
     // Assert
-    assert_eq!(stdout_of(&defaults).lines().count(), 1, "{defaults:?}");
+    assert_eq!(
+        stdout_of(&defaults)
+            .lines()
+            .filter(|line| line.contains(": TPX"))
+            .count(),
+        1,
+        "{defaults:?}"
+    );
     assert!(stdout_of(&defaults).contains("TPX003"));
     assert!(
         !stdout_of(&defaults).contains("TPX001"),
@@ -1180,7 +1210,7 @@ fn the_project_configuration_changes_what_is_reported() {
     assert_eq!(
         stdout_of(&tightened)
             .lines()
-            .filter(|line| line.contains("TPX001"))
+            .filter(|line| line.contains(": TPX001 "))
             .count(),
         2,
         "a lowered comment limit did not reach the detector: {}",
@@ -1652,7 +1682,10 @@ fn exclude_does_not_make_the_walk_follow_symlinks() {
 
     // Assert — one file behind two names is still one file.
     assert_eq!(
-        stdout_of(&output).lines().count(),
+        stdout_of(&output)
+            .lines()
+            .filter(|line| line.contains(": TPX"))
+            .count(),
         1,
         "the same source was counted twice, so the walk followed a symlink: {}",
         stdout_of(&output)
@@ -2272,6 +2305,12 @@ fn a_broken_file_no_longer_hides_the_findings_of_the_files_that_parsed() {
         "the finding of the file that parsed was withheld: {:?}",
         stdout_of(&text)
     );
+    assert!(
+        stdout_of(&text)
+            .ends_with("Found 1 findings (TPX001: 1); check incomplete: 1 file skipped.\n"),
+        "the partial finding aggregate lost its count or incomplete suffix: {:?}",
+        stdout_of(&text)
+    );
     // ... and the file that did not parse is named, with the reason.
     assert!(
         stderr_of(&text).contains("1 file(s) skipped:") && stderr_of(&text).contains("broken.py"),
@@ -2310,10 +2349,9 @@ fn a_broken_file_no_longer_hides_the_findings_of_the_files_that_parsed() {
 
 /// **The guarantee the whole reversal was accepted on: a partial run never exits 0.**
 ///
-/// The fixture is built so that every *other* signal says "clean": the only readable file has no
-/// findings at all, so stdout is empty and a tool that simply skipped the broken file and carried on
-/// would print nothing and exit 0 — indistinguishable from a repository that was measured and found
-/// good. That is the outcome this exists to make impossible.
+/// The fixture is built so that the only readable file has no findings at all. The text answer must
+/// say both facts — no reachable findings and an incomplete check — while the exit code remains the
+/// load-bearing guarantee.
 ///
 /// Asserted on the code and not merely on `!= 0`: 2 would mean the reversal never happened.
 #[test]
@@ -2335,8 +2373,8 @@ fn a_partial_run_never_exits_zero_even_with_nothing_to_report() {
     );
     assert_eq!(
         stdout_of(&output),
-        "",
-        "there is nothing to report and something was reported: {:?}",
+        "No findings; check incomplete: 1 file skipped.\n",
+        "the incomplete no-findings summary drifted: {:?}",
         stdout_of(&output)
     );
     assert!(
@@ -2349,7 +2387,7 @@ fn a_partial_run_never_exits_zero_even_with_nothing_to_report() {
     let document = document_of(&json);
     assert_eq!(
         document["complete"], false,
-        "the only channel that can still express incompleteness says the tree was complete: \
+        "the machine-readable completeness channel says the tree was complete: \
          {document}"
     );
     assert_eq!(document["findings"].as_array().map(Vec::len), Some(0));
@@ -2372,7 +2410,10 @@ fn a_tree_where_no_file_could_be_read_does_not_look_successful() {
 
     // Assert
     assert_eq!(output.status.code(), Some(1), "{output:?}");
-    assert_eq!(stdout_of(&output), "");
+    assert_eq!(
+        stdout_of(&output),
+        "No findings; check incomplete: 2 files skipped.\n"
+    );
     assert!(
         stderr_of(&output).contains("2 file(s) skipped:"),
         "{:?}",
@@ -3088,8 +3129,8 @@ fn a_tree_holding_a_symlinked_source_is_not_reported_as_a_clean_measurement() {
     // Assert — every channel says the tree was not measured whole, and none of them says it passed.
     assert_eq!(
         stdout_of(&output),
-        "",
-        "a tree holding an unmeasured `.py` was announced as passing"
+        "No findings; check incomplete: 1 file skipped.\n",
+        "a tree holding an unmeasured `.py` lost its incomplete summary"
     );
     assert_eq!(output.status.code(), Some(1), "{output:?}");
     let document = document_of(&json);
