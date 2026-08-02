@@ -122,6 +122,19 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           enable-cache: true
 
+      - name: Install cargo-about
+        uses: taiki-e/install-action@18b1216eba7f8039b0f8d131d5473787f0edce68 # v2.85.3
+        with:
+          tool: cargo-about@0.9.1
+          fallback: none
+
+      - name: The third-party licence bundle matches Cargo.lock
+        run: |
+          set -euo pipefail
+          cargo fetch --locked
+          cargo about generate --frozen --fail --output-file "$RUNNER_TEMP/THIRD-PARTY-LICENSES.html" about.hbs
+          diff -u THIRD-PARTY-LICENSES.html "$RUNNER_TEMP/THIRD-PARTY-LICENSES.html"
+
       # THE ONLY WAY A RELEASE ARTIFACT LEARNS WHAT IT WAS BUILT FROM.
       #
       # `tooprolix --version` prints the COMMIT date, resolved by build.rs as SOURCE_DATE_EPOCH ->
@@ -199,7 +212,7 @@ jobs:
       # exploits were measured green under every other gate here — see the script's own header.
       #
       # README.md on disk is the TRANSFORMED one at this point, which is the object AC8 names.
-      - name: The archives carry MIT, their LICENSE, docs/, and the transformed README
+      - name: The archives carry MIT, required licence files, docs/, and the transformed README
         run: |
           uv run --no-project python scripts/check_artifact.py "$SDIST" README.md
           uv run --no-project python scripts/check_artifact.py "$WHEEL_FROM_SDIST" README.md
@@ -272,6 +285,7 @@ jobs:
   # `wheel ${{ matrix.platform.name }}`, while release events report three platform-specific names.
   # Any one of those contexts disappears on the other event. The required name is `ci-required`.
   wheels:
+    needs: sdist
     name: wheel ${{ matrix.platform.name }}
     runs-on: ${{ matrix.platform.runner }}
     timeout-minutes: 30

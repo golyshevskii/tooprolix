@@ -1,0 +1,13 @@
+# Priority chooses one branch of each `OR`; conjunctive terms still remain mandatory.
+# MIT covers the common dual-licensed crates, BSL-1.0 selects ryu's non-Apache option,
+# the Unicode terms cover unicode-ident/unicode_names2, and is-macro requires Apache-2.0.
+accepted = [
+    "MIT",
+    "BSL-1.0",
+    "Unicode-3.0",
+    "Unicode-DFS-2016",
+    "Apache-2.0",
+]
+ignore-build-dependencies = false
+ignore-dev-dependencies = true
+ignore-transitive-dependencies = false

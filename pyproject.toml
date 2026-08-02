@@ -20,10 +20,10 @@ description = "A prose budget linter for Python."
 readme = "README.md"
 keywords = ["comments", "docstrings", "linter", "prose", "python"]
 # PEP 639: an SPDX expression plus the file, not the retired `License ::` trove classifiers —
-# `license-files` is what puts `License-File: LICENSE` in METADATA and the file itself in both
-# archives, which is what AC3 grades by listing the archives.
+# `license-files` puts both required `License-File` headers and files into both archives, which
+# `scripts/check_artifact.py` grades by opening the built artifacts.
 license = "MIT"
-license-files = ["LICENSE"]
+license-files = ["LICENSE", "THIRD-PARTY-LICENSES.html"]
 # No `Programming Language :: Python :: 3.x` rows. The wheel is `py3-none-<platform>`: it carries a
 # native executable and no Python code at all, so it neither knows nor cares which interpreter
 # installs it. Listing versions would advertise a compatibility matrix nothing here tests.
@@ -107,29 +107,24 @@ bindings = "bin"
 # the date. CI builds each published wheel per platform with its own `SOURCE_DATE_EPOCH`, and
 # nothing compares a corpus binary's hash against wheel contents.
 #
-# # Third-party notices: NOT NEEDED, and here is the measurement behind that
+# # Third-party licences: generated from the locked dependency graph, not inferred from the SBOM
 #
-# `license-files = ["LICENSE"]` above covers THIS project. The separate question — does the wheel
-# owe a generated notice for the ~92 Rust crates statically linked into the binary? — is answered
-# **no**, for two measured reasons rather than by silence:
+# The wheel's CycloneDX SBOM identifies components and licence expressions; it does not carry the
+# licence/copyright texts those expressions may require on redistribution. `THIRD-PARTY-LICENSES.html`
+# is generated from the published crate sources by cargo-about 0.9.1. The artifact workflow runs
+# the same frozen generation and refuses any diff before building an sdist or wheel.
 #
-#   1. **maturin 1.14.1 already ships an SBOM and we did not ask for it.** Measured on the built
-#      wheel: `tooprolix-<version>.dist-info/sboms/tooprolix.cyclonedx.json`, CycloneDX 1.5, 92
-#      components with a declared licence each. ruff ships `dist-info/sboms/ruff.cyclonedx.json` in
-#      exactly the same place, which is what a hand-written NOTICE file would be duplicating.
-#   2. **Every licence in that graph is permissive and none has a notice-in-binary obligation that
-#      the SBOM does not already discharge.** The distribution over the 92 shipped components:
-#      55 `MIT OR Apache-2.0`, 18 `MIT`, 7 `Unlicense OR MIT`, 4 `Apache-2.0 OR MIT`, 2
-#      `BSD-2-Clause OR Apache-2.0 OR MIT`, and one each of `Apache-2.0`, `Apache-2.0 OR BSL-1.0`,
-#      `Zlib OR Apache-2.0 OR MIT`, `MIT OR Apache-2.0 OR Zlib`, `(MIT OR Apache-2.0) AND
-#      Unicode-3.0`, `(MIT OR Apache-2.0) AND Unicode-DFS-2016`, `Apache-2.0 WITH LLVM-exception OR
-#      Apache-2.0 OR MIT`. No GPL, no AGPL, no LGPL. The one crate in `Cargo.lock` whose expression
-#      offers `LGPL-2.1-or-later` — `r-efi 6.0.0`, a UEFI target dependency — is **not in the
-#      shipped graph at all** and does not appear in the SBOM.
+# `about.toml` chooses MIT first for `MIT OR Apache-2.0` dependencies and BSL-1.0 for ryu 1.0.23.
+# Conjunction is not treated as choice: unicode-ident 1.0.24 keeps Unicode-3.0 and unicode_names2
+# 1.3.0 keeps Unicode-DFS-2016. is-macro 0.3.7 is Apache-2.0-only, so its published Apache text is
+# bundled; its crate archive has no NOTICE file. No conclusion depends on whether proc-macro code is
+# present in the final binary — the text travels either way.
 #
-# Revisit when a copyleft licence enters the graph, or when the first corporate consumer asks
-# for a NOTICE. The SBOM is the artifact to answer them from; it is generated from the real build,
-# so it cannot go stale the way a checked-in notice file would.
+# cargo-about lists zerocopy 0.8.55 rather than separately naming zerocopy-derive 0.8.55. Both
+# published archives contain byte-identical MIT/Apache/BSD licence files, so the generated text
+# covers both components named separately by maturin's SBOM. This is licence-text coverage, not a
+# claim of legal completeness. The project's own `License-Expression` remains MIT; the bundle is
+# declared separately through `License-File` metadata and graded inside both distribution archives.
 
 [dependency-groups]
 lint = [
