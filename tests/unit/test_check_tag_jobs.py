@@ -91,19 +91,36 @@ def grade(
     tag_sha: str = TAG_SHA,
     tag_name: str = TAG_NAME,
     expected_workflow: str = WORKFLOW,
+    publish_conclusions: tuple[Any, ...] = (None,),
+    postupload: bool = False,
     **payload_kwargs: Any,
 ) -> int:
-    return main(
-        [
-            str(payload(tmp_path / "jobs.json", jobs, **payload_kwargs)),
-            "--manifest",
-            str(manifest(tmp_path / "expected.txt", expected, expected_workflow)),
-            "--tag-sha",
-            tag_sha,
-            "--tag-name",
-            tag_name,
-        ]
-    )
+    inputs = [str(payload(tmp_path / "jobs.json", jobs, **payload_kwargs))]
+    if publish_conclusions:
+        publish_binding = {key: payload_kwargs[key] for key in ("head_sha", "head_branch") if key in payload_kwargs}
+        inputs.append(
+            str(
+                payload(
+                    tmp_path / "publish.json",
+                    tuple(("Publish to PyPI", conclusion) for conclusion in publish_conclusions),
+                    workflow_name="Build artifacts",
+                    run_id=222,
+                    **publish_binding,
+                )
+            )
+        )
+    argv = [
+        *inputs,
+        "--manifest",
+        str(manifest(tmp_path / "expected.txt", expected, expected_workflow)),
+        "--tag-sha",
+        tag_sha,
+        "--tag-name",
+        tag_name,
+    ]
+    if postupload:
+        argv.append("--postupload")
+    return main(argv)
 
 
 def names() -> tuple[str, ...]:
@@ -158,6 +175,35 @@ def test_an_unexpected_job_blocks_publication(tmp_path: Path) -> None:
     a workflow someone else added, and both are answers a human owes the release.
     """
     assert grade(tmp_path, (*COMPLETE, ("mystery", "success")), names()) == 1
+
+
+def test_a_duplicate_prerequisite_job_blocks_publication(tmp_path: Path) -> None:
+    """Set equality must not collapse two observations of the same job into one."""
+    assert grade(tmp_path, (*COMPLETE, ("ci-python", "success")), names()) == 1
+
+
+@pytest.mark.parametrize("conclusion", ["success", "failure", "cancelled"])
+def test_preapproval_requires_exactly_one_pending_publish_job(tmp_path: Path, conclusion: str) -> None:
+    assert grade(tmp_path, COMPLETE, names(), publish_conclusions=(conclusion,)) == 1
+
+
+@pytest.mark.parametrize("postupload", [False, True])
+def test_each_phase_refuses_an_absent_publish_job(tmp_path: Path, postupload: bool) -> None:
+    assert grade(tmp_path, COMPLETE, names(), publish_conclusions=(), postupload=postupload) == 1
+
+
+@pytest.mark.parametrize(("conclusion", "postupload"), [(None, False), ("success", True)])
+def test_each_phase_refuses_duplicate_publish_jobs(tmp_path: Path, conclusion: Any, postupload: bool) -> None:
+    assert grade(tmp_path, COMPLETE, names(), publish_conclusions=(conclusion, conclusion), postupload=postupload) == 1
+
+
+def test_postupload_requires_the_same_publish_job_to_have_succeeded(tmp_path: Path) -> None:
+    assert grade(tmp_path, COMPLETE, names(), publish_conclusions=("success",), postupload=True) == 0
+
+
+@pytest.mark.parametrize("conclusion", [None, "failure", "cancelled"])
+def test_postupload_refuses_a_publish_job_without_raw_success(tmp_path: Path, conclusion: Any) -> None:
+    assert grade(tmp_path, COMPLETE, names(), publish_conclusions=(conclusion,), postupload=True) == 1
 
 
 def test_the_environment_gated_publish_job_is_not_a_circular_preapproval_requirement(tmp_path: Path) -> None:
@@ -328,6 +374,16 @@ def test_the_documented_runbook_command_parses(tmp_path: Path) -> None:
     assert main(argv) == 1, "the documented command must be refused on its missing payloads, not on its arguments"
 
 
+def test_the_documented_postupload_command_uses_the_same_verifier() -> None:
+    documented = [
+        line.strip() for line in (check_tag_jobs.__doc__ or "").splitlines() if "check_tag_jobs.py --" in line
+    ]
+
+    assert len(documented) == 2
+    assert "--postupload" not in documented[0]
+    assert "--postupload" in documented[1]
+
+
 def test_a_missing_manifest_blocks_publication(tmp_path: Path) -> None:
     """A guard that cannot find its expectation must refuse, not default to expecting nothing."""
     jobs = payload(tmp_path / "jobs.json", COMPLETE)
@@ -379,9 +435,18 @@ def test_the_two_workflows_a_tag_fires_are_graded_together(tmp_path: Path) -> No
     payloads must be given at once — one at a time, each is a superset failure against the other.
     """
     ci = payload(tmp_path / "ci.json", COMPLETE, run_id=111)
-    artifacts = payload(tmp_path / "artifacts.json", (("wheel macos-arm64", "success"),), run_id=222)
-    expected = manifest(tmp_path / "expected.txt", (*names(), "wheel macos-arm64"))
+    artifacts = payload(
+        tmp_path / "artifacts.json",
+        (("wheel macos-arm64", "success"), ("Publish to PyPI", None)),
+        workflow_name="Build artifacts",
+        run_id=222,
+    )
+    expectation = tmp_path / "expected.txt"
+    expectation.write_text(
+        "[CI]\n" + "".join(f"{name}\n" for name in names()) + "[Build artifacts]\nwheel macos-arm64\n", encoding="utf-8"
+    )
 
     assert (
-        main([str(ci), str(artifacts), "--manifest", str(expected), "--tag-sha", TAG_SHA, "--tag-name", TAG_NAME]) == 0
+        main([str(ci), str(artifacts), "--manifest", str(expectation), "--tag-sha", TAG_SHA, "--tag-name", TAG_NAME])
+        == 0
     )

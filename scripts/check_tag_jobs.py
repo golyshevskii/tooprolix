@@ -19,6 +19,11 @@ Three ways a weaker version passes while the guarantee is broken, all refused he
   * the expectation reduced to `[]` — refused by its own assertion, because a set-equality check
     over an empty expectation passes having verified nothing and no populated-set test can see it.
 
+The environment-gated `Build artifacts / Publish to PyPI` job is deliberately outside that
+manifest, but not optional: preapproval requires exactly one such job with `conclusion: null`;
+`--postupload` requires the same unique job to have raw-concluded `success`. Duplicate job pairs
+are refused before set comparison so two observations cannot collapse into one.
+
 It also binds the jobs to the tag and to the workflows a tag push fires. Without that, a payload
 naming every expected job with no `head_sha` at all exited 0, and so did one whose `workflow_name`
 was a foreign workflow dispatched on `main`. Every job must now report the tag's commit and the tag
@@ -45,6 +50,11 @@ Usage, once per tag, before the `pypi` environment is approved. The publication 
     gh api repos/golyshevskii/tooprolix/actions/runs/<ci-run>/jobs --paginate > ci.json
     gh api repos/golyshevskii/tooprolix/actions/runs/<artifact-run>/jobs --paginate > artifacts.json
     python scripts/check_tag_jobs.py --tag-sha $(git rev-parse v0.4.8^{commit}) --tag-name v0.4.8 ci.json artifacts.json
+
+After approval and upload, refresh the artifact payload and grade the same contract in postupload mode:
+
+    gh api repos/golyshevskii/tooprolix/actions/runs/<artifact-run>/jobs --paginate > artifacts-after.json
+    python scripts/check_tag_jobs.py --postupload --tag-sha $(git rev-parse v0.4.8^{commit}) --tag-name v0.4.8 ci.json artifacts-after.json
 """
 
 from __future__ import annotations
@@ -53,6 +63,7 @@ import argparse
 import json
 import re
 import sys
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -67,7 +78,7 @@ SUCCESS: str = "success"
 #: The only job outside the preapproval proof. It is waiting on the approval this script informs,
 #: so requiring its raw success here would make the gate circular. All other observed jobs remain
 #: under set equality and raw-success checks.
-PREAPPROVAL_EXCLUDED_JOBS: frozenset[tuple[str, str]] = frozenset({("Build artifacts", "Publish to PyPI")})
+PUBLISH_JOB: tuple[str, str] = ("Build artifacts", "Publish to PyPI")
 
 
 class TagJobsError(AssertionError):
@@ -140,7 +151,9 @@ def read_jobs(paths: list[Path]) -> list[dict[str, Any]]:
     return collected
 
 
-def failures(expected: set[tuple[str, str]], observed: list[dict[str, Any]], tag_sha: str, tag_name: str) -> list[str]:
+def failures(
+    expected: set[tuple[str, str]], observed: list[dict[str, Any]], tag_sha: str, tag_name: str, *, postupload: bool
+) -> list[str]:
     """Return every reason the tag must not be published, or an empty list when there is none."""
     reasons: list[str] = []
 
@@ -155,11 +168,22 @@ def failures(expected: set[tuple[str, str]], observed: list[dict[str, Any]], tag
     if elsewhere:
         reasons.append(f"job(s) belong to a run of ref {elsewhere}, not of {tag_name}")
 
-    prerequisites = [
-        job
-        for job in observed
-        if (str(job.get("workflow_name")), str(job.get("name"))) not in PREAPPROVAL_EXCLUDED_JOBS
-    ]
+    pairs = [(str(job.get("workflow_name")), str(job.get("name"))) for job in observed]
+    duplicates = sorted(pair for pair, count in Counter(pairs).items() if count != 1)
+    if duplicates:
+        reasons.append(f"duplicate (workflow, job) pair(s): {duplicates}")
+
+    publish = [job for job, pair in zip(observed, pairs, strict=True) if pair == PUBLISH_JOB]
+    expected_publish_conclusion: str | None = SUCCESS if postupload else None
+    if len(publish) != 1:
+        reasons.append(f"expected exactly one {PUBLISH_JOB}, observed {len(publish)}")
+    elif "conclusion" not in publish[0] or publish[0]["conclusion"] != expected_publish_conclusion:
+        reasons.append(
+            f"{PUBLISH_JOB} must have conclusion {expected_publish_conclusion!r} "
+            f"in {'postupload' if postupload else 'preapproval'} mode, observed {publish[0].get('conclusion')!r}"
+        )
+
+    prerequisites = [job for job, pair in zip(observed, pairs, strict=True) if pair != PUBLISH_JOB]
     malformed = [
         job
         for job in prerequisites
@@ -194,6 +218,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST, help="the tracked expected-job list")
     parser.add_argument("--tag-sha", required=True, help="the tag's target commit, `git rev-parse 'v0.4.8^{commit}'`")
     parser.add_argument("--tag-name", required=True, help="the tag itself, e.g. v0.4.8")
+    parser.add_argument(
+        "--postupload", action="store_true", help="require the unique Publish to PyPI job to have raw-concluded success"
+    )
     parsed = parser.parse_args(argv)
 
     try:
@@ -210,14 +237,15 @@ def main(argv: list[str] | None = None) -> int:
         print(f"FAIL: {error}", file=sys.stderr)
         return 1
 
-    if reasons := failures(expected, observed, parsed.tag_sha, parsed.tag_name):
+    if reasons := failures(expected, observed, parsed.tag_sha, parsed.tag_name, postupload=parsed.postupload):
         for reason in reasons:
             print(f"FAIL: {reason}", file=sys.stderr)
         return 1
 
     runs = sorted({str(job.get("run_id")) for job in observed})
     print(
-        f"OK: all {len(expected)} expected job(s) of {parsed.tag_name} ({parsed.tag_sha}) concluded {SUCCESS} (runs {runs})."
+        f"OK: all {len(expected)} prerequisite job(s) of {parsed.tag_name} ({parsed.tag_sha}) concluded {SUCCESS}; "
+        f"the unique Publish to PyPI job is {'successful' if parsed.postupload else 'pending approval'} (runs {runs})."
     )
     return 0
 

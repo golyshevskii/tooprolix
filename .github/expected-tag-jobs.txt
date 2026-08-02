@@ -3,8 +3,9 @@
 # The expectation is pinned here so that shrinking it is a reviewable diff.
 # `scripts/check_tag_jobs.py` compares it to a tag run's prerequisite jobs by SET EQUALITY, never
 # "contains", and refuses an empty list outright — an expectation of nothing is satisfied by
-# nothing. It excludes exactly the environment-gated `Build artifacts / Publish to PyPI` job: that
-# job has no conclusion while it waits for the approval this list is the precondition for.
+# nothing. The environment-gated `Build artifacts / Publish to PyPI` job stays outside the list,
+# but is not optional: the verifier requires exactly one pending instance before approval and one
+# successful instance in `--postupload` mode.
 #
 # `[section]` headers are `workflow_name` as the Actions API reports it; the lines under them are
 # `.name` values, not YAML job ids, which differ for a matrix job. Pairing the two is what stops a
@@ -22,8 +23,8 @@
 # `ci-required`'s `needs:`.
 #
 # Run `check_tag_jobs.py` before approving the `pypi` environment. The manifest below is the last
-# required preapproval job. After upload, separately confirm that `Publish to PyPI` concluded
-# `success`; it is deliberately not allowed to certify itself here.
+# required preapproval job. After upload, run the same verifier with `--postupload`; Publish is
+# deliberately not allowed to certify itself as a prerequisite.
 
 [CI]
 ci-python

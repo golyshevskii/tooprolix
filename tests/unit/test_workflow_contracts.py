@@ -215,6 +215,9 @@ def release_fixture(tmp_path: Path) -> tuple[Path, dict[str, str]]:
         directory = root / "downloaded" / f"artifacts-{artifact_id}"
         directory.mkdir(parents=True)
         (directory / filename).write_bytes(f"artifact:{filename}\n".encode())
+    scripts = root / "scripts"
+    scripts.mkdir()
+    (scripts / "check_release_manifest.py").write_bytes((REPO / "scripts" / "check_release_manifest.py").read_bytes())
 
     return root, {
         "GITHUB_EVENT_NAME": "push",
@@ -297,22 +300,34 @@ def checkout_of(commit: str) -> Iterator[Path]:
 # ---------------------------------------------------------------------------------------------
 
 
-def test_an_artifact_build_is_only_cancelled_by_another_build_of_the_same_commit() -> None:
+def test_an_artifact_build_is_only_cancelled_by_the_same_event_and_commit() -> None:
     """
     The artifact build must belong to the COMMIT it built, not to the branch it arrived on.
 
     Keyed on `github.ref` with `cancel-in-progress`, a later push to the same ref kills the earlier
     run on the assumption that later means newer. On PR #37 all four artifact checks came back
     `cancel` and the only surviving build was of the base tip, a commit that PR does not propose.
-    Keyed on `github.sha`, a build can only be cancelled by another run of the same commit, and
-    duplicate events for one SHA still collapse.
+    Keyed on event plus `github.sha`, a build can only be cancelled by another run of the same event
+    and commit. A dispatch at a tag's SHA cannot cancel the authoritative tag-push run.
     """
     matched = CONCURRENCY_GROUP.search(BUILD_ARTIFACTS.read_text(encoding="utf-8"))
     assert matched is not None, "build-artifacts.yml declares no concurrency group"
     group: str = matched.group("group")
 
     assert "github.sha" in group, f"artifact builds must be grouped by commit, group is {group!r}"
+    assert "github.event_name" in group, f"manual dispatch must not cancel a push, group is {group!r}"
     assert "github.ref" not in group, f"grouping by ref cancels other commits' builds, group is {group!r}"
+
+    def key(event: str, sha: str) -> str:
+        rendered = group.replace("${{ github.workflow }}", "Build artifacts")
+        rendered = rendered.replace("${{ github.event_name }}", event).replace("${{ github.sha }}", sha)
+        assert "${{" not in rendered, f"test does not understand concurrency group {group!r}"
+        return rendered
+
+    tag_push = key("push", "a1" * 20)
+    assert tag_push == key("push", "a1" * 20), "duplicate tag-push runs of one commit must collapse"
+    assert tag_push != key("workflow_dispatch", "a1" * 20), "dispatch must not cancel the tag-push run"
+    assert tag_push != key("push", "b2" * 20), "a later commit must not cancel the tag-push run"
 
 
 def test_artifacts_are_built_for_main_v_tags_and_pull_requests_and_nothing_else() -> None:
@@ -492,6 +507,15 @@ def test_publish_uses_the_full_sha_pinned_official_action_on_only_the_verified_d
     assert "packages-dir: dist" in publish
     assert "password:" not in publish
     assert "repository-url:" not in publish
+
+
+def test_publish_reuses_the_shipped_manifest_checker_before_the_pypi_action() -> None:
+    publish = jobs(uncommented(BUILD_ARTIFACTS))["publish-pypi"]
+    verification = step_script(BUILD_ARTIFACTS, VERIFY_RELEASE_STEP)
+
+    assert 'python scripts/check_release_manifest.py --version "$version" release-manifest.txt dist' in verification
+    assert "sha256sum" not in verification
+    assert publish.index(VERIFY_RELEASE_STEP) < publish.index(PYPI_PUBLISH_ACTION)
 
 
 def test_the_shipped_manifest_assembles_exactly_the_supported_artifacts(tmp_path: Path) -> None:
@@ -881,8 +905,9 @@ def test_the_release_day_runbook_checks_preapproval_jobs_before_approval_and_pub
 
     preapproval_check = runbook.index("python scripts/check_tag_jobs.py")
     approval = runbook.index("Approve the `pypi` environment")
-    postpublish_check = runbook.index("Confirm `Publish to PyPI` concluded `success`")
-    assert preapproval_check < approval < postpublish_check
+    postupload_check = runbook.index("--postupload")
+    downloaded_file_check = runbook.index("python scripts/check_release_manifest.py")
+    assert preapproval_check < approval < postupload_check < downloaded_file_check
 
 
 # ---------------------------------------------------------------------------------------------

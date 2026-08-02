@@ -77,9 +77,24 @@ Treat environment approval as the boundary between verification and upload:
    sizes and SHA-256 hashes. `PyPI release manifest` is the last required preapproval job;
    `Publish to PyPI` is intentionally absent from that list because it is waiting for this approval.
 3. Approve the `pypi` environment only after steps 1–2 pass.
-4. Confirm `Publish to PyPI` concluded `success` in that same tag-push run. Then download the four
-   files from PyPI and separately compare their filenames, sizes and SHA-256 hashes with the approved
-   manifest. `check_tag_jobs.py` is the preapproval verifier; it does not certify the upload.
+4. Refresh the artifact run's raw jobs payload and require the same unique publish job to have
+   concluded `success`:
+
+   ```bash
+   gh api repos/golyshevskii/tooprolix/actions/runs/<artifact-run>/jobs \
+     --paginate > artifacts-after.json
+   python scripts/check_tag_jobs.py --postupload \
+     --tag-sha "$(git rev-parse 'v0.5.1^{commit}')" --tag-name v0.5.1 \
+     ci.json artifacts-after.json
+   ```
+
+5. Freshly download all four files for this release from PyPI into an otherwise empty `pypi-files/`
+   directory, then compare the exact names, sizes and SHA-256 hashes with the approved manifest:
+
+   ```bash
+   python scripts/check_release_manifest.py --version 0.5.1 \
+     release-manifest.txt pypi-files
+   ```
 
 > **Do not add `publish = false` to `Cargo.toml`.** It reads like the obvious way to say "not
 > published yet", and it silently disables release-plz entirely — no version bump, no changelog, no
