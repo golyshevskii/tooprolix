@@ -92,42 +92,35 @@ frozen `--version` example, because nothing would go red when a hand-refreshed c
 
 ## Run the gates before you push
 
-CI runs all seven of these on every pull request:
+CI runs all eight of these on every pull request:
 
 ```bash
-make lint.check       # ruff format --check + ruff check   -> CI job "lint"
-make type             # ty                                 -> CI job "type"
-make test             # pytest, tests/unit/                 -> CI job "test"
-make rust.fmt.check   # cargo fmt --check                   -> CI job "cargo-fmt"
-make rust.lint        # cargo clippy -D warnings            -> CI job "cargo-clippy"
-make rust.test        # cargo test                          -> CI job "cargo-test"
+make lint.check       # ruff format --check + ruff check   -> CI job "ci-python"
+make type             # ty                                 -> CI job "ci-python"
+make test             # pytest, tests/unit/                -> CI job "ci-python"
+make rust.fmt.check   # cargo fmt --check                  -> CI job "ci-rust"
+make rust.lint        # cargo clippy -D warnings           -> CI job "ci-rust"
+make rust.build       # cargo build                        -> CI job "ci-rust"
+make rust.test        # cargo test                         -> CI job "ci-rust"
 make rust.doc         # cargo doc, warnings are errors      -> CI job "cargo-doc"
 ```
 
 `make rust.doc` is the rustdoc gate. `cargo doc` exits 0 on a broken intra-doc link — a link to a
 renamed function passes it — so `RUSTDOCFLAGS="-D warnings"` is what makes those diagnostics fail.
 
-An **eighth** job in `ci.yml`, `coverage`, runs `make cov` — see below. **It is deliberately not a
-required check**: it protects the measuring instrument (that the coverage toolchain still resolves
-and that the report grader still accepts a real run), not the shipped artifact.
+Those targets are grouped into `ci-python`, `ci-rust` and `cargo-doc`. A fourth work job,
+`coverage`, runs `make cov` — see below. The `ci-required` aggregate runs with `if: always()` and
+fails unless `ci-python`, `ci-rust` and `cargo-doc` all succeed. `coverage` is deliberately outside
+that aggregate: it protects the measuring instrument, not the shipped artifact.
 
 A separate `release-contract` check validates the PR title on open, edit, reopen and new pushes.
 It reads the trusted workflow from the base branch and never checks out or executes PR code. Keeping
-it separate avoids rerunning the eight `ci.yml` jobs when only the PR title or body changes.
+it separate avoids rerunning `ci.yml` when only the PR title or body changes.
 
-**None of them is enforced by branch protection — not one.** Measured 2026-07-29:
-`gh api repos/golyshevskii/tooprolix/branches/main/protection` returns **404** and `.../rulesets`
-returns **403 "Upgrade to GitHub Pro or make this repository public"**. A private repository without
-Pro cannot have branch protection at all, so every job here runs and reports and none of them can
-block a merge.
-
-Consequence, and it is the reason this is written down rather than quietly corrected: **a pull
-request with every Rust gate red is still mergeable.** Read the job results yourself before
-merging; do not treat a green merge button as a green build. Registering the required set is part
-of making the repository public, and it is owned by the `flip-public-and-publish-to-pypi` task.
-
-The same is true of `release-contract`: a red result is advisory while the repository is private
-and becomes a barrier when the publication task registers required checks.
+Branch protection requires exactly `ci-required` and `release-contract`, with the branch required
+to be up to date. The aggregate makes the three work jobs merge-blocking without coupling protection
+to their individual names; `coverage` remains advisory. CI still runs after a merge on `main`, so
+the exact commit that landed is graded as well as the proposed merge.
 
 `make rust.fmt` and `make lint.fix` are the fixing counterparts. `make help` lists everything.
 
@@ -163,7 +156,7 @@ executable (`[tool.maturin] bindings = "bin"`), so `import tooprolix` raises `Mo
 by design and there is nothing to rebuild into `.venv`.
 
 ```bash
-make rust.build       # cargo build, then otool/ldd that binary -> CI job "cargo-clippy"
+make rust.build       # cargo build, then otool/ldd that binary -> CI job "ci-rust"
 uvx maturin==1.14.1 build --release --locked --out dist   # a wheel for this machine
 # install it and run the COMMAND. The date is REQUIRED and is the oracle the check compares
 # against — without one it could only assert the SHAPE of a date, which accepted a binary built
