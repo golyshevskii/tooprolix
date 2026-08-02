@@ -1,18 +1,14 @@
 name: Build artifacts
 
-# THERE IS NO PUBLISH STEP IN THIS FILE, AND THAT IS THE POINT OF IT.
-#
-# This is the reversible half of publication: it builds every artifact the
-# supported matrix promises, installs each one and runs it, and uploads the results as run
-# artifacts. Nothing is uploaded to PyPI, TestPyPI or crates.io and no tag is created.
+# Pull requests and main builds are reversible: they build, smoke and retain artifacts but never
+# publish. Only a successful `v*` tag build reaches the manifest and environment-gated PyPI jobs.
 #
 # Stated precisely, because the publishing task inherits this reasoning: a credential IS
 # provisioned. `permissions: contents: read` gives the job a read-scoped `GITHUB_TOKEN`, and
 # `actions/checkout` reads it to clone — `persist-credentials: false` only keeps it out of
 # `.git/config` afterwards, it does not stop the checkout step receiving it. What is absent is
-# anything that could PUBLISH: no `secrets.*` is referenced anywhere in this file, no scope here is
-# writable, and there is no `id-token`, so no OIDC exchange is available to a step that tried. The
-# publishing task owns the irreversible half and will add a publish job of its own.
+# no `secrets.*` is referenced anywhere in this file. The workflow default is read-only; the final
+# publish job alone receives `id-token: write`, after the immutable manifest has been uploaded.
 #
 # # Two axes, decided separately: the BRANCH axis is filtered, the PATH axis is not
 #
@@ -85,11 +81,12 @@ permissions:
 #
 # The branch filter above now stops those pushes reaching this workflow, so that race no longer
 # fires. THE KEY STILL DOES NOT GO BACK TO `github.ref`: keying on the commit is correct whatever
-# events are accepted, still collapses duplicates for one SHA, and reverting it would re-arm the
-# race the day the trigger widens.
-# Enforced by test_an_artifact_build_is_only_cancelled_by... in tests/unit/test_workflow_contracts.py.
+# events are accepted. The event is also part of the key: duplicate runs of one event and SHA still
+# collapse, while a manual dispatch at a tag SHA cannot cancel the authoritative tag-push run.
+# Reverting either dimension would re-arm one of those races.
+# Enforced by test_an_artifact_build_is_only_cancelled_by_the_same_event_and_commit.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.sha }}
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.sha }}
   cancel-in-progress: true
 
 env:
@@ -243,9 +240,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: artifacts-sdist
-          path: |
-            dist
-            dist-from-sdist
+          path: dist/*.tar.gz
 
       # THE BINARIES THIS JOB UPLOADS ARE WHAT ACTUALLY GETS PUBLISHED, so this job proves for
       # itself which commit it built. Change this workflow's checkout to `ref: main` and every leg
@@ -415,7 +410,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: artifacts-${{ matrix.platform.name }}
-          path: dist
+          path: dist/*.whl
 
       - name: The gates above ran on the commit this event names
         shell: bash
@@ -427,3 +422,166 @@ jobs:
             echo "FAIL: this job graded $sha, but the event names ${GITHUB_SHA:-<unset>}." >&2
             exit 1
           fi
+
+  release-manifest:
+    name: PyPI release manifest
+    needs: [sdist, wheels]
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Download the four independently built artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: artifacts-*
+          path: downloaded
+
+      - name: Assemble the immutable PyPI release candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_EVENT_NAME:-}" != "push" ] \
+            || [[ "${GITHUB_REF:-}" != refs/tags/v* || "${GITHUB_REF_NAME:-}" != v* ]]; then
+            echo "FAIL: release candidates require a v* tag push event." >&2
+            exit 1
+          fi
+          version="${GITHUB_REF_NAME#v}"
+          declared_version=$(sed -n '/^\[package\]/,/^\[/{s/^version = "\([^"]*\)"/\1/p;}' Cargo.toml)
+          if [ -z "$version" ] || [ "$version" != "$declared_version" ]; then
+            echo "FAIL: tag $GITHUB_REF_NAME does not match Cargo.toml version $declared_version." >&2
+            exit 1
+          fi
+          tag_sha=$(git rev-parse HEAD)
+          if [ "$tag_sha" != "${GITHUB_SHA:-}" ]; then
+            echo "FAIL: checkout $tag_sha does not match triggering SHA ${GITHUB_SHA:-<unset>}." >&2
+            exit 1
+          fi
+          tree_sha=$(git rev-parse 'HEAD^{tree}')
+
+          artifact_ids=(sdist linux-x86_64 macos-arm64 windows-x86_64)
+          filenames=(
+            "tooprolix-${version}.tar.gz"
+            "tooprolix-${version}-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+            "tooprolix-${version}-py3-none-macosx_11_0_arm64.whl"
+            "tooprolix-${version}-py3-none-win_amd64.whl"
+          )
+          mapfile -t downloaded_entries < <(find downloaded -mindepth 1 -maxdepth 1 -print | sort)
+          if [ "${#downloaded_entries[@]}" -ne 4 ]; then
+            echo "FAIL: expected four downloaded artifacts, found ${#downloaded_entries[@]}." >&2
+            exit 1
+          fi
+
+          mkdir dist
+          for index in "${!artifact_ids[@]}"; do
+            directory="downloaded/artifacts-${artifact_ids[$index]}"
+            expected="${filenames[$index]}"
+            mapfile -t members < <(find "$directory" -mindepth 1 -maxdepth 1 -print | sort)
+            if [ "${#members[@]}" -ne 1 ] || [ ! -f "${members[0]:-}" ] || [ "$(basename "${members[0]:-}")" != "$expected" ]; then
+              echo "FAIL: $directory must contain only $expected." >&2
+              exit 1
+            fi
+            cp -- "${members[0]}" "dist/$expected"
+          done
+
+          {
+            printf 'tag: %s\n' "$GITHUB_REF_NAME"
+            printf 'tag-target-sha: %s\n' "$tag_sha"
+            printf 'tree-sha: %s\n' "$tree_sha"
+            printf 'run-id: %s\n\n' "$GITHUB_RUN_ID"
+            printf 'size\tfilename\tsha256\n'
+            for filename in "${filenames[@]}"; do
+              size=$(wc -c < "dist/$filename" | tr -d ' ')
+              digest=$(sha256sum "dist/$filename" | cut -d ' ' -f 1)
+              printf '%s\t%s\t%s\n' "$size" "$filename" "$digest"
+            done
+          } > release-manifest.txt
+          cat release-manifest.txt
+
+      - name: Upload the immutable human-readable manifest
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-manifest-${{ github.run_id }}
+          path: release-manifest.txt
+
+      - name: Upload the reusable release verifier
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-verifier-${{ github.run_id }}
+          path: scripts/check_release_manifest.py
+
+      - name: Upload the immutable release candidate
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-candidate-${{ github.run_id }}
+          path: dist/*
+
+      - name: The gates above ran on the commit this event names
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha=$(git rev-parse HEAD)
+          echo "graded commit $sha, tree $(git rev-parse "HEAD^{tree}")"
+          if [ "$sha" != "${GITHUB_SHA:-}" ]; then
+            echo "FAIL: this job graded $sha, but the event names ${GITHUB_SHA:-<unset>}." >&2
+            exit 1
+          fi
+
+  publish-pypi:
+    name: Publish to PyPI
+    needs: [sdist, wheels, release-manifest]
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: pypi
+      url: https://pypi.org/p/tooprolix
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Download the immutable manifest
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release-manifest-${{ github.run_id }}
+          path: .
+
+      - name: Download the release verifier from the manifest job
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release-verifier-${{ github.run_id }}
+          path: scripts
+
+      - name: Download the immutable release candidate
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release-candidate-${{ github.run_id }}
+          path: dist
+
+      - name: Verify the approved PyPI release candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_EVENT_NAME:-}" != "push" ] \
+            || [[ "${GITHUB_REF:-}" != refs/tags/v* || "${GITHUB_REF_NAME:-}" != v* ]]; then
+            echo "FAIL: publishing requires a v* tag push event." >&2
+            exit 1
+          fi
+          if ! grep -Fxq "tag: $GITHUB_REF_NAME" release-manifest.txt \
+            || ! grep -Fxq "tag-target-sha: ${GITHUB_SHA:-}" release-manifest.txt \
+            || ! grep -Fxq "run-id: $GITHUB_RUN_ID" release-manifest.txt; then
+            echo "FAIL: release manifest does not belong to this tag run." >&2
+            exit 1
+          fi
+
+          version="${GITHUB_REF_NAME#v}"
+          python scripts/check_release_manifest.py --version "$version" release-manifest.txt dist
+
+      - name: Publish the verified release candidate to PyPI
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # release/v1 2026-07-28
+        with:
+          packages-dir: dist

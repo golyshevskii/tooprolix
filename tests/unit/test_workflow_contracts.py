@@ -31,6 +31,7 @@ CI: Path = WORKFLOWS / "ci.yml"
 RELEASE_PLZ: Path = WORKFLOWS / "release-plz.yml"
 CONTRIBUTING: Path = REPO / "CONTRIBUTING.md"
 GITATTRIBUTES: Path = REPO / ".gitattributes"
+README: Path = REPO / "README.md"
 
 CONCURRENCY_GROUP = re.compile(r"^concurrency:\n\s+group:\s*(?P<group>.+)$", re.MULTILINE)
 
@@ -39,6 +40,9 @@ CONCURRENCY_GROUP = re.compile(r"^concurrency:\n\s+group:\s*(?P<group>.+)$", re.
 STALE_TREE_GUARD_STEP = "Refuse to tag a tree that is not main's"
 AGGREGATE_STEP = "Every required job must have concluded success"
 COMMIT_ASSERTION_STEP = "The gates above ran on the commit this event names"
+ASSEMBLE_RELEASE_STEP = "Assemble the immutable PyPI release candidate"
+VERIFY_RELEASE_STEP = "Verify the approved PyPI release candidate"
+PYPI_PUBLISH_ACTION = "pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33"
 
 #: Every `make` target `ci.yml` ran before the eight jobs were consolidated into four. The
 #: consolidation's one real risk is dropping a gate while the run still goes green, and a job count
@@ -169,6 +173,61 @@ def run_commit_assertion(cwd: Path, event_sha: str) -> subprocess.CompletedProce
     )
 
 
+def run_build_artifact_step(step: str, cwd: Path, environment: dict[str, str]) -> subprocess.CompletedProcess[str]:
+    """Execute one shipped build-artifacts shell step against a local release fixture."""
+    return subprocess.run(
+        ["bash", "-c", step_script(BUILD_ARTIFACTS, step)],
+        cwd=cwd,
+        env={**os.environ, **environment},
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
+def release_artifact_names(version: str) -> tuple[str, ...]:
+    """Return the four files the supported tag matrix publishes."""
+    return (
+        f"tooprolix-{version}.tar.gz",
+        f"tooprolix-{version}-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+        f"tooprolix-{version}-py3-none-macosx_11_0_arm64.whl",
+        f"tooprolix-{version}-py3-none-win_amd64.whl",
+    )
+
+
+def release_fixture(tmp_path: Path) -> tuple[Path, dict[str, str]]:
+    """Create the exact four downloaded build artifacts and the tag checkout that owns them."""
+    root = tmp_path / "release"
+    root.mkdir()
+    subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+    subprocess.run(["git", "config", "user.email", "fixture@example.com"], cwd=root, check=True)
+    subprocess.run(["git", "config", "user.name", "fixture"], cwd=root, check=True)
+    (root / "Cargo.toml").write_text('[package]\nname = "tooprolix"\nversion = "0.5.1"\n', encoding="utf-8")
+    subprocess.run(["git", "add", "Cargo.toml"], cwd=root, check=True)
+    subprocess.run(["git", "commit", "-qm", "release: v0.5.1"], cwd=root, check=True)
+    sha = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=root, check=True, capture_output=True, text=True
+    ).stdout.strip()
+
+    artifact_names = release_artifact_names("0.5.1")
+    artifact_ids = ("sdist", "linux-x86_64", "macos-arm64", "windows-x86_64")
+    for artifact_id, filename in zip(artifact_ids, artifact_names, strict=True):
+        directory = root / "downloaded" / f"artifacts-{artifact_id}"
+        directory.mkdir(parents=True)
+        (directory / filename).write_bytes(f"artifact:{filename}\n".encode())
+    scripts = root / "scripts"
+    scripts.mkdir()
+    (scripts / "check_release_manifest.py").write_bytes((REPO / "scripts" / "check_release_manifest.py").read_bytes())
+
+    return root, {
+        "GITHUB_EVENT_NAME": "push",
+        "GITHUB_REF": "refs/tags/v0.5.1",
+        "GITHUB_REF_NAME": "v0.5.1",
+        "GITHUB_RUN_ID": "424242",
+        "GITHUB_SHA": sha,
+    }
+
+
 def succeeded(*jobs: str) -> dict[str, dict[str, Any]]:
     return {job: {"result": "success"} for job in jobs}
 
@@ -241,22 +300,34 @@ def checkout_of(commit: str) -> Iterator[Path]:
 # ---------------------------------------------------------------------------------------------
 
 
-def test_an_artifact_build_is_only_cancelled_by_another_build_of_the_same_commit() -> None:
+def test_an_artifact_build_is_only_cancelled_by_the_same_event_and_commit() -> None:
     """
     The artifact build must belong to the COMMIT it built, not to the branch it arrived on.
 
     Keyed on `github.ref` with `cancel-in-progress`, a later push to the same ref kills the earlier
     run on the assumption that later means newer. On PR #37 all four artifact checks came back
     `cancel` and the only surviving build was of the base tip, a commit that PR does not propose.
-    Keyed on `github.sha`, a build can only be cancelled by another run of the same commit, and
-    duplicate events for one SHA still collapse.
+    Keyed on event plus `github.sha`, a build can only be cancelled by another run of the same event
+    and commit. A dispatch at a tag's SHA cannot cancel the authoritative tag-push run.
     """
     matched = CONCURRENCY_GROUP.search(BUILD_ARTIFACTS.read_text(encoding="utf-8"))
     assert matched is not None, "build-artifacts.yml declares no concurrency group"
     group: str = matched.group("group")
 
     assert "github.sha" in group, f"artifact builds must be grouped by commit, group is {group!r}"
+    assert "github.event_name" in group, f"manual dispatch must not cancel a push, group is {group!r}"
     assert "github.ref" not in group, f"grouping by ref cancels other commits' builds, group is {group!r}"
+
+    def key(event: str, sha: str) -> str:
+        rendered = group.replace("${{ github.workflow }}", "Build artifacts")
+        rendered = rendered.replace("${{ github.event_name }}", event).replace("${{ github.sha }}", sha)
+        assert "${{" not in rendered, f"test does not understand concurrency group {group!r}"
+        return rendered
+
+    tag_push = key("push", "a1" * 20)
+    assert tag_push == key("push", "a1" * 20), "duplicate tag-push runs of one commit must collapse"
+    assert tag_push != key("workflow_dispatch", "a1" * 20), "dispatch must not cancel the tag-push run"
+    assert tag_push != key("push", "b2" * 20), "a later commit must not cancel the tag-push run"
 
 
 def test_artifacts_are_built_for_main_v_tags_and_pull_requests_and_nothing_else() -> None:
@@ -375,6 +446,178 @@ def test_the_shipped_wheel_gate_selects_the_release_events(
     assert evaluate(expression, event_name, ref, head_ref) is builds_wheels, f"{event} selected the wrong matrix"
 
 
+def test_manifest_and_publish_are_tag_only_and_wait_for_every_build() -> None:
+    """Ordinary PR/main runs stay reversible; a tag waits for the full authoritative matrix."""
+    build = jobs(uncommented(BUILD_ARTIFACTS))
+    manifest = build["release-manifest"]
+    publish = build["publish-pypi"]
+
+    assert re.search(r"^ {4}needs: \[sdist, wheels\]$", manifest, re.MULTILINE)
+    assert re.search(r"^ {4}needs: \[sdist, wheels, release-manifest\]$", publish, re.MULTILINE)
+    for job in (manifest, publish):
+        condition = job_condition(job)
+        assert condition is not None
+        expression = condition.removeprefix(">").removeprefix("-").strip()
+        assert evaluate(expression, "push", "refs/tags/v0.5.1", "") is True
+        assert evaluate(expression, "workflow_dispatch", "refs/tags/v0.5.1", "") is False
+        assert evaluate(expression, "push", "refs/heads/main", "") is False
+        assert evaluate(expression, "pull_request", "refs/pull/56/merge", "release-plz-0.5.1") is False
+
+
+def test_only_the_environment_gated_publish_job_can_request_an_oidc_token() -> None:
+    """The reviewable manifest exists before the only job able to identify itself to PyPI."""
+    build = jobs(uncommented(BUILD_ARTIFACTS))
+    manifest = build["release-manifest"]
+    publish = build["publish-pypi"]
+
+    assert "id-token" not in manifest
+    assert re.search(r"^ {4}environment:\s*$\n {6}name: pypi$", publish, re.MULTILINE)
+    assert re.search(r"^ {4}permissions:\s*$\n {6}contents: read$\n {6}id-token: write$", publish, re.MULTILINE)
+    assert uncommented(BUILD_ARTIFACTS).count("id-token: write") == 1
+    assert "secrets." not in publish
+    assert "name: release-manifest-${{ github.run_id }}" in manifest
+    assert "path: release-manifest.txt" in manifest
+    assert "name: release-candidate-${{ github.run_id }}" in manifest
+
+
+def test_build_artifacts_uploads_only_the_publishable_source_from_each_builder() -> None:
+    build = jobs(uncommented(BUILD_ARTIFACTS))
+
+    assert re.search(r"name: artifacts-sdist\n\s+path: dist/\*\.tar\.gz", build["sdist"])
+    assert "path: dist/*.whl" in build["wheels"]
+
+
+def test_every_build_artifact_action_is_pinned_to_a_full_commit() -> None:
+    used = re.findall(r"^\s+uses:\s+(\S+)", uncommented(BUILD_ARTIFACTS), re.MULTILINE)
+
+    assert used
+    assert [reference for reference in used if not re.search(r"@[0-9a-f]{40}$", reference)] == []
+    assert {reference for reference in used if reference.startswith("actions/download-artifact@")} == {
+        "actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c"
+    }
+    assert {reference for reference in used if reference.startswith("actions/upload-artifact@")} == {
+        "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"
+    }
+
+
+def test_publish_uses_the_full_sha_pinned_official_action_on_only_the_verified_directory() -> None:
+    publish = jobs(uncommented(BUILD_ARTIFACTS))["publish-pypi"]
+
+    assert f"uses: {PYPI_PUBLISH_ACTION}" in publish
+    assert "packages-dir: dist" in publish
+    assert "password:" not in publish
+    assert "repository-url:" not in publish
+
+
+def test_publish_reuses_the_shipped_manifest_checker_before_the_pypi_action() -> None:
+    publish = jobs(uncommented(BUILD_ARTIFACTS))["publish-pypi"]
+    verification = step_script(BUILD_ARTIFACTS, VERIFY_RELEASE_STEP)
+
+    assert 'python scripts/check_release_manifest.py --version "$version" release-manifest.txt dist' in verification
+    assert "sha256sum" not in verification
+    assert publish.index(VERIFY_RELEASE_STEP) < publish.index(PYPI_PUBLISH_ACTION)
+
+
+def test_the_shipped_manifest_assembles_exactly_the_supported_artifacts(tmp_path: Path) -> None:
+    root, environment = release_fixture(tmp_path)
+
+    result = run_build_artifact_step(ASSEMBLE_RELEASE_STEP, root, environment)
+
+    assert result.returncode == 0, f"{result.stdout}{result.stderr}"
+    assert {path.name for path in (root / "dist").iterdir()} == set(release_artifact_names("0.5.1"))
+    manifest = (root / "release-manifest.txt").read_text(encoding="utf-8")
+    assert f"tag-target-sha: {environment['GITHUB_SHA']}" in manifest
+    assert "tree-sha: " in manifest
+    assert "run-id: 424242" in manifest
+    for filename in release_artifact_names("0.5.1"):
+        assert f"\t{filename}\t" in manifest
+
+
+@pytest.mark.parametrize(
+    "mutation", ["unknown-artifact", "extra-file", "missing-file", "wrong-name", "wrong-sha", "wrong-tag"]
+)
+def test_the_shipped_manifest_fails_closed_on_an_inconsistent_release(tmp_path: Path, mutation: str) -> None:
+    root, environment = release_fixture(tmp_path)
+    sdist = root / "downloaded" / "artifacts-sdist" / release_artifact_names("0.5.1")[0]
+    if mutation == "unknown-artifact":
+        unknown = root / "downloaded" / "artifacts-other"
+        unknown.mkdir()
+        (unknown / "foreign.whl").write_bytes(b"foreign")
+    elif mutation == "extra-file":
+        (sdist.parent / "duplicate.tar.gz").write_bytes(sdist.read_bytes())
+    elif mutation == "missing-file":
+        sdist.unlink()
+    elif mutation == "wrong-name":
+        sdist.rename(sdist.with_name("tooprolix-9.9.9.tar.gz"))
+    elif mutation == "wrong-sha":
+        environment["GITHUB_SHA"] = "0" * 40
+    else:
+        environment["GITHUB_REF_NAME"] = "v9.9.9"
+        environment["GITHUB_REF"] = "refs/tags/v9.9.9"
+
+    result = run_build_artifact_step(ASSEMBLE_RELEASE_STEP, root, environment)
+
+    assert result.returncode != 0, f"{mutation} passed:\n{result.stdout}{result.stderr}"
+
+
+@pytest.mark.parametrize("mutation", ["changed-bytes", "extra-file", "missing-file", "manifest-hash", "wrong-sha"])
+def test_the_shipped_publish_verification_refuses_any_change_after_the_manifest(tmp_path: Path, mutation: str) -> None:
+    root, environment = release_fixture(tmp_path)
+    assembled = run_build_artifact_step(ASSEMBLE_RELEASE_STEP, root, environment)
+    assert assembled.returncode == 0, f"{assembled.stdout}{assembled.stderr}"
+    candidate = root / "dist" / release_artifact_names("0.5.1")[0]
+    if mutation == "changed-bytes":
+        candidate.write_bytes(candidate.read_bytes() + b"changed")
+    elif mutation == "extra-file":
+        (root / "dist" / "foreign.whl").write_bytes(b"foreign")
+    elif mutation == "missing-file":
+        candidate.unlink()
+    elif mutation == "manifest-hash":
+        manifest = root / "release-manifest.txt"
+        manifest.write_text(
+            re.sub(r"\t[0-9a-f]{64}$", f"\t{'0' * 64}", manifest.read_text(), count=1, flags=re.MULTILINE)
+        )
+    else:
+        environment["GITHUB_SHA"] = "0" * 40
+
+    result = run_build_artifact_step(VERIFY_RELEASE_STEP, root, environment)
+
+    assert result.returncode != 0, f"{mutation} passed:\n{result.stdout}{result.stderr}"
+
+
+def test_the_shipped_publish_verification_accepts_the_unchanged_candidate(tmp_path: Path) -> None:
+    root, environment = release_fixture(tmp_path)
+    assembled = run_build_artifact_step(ASSEMBLE_RELEASE_STEP, root, environment)
+    assert assembled.returncode == 0, f"{assembled.stdout}{assembled.stderr}"
+
+    verified = run_build_artifact_step(VERIFY_RELEASE_STEP, root, environment)
+
+    assert verified.returncode == 0, f"{verified.stdout}{verified.stderr}"
+
+
+@pytest.mark.parametrize("step", [ASSEMBLE_RELEASE_STEP, VERIFY_RELEASE_STEP])
+def test_the_shipped_release_shells_refuse_dispatch_even_at_the_tag(tmp_path: Path, step: str) -> None:
+    """A manual dispatch at a tag ref is not the authoritative tag-push release run."""
+    root, environment = release_fixture(tmp_path)
+    if step == VERIFY_RELEASE_STEP:
+        assembled = run_build_artifact_step(ASSEMBLE_RELEASE_STEP, root, environment)
+        assert assembled.returncode == 0, f"{assembled.stdout}{assembled.stderr}"
+    environment["GITHUB_EVENT_NAME"] = "workflow_dispatch"
+
+    result = run_build_artifact_step(step, root, environment)
+
+    assert result.returncode != 0, f"{step} accepted workflow_dispatch:\n{result.stdout}{result.stderr}"
+
+
+def test_the_release_day_readme_no_longer_claims_the_project_is_unpublished() -> None:
+    readme = README.read_text(encoding="utf-8")
+
+    assert "img.shields.io/pypi/v/tooprolix" in readme
+    assert "img.shields.io/pypi/pyversions/tooprolix" in readme
+    assert "status-pre--release" not in readme
+    assert "Publication is still gated by labelled-corpus validation" not in readme
+
+
 # ---------------------------------------------------------------------------------------------
 # ci.yml — what runs, on which events, with which hard-won settings intact
 # ---------------------------------------------------------------------------------------------
@@ -468,14 +711,14 @@ def test_every_job_that_checks_out_proves_which_commit_it_graded(workflow: Path)
         )
 
 
-def test_the_commit_assertion_is_one_script_and_not_six_drifting_copies() -> None:
+def test_the_commit_assertion_is_one_script_and_not_seven_drifting_copies() -> None:
     """
-    Six jobs carry it, and the per-job test above checks placement, not content — so a fix applied
+    Seven jobs carry it, and the per-job test above checks placement, not content — so a fix applied
     to one copy and not the others would leave a hole nothing else sees.
     """
     copies = step_scripts(CI, COMMIT_ASSERTION_STEP) + step_scripts(BUILD_ARTIFACTS, COMMIT_ASSERTION_STEP)
 
-    assert len(copies) == 6, f"expected the assertion in all six checkout-carrying jobs, found {len(copies)}"
+    assert len(copies) == 7, f"expected the assertion in all seven checkout-carrying jobs, found {len(copies)}"
     # Stripped: the extractor swallows the blank line that separates a step from the next block, so
     # a copy at the end of a job differs from one in the middle by trailing whitespace alone.
     assert len({copy.strip() for copy in copies}) == 1, "the copies have drifted apart"
@@ -645,6 +888,26 @@ def test_the_expected_tag_job_manifest_names_every_ci_job() -> None:
     )
     in_ci = {job for workflow, job in expected if workflow == "CI"}
     assert set(jobs(uncommented(CI))) <= in_ci, f"missing from the manifest: {set(jobs(uncommented(CI))) - in_ci}"
+    in_artifacts = {job for workflow, job in expected if workflow == "Build artifacts"}
+    assert in_artifacts == {
+        "sdist (+ the wheel built from it)",
+        "wheel linux-x86_64",
+        "wheel macos-arm64",
+        "wheel windows-x86_64",
+        "PyPI release manifest",
+    }
+
+
+def test_the_release_day_runbook_checks_preapproval_jobs_before_approval_and_publish_afterward() -> None:
+    """The environment-gated publish job cannot be its own precondition."""
+    contributing = CONTRIBUTING.read_text(encoding="utf-8")
+    runbook = contributing[contributing.index("## First PyPI release day") :]
+
+    preapproval_check = runbook.index("python scripts/check_tag_jobs.py")
+    approval = runbook.index("Approve the `pypi` environment")
+    postupload_check = runbook.index("--postupload")
+    downloaded_file_check = runbook.index("python scripts/check_release_manifest.py")
+    assert preapproval_check < approval < postupload_check < downloaded_file_check
 
 
 # ---------------------------------------------------------------------------------------------

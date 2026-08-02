@@ -231,10 +231,9 @@ pub(crate) fn shipping_codes() -> String {
 /// test compares them byte for byte.
 ///
 /// `status` is a `&'static str` and not an enum on purpose, against `type-no-stringly`: it is a
-/// *label*, not a decision anything branches on — nothing in this crate reads it, three documents
-/// render it, and `CONTRIBUTING.md`'s release-day checklist flips every one of them from
-/// `Implemented` to `Released` on publication day. An enum would turn that one-word edit into a
-/// variant rename plus a `match`, and would still not stop the label being wrong.
+/// *label*, not a decision anything branches on — nothing in this crate reads it, and three
+/// documents render it. An enum would turn a label edit into a variant rename plus a `match`, and
+/// would still not stop the label being wrong.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct Documented {
@@ -265,18 +264,18 @@ pub const CATALOGUE: [Documented; 4] = [
     Documented {
         code: "TPX001",
         description: "A comment run longer than its word limit",
-        status: "Implemented",
+        status: "Released",
     },
     Documented {
         code: "TPX002",
         description: "A docstring longer than its word limit",
-        status: "Implemented",
+        status: "Released",
     },
     Documented {
         code: "TPX003",
         description: "One explanation repeated across comments and docstrings, reported once with \
                       every place it appears",
-        status: "Implemented",
+        status: "Released",
     },
     Documented {
         code: "TPX004",
@@ -707,7 +706,7 @@ mod tests {
                 documented.code,
                 "the catalogue and the rule registry disagree about the codes, in order"
             );
-            assert_eq!(documented.status, "Implemented");
+            assert_eq!(documented.status, "Released");
         }
 
         // Codes and statuses lining up is not enough: swapping the TPX001 and TPX002 *descriptions*
