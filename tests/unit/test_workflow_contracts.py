@@ -613,7 +613,7 @@ def test_the_release_day_readme_no_longer_claims_the_project_is_unpublished() ->
     readme = README.read_text(encoding="utf-8")
 
     assert "img.shields.io/pypi/v/tooprolix" in readme
-    assert "img.shields.io/pypi/pyversions/tooprolix" in readme
+    assert "img.shields.io/python/required-version-toml" in readme
     assert "status-pre--release" not in readme
     assert "Publication is still gated by labelled-corpus validation" not in readme
 

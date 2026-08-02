@@ -89,8 +89,23 @@ lost, only folded.
 
 ## Output channels and ordering
 
-Findings go to **stdout** and diagnostics to **stderr**, sorted by address and byte-identical between
-runs. Piping stdout somewhere never loses a warning, and never mixes one into the data.
+Findings and their final summary go to **stdout**; diagnostics go to **stderr**. Finding lines are
+sorted by address and byte-identical between runs. Piping stdout somewhere never loses a warning,
+and never mixes one into the data.
+
+A complete non-clean run ends with the total and each non-zero code count, in code order:
+
+```text
+Found 3 findings (TPX001: 1, TPX002: 1, TPX003: 1).
+```
+
+An incomplete run carries its skipped count in that final stdout line as well as keeping each
+detailed reason on stderr:
+
+```text
+Found 1 findings (TPX001: 1); check incomplete: 1 file skipped.
+No findings; check incomplete: 1 file skipped.
+```
 
 ## Clean output and colour
 
@@ -103,8 +118,8 @@ All checks passed!
 
 Green on a terminal, plain everywhere else — in a pipe, a file, or with `NO_COLOR` set to anything
 other than an empty string. It is printed **only** when the tree was read whole and the exit code is
-0: a run that could not read part of the tree exits 1 and stays quiet, because the sentence would be
-claiming a completeness the run does not have. `--format json` never prints it.
+0. A run that could not read part of the tree exits 1 and prints the explicit incomplete summary
+above, never this success sentence. `--format json` never prints either text summary.
 
 ## Exit codes
 
@@ -158,7 +173,8 @@ whole document, or use the text format for streaming.
 ### Symlinked sources
 
 A `*.py` symlink is not followed. It is reported as skipped, which makes the document incomplete and
-the run exit 1:
+the run exit 1. With no reachable findings, stdout is `No findings; check incomplete: 1 file
+skipped.` and stderr carries the detail:
 
 ```console
 warning: 1 file(s) skipped:
@@ -172,9 +188,9 @@ file, not a claim about a tree.
 
 `--format json` writes one versioned document, including on a clean run, so a consumer never has to
 tell an empty result from a crash. Exit 1 does not distinguish "the prose is bad" from "the
-measurement is incomplete", so this is the only channel that carries completeness — all five keys are
-present on **every** document, `schema_version` is `"2"`, and a v1 consumer fails loudly on it rather
-than silently reading a partial result as a whole one:
+measurement is incomplete", so the document carries machine-readable completeness. All five keys
+are present on **every** document, `schema_version` is `"2"`, and a v1 consumer fails loudly on it
+rather than silently reading a partial result as a whole one:
 
 ```json
 {

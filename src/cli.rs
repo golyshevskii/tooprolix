@@ -179,7 +179,7 @@ Arguments:
             `-` is read as an option, so write it as `./-name.py`.
 
 Options:
-  --format  `text` (default) writes one line per finding to stdout.
+  --format  `text` (default) writes one line per finding and a final summary to stdout.
             `json` writes a versioned document: {\"schema_version\", \"complete\",
             \"skipped\", \"excluded\", \"findings\"}, including on a clean run. All
             five are always present. Giving it twice is an error, not last-wins.
@@ -679,27 +679,27 @@ pub fn execute<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<ExitSta
         ExitStatus::Incomplete
     };
 
-    // The empty case is written in JSON and not in text, and that asymmetry is the point. A human
-    // reading a clean run wants silence; a consumer parsing stdout wants a document, and a
-    // successful run that emits zero bytes is a parse error at the far end that looks exactly like
-    // a crash.
+    // Report refusals before stdout. A consumer may close stdout deliberately, and `emit` then
+    // returns early through the clean BrokenPipe path; the skipped filename and reason must still
+    // reach stderr for both partial shapes and both formats.
+    report_skipped(&skipped, &config);
+
+    // JSON is always a document. Text is findings plus a human aggregate, except that a complete
+    // clean run keeps its established success line below.
     match format {
         Format::Text => {
-            // One lock for the whole list, and the `?` inside stops at the first failed write
-            // rather than formatting the rest of a report that is not going anywhere.
+            // One lock for the findings and their aggregate. The `?` inside stops at the first
+            // failed write rather than formatting the rest of a report that is not going anywhere.
             emit(|out| {
                 for finding in &findings {
                     writeln!(out, "{finding}")?;
                 }
-                Ok(())
+                write_text_summary(out, &findings, &skipped)
             })?;
             // Gated on the OUTCOME, not on `findings.is_empty()`. `Success` is the only variant
             // that reports 0 and it is unreachable while anything was skipped, so this one
             // condition carries both halves of the rule — "no findings" and "the tree was read
-            // whole" — and cannot drift from the exit code, because it *is* the exit code. A
-            // partial run with nothing to report is `Incomplete`: exit 1, and silence here. The
-            // line would otherwise assert a completeness the run does not have, which is the
-            // outcome the whole graceful contract exists to prevent.
+            // whole" — and cannot drift from the exit code, because it *is* the exit code.
             if matches!(status, ExitStatus::Success) {
                 success_line()?;
             }
@@ -730,11 +730,51 @@ pub fn execute<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<ExitSta
         }
     }
 
-    // After the findings, and on stderr in BOTH formats: a document on stdout still needs its
-    // diagnostics somewhere a `| jq` does not eat them, and every other warning in this file is
-    // already there.
-    report_skipped(&skipped, &config);
     Ok(status)
+}
+
+/// The final human-readable line for a non-clean run.
+///
+/// # Errors
+///
+/// Returns the first stdout write error so [`emit`] can preserve its closed-pipe/error contract.
+fn write_text_summary(
+    out: &mut dyn Write,
+    findings: &[Finding],
+    skipped: &[Skipped],
+) -> std::io::Result<()> {
+    if !findings.is_empty() {
+        write!(out, "Found {} findings (", findings.len())?;
+        let mut separator = "";
+        for rule in Rule::ALL {
+            let count = findings
+                .iter()
+                .filter(|finding| finding.code == rule)
+                .count();
+            if count > 0 {
+                write!(out, "{separator}{}: {count}", rule.code())?;
+                separator = ", ";
+            }
+        }
+        if skipped.is_empty() {
+            writeln!(out, ").")?;
+        } else {
+            writeln!(
+                out,
+                "); check incomplete: {} file{} skipped.",
+                skipped.len(),
+                if skipped.len() == 1 { "" } else { "s" }
+            )?;
+        }
+    } else if !skipped.is_empty() {
+        writeln!(
+            out,
+            "No findings; check incomplete: {} file{} skipped.",
+            skipped.len(),
+            if skipped.len() == 1 { "" } else { "s" }
+        )?;
+    }
+    Ok(())
 }
 
 /// What a run that read the whole tree and found nothing says.
