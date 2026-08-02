@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0](https://github.com/golyshevskii/tooprolix/compare/v0.4.8...v0.5.0) - 2026-08-02
+
+### Added
+
+- *(config)* [**breaking**] give each exclude spelling the depth it names, and refuse a leading / ([#54](https://github.com/golyshevskii/tooprolix/pull/54))
+
 ## [0.4.8](https://github.com/golyshevskii/tooprolix/compare/v0.4.7...v0.4.8) - 2026-08-01
 
 ### Other
