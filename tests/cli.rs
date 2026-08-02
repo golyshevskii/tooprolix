@@ -1497,6 +1497,48 @@ fn exclude_means_the_same_thing_from_a_subdirectory_as_from_the_project_root() {
     );
 }
 
+/// The anchor `./x` emits is relative to the CONFIGURATION FILE, not to wherever the walk started.
+///
+/// The sibling test above uses `pkg/generated`, whose internal `/` passes through normalisation
+/// untouched, so it never exercises the leading `/` that `./x` and `x/` now produce. This is the
+/// invariant that breaks first if `exclude_matcher`'s base is ever rebased onto the walk root:
+/// `./generated` would then start eating `pkg/generated` the moment CI ran from `pkg`.
+#[test]
+fn an_anchored_entry_stays_anchored_to_the_configuration_file_from_a_subdirectory() {
+    // Arrange — the same name at the root and inside the package, so a rebased anchor is visible.
+    let scratch = Scratch::new("exclude-anchor-subdir");
+    scratch.write("generated/top.py", &long_comment("top level codegen"));
+    scratch.write("pkg/generated/g.py", &long_comment("package codegen"));
+    scratch.write("pkg/keep.py", &long_comment("retry policy"));
+
+    for entry in ["./generated", "generated/"] {
+        scratch.write(
+            "pyproject.toml",
+            &format!("[tool.tooprolix]\nexclude = [\"{entry}\"]\n"),
+        );
+
+        // Act — the same rule, reached from the root and from inside the package.
+        let from_root = scratch.check(&[]);
+        let from_pkg = scratch.check_from("pkg", ".");
+
+        // Assert — from the root the anchor selects the top-level one and nothing deeper.
+        assert!(
+            !stdout_of(&from_root).contains("top.py")
+                && stdout_of(&from_root).contains("g.py")
+                && stdout_of(&from_root).contains("keep.py"),
+            "`{entry}` from the root did not select exactly the top-level `generated`: {}",
+            stdout_of(&from_root)
+        );
+        // ... and starting the walk BELOW the base does not re-anchor it there.
+        assert!(
+            stdout_of(&from_pkg).contains("g.py") && stdout_of(&from_pkg).contains("keep.py"),
+            "`{entry}` swallowed `pkg/generated` when the walk started at `pkg`, so the anchor was \
+             resolved against the walk root instead of the configuration file: {}",
+            stdout_of(&from_pkg)
+        );
+    }
+}
+
 /// AC3 — `exclude` is a second layer over `.gitignore`, not a replacement for it.
 ///
 /// The one-line version of the defect this forbids: switching the walk over to an "include only
@@ -1965,46 +2007,176 @@ fn removing_something_that_was_never_measurable_is_not_an_incomplete_measurement
     );
 }
 
-/// `./vendor` and `vendor` are one rule, and so is every other spelling of the same path.
+/// A bare name matches at any depth; a spelling that carries a `/` names the root directory only.
 ///
-/// This overturns a residual: "an entry that matches nothing is silent" was accepted because a
-/// shared configuration legitimately names paths absent from any one repository. `./vendor` is not
-/// an absent path — it is a *present* one in a natural spelling, and the task pins ruff semantics,
-/// where it works. Unnormalised it is a glob for a directory literally named `.`, which matches
-/// nothing, so the run fails on a tree the user believed they had excluded.
+/// Measured against ruff 0.16.0, which is the contract: `vendor` excludes both depths, `vendor/`
+/// and `./vendor` exclude only the directory beside the configuration file. The old version of this
+/// test had one root `vendor/` and so could not tell those two apart — it asserted every spelling
+/// was one rule, which the measurement disproves.
 ///
-/// The whole class is swept rather than the one instance that was reported, because `./x` was
-/// found by someone typing it and the next one will be found the same way.
+/// Separator noise still collapses (`.//x`, `././x`), because that was found by somebody typing it.
 #[test]
-fn every_spelling_of_the_same_relative_path_excludes_the_same_tree() {
-    // Arrange — an unparsable file, so a failed exclusion is exit 2 and cannot be mistaken for a
-    // clean run that happened to find nothing.
-    let scratch = Scratch::new("exclude-spellings");
-    scratch.write("broken/parser_fixture.py", "def f(:\n    pass\n");
-    scratch.write("app.py", "\"\"\"A short docstring.\"\"\"\n");
+fn each_exclude_spelling_selects_the_depth_it_names() {
+    // Arrange — the same directory name at the root and one level down, one TPX001 in each, so the
+    // two depths are distinguishable in one run.
+    let scratch = Scratch::new("exclude-depth");
+    scratch.write("vendor/root_only.py", &long_comment("root retry policy"));
+    scratch.write(
+        "sub/vendor/nested_too.py",
+        &long_comment("nested retry policy"),
+    );
 
-    for spelling in [
-        "broken",
-        "./broken",
-        ".//broken",
-        "././broken",
-        "broken/",
-        "./broken/",
-        "brok*n",
+    // Act — first WITHOUT the key, because half the table below proves exclusion by ABSENCE. On a
+    // build where `long_comment` stopped producing a finding, every `root_excluded == true` row
+    // would pass while the matcher did nothing.
+    let baseline = scratch.check(&[]);
+    for fixture in ["root_only.py", "nested_too.py"] {
+        assert!(
+            stdout_of(&baseline).contains(fixture),
+            "`{fixture}` is not reported even with no `exclude` at all, so every absence asserted \
+             below proves nothing: {:?}",
+            stdout_of(&baseline)
+        );
+    }
+
+    for (entry, root_excluded, nested_excluded) in [
+        ("vendor", true, true),
+        ("vend*r", true, true),
+        ("vendor/", true, false),
+        ("./vendor", true, false),
+        (".//vendor", true, false),
+        ("././vendor", true, false),
+        ("./vendor/", true, false),
     ] {
         scratch.write(
             "pyproject.toml",
-            &format!("[tool.tooprolix]\nexclude = [\"{spelling}\"]\n"),
+            &format!("[tool.tooprolix]\nexclude = [\"{entry}\"]\n"),
+        );
+
+        let output = scratch.check(&[]);
+
+        assert_ne!(
+            output.status.code(),
+            Some(2),
+            "`{entry}` is a supported spelling and was refused: {:?}",
+            stderr_of(&output)
+        );
+        assert_eq!(
+            !stdout_of(&output).contains("root_only.py"),
+            root_excluded,
+            "`{entry}`: the ROOT `vendor` should{} have been excluded: {:?}",
+            if root_excluded { "" } else { " NOT" },
+            stdout_of(&output)
+        );
+        assert_eq!(
+            !stdout_of(&output).contains("nested_too.py"),
+            nested_excluded,
+            "`{entry}`: the NESTED `sub/vendor` should{} have been excluded: {:?}",
+            if nested_excluded { "" } else { " NOT" },
+            stdout_of(&output)
+        );
+    }
+}
+
+/// A leading `/` is refused, and the message hands back the spelling that works.
+///
+/// It reads as "anchor to the project root", and ruff 0.16.0 gives it two opposite meanings
+/// depending on the shape — measured, `/vendor` excludes nothing there and `/*.py` excludes
+/// everything — so there is no one reading to copy and the class is refused. It is a separate test
+/// from the `..` table because it is a different verdict: `..` can never match anything, `/vendor`
+/// matches fine and is refused on contract grounds, so it carries assertions the `..` entries
+/// do not have.
+#[test]
+fn a_leading_slash_is_refused_and_names_the_spelling_that_works() {
+    let scratch = Scratch::new("exclude-leading-slash");
+    scratch.write("vendor/root_only.py", &long_comment("root retry policy"));
+
+    // The advice is the user's OWN entry minus the slash, never a string rebuilt from its parts —
+    // a rebuilt one dropped the trailing `/`, and `./generated.py` is a WIDER rule than
+    // `./generated.py/`: it also eats the file of that name, silently shrinking the denominator.
+    for (entry, advice) in [
+        ("/vendor", "./vendor"),
+        ("/vendor/", "./vendor/"),
+        ("/./vendor", "./vendor"),
+        ("/vendor/generated", "./vendor/generated"),
+    ] {
+        scratch.write(
+            "pyproject.toml",
+            &format!("[tool.tooprolix]\nexclude = [\"{entry}\"]\n"),
         );
 
         let output = scratch.check(&[]);
 
         assert_eq!(
             output.status.code(),
-            Some(0),
-            "`{spelling}` silently excluded nothing, so the unparsable file still failed the \
-             run: {:?}",
-            stderr_of(&output)
+            Some(2),
+            "`{entry}` anchors in a way ruff reads inconsistently and was accepted anyway: \
+             {output:?}"
+        );
+        let stderr = stderr_of(&output);
+        assert!(
+            stderr.contains("exclude") && stderr.contains("pyproject.toml"),
+            "`{entry}`: the message names neither the key nor the file: {stderr:?}"
+        );
+        // The whole sentence AND the end of the message. `contains("./vendor")` was also satisfied
+        // by `././vendor`, so the double-hop row could not fail when the advice regressed to
+        // exactly that; `ends_with` additionally refuses a second clause appended after the advice,
+        // which is how the false any-depth promise got in. An assertion a longer wrong string still
+        // passes is not an assertion.
+        assert!(
+            stderr
+                .trim_end()
+                .ends_with(&format!("write `{advice}` instead")),
+            "`{entry}`: the message does not end by advising exactly `{advice}`, the spelling that \
+             does what the user meant: {stderr:?}"
+        );
+        // `vendor/generated` excludes only the root one — a glob carrying a `/` is matched as a
+        // whole base-relative path, so an any-depth clause is false for every multi-component name.
+        assert!(
+            !stderr.contains("any depth"),
+            "`{entry}`: the message promises an any-depth spelling that does not match at any \
+             depth: {stderr:?}"
+        );
+    }
+}
+
+/// Advice is only given when it can be taken: a rejected entry is never offered a rejected fix.
+///
+/// `/!vendor` trips the leading-slash refusal first, and the two spellings that refusal would
+/// normally recommend — `./!vendor` and `!vendor` — are both refused a few lines later by the
+/// negation guard. Sending the user from one exit 2 to a different exit 2 is worse than saying
+/// nothing, so the concrete advice is withheld for exactly the names the later guards reject.
+#[test]
+fn a_refusal_never_recommends_a_spelling_that_is_also_refused() {
+    let scratch = Scratch::new("exclude-unhelpable");
+    scratch.write("app.py", &long_comment("retry policy"));
+
+    // The premise: both spellings the message would otherwise name really are refused.
+    for rejected in ["./!vendor", "!vendor"] {
+        scratch.write(
+            "pyproject.toml",
+            &format!("[tool.tooprolix]\nexclude = [\"{rejected}\"]\n"),
+        );
+        assert_eq!(
+            scratch.check(&[]).status.code(),
+            Some(2),
+            "`{rejected}` is accepted, so this test no longer pins anything"
+        );
+    }
+
+    scratch.write(
+        "pyproject.toml",
+        "[tool.tooprolix]\nexclude = [\"/!vendor\"]\n",
+    );
+    let output = scratch.check(&[]);
+    let stderr = stderr_of(&output);
+
+    assert_eq!(output.status.code(), Some(2), "{output:?}");
+    for promise in ["./!vendor", "`!vendor`"] {
+        assert!(
+            !stderr.contains(promise),
+            "the refusal tells the user to write `{promise}`, which the next guard also refuses — \
+             one exit 2 handing off to another: {stderr:?}"
         );
     }
 }

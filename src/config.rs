@@ -34,10 +34,11 @@
 //! # Where the file is looked for, and the answer is one answer
 //!
 //! **The nearest `pyproject.toml` at or above the checked path**, searching upwards to the
-//! filesystem root, first match wins. Not "the current directory": with a cwd rule,
-//! `tooprolix check src/api.py` and `cd src && tooprolix check api.py` would apply different
-//! limits to the same file, and a CI job that changed directory would silently change the
-//! thresholds it was enforcing.
+//! filesystem root, first match wins — at most one, and none at all if the search runs out, which
+//! is the ordinary unconfigured case and applies the defaults. Not "the current directory": with a
+//! cwd rule, `tooprolix check src/api.py` and `cd src && tooprolix check api.py` would apply
+//! different limits to the same file, and a CI job that changed directory would silently change
+//! the thresholds it was enforcing.
 //!
 //! **The path is canonicalised before anything is compared or walked.** `..` components and
 //! symlinks defeat every lexical answer to "which directory is this in", and that is a recorded
@@ -56,6 +57,7 @@
 //! | a key the tool does not know | **exit 2**, naming the key | a key that does nothing looks exactly like a key that works, which is the whole reason `ty` rejects unknown keys too |
 //! | a code in `ignore` that no rule answers to | **exit 2**, naming the code | a gate switched off by a typo. Fatal here and merely loud in a marker, because this file belongs to the tool and there is one of it |
 //! | an `exclude` entry that is empty, blank, starts with `!`, or is not a glob | **exit 2**, naming the entry | measured against the walker: `""` and `"   "` build a matcher that excludes **nothing**, and `"!vendor"` cancels the exclusion into a no-op. All three look exactly like a rule that works, and the second class silently un-excludes the tree the project meant to put out of scope |
+//! | an `exclude` entry starting with `/` | **exit 2**, naming `./x` — the entry as written, minus the slash — unless a later guard would refuse that too, in which case it only says to remove it | measured against ruff 0.16.0, a leading `/` is not one behaviour there but two opposite ones: `/vendor` excludes NOTHING, `/*.py` and `/**/*.py` exclude EVERYTHING. There is no single interpretation to copy, so the class is refused rather than guessed at |
 //! | a limit that is not an integer, or is negative | **exit 2**, naming the key and what was found | `docstring-max-volume = "200"` silently falling back to the default is the same defect one type further out |
 //! | a limit of `0` | **accepted**: every block of that kind is a finding | `0` is the literal meaning of the key — "no words allowed" — and the core is already fail-closed there. `ignore` is how a rule is switched off; a limit that quietly meant "off" would be the trap |
 //! | `ignore` naming every shipping code | **accepted**, and [`crate::cli`] prints a diagnostic | the exit code is honestly 0 — there really are no findings — but a run that measured nothing must not be silent about it |
@@ -422,7 +424,7 @@ fn read_ignore(value: &toml::Value, path: &Path) -> Result<Vec<Rule>, Error> {
 ///
 /// What is **not** allowed to be silent is an entry naming a path that is right there, in a
 /// spelling the matcher does not recognise. `./broken` was exactly that, and [`normalise_glob`]
-/// now collapses it; anything that provably cannot match is refused outright.
+/// now gives it the anchored form; anything that provably cannot match is refused outright.
 ///
 /// # Two residuals, recorded so they are re-examined rather than rediscovered
 ///
@@ -486,7 +488,10 @@ fn read_exclude(value: &toml::Value, path: &Path) -> Result<Vec<String>, Error> 
             key: "exclude".to_owned(),
             problem: format!("`{raw}` {problem}"),
         })?;
-        if normalised.starts_with('!') {
+        // Read past the anchor `normalise_glob` may have prepended, not byte zero. Measured: once
+        // `./x` started emitting `/x`, a byte-zero guard let `./!vendor` through as `/!vendor` —
+        // the third time this project has read position zero of the wrong representation.
+        if normalised.trim_start_matches('/').starts_with('!') {
             return Err(Error::BadValue {
                 path: path.to_path_buf(),
                 key: "exclude".to_owned(),
@@ -523,51 +528,57 @@ fn read_exclude(value: &toml::Value, path: &Path) -> Result<Vec<String>, Error> 
                 ),
             });
         }
+        // Compile it HERE, where `raw` is still in hand. `exclude_matcher` sees only the normalised
+        // form, so its message echoed `/a[` at a user who wrote `./a[` — a string they never typed
+        // and one the leading-slash guard above would itself refuse. Every message in this function
+        // quotes the entry as written; this was the one that had stopped.
+        OverrideBuilder::new(".")
+            .add(&format!("!{normalised}"))
+            .map_err(|error| Error::BadValue {
+                path: path.to_path_buf(),
+                key: "exclude".to_owned(),
+                problem: format!("`{raw}` is not a valid glob: {error}"),
+            })?;
         excluded.push(normalised);
     }
 
     Ok(excluded)
 }
 
-/// Collapses the redundant spellings of one relative path, or says why the entry can never match.
+/// Turns an `exclude` entry into the one glob that says what it means, or refuses it.
 ///
-/// `./broken` and `broken` are the same intent, and the underlying matcher does not think so: an
-/// unnormalised `./broken` is a glob for a directory literally named `.`, so it silently matches
-/// nothing and the tree the user believed they had excluded fails the run. Measured, on a tree
-/// where `broken/` exists: `exclude = ["broken"]` exits 0 and `exclude = ["./broken"]` exits 2.
+/// Separator noise carries no meaning and collapses (`.//x`, `././x`, `x/./y`, `x//y`); the depth an
+/// entry names does carry meaning and survives. Left raw, `./broken` is a glob for a directory
+/// literally called `.` and matches nothing at all.
 ///
-/// Every separator-level spelling of the same path therefore collapses — `./x`, `.//x`, `././x`,
-/// `x/./y`, `x//y` — because the one that was reported was found by somebody typing it, and the
-/// next one will be found the same way.
+/// # What each spelling means, measured against ruff 0.16.0
 ///
-/// # What is preserved, and what is refused
-///
-/// * A **leading `/`** is kept. In gitignore syntax it does not mean "absolute", it *anchors* the
-///   pattern to the base directory, and that is the only way to say "the top-level `vendor`, not
-///   every `vendor` at any depth". Dropping it would delete a working, ruff-compatible capability
-///   in order to fix a spelling problem. The consequence, stated rather than left as folklore: a
-///   hand-pasted absolute path such as `/Users/me/proj/vendor` is read as an anchored *relative*
-///   pattern and matches nothing on a tree that has no `Users/` in it. That is the genuinely
-///   absent-path case, which stays silent for the reason [`read_exclude`] gives.
-/// * A **trailing `/`** is kept. It means "directory only" and dropping it would widen the rule to
-///   files of the same name — a silent change of meaning, which is the thing this function exists
-///   to prevent.
-/// * A **`..` component** is refused. It walks out of the tree the base names, so nothing the walk
-///   can ever yield will match it — measured as a no-op. That is the same class as the empty glob
-///   and the negated one: a rule that reads as working and is not.
-/// * An entry that **normalises away to nothing** (`.`, `./`, `/`) is refused, and this one is
-///   load-bearing rather than tidy: it would otherwise reach [`exclude_matcher`] as the bare `!`,
-///   which was measured to exclude the **entire tree**. Normalising without this guard would
-///   introduce the exact fail-open the empty-string check already closes.
-fn normalise_glob(glob: &str) -> Result<String, &'static str> {
+/// * `x` matches **at any depth**, and stays a bare name.
+/// * `x/` and `./x` select **only the entry beside the configuration file**, and are emitted with a
+///   leading `/`. That is not cosmetic: gitignore anchors a pattern whose `/` is not merely
+///   trailing, so the leading slash is what turns `vendor/` from "every `vendor` at any depth" into
+///   "the root one". A trailing `/` is still kept on top of it, because it means "directory only".
+/// * `/x` is **refused**. Ruff's handling of it depends on the shape — `/vendor` excludes nothing,
+///   `/*.py` excludes everything — so there is no one meaning to copy, and guessing would silently
+///   disagree with ruff either way.
+/// * A `..` component is refused: it walks out of the tree the base names, so nothing the walk can
+///   yield will match it — measured as a no-op.
+/// * An entry that normalises away to nothing (`.`, `./`, `/`) is refused. This one is load-bearing:
+///   it would otherwise reach [`exclude_matcher`] as the bare `!`, measured to exclude the **entire
+///   tree**.
+fn normalise_glob(glob: &str) -> Result<String, String> {
+    // Anchoring is decided on the raw spelling, and only here, so there is one representation to
+    // reason about: a `.` hop before any real component, or a trailing `/`.
+    let mut leading_dot_hop = false;
     let mut segments = Vec::new();
     for segment in glob.split('/') {
         match segment {
             // A separator run or a `.` hop: no path component, so nothing to keep.
-            "" | "." => {}
+            "" => {}
+            "." => leading_dot_hop |= segments.is_empty(),
             ".." => {
                 return Err(
-                    "escapes the directory of the configuration file with `..`, so no path this walk can reach will ever match it",
+                    "escapes the directory of the configuration file with `..`, so no path this walk can reach will ever match it".to_owned(),
                 );
             }
             component => segments.push(component),
@@ -575,11 +586,36 @@ fn normalise_glob(glob: &str) -> Result<String, &'static str> {
     }
 
     if segments.is_empty() {
-        return Err("names no path at all; an empty glob would exclude the whole tree");
+        return Err("names no path at all; an empty glob would exclude the whole tree".to_owned());
+    }
+    // Refused rather than mapped onto `./x`. Measured with ruff 0.16.0: a leading `/` is not one
+    // behaviour there but two opposite ones — `/vendor` excludes NOTHING, `/*.py` and `/**/*.py`
+    // exclude EVERYTHING. Refusing the class beats picking one of them and being silently wrong.
+    if glob.starts_with('/') {
+        // The suggestion is the user's own entry with the slash trimmed off, never a string rebuilt
+        // from `segments`: rebuilding dropped the trailing `/`, and `./x` is a WIDER rule than
+        // `./x/` — it eats the file of that name too, which is the silent over-exclusion this whole
+        // function exists to prevent. No any-depth alternative is offered, because a glob carrying a
+        // `/` is matched as one base-relative path and never matches at any depth.
+        let suggestion = glob.trim_start_matches('/').trim_start_matches("./");
+        // Name the fix only when the fix is takeable. `read_exclude` refuses a `!` prefix and any
+        // `\` a few lines later, so recommending `./!vendor` would hand one exit 2 off to another.
+        // ponytail: those two are the whole set of later guards, 30 lines away in the same file; if
+        // a third arrives, this is the line it has to be added to. A malformed glob is deliberately
+        // NOT covered — the compiler's own message names that defect better than a predicate here.
+        let advice = if suggestion.starts_with('!') || suggestion.contains('\\') {
+            "remove it".to_owned()
+        } else {
+            format!("write `./{suggestion}` instead")
+        };
+        return Err(format!(
+            "is anchored with a leading `/`, which this tool does not accept because ruff's own \
+             reading of it depends on the shape; {advice}"
+        ));
     }
 
-    let mut normalised = String::with_capacity(glob.len());
-    if glob.starts_with('/') {
+    let mut normalised = String::with_capacity(glob.len() + 1);
+    if leading_dot_hop || glob.ends_with('/') {
         normalised.push('/');
     }
     normalised.push_str(&segments.join("/"));
@@ -591,10 +627,14 @@ fn normalise_glob(glob: &str) -> Result<String, &'static str> {
 
 /// The walk filter for [`Config::exclude`], with the configuration file's directory as its base.
 ///
-/// **The base is the configuration file's own directory** — ruff's rule — and not the working
-/// directory and not the walk root. One project, one file, one meaning for `vendor/`, whether CI
-/// runs `tooprolix check .` at the root or `tooprolix check .` inside a package. [`crate::cli`] is
-/// what makes that reachable, by matching against paths rooted at the same canonical tree.
+/// **The base is the configuration file's own directory** and not the working directory or the walk
+/// root, so `vendor/` means one thing whether CI runs `tooprolix check .` at the root or inside a
+/// package. [`crate::cli`] is what makes that reachable, by matching against paths rooted at the
+/// same canonical tree.
+///
+/// The scope of that claim is exactly [`discover`]: one file, found by walking UP from the checked
+/// path. This is not ruff's per-file hierarchical model — a `pyproject.toml` below the walk root is
+/// never read, so a run started above it applies no `exclude` at all.
 ///
 /// Returns a matcher that is [`Override::is_empty`] when nothing is excluded, which is the signal
 /// [`crate::cli`] uses to keep the untouched walk untouched.
@@ -827,31 +867,27 @@ mod tests {
         );
     }
 
-    /// Redundant spellings collapse; the two separators that carry MEANING survive.
+    /// Separator noise collapses; the spellings that carry a DEPTH become the anchored form.
     ///
-    /// The collapsing half is what `./broken` needed. This test exists for the other half, which
-    /// no end-to-end test can see: a leading `/` anchors the pattern to the base directory and a
-    /// trailing `/` restricts it to directories, so normalising either away would silently widen
-    /// or unanchor the rule — the exact class of change this function was added to prevent. The
-    /// expected strings are written out rather than compared to each other, so a normaliser that
-    /// mangled every case identically could not pass.
+    /// The exact emitted string is what no end-to-end test can see: `./broken` and `broken/` both
+    /// mean the root one, and the only way to say that to gitignore is a leading `/`. Expected
+    /// strings are written out rather than derived, so a normaliser that mangled every case
+    /// identically could not pass.
     #[test]
-    fn normalisation_collapses_redundant_separators_and_keeps_the_meaningful_ones() {
+    fn normalisation_collapses_redundant_separators_and_anchors_the_root_only_spellings() {
         for (written, expected) in [
+            // A bare name, at any depth, and unchanged.
             ("broken", "broken"),
-            ("./broken", "broken"),
-            (".//broken", "broken"),
-            ("././broken", "broken"),
+            ("crates/*/resources", "crates/*/resources"),
             ("a/./b", "a/b"),
             ("a//b", "a/b"),
-            ("crates/*/resources", "crates/*/resources"),
-            // Anchored to the configuration file's directory — not "absolute", and not the same
-            // rule as the unanchored `broken`, which matches at any depth.
-            ("/broken", "/broken"),
-            ("/./broken", "/broken"),
-            // Directory-only, which is a narrower rule than the same name without the slash.
-            ("broken/", "broken/"),
-            ("./broken/", "broken/"),
+            // A `./` hop means the root one, however many separators it is written with.
+            ("./broken", "/broken"),
+            (".//broken", "/broken"),
+            ("././broken", "/broken"),
+            // A trailing `/` means the root one AND directory-only, so both slashes survive.
+            ("broken/", "/broken/"),
+            ("./broken/", "/broken/"),
         ] {
             let config = parse(&format!("[tool.tooprolix]\nexclude = [\"{written}\"]\n"))
                 .unwrap_or_else(|error| panic!("`{written}` was rejected: {error}"));
@@ -947,6 +983,14 @@ mod tests {
                 "[tool.tooprolix]\nexclude = [\"a[\"]\n",
                 "a[",
                 "a glob that does not compile",
+            ),
+            // Every message here echoes what the user WROTE. `./a[` reaches the glob compiler as
+            // the anchored `/a[`, and echoing that hands back a string they never typed — one this
+            // tool refuses at the leading-slash guard, so the advice would be unusable twice over.
+            (
+                "[tool.tooprolix]\nexclude = [\"./a[\"]\n",
+                "./a[",
+                "a malformed glob behind a `./` hop, echoed as written",
             ),
             (
                 "[tool.tooprolix]\nexclude = \"vendor\"\n",

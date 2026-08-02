@@ -153,3 +153,34 @@ in-file annotation, so disabling a rule centrally really disables it.
 `exclude` is a measurement boundary, not a filter on findings: excluded paths are never opened, they
 appear in the JSON document's `excluded` list, and the text output stays silent about them. Excluding
 every measurable file is legal and reported on stderr.
+
+### `exclude` path shapes
+
+At **most one** `pyproject.toml` is used per run: the nearest one at or above the path being
+checked. If the search reaches the filesystem root without finding one, none is read and the
+defaults apply. Every glob in the file that *is* found resolves against that file's own directory,
+not against the working directory — so one rule means the same thing run from the project root and
+run from a package inside it. Configuration is not hierarchical: a `pyproject.toml` that sits
+*below* the checked path is never read, and its `exclude` does not apply to a run started above it.
+
+The shape of the entry decides the depth:
+
+| entry | what it selects |
+|---|---|
+| `vendor` | every `vendor` at any depth |
+| `vendor/` | only the `vendor` **directory** beside this file |
+| `./vendor` | only the `vendor` beside this file, file or directory |
+| `/vendor` | **refused**, exit 2 — write `./vendor` |
+
+Measured against ruff 0.16.0 on a tree holding `vendor/a.py` and `sub/vendor/b.py`: the first three
+rows match it exactly. The fourth is a deliberate divergence, and the reason is that ruff has no one
+behaviour to copy — a leading `/` means opposite things there depending on the shape that follows
+it. Measured on that same tree: `exclude = ["/vendor"]` excludes **nothing**, while
+`exclude = ["/*.py"]` and `exclude = ["/**/*.py"]` exclude **everything**. Picking either reading
+would silently disagree with ruff for the other, so the whole class is refused instead.
+
+The refusal quotes the entry back as written, minus the leading slash, so `/vendor/` is told to
+write `./vendor/` — keeping the trailing slash, which is a narrower rule than `./vendor`. No
+any-depth alternative is suggested: a glob containing a `/` is matched as one complete path relative
+to the configuration file, so `vendor/generated` selects only the root one and never matches at any
+depth.
