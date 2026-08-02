@@ -153,3 +153,20 @@ in-file annotation, so disabling a rule centrally really disables it.
 `exclude` is a measurement boundary, not a filter on findings: excluded paths are never opened, they
 appear in the JSON document's `excluded` list, and the text output stays silent about them. Excluding
 every measurable file is legal and reported on stderr.
+
+### `exclude` path shapes
+
+Globs are resolved against the directory of the `pyproject.toml` they are written in, never the
+working directory. The shape of the entry decides the depth:
+
+| entry | what it selects |
+|---|---|
+| `vendor` | every `vendor` at any depth |
+| `vendor/` | only the `vendor` **directory** beside this file |
+| `./vendor` | only the `vendor` beside this file, file or directory |
+| `/vendor` | **refused**, exit 2 — write `./vendor` or `vendor` |
+
+Measured against ruff 0.16.0 on a tree holding `vendor/a.py` and `sub/vendor/b.py`: the first three
+rows match it exactly. The fourth is where the two tools part company on purpose — ruff excludes
+*nothing* for `/vendor`, so a project that wrote it would get a rule that reads as anchoring and
+silently does nothing. This tool refuses it instead of copying the silence.

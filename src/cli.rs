@@ -233,7 +233,9 @@ Opt out of a rule for the whole project, in pyproject.toml:
 
   `exclude` takes .gitignore-syntax globs, resolved relative to the directory of
   the pyproject.toml they are written in — so one rule means the same thing from
-  the project root and from a package inside it. Matches are never read, so they
+  the project root and from a package inside it. `vendor` matches at any depth;
+  `vendor/` and `./vendor` match only the one beside that file; a leading `/` is
+  refused, because ruff matches nothing for it. Matches are never read, so they
   are neither checked nor able to fail the run; this is how a repository that
   legitimately contains invalid Python (a parser corpus, a fixture tree) can be
   checked at all. It ADDS to .gitignore rather than replacing it, and a path named

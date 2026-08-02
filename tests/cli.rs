@@ -1965,46 +1965,98 @@ fn removing_something_that_was_never_measurable_is_not_an_incomplete_measurement
     );
 }
 
-/// `./vendor` and `vendor` are one rule, and so is every other spelling of the same path.
+/// A bare name matches at any depth; a spelling that carries a `/` names the root directory only.
 ///
-/// This overturns a residual: "an entry that matches nothing is silent" was accepted because a
-/// shared configuration legitimately names paths absent from any one repository. `./vendor` is not
-/// an absent path — it is a *present* one in a natural spelling, and the task pins ruff semantics,
-/// where it works. Unnormalised it is a glob for a directory literally named `.`, which matches
-/// nothing, so the run fails on a tree the user believed they had excluded.
+/// Measured against ruff 0.16.0, which is the contract: `vendor` excludes both depths, `vendor/`
+/// and `./vendor` exclude only the directory beside the configuration file. The old version of this
+/// test had one root `vendor/` and so could not tell those two apart — it asserted every spelling
+/// was one rule, which the measurement disproves.
 ///
-/// The whole class is swept rather than the one instance that was reported, because `./x` was
-/// found by someone typing it and the next one will be found the same way.
+/// Separator noise still collapses (`.//x`, `././x`), because that was found by somebody typing it.
 #[test]
-fn every_spelling_of_the_same_relative_path_excludes_the_same_tree() {
-    // Arrange — an unparsable file, so a failed exclusion is exit 2 and cannot be mistaken for a
-    // clean run that happened to find nothing.
-    let scratch = Scratch::new("exclude-spellings");
-    scratch.write("broken/parser_fixture.py", "def f(:\n    pass\n");
-    scratch.write("app.py", "\"\"\"A short docstring.\"\"\"\n");
+fn each_exclude_spelling_selects_the_depth_it_names() {
+    // Arrange — the same directory name at the root and one level down, one TPX001 in each, so the
+    // two depths are distinguishable in one run.
+    let scratch = Scratch::new("exclude-depth");
+    scratch.write("vendor/root_only.py", &long_comment("root retry policy"));
+    scratch.write(
+        "sub/vendor/nested_too.py",
+        &long_comment("nested retry policy"),
+    );
 
-    for spelling in [
-        "broken",
-        "./broken",
-        ".//broken",
-        "././broken",
-        "broken/",
-        "./broken/",
-        "brok*n",
+    for (entry, root_excluded, nested_excluded) in [
+        ("vendor", true, true),
+        ("vend*r", true, true),
+        ("vendor/", true, false),
+        ("./vendor", true, false),
+        (".//vendor", true, false),
+        ("././vendor", true, false),
+        ("./vendor/", true, false),
     ] {
         scratch.write(
             "pyproject.toml",
-            &format!("[tool.tooprolix]\nexclude = [\"{spelling}\"]\n"),
+            &format!("[tool.tooprolix]\nexclude = [\"{entry}\"]\n"),
+        );
+
+        let output = scratch.check(&[]);
+
+        assert_ne!(
+            output.status.code(),
+            Some(2),
+            "`{entry}` is a supported spelling and was refused: {:?}",
+            stderr_of(&output)
+        );
+        assert_eq!(
+            !stdout_of(&output).contains("root_only.py"),
+            root_excluded,
+            "`{entry}`: the ROOT `vendor` should{} have been excluded: {:?}",
+            if root_excluded { "" } else { " NOT" },
+            stdout_of(&output)
+        );
+        assert_eq!(
+            !stdout_of(&output).contains("nested_too.py"),
+            nested_excluded,
+            "`{entry}`: the NESTED `sub/vendor` should{} have been excluded: {:?}",
+            if nested_excluded { "" } else { " NOT" },
+            stdout_of(&output)
+        );
+    }
+}
+
+/// A leading `/` is refused, and the message hands back the spelling that works.
+///
+/// It reads as "anchor to the project root", and ruff 0.16.0 excludes NEITHER depth for it —
+/// keeping it would ship a private extension that quietly disagrees with the tool this one is
+/// compared against. It is a separate test from the `..` table because it is a different verdict:
+/// `..` can never match anything, `/vendor` matches fine and is refused on contract grounds, so it
+/// carries an extra assertion the `..` entries do not have.
+#[test]
+fn a_leading_slash_is_refused_and_names_the_spelling_that_works() {
+    let scratch = Scratch::new("exclude-leading-slash");
+    scratch.write("vendor/root_only.py", &long_comment("root retry policy"));
+
+    for entry in ["/vendor", "/vendor/", "/./vendor"] {
+        scratch.write(
+            "pyproject.toml",
+            &format!("[tool.tooprolix]\nexclude = [\"{entry}\"]\n"),
         );
 
         let output = scratch.check(&[]);
 
         assert_eq!(
             output.status.code(),
-            Some(0),
-            "`{spelling}` silently excluded nothing, so the unparsable file still failed the \
-             run: {:?}",
-            stderr_of(&output)
+            Some(2),
+            "`{entry}` anchors in a way ruff does not honour and was accepted anyway: {output:?}"
+        );
+        let stderr = stderr_of(&output);
+        assert!(
+            stderr.contains("exclude") && stderr.contains("pyproject.toml"),
+            "`{entry}`: the message names neither the key nor the file: {stderr:?}"
+        );
+        assert!(
+            stderr.contains("./vendor"),
+            "`{entry}`: the message refuses without naming `./vendor`, the spelling that does what \
+             the user meant: {stderr:?}"
         );
     }
 }
