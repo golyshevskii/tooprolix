@@ -9,9 +9,9 @@ For output format, exit codes, and the JSON schema, see [cli-contract.md](cli-co
 
 | Code | Detects | Status |
 | --- | --- | --- |
-| `TPX001` | A comment run longer than its word limit | Implemented |
-| `TPX002` | A docstring longer than its word limit | Implemented |
-| `TPX003` | One explanation repeated across comments and docstrings, reported once with every place it appears | Implemented |
+| `TPX001` | A comment run longer than its word limit | Released |
+| `TPX002` | A docstring longer than its word limit | Released |
+| `TPX003` | One explanation repeated across comments and docstrings, reported once with every place it appears | Released |
 | `TPX004` | Comments that restate the following code | Reserved |
 
 `tooprolix --rules` prints these same three columns. The CLI renders them from one array in

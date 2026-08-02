@@ -11,9 +11,9 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/status-pre--release-CCCCCC.svg?labelColor=12130f" alt="Pre-release">
+  <img src="https://img.shields.io/pypi/v/tooprolix?color=CCCCCC&labelColor=12130f" alt="PyPI">
   <img src="https://img.shields.io/badge/Rust-powered-CCCCCC.svg?logo=rust&labelColor=12130f" alt="Powered by Rust">
-  <img src="https://img.shields.io/badge/Python->=3.11-CCCCCC.svg?logo=python&labelColor=12130f" alt="Python">
+  <img src="https://img.shields.io/pypi/pyversions/tooprolix?color=CCCCCC&logo=python&labelColor=12130f" alt="Python">
 </p>
 
 Coding agents over-explain. Comments grow into essays, docstrings restate the code, and the same
@@ -53,9 +53,9 @@ whole **never** exits 0. See the [CLI contract](docs/cli-contract.md).
 
 | Code | Detects | Status |
 | --- | --- | --- |
-| `TPX001` | A comment run longer than its word limit | Implemented |
-| `TPX002` | A docstring longer than its word limit | Implemented |
-| `TPX003` | One explanation repeated across comments and docstrings, reported once with every place it appears | Implemented |
+| `TPX001` | A comment run longer than its word limit | Released |
+| `TPX002` | A docstring longer than its word limit | Released |
+| `TPX003` | One explanation repeated across comments and docstrings, reported once with every place it appears | Released |
 | `TPX004` | Comments that restate the following code | Reserved |
 
 `tooprolix --rules` prints this table; `tooprolix --version` prints the version and the date of the
@@ -78,9 +78,6 @@ Rules are exercised on six pinned real repositories agent frameworks and mature 
 only synthetic fixtures. Every threshold is read off that corpus rather than chosen by taste, and
 critical guards are mutation-proved: a test that stays green when its guarantee is broken is deleted,
 not kept for the count.
-
-Publication is still gated by labelled-corpus validation. See
-[`corpus/REPORT.md`](corpus/REPORT.md) for the pins, the measurements, and what is still open.
 
 ## Why tooprolix
 

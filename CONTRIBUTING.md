@@ -41,10 +41,8 @@ Cargo SemVer for `0.x`.
 Recorded so it is not rediscovered as a bug. `v0.3.4` should have been `v0.4.0`; the tag, the GitHub
 release and the CHANGELOG entry are live and all say patch. It is deliberately **not** retagged and
 neither `Cargo.toml` nor `CHANGELOG.md` is hand-edited — the rule above forbids exactly that, and the
-rule stands. The cost is bookkeeping only for as long as the repository is **private** — the tag and
-its GitHub release become user-facing the moment visibility flips, which is before anything is
-published. **Owner: the `flip-public-and-publish-to-pypi` task**, which chooses the first *published*
-version deliberately.
+rule stands. The repository is public, so the historical tag and GitHub release remain visible; the
+first PyPI version is still chosen deliberately rather than repairing history.
 
 ## Never edit versions or the changelog by hand
 
@@ -54,41 +52,19 @@ version deliberately.
   so there is exactly one number to bump and no way for the two to disagree.
 
 Merging the Release PR that release-plz opens is what creates the tag and the GitHub release.
-Neither registry receives anything today, and **the two are off for different reasons**:
+The two registries have deliberately different contracts:
 
 - **crates.io is off by a switch** — `[workspace] publish = false` in `release-plz.toml` keeps
   release-plz to version, changelog, tag and GitHub release, never `cargo publish`;
-- **PyPI is off because nothing uploads to it** — there is no switch. `build-artifacts.yml` builds,
-  checks and attaches artifacts to the run, and opens with "THERE IS NO PUBLISH STEP IN THIS FILE,
-  AND THAT IS THE POINT OF IT"; the publishing task adds that job.
+- **PyPI is tag-only** — `build-artifacts.yml` records the exact artifact manifest, then its `pypi`
+  environment uses Trusted Publishing after approval. No API token is stored.
 
-Neither is a one-line flip: `release-plz.yml` also withholds `CARGO_REGISTRY_TOKEN` as a backstop,
-and PyPI has no publish job to enable.
+`release-plz.yml` still withholds `CARGO_REGISTRY_TOKEN` as a crates.io backstop.
 
 > **Do not add `publish = false` to `Cargo.toml`.** It reads like the obvious way to say "not
 > published yet", and it silently disables release-plz entirely — no version bump, no changelog, no
 > tag, no release, and `release-plz update` still exits 0. `Cargo.toml` has a comment at that spot
 > saying so. Its absence there is intentional, not drift.
-
-### Release-day checklist
-
-The repository currently describes itself as pre-release in several places. When the first published
-release goes out, all of them move together:
-
-- replace the `status-pre--release` badge in `README.md` with PyPI version and supported-Python
-  badges — that badge is currently the **only** thing marking the project unpublished, since the
-  README's examples deliberately show the installed `tooprolix check` command;
-- change rule statuses from `Implemented` to `Released` in **three** places — `README.md`,
-  `docs/rules-and-configuration.md`, and the `status` field of `CATALOGUE` in `src/rules.rs`, which
-  is what `tooprolix --rules` prints — and only after reference-corpus validation records the
-  result. The three cannot be flipped separately:
-  `the_rules_listing_agrees_with_every_documented_table` in `tests/cli.rs` turns each line the
-  binary printed into a table row and requires the `| \`TPX…` rows of both Markdown files to be
-  exactly that list, in order, so changing one of the three reddens the suite;
-- verify every install and output example against the **published wheel**, not a local build.
-
-Nothing on this list is a version or date string copied into prose: `docs/` deliberately carries no
-frozen `--version` example, because nothing would go red when a hand-refreshed copy went stale.
 
 ## Run the gates before you push
 

@@ -31,3 +31,5 @@ sdist (+ the wheel built from it)
 wheel linux-x86_64
 wheel macos-arm64
 wheel windows-x86_64
+PyPI release manifest
+Publish to PyPI

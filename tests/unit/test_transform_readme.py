@@ -168,7 +168,7 @@ class TestTheRealReadmeIsFullyResolved:
         # quietly.
         found = relative_addresses((REPO_ROOT / "README.md").read_text(encoding="utf-8"))
 
-        assert len(found) >= 9, f"expected the measured relative addresses, found {found}"
+        assert len(found) >= 8, f"expected the measured relative addresses, found {found}"
 
     def test_no_relative_address_survives_the_transformation(self) -> None:
         transformed = transform((REPO_ROOT / "README.md").read_text(encoding="utf-8"), root=REPO_ROOT)
