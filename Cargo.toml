@@ -115,9 +115,10 @@ ruff_text_size = "=0.0.6"
 #     `src/finding.rs` and a change to it is a change to a `#[derive(Serialize)]`, not to a format
 #     string somewhere in a renderer.
 #
-# **Argument parsing is NOT a dependency.** The whole grammar is `tooprolix check <path>
-# [--format text|json]` plus `--help`; `clap` would be a large tree, a derive macro and a second
-# source of truth for the help text, for three tokens parsed in `cli::Arguments::parse`.
+# **Argument parsing is NOT a dependency.** The whole grammar is `tooprolix check <path>...
+# [--format text|json]` plus three discovery flags; `clap` would be a large tree, a derive macro and
+# a second source of truth for the help text, for one repeated positional and one option parsed by
+# the short loop in `cli::parse`.
 ignore = "0.4.31"
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.151"

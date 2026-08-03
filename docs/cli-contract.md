@@ -9,7 +9,7 @@ For the rules themselves â€” thresholds, suppression markers, `pyproject.toml` â
 ## The four invocations
 
 ```console
-$ tooprolix check <path> [--format text|json]
+$ tooprolix check <path>... [--format text|json]
 $ tooprolix --help
 $ tooprolix --version
 $ tooprolix --rules
@@ -17,6 +17,19 @@ $ tooprolix --rules
 
 `--help`, `--version` and `--rules` all exit **0** and write to stdout. An unknown subcommand or an
 unknown option exits **2** and points at `tooprolix --help`.
+
+`check` requires one or more explicit Python files or directories. Paths may appear before, between
+or after the two `--format` forms. Every selected path feeds one combined report and one TPX003
+input set; there is one summary or one schema-v2 JSON document, not one output per root.
+
+Repeated and overlapping targets are canonicalised for identity only. Each physical file is
+measured once, while findings retain the winning typed spelling: an explicitly named file wins over
+the same file found by a directory walk, and the first explicit spelling wins between repeats. A
+missing or unsupported explicit target stops the whole invocation before any report is written.
+
+The nearest `pyproject.toml` is resolved independently from every target before sources are read.
+All targets must resolve to the same configuration source; targets with no file share the default
+context. Conflicting sources are an exit-2 startup error rather than an order-dependent choice.
 
 ### `--version`
 

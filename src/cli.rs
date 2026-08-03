@@ -1,4 +1,4 @@
-//! `tooprolix check <path>`: the walk, the exit contract, and the two output formats.
+//! `tooprolix check <path>...`: the walks, the exit contract, and the two output formats.
 //!
 //! # Why all of this is in the library
 //!
@@ -90,6 +90,7 @@
 //! file*. A user who reads exit 0 there as a verdict on the repository has been misled by silence,
 //! so [`help`] says it in as many words.
 
+use std::collections::HashSet;
 use std::ffi::{OsStr, OsString};
 use std::io::{IsTerminal, Write};
 use std::path::{Path, PathBuf};
@@ -167,16 +168,17 @@ const HELP_BEFORE_RULES: &str = "\
 tooprolix — a prose budget linter for Python.
 
 Usage:
-  tooprolix check <path> [--format text|json]
+  tooprolix check <path>... [--format text|json]
   tooprolix --help
   tooprolix --version
   tooprolix --rules
 
 Arguments:
-  <path>    A Python file, a directory, or `.`. Directories are walked; `.gitignore`
-            is respected, symlinks are not followed, and hidden entries are skipped.
-            There is no `--` end-of-options marker: a path whose name begins with
-            `-` is read as an option, so write it as `./-name.py`.
+  <path>... One or more Python files, directories, or `.`. Directories are walked;
+            `.gitignore` is respected, symlinks are not followed, and hidden entries
+            are skipped. They form one combined report and one TPX003 input set.
+            There is no `--` end-of-options marker: a path whose name
+            begins with `-` is read as an option, so write it as `./-name.py`.
 
 Options:
   --format  `text` (default) writes one line per finding and a final summary to stdout.
@@ -228,10 +230,11 @@ Opt out of a rule for the whole project, in pyproject.toml:
   comment-max-volume = 150
   docstring-max-volume = 200
 
-  The nearest pyproject.toml at or above the checked path is used — at MOST one, never
-  a second one further down, so configuration is not hierarchical. If the search reaches
-  the filesystem root without finding one, none is read and the defaults apply. A rule
-  listed in `ignore` cannot be switched back on by a marker.
+  The nearest pyproject.toml at or above each selected path is found, and every path
+  must resolve to the same configuration source. No pyproject.toml means the shared
+  default context. At MOST one source is used for the combined run, never a second one
+  further down, so configuration is not hierarchical. A rule listed in `ignore` cannot
+  be switched back on by a marker.
 
   `exclude` takes .gitignore-syntax globs, resolved relative to the directory of
   the pyproject.toml they are written in — so one rule means the same thing from
@@ -331,10 +334,10 @@ pub enum Format {
 /// What the command line asked for.
 #[derive(Debug, Clone, PartialEq)]
 enum Invocation {
-    /// `tooprolix check <path> [--format …]`.
+    /// `tooprolix check <path>... [--format …]`.
     Check {
-        /// The file or directory to walk, exactly as it was typed.
-        path: PathBuf,
+        /// The files or directories to walk, exactly as they were typed.
+        paths: Vec<PathBuf>,
         /// The output format.
         format: Format,
     },
@@ -375,6 +378,24 @@ pub enum Error {
     /// A file was named directly and is not a Python source.
     #[error("{}: not a Python source file", .0.display())]
     NotPython(PathBuf),
+
+    /// Explicit targets resolved to different configuration contexts.
+    #[error(
+        "check paths {} ({first_source}) and {} ({second_source}) resolve to different \
+         configuration sources; select paths under one pyproject.toml or run separate checks",
+        first_path.display(),
+        second_path.display()
+    )]
+    ConflictingConfigurations {
+        /// The first target, which establishes the run's configuration context.
+        first_path: PathBuf,
+        /// Its configuration source, or the default-context label.
+        first_source: String,
+        /// The target whose context conflicts.
+        second_path: PathBuf,
+        /// Its configuration source, or the default-context label.
+        second_source: String,
+    },
 
     /// The directory walk itself failed.
     #[error("could not walk {}: {message}", path.display())]
@@ -574,9 +595,11 @@ fn emit(write: impl FnOnce(&mut dyn Write) -> std::io::Result<()>) -> Result<(),
 ///
 /// # Errors
 ///
-/// Every variant of [`Error`] — all of them are "the tree could not be read", never "it is clean".
+/// Returns [`Error`] when the command is malformed, any target or configuration context is invalid,
+/// a walk cannot start, or stdout cannot accept the report. Findings and mid-walk/read refusals are
+/// outcomes, not startup errors.
 pub fn execute<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<ExitStatus, Error> {
-    let (path, format) = match parse(arguments)? {
+    let (paths, format) = match parse(arguments)? {
         Invocation::Help => {
             emit(|out| out.write_all(help().as_bytes()))?;
             return Ok(ExitStatus::Success);
@@ -589,10 +612,10 @@ pub fn execute<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<ExitSta
             emit(|out| out.write_all(rules_listing().as_bytes()))?;
             return Ok(ExitStatus::Success);
         }
-        Invocation::Check { path, format } => (path, format),
+        Invocation::Check { paths, format } => (paths, format),
     };
 
-    let config = config::load(&path)?;
+    let (config, walked_roots) = prepare_walks(&paths)?;
     if config.ignores_everything() {
         // "Nothing was found" and "nothing could be found" are the same exit code and must not be
         // the same output. The code stays 0 because it is honest — there really are no findings.
@@ -611,7 +634,7 @@ pub fn execute<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<ExitSta
         files,
         excluded,
         skipped: unwalkable,
-    } = python_files(&path, &config)?;
+    } = merge_walks(&paths, walked_roots);
     let excluded_measurable = excluded.len();
     // `unwalkable.is_empty()` as well: this line blames an *absence* of Python, and when the walk
     // found a `.py` it could not read, absence is not what happened. The skip is already reported,
@@ -620,7 +643,11 @@ pub fn execute<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<ExitSta
     if files.is_empty() && unwalkable.is_empty() {
         // A walk that visited nothing scores every repository clean. Saying so is the difference
         // between "no findings" and "no measurement".
-        eprintln!("warning: no Python files under {}", path.display());
+        if paths.len() == 1 {
+            eprintln!("warning: no Python files under {}", paths[0].display());
+        } else {
+            eprintln!("warning: no Python files under the selected paths");
+        }
         // ... and when `exclude` is what emptied it, name that too. On its own the line above
         // blames an *absence* of Python, which for `exclude = ["*"]` is not what happened and
         // sends the reader looking for files that were there all along. The exit code stays 0
@@ -731,6 +758,35 @@ pub fn execute<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<ExitSta
     }
 
     Ok(status)
+}
+
+/// Validates and walks every explicit root before any source is read.
+///
+/// # Errors
+///
+/// Returns a startup [`Error`] for an invalid target, a broken configuration, a walk that cannot
+/// start, or configuration sources that do not match.
+fn prepare_walks(paths: &[PathBuf]) -> Result<(Config, Vec<Walked>), Error> {
+    let Some(first_path) = paths.first() else {
+        return Err(Error::Usage("check needs a path".to_owned()));
+    };
+    let config = config::load(first_path)?;
+    for path in paths.iter().skip(1) {
+        let candidate = config::load(path)?;
+        if candidate.source != config.source {
+            return Err(Error::ConflictingConfigurations {
+                first_path: first_path.clone(),
+                first_source: config_source_label(&config),
+                second_path: path.clone(),
+                second_source: config_source_label(&candidate),
+            });
+        }
+    }
+    let walks = paths
+        .iter()
+        .map(|path| python_files(path, &config))
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok((config, walks))
 }
 
 /// The final human-readable line for a non-clean run.
@@ -863,10 +919,10 @@ fn report_skipped(skipped: &[Skipped], config: &Config) {
     }
 }
 
-/// Parses `tooprolix check <path> [--format …]` and nothing else.
+/// Parses `tooprolix check <path>... [--format …]` and nothing else.
 ///
-/// Hand-written, and that is a recorded decision: the grammar is one subcommand, one positional and
-/// one option, so a derive-macro argument parser would be a dependency tree and a second home for
+/// Hand-written, and that is a recorded decision: the grammar is one subcommand, positional paths
+/// and one option, so a derive-macro argument parser would be a dependency tree and a second home for
 /// the help text that [`help`] already owns.
 ///
 /// **`arguments` does NOT include the program name.** A `.skip(1)` hidden here would silently eat
@@ -900,7 +956,7 @@ fn parse<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<Invocation, E
         return Err(Error::Usage(format!("unknown subcommand `{first}`")));
     }
 
-    let mut path: Option<PathBuf> = None;
+    let mut paths = Vec::new();
     // `Option`, not `Format`, so that "given twice" is distinguishable from "given once". A silent
     // last-one-wins would make `--format json … --format text` write prose into a pipe that asked
     // for a document, which is the same class as `--format yaml` falling back to text — and every
@@ -924,25 +980,17 @@ fn parse<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<Invocation, E
             _ if argument.starts_with('-') => {
                 return Err(Error::Usage(format!("unknown option `{argument}`")));
             }
-            _ if path.is_some() => {
-                return Err(Error::Usage(
-                    "check takes exactly one path; pass a directory to check several files"
-                        .to_owned(),
-                ));
-            }
-            _ => path = Some(PathBuf::from(argument)),
+            _ => paths.push(PathBuf::from(argument)),
         }
     }
 
-    path.map_or_else(
-        || Err(Error::Usage("check needs a path".to_owned())),
-        |path| {
-            Ok(Invocation::Check {
-                path,
-                format: format.unwrap_or_default(),
-            })
-        },
-    )
+    if paths.is_empty() {
+        return Err(Error::Usage("check needs a path".to_owned()));
+    }
+    Ok(Invocation::Check {
+        paths,
+        format: format.unwrap_or_default(),
+    })
 }
 
 /// A flag that reports and exits takes nothing else, so `--version --rules` is refused, not ranked.
@@ -1247,6 +1295,79 @@ struct Walked {
     skipped: Vec<Skipped>,
 }
 
+/// Merges walks without measuring one physical file twice.
+///
+/// Explicit files are considered before directory results whatever their CLI position, so they
+/// keep their first explicit spelling. Canonical paths are identity keys only; reported paths stay
+/// exactly as the winning walk reached them.
+fn merge_walks(paths: &[PathBuf], walks: Vec<Walked>) -> Walked {
+    let mut explicit_files = Vec::new();
+    let mut nested_files = Vec::new();
+    let mut excluded = Vec::new();
+    let mut skipped = Vec::new();
+
+    for (path, walk) in paths.iter().zip(walks) {
+        if path.is_file() {
+            explicit_files.extend(walk.files);
+        } else {
+            nested_files.extend(walk.files);
+        }
+        excluded.extend(walk.excluded);
+        skipped.extend(walk.skipped);
+    }
+
+    let explicit_roots: HashSet<PathBuf> = paths.iter().map(|path| path_identity(path)).collect();
+    let mut measured = HashSet::new();
+    let mut files = Vec::new();
+    for file in explicit_files.into_iter().chain(nested_files) {
+        if measured.insert(path_identity(&file)) {
+            files.push(file);
+        }
+    }
+
+    let mut seen_excluded = HashSet::new();
+    excluded.retain(|path| {
+        let identity = path_identity(path);
+        !explicit_roots.contains(&identity)
+            && !measured.contains(&identity)
+            && seen_excluded.insert(identity)
+    });
+
+    let mut seen_skipped = HashSet::new();
+    skipped.retain(|entry| {
+        let identity = path_identity(Path::new(&entry.path));
+        seen_skipped.insert(identity)
+    });
+
+    Walked {
+        files,
+        excluded,
+        skipped,
+    }
+}
+
+/// A canonical identity key for deduplication, never a reported path.
+///
+/// A skipped entry may be a dangling symlink or a path that vanished after the walk. In that case
+/// its parent is still canonicalised before the final name is reattached; only an unresolvable
+/// parent falls back to the typed path, where no physical identity is available to compare.
+fn path_identity(path: &Path) -> PathBuf {
+    std::fs::canonicalize(path).unwrap_or_else(|_| {
+        path.parent()
+            .and_then(|parent| std::fs::canonicalize(parent).ok())
+            .and_then(|parent| path.file_name().map(|name| parent.join(name)))
+            .unwrap_or_else(|| path.to_path_buf())
+    })
+}
+
+/// The configuration context as it appears in a startup error.
+fn config_source_label(config: &Config) -> String {
+    config.source.as_ref().map_or_else(
+        || "defaults: no pyproject.toml".to_owned(),
+        |source| source.display().to_string(),
+    )
+}
+
 /// Puts a walked path back under the root **as the user typed it**.
 ///
 /// A no-op unless the walk was canonicalised, which is the only case where the two differ. The
@@ -1547,24 +1668,38 @@ mod tests {
 
     #[test]
     fn the_grammar_is_the_one_the_help_documents() {
+        let expected_paths = vec![PathBuf::from("src"), PathBuf::from("tests")];
+        for arguments in [
+            vec!["check", "--format", "json", "src", "tests"],
+            vec!["check", "src", "--format=json", "tests"],
+            vec!["check", "src", "tests", "--format", "json"],
+        ] {
+            assert_eq!(
+                command(&arguments).expect("multiple paths are valid"),
+                Invocation::Check {
+                    paths: expected_paths.clone(),
+                    format: Format::Json,
+                }
+            );
+        }
         assert_eq!(
             command(&["check", "src"]).expect("valid"),
             Invocation::Check {
-                path: PathBuf::from("src"),
+                paths: vec![PathBuf::from("src")],
                 format: Format::Text
             }
         );
         assert_eq!(
             command(&["check", ".", "--format", "json"]).expect("valid"),
             Invocation::Check {
-                path: PathBuf::from("."),
+                paths: vec![PathBuf::from(".")],
                 format: Format::Json
             }
         );
         assert_eq!(
             command(&["check", "--format=json", "a.py"]).expect("valid"),
             Invocation::Check {
-                path: PathBuf::from("a.py"),
+                paths: vec![PathBuf::from("a.py")],
                 format: Format::Json
             }
         );
@@ -1579,6 +1714,20 @@ mod tests {
         assert_eq!(command(&["--version"]).expect("valid"), Invocation::Version);
         assert_eq!(command(&["-V"]).expect("valid"), Invocation::Version);
         assert_eq!(command(&["--rules"]).expect("valid"), Invocation::Rules);
+
+        let documented = help();
+        for required in [
+            "check <path>...",
+            "one combined report",
+            "one TPX003 input set",
+            "same configuration source",
+            "only finds duplicates inside that file",
+        ] {
+            assert!(
+                documented.contains(required),
+                "--help is missing `{required}`: {documented}"
+            );
+        }
     }
 
     /// Every way of getting the command line wrong is an error rather than a default.
@@ -1591,7 +1740,6 @@ mod tests {
             vec![],
             vec!["lint", "src"],
             vec!["check"],
-            vec!["check", "a", "b"],
             vec!["check", "src", "--format"],
             vec!["check", "src", "--format", "yaml"],
             vec!["check", "src", "--format=yaml"],

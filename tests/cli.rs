@@ -406,11 +406,195 @@ fn a_single_file_is_checked_and_the_help_says_what_that_misses() {
         "--help does not warn that a single-file run is not a verdict on the repository: {}",
         stdout_of(&help)
     );
+    for required in [
+        "check <path>...",
+        "one combined report",
+        "one TPX003 input set",
+        "same configuration source",
+    ] {
+        assert!(
+            stdout_of(&help).contains(required),
+            "--help is missing `{required}`: {}",
+            stdout_of(&help)
+        );
+    }
     assert!(
         stdout_of(&help).contains("words"),
         "--help does not name the unit the limits are measured in: {}",
         stdout_of(&help)
     );
+}
+
+/// Several explicit files form one report, so cross-file TPX003 still sees every block.
+#[test]
+fn multiple_explicit_paths() {
+    // Act
+    let text = tooprolix(&[
+        "check",
+        "tests/fixtures/dup-corpus/client.py",
+        "tests/fixtures/dup-corpus/poller.py",
+        "tests/fixtures/dup-corpus/worker.py",
+    ]);
+    let missing = tooprolix(&[
+        "check",
+        "tests/fixtures/dup-corpus/client.py",
+        "tests/fixtures/does-not-exist",
+    ]);
+    let json = tooprolix(&[
+        "check",
+        "tests/fixtures/dup-corpus/client.py",
+        "--format",
+        "json",
+        "tests/fixtures/dup-corpus/poller.py",
+        "tests/fixtures/dup-corpus/worker.py",
+    ]);
+
+    // Assert
+    assert_eq!(text.status.code(), Some(1), "{text:?}");
+    let lines: Vec<&str> = stdout_of(&text).lines().collect();
+    assert_eq!(
+        lines.len(),
+        2,
+        "stdout is not one finding plus one summary: {lines:#?}"
+    );
+    assert!(
+        lines[0].starts_with("tests/fixtures/dup-corpus/client.py:2-4: TPX003 ")
+            && lines[0].contains("poller.py:2-3")
+            && lines[0].contains("worker.py:2-3")
+            && lines[0].contains("same explanation in 3 places"),
+        "the three explicit files did not form one TPX003 input set: {lines:#?}"
+    );
+    assert_eq!(lines[1], "Found 1 findings (TPX003: 1).");
+    assert_eq!(stderr_of(&text), "");
+
+    assert_eq!(json.status.code(), Some(1), "{json:?}");
+    assert_eq!(stderr_of(&json), "");
+    let document: serde_json::Value =
+        serde_json::from_str(stdout_of(&json)).expect("stdout is one JSON document");
+    assert_eq!(document["schema_version"], "2");
+    assert_eq!(document["complete"], true);
+    assert_eq!(document["findings"].as_array().map(Vec::len), Some(1));
+    assert_eq!(document["findings"][0]["code"], "TPX003");
+    assert_eq!(
+        document["findings"][0]["locations"]
+            .as_array()
+            .map(Vec::len),
+        Some(3)
+    );
+
+    assert_eq!(missing.status.code(), Some(2), "{missing:?}");
+    assert_eq!(stdout_of(&missing), "", "{missing:?}");
+    assert!(stderr_of(&missing).contains("does-not-exist"));
+}
+
+/// An explicitly named file wins over every spelling of the same file reached by a walk.
+#[test]
+#[cfg(unix)]
+fn explicit_path_wins_over_walked_duplicate() {
+    // Arrange
+    let scratch = Scratch::new("explicit-wins");
+    scratch.write("visible.py", &long_comment("visible retry policy"));
+    scratch.write("excluded.py", &long_comment("excluded retry policy"));
+    scratch.write("sub/.keep", "");
+    scratch.write(
+        "pyproject.toml",
+        "[tool.tooprolix]\nexclude = [\"excluded.py\"]\n",
+    );
+    std::os::unix::fs::symlink(
+        scratch.root.join("visible.py"),
+        scratch.root.join("alias.py"),
+    )
+    .expect("a symlink is creatable");
+
+    // Act — the directory contributes a walked copy and a skipped symlink; the first explicit
+    // spelling replaces the measured copy, but cannot erase the distinct refusal to follow the
+    // alias. The explicitly named excluded file must still leave `excluded`.
+    let output = scratch.check(&[
+        "visible.py",
+        "./visible.py",
+        "alias.py",
+        "sub/../visible.py",
+        "excluded.py",
+        "--format",
+        "json",
+    ]);
+
+    // Assert
+    assert_eq!(output.status.code(), Some(1), "{output:?}");
+    assert!(
+        stderr_of(&output).contains("alias.py"),
+        "the skipped alias is not named: {output:?}"
+    );
+    let document: serde_json::Value =
+        serde_json::from_str(stdout_of(&output)).expect("stdout is one JSON document");
+    assert_eq!(document["complete"], false, "{document:#}");
+    assert_eq!(
+        document["skipped"].as_array().map(Vec::len),
+        Some(1),
+        "{document:#}"
+    );
+    assert!(
+        document["skipped"][0]["path"]
+            .as_str()
+            .is_some_and(|path| path.ends_with("alias.py")),
+        "the refusal channel does not retain the alias: {document:#}"
+    );
+    assert_eq!(document["excluded"].as_array().map(Vec::len), Some(0));
+    let paths: Vec<&str> = document["findings"]
+        .as_array()
+        .expect("findings is an array")
+        .iter()
+        .filter(|finding| finding["code"] == "TPX001")
+        .map(|finding| finding["path"].as_str().expect("a finding path"))
+        .collect();
+    assert_eq!(paths, vec!["excluded.py", "visible.py"]);
+}
+
+/// Several targets cannot make CLI order choose between different project configurations.
+#[test]
+fn conflicting_explicit_path_configurations() {
+    // Arrange
+    let scratch = Scratch::new("conflicting-configs");
+    scratch.write("one/a.py", &long_comment("first project retry policy"));
+    scratch.write("two/b.py", &long_comment("second project retry policy"));
+    scratch.write(
+        "one/pyproject.toml",
+        "[tool.tooprolix]\ncomment-max-volume = 5\n",
+    );
+    scratch.write(
+        "two/pyproject.toml",
+        "[tool.tooprolix]\ncomment-max-volume = 6\n",
+    );
+
+    // Act
+    let forward = Command::new(env!("CARGO_BIN_EXE_tooprolix"))
+        .args(["check", "one/a.py", "two/b.py"])
+        .current_dir(&scratch.root)
+        .output()
+        .expect("the binary cargo just built is executable");
+    let reverse = Command::new(env!("CARGO_BIN_EXE_tooprolix"))
+        .args(["check", "two/b.py", "one/a.py"])
+        .current_dir(&scratch.root)
+        .output()
+        .expect("the binary cargo just built is executable");
+
+    // Assert
+    for output in [&forward, &reverse] {
+        assert_eq!(output.status.code(), Some(2), "{output:?}");
+        assert_eq!(stdout_of(output), "", "{output:?}");
+        for expected in [
+            "one/a.py",
+            "two/b.py",
+            "one/pyproject.toml",
+            "two/pyproject.toml",
+        ] {
+            assert!(
+                stderr_of(output).contains(expected),
+                "the conflict does not name {expected}: {}",
+                stderr_of(output)
+            );
+        }
+    }
 }
 
 /// `.` is one of the three path forms the user confirmed, and it must not be special-cased.

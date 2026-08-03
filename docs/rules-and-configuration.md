@@ -137,7 +137,7 @@ a marker but is not one also warns, so a forgotten `!` does not fail silently.
 ## Repository configuration
 
 Turn a rule off repository-wide, or move a limit, in `pyproject.toml`. The nearest one at or above
-the checked path is used:
+each selected path is resolved before any source is read:
 
 ```toml
 [tool.tooprolix]
@@ -156,12 +156,15 @@ every measurable file is legal and reported on stderr.
 
 ### `exclude` path shapes
 
-At **most one** `pyproject.toml` is used per run: the nearest one at or above the path being
-checked. If the search reaches the filesystem root without finding one, none is read and the
-defaults apply. Every glob in the file that *is* found resolves against that file's own directory,
+At **most one configuration source** is used per run: every selected path must resolve to the same
+nearest `pyproject.toml`. If every search reaches the filesystem root without finding one, the paths
+share the unconfigured defaults. A configured and an unconfigured path, or paths resolving to
+different files, are refused with exit 2 rather than making argument order choose limits or
+exclusions. Every glob in the one file that *is* found resolves against that file's own directory,
 not against the working directory — so one rule means the same thing run from the project root and
 run from a package inside it. Configuration is not hierarchical: a `pyproject.toml` that sits
-*below* the checked path is never read, and its `exclude` does not apply to a run started above it.
+*below a selected directory* is never read, and its `exclude` does not apply to a run started above
+it.
 
 The shape of the entry decides the depth:
 
