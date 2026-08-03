@@ -2,7 +2,7 @@
 name = "tooprolix"
 version = "0.5.2"
 edition = "2024"
-description = "A prose budget linter for Python."
+description = "Deterministic linter for overlong and duplicated prose in Python comments and docstrings."
 license = "MIT"
 repository = "https://github.com/golyshevskii/tooprolix"
 # Keeps the measurement corpus OUT OF THE PACKAGE — not out of the repository, where
