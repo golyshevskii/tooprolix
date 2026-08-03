@@ -161,6 +161,41 @@ fn one_line_volume_boundaries_are_silent_in_text_and_json() {
     }
 }
 
+/// Tool-looking labels that were not already pragmas cannot split a long comment run and hide it.
+#[test]
+fn new_tool_directive_prefixes_do_not_hide_comment_volume() {
+    // Arrange — sixteen prose lines hold 151 words; inserting one directive makes seventeen lines.
+    let scratch = Scratch::new("tool-directive-volume");
+    for (name, directive, expected_words) in [
+        ("fmt", "# fmt: off", 153),
+        ("pyright", "# pyright: reportUnusedImport=false", 154),
+    ] {
+        let words = (1..=151)
+            .map(|index| format!("w{index}"))
+            .collect::<Vec<_>>();
+        let mut lines = words
+            .chunks(10)
+            .map(|chunk| format!("# {}", chunk.join(" ")))
+            .collect::<Vec<_>>();
+        lines.insert(8, directive.to_owned());
+        let path = scratch.write(&format!("{name}.py"), &format!("{}\n", lines.join("\n")));
+
+        // Act
+        let output = tooprolix(&["check", path.to_str().expect("the scratch path is UTF-8")]);
+
+        // Assert
+        assert_eq!(output.status.code(), Some(1), "{name}: {output:?}");
+        assert_eq!(stderr_of(&output), "", "{name}: {output:?}");
+        assert!(
+            stdout_of(&output).contains(&format!(
+                ":1-17: TPX001 comment is {expected_words} words long, over the 150-word limit"
+            )),
+            "{name}: {}",
+            stdout_of(&output)
+        );
+    }
+}
+
 /// Existing markers suppress one-line volume, while a parse failure still makes the run partial.
 #[test]
 fn one_line_volume_suppression_does_not_hide_an_incomplete_run() {

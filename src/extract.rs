@@ -42,12 +42,10 @@
 //!   `a_trailing_comment_is_not_glued_to_the_following_comment_run` pins.
 //!   Own-line versus trailing is decided by `ruff_python_trivia::has_leading_content`, the same
 //!   function ruff uses for the same question.
-//! * **Not prose, excluded** — seven machine directives: a `#!` shebang on **line 1** (keyed on the
+//! * **Not prose, excluded** — five machine directives: a `#!` shebang on **line 1** (keyed on the
 //!   line, not on byte offset 0, so a UTF-8 BOM cannot smuggle it in), an encoding cookie on line 1
-//!   or 2, `# noqa…`, `# type: …`, `# pyright: …`, `# fmt: …`, and our own opt-out marker, which
-//!   `README.md` ships as part of the 0.1.0 contract. The `pyright:` and `fmt:` spellings are the
-//!   exact prefixes present in the pinned public corpus; an arbitrary label such as `# Note:` is
-//!   still prose.
+//!   or 2, `# noqa…`, `# type: …`, and our own opt-out marker, which `README.md` ships as part of
+//!   the 0.1.0 contract.
 //!   The exclusion is load-bearing rather than cosmetic: four glued pragma lines are 4 lines and 13
 //!   normalised words, so they pass the size conjunction on their own.
 //! * **Interaction with the opt-out**: only the marker LINE is excluded here, so the block it
@@ -1157,13 +1155,10 @@ fn is_pragma(text: &str, line: usize) -> bool {
     // a measured volume. The diagnostic belongs where a line can be reported rather than dropped,
     // so `crate::cli` warns about both positions instead. One owner, one direction, still.
     //
-    // These exact prefixes name OTHER tools' pragmas and have nothing to do with our grammar.
-    // `pyright:` and `fmt:` are the additional spellings present in the pinned public corpus; this
-    // stays an allowlist so an ordinary labelled sentence such as `# Note:` remains prose.
-    ["noqa", "type:", "pyright:", "fmt:"]
-        .iter()
-        .any(|prefix| lowered.starts_with(prefix))
-        || crate::rules::is_marker(text)
+    // `noqa` and `type:` stay: they name OTHER tools' pragmas (ruff, flake8, mypy) and have nothing
+    // to do with our grammar. Renaming them along with the marker would start counting `# noqa:
+    // F401` as human prose.
+    lowered.starts_with("noqa") || lowered.starts_with("type:") || crate::rules::is_marker(text)
 }
 
 /// Whether `body` carries a PEP 263 encoding declaration.
@@ -1744,29 +1739,6 @@ mod tests {
         let extracted = blocks("a.py", source);
 
         assert!(extracted.is_empty(), "got {extracted:?}");
-    }
-
-    /// Standard Python-tool control comments are directives, while labelled prose remains prose.
-    #[test]
-    fn pyright_and_formatter_control_comments_are_not_prose() {
-        // Arrange — both spellings occur in the pinned public corpus. Together they also clear the
-        // old TPX003 floor, so leaking them cannot hide behind block size.
-        let directives = "# pyright: reportUnusedImport=false\n\
-                          # fmt: off\n\
-                          # fmt: on\n";
-        let note = "# Note: this ordinary labelled explanation remains prose\n";
-
-        // Act
-        let excluded = blocks("directives.py", directives);
-        let retained = blocks("note.py", note);
-
-        // Assert
-        assert!(
-            excluded.is_empty(),
-            "tool directives leaked as prose: {excluded:?}"
-        );
-        assert_eq!(retained.len(), 1, "ordinary labelled prose was deleted");
-        assert_eq!(retained[0].raw, note.trim_end());
     }
 
     /// A trailing comment is never glued to the own-line run below it. Without the distinction the
