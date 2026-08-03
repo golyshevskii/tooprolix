@@ -37,10 +37,8 @@
 //!   of code, or an excluded comment between them ends the run, because the lines are then no
 //!   longer consecutive.
 //! * **A trailing comment (`x = 1  # why`) never joins a run.** It is prose about one statement,
-//!   not about the lines below it. It is also, by construction, exactly one physical line — and the
-//!   line half of the size conjunction below excludes every one-line block — so a trailing comment
-//!   can never reach the output. It is therefore skipped rather than emitted and immediately
-//!   filtered: the observable half of this rule is that it does not *glue*, and that is what
+//!   not about the lines below it. It is intentionally skipped rather than emitted as its own
+//!   block: the observable half of this rule is that it does not *glue*, and that is what
 //!   `a_trailing_comment_is_not_glued_to_the_following_comment_run` pins.
 //!   Own-line versus trailing is decided by `ruff_python_trivia::has_leading_content`, the same
 //!   function ruff uses for the same question.
@@ -62,7 +60,8 @@
 //!
 //! [`normalize`] lowercases, replaces every non-alphanumeric character with a space, and collapses
 //! whitespace. That kills the difference between `# Foo bar.` and `"""foo   bar"""`, which is the
-//! only reason a comment and a docstring can be compared at all.
+//! only reason a comment and a docstring can be compared at all. Punctuation also splits words for
+//! volume: `path/to/file.py:42` normalises to five words, not one opaque source reference.
 //!
 //! **Deviation from the task file, deliberate.** The task prescribes
 //! `" ".join(text.split()).lower()` plus explicit stripping of `# ` prefixes and docstring quotes.
@@ -72,9 +71,11 @@
 //! Jaccard `>= 0.75` there — were *measured* with this normaliser. Consuming them under a different
 //! one would silently change what they mean (`0.1.0` is three words here, one there).
 //!
-//! ## Minimum block size
+//! ## Minimum duplicate-candidate size
 //!
-//! [`MIN_BLOCK_LINES`] `AND` [`MIN_BLOCK_WORDS`], never either alone. See their rustdoc.
+//! [`MIN_BLOCK_LINES`] `AND` [`MIN_BLOCK_WORDS`], never either alone. This conjunction belongs to
+//! [`crate::detect::duplicate`]; extraction keeps smaller blocks because volume is measured in
+//! normalised words regardless of physical wrapping. See the constants' rustdoc.
 
 use std::fmt;
 use std::path::{Path, PathBuf};
@@ -88,14 +89,14 @@ use ruff_source_file::LineIndex;
 use ruff_text_size::{Ranged, TextRange};
 use thiserror::Error as ThisError;
 
-/// Minimum physical line span of a block, in `line_end - line_start + 1`.
+/// Minimum physical line span of a `TPX003` candidate, in `line_end - line_start + 1`.
 ///
 /// Measured in `corpus/REPORT.md`: **741 861 of the 741 970** exact duplicate prose pairs found in
 /// the `OpenHands` checkout are one-line blocks. Without this half, the duplicate detector reports
 /// hundreds of copies of `"""Initialize the class."""`.
 pub const MIN_BLOCK_LINES: usize = 2;
 
-/// Minimum number of [`normalize`]d words in a block.
+/// Minimum number of [`normalize`]d words in a `TPX003` candidate.
 ///
 /// Measured in `corpus/REPORT.md`: 6, 8 and 10 words yield the *same* 8 candidates on the reference
 /// repository (the sets are nested), 12 yields 7 and 16 yields 6. 8 is the conservative end of that
@@ -277,7 +278,7 @@ impl ProseBlock {
         self.normalized.split_whitespace().count()
     }
 
-    /// Whether the block is large enough to be worth comparing.
+    /// Whether the block is large enough for `TPX003` to compare.
     ///
     /// A **conjunction**, and each half is provably necessary on the measured corpus: by lines
     /// alone the 3-word `Init API instance.` spread over three lines gets through (a real pair at
@@ -950,9 +951,9 @@ pub fn is_python_source(path: &Path) -> bool {
 /// Extracts every prose block of `source`, which is the contents of `path`.
 ///
 /// `path` is metadata and dispatch only — nothing is read from disk, so the caller controls which
-/// files are visited. Blocks smaller than the [`MIN_BLOCK_LINES`] `AND` [`MIN_BLOCK_WORDS`]
-/// conjunction are dropped. The result is sorted by `(path, line_start, line_end, kind)` and is
-/// therefore byte-identical between runs.
+/// files are visited. The result is sorted by `(path, line_start, line_end, kind)` and is therefore
+/// byte-identical between runs. Small and one-line blocks are retained for volume measurement;
+/// [`crate::detect::duplicate::duplicates`] applies its measured candidate floor.
 ///
 /// # Errors
 ///
@@ -981,7 +982,6 @@ pub fn extract(path: &Path, source: &str) -> Result<Vec<ProseBlock>, Error> {
     }
     let mut blocks = python_blocks(path, source)?;
 
-    blocks.retain(ProseBlock::is_large_enough);
     blocks.sort_by(|left, right| left.coordinates().cmp(&right.coordinates()));
     Ok(blocks)
 }
@@ -1079,8 +1079,8 @@ fn comment_blocks(
         if is_pragma(&source[range], line) {
             continue;
         }
-        // A trailing comment is prose about one statement; it must not join the run below it. It
-        // is never emitted either — one physical line cannot pass MIN_BLOCK_LINES.
+        // A trailing comment is prose about one statement; it must not join the run below it and
+        // is intentionally not emitted as a standalone block.
         if has_leading_content(range.start(), source) {
             continue;
         }
@@ -1211,6 +1211,8 @@ mod tests {
 
     use insta::assert_debug_snapshot;
 
+    use crate::detect::volume::{Limits, volume};
+
     use super::{
         MIN_BLOCK_LINES, MIN_BLOCK_WORDS, ProseBlock, ProseKind, extract, narrative, normalize,
         normalize_comparable,
@@ -1222,25 +1224,28 @@ mod tests {
         extract(Path::new(path), source).expect("the fixture is a supported source")
     }
 
-    /// AC1 — the whole Python half of the contract in one reviewed artifact: module, class, method
-    /// and nested-function docstrings, the glued `#`-run, and the absence of everything the
-    /// contract excludes (shebang, coding cookie, `# noqa`, `# type:`, the trailing comment,
-    /// `"""Init."""`, the two-line-but-short comment).
+    /// The duplicate-eligible Python blocks in one reviewed artifact: module, class, method and
+    /// nested-function docstrings, the glued `#`-run, and the absence of machine directives and
+    /// trailing comments. Small prose remains extracted for volume and is covered separately.
     #[test]
     fn extracts_the_python_fixture() {
         let extracted = blocks("tests/fixtures/extract/sample.py", SAMPLE_PY);
 
-        assert_debug_snapshot!(extracted);
+        let duplicate_candidates: Vec<&ProseBlock> = extracted
+            .iter()
+            .filter(|block| block.is_large_enough())
+            .collect();
+        assert_debug_snapshot!(duplicate_candidates);
         // The snapshot is the artifact, and this is the one thing a reader could mistake in it:
         // `narrative` equals `normalized` for six of the seven blocks because those six carry no
         // scaffolding, not because the two fields are the same field. Exactly one block — the last
         // — has an `Args:`/`Returns:` table, and asserting the split here keeps the fixture from
         // drifting back into a corpus where the distinction is invisible.
-        let split = extracted
+        let split = duplicate_candidates
             .iter()
             .filter(|block| block.narrative != block.normalized)
             .count();
-        assert_eq!(split, 1, "got {extracted:?}");
+        assert_eq!(split, 1, "got {duplicate_candidates:?}");
     }
 
     /// AC2 — the same sentence written with different line breaks and indentation must normalise to
@@ -1268,6 +1273,12 @@ mod tests {
         );
         // ... and the raw text really does differ, so the equality above is not trivial.
         assert_ne!(from_flat[0].raw, from_wrapped[0].raw);
+    }
+
+    /// Source references use the same punctuation-separated word unit as every other prose shape.
+    #[test]
+    fn source_reference_punctuation_remains_word_boundaries() {
+        assert_eq!(normalize("path/to/file.py:42-43"), "path to file py 42 43");
     }
 
     /// **The guard that can say "these two must stay DIFFERENT", and the reason it exists.**
@@ -1421,41 +1432,48 @@ mod tests {
         );
     }
 
-    /// AC3(a) — `"""Init."""` fails both halves. The single most common docstring in the corpus.
+    /// `"""Init."""` is extracted for volume but fails both `TPX003` eligibility halves.
     #[test]
-    fn a_one_word_docstring_is_excluded() {
+    fn a_one_word_docstring_is_extracted_but_duplicate_ineligible() {
         let extracted = blocks("a.py", "def f():\n    \"\"\"Init.\"\"\"\n");
 
-        assert!(extracted.is_empty(), "got {extracted:?}");
+        assert_eq!(extracted.len(), 1, "got {extracted:?}");
+        assert!(!extracted[0].is_large_enough());
     }
 
     /// AC3(b) — enough LINES, too few WORDS. One of the two cases that tell `AND` from `OR`: under
     /// `OR` the line half alone would let it through.
     #[test]
-    fn a_multi_line_block_with_too_few_words_is_excluded() {
+    fn a_multi_line_block_with_too_few_words_is_extracted_but_duplicate_ineligible() {
         let source = "def f():\n    \"\"\"\n    Short.\n    \"\"\"\n";
 
         let extracted = blocks("a.py", source);
 
-        assert!(
-            extracted.is_empty(),
-            "3 lines but 1 word must not pass the conjunction; got {extracted:?}"
-        );
+        assert_eq!(extracted.len(), 1, "got {extracted:?}");
+        assert!(!extracted[0].is_large_enough());
     }
 
-    /// AC3(c) — enough WORDS, too few LINES. The other discriminating case: under `OR` the word
-    /// half alone would let it through, and one-line blocks are 741 861 of the 741 970 exact
-    /// duplicate pairs measured on the reference corpus.
+    /// One-line prose is ineligible for `TPX003`, but its word count still belongs to volume.
     #[test]
-    fn a_one_line_block_with_enough_words_is_excluded() {
-        let source = "# one line comment with quite a lot of words in it indeed\n";
-
-        let extracted = blocks("a.py", source);
-
-        assert!(
-            extracted.is_empty(),
-            "1 line but 12 words must not pass the conjunction; got {extracted:?}"
+    fn a_one_line_block_reaches_volume_without_becoming_duplicate_eligible() {
+        // Arrange
+        let source = format!(
+            "# {}\n",
+            (1..=151)
+                .map(|index| format!("w{index}"))
+                .collect::<Vec<_>>()
+                .join(" ")
         );
+
+        // Act
+        let extracted = blocks("a.py", &source);
+        let report = volume(&extracted, Limits::default());
+
+        // Assert
+        assert_eq!(extracted.len(), 1, "volume cannot see a dropped block");
+        assert!(!extracted[0].is_large_enough());
+        assert_eq!(report.overruns.len(), 1);
+        assert_eq!(report.overruns[0].words, 151);
     }
 
     /// A block that passes both halves must actually appear — otherwise the three exclusion tests
@@ -1619,19 +1637,19 @@ mod tests {
         );
     }
 
-    /// ... and the marker must not MANUFACTURE a block either: a lone one-line comment is below the
-    /// size gate, and putting a marker above it used to push the pair over the line half.
+    /// The marker stays outside a one-line block, so it cannot make that block `TPX003`-eligible.
     #[test]
-    fn the_opt_out_marker_does_not_manufacture_a_block() {
+    fn the_opt_out_marker_does_not_enlarge_a_one_line_block() {
         let suppressed = "# !TPX001\n\
                           # one line comment with quite a lot of words in it indeed\n";
 
         let extracted = blocks("a.py", suppressed);
 
-        assert!(
-            extracted.is_empty(),
-            "the marker turned a filtered one-line comment into a block: {extracted:?}"
-        );
+        assert_eq!(extracted.len(), 1, "got {extracted:?}");
+        assert_eq!((extracted[0].line_start, extracted[0].line_end), (2, 2));
+        assert_eq!(extracted[0].size_words(), 12);
+        assert!(!extracted[0].is_large_enough());
+        assert!(!extracted[0].normalized.contains("tpx001"));
     }
 
     /// `size_lines` must not underflow on an inverted span. Every field of [`ProseBlock`] is public

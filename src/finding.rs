@@ -518,13 +518,10 @@ mod tests {
     /// a spanning block renders `start-end`, a block that occupies one line renders that line and
     /// no range, because `path:7-7` is noise that a reader has to parse before discarding.
     ///
-    /// The single-line half is **constructed rather than extracted**, and that is deliberate:
-    /// [`crate::extract::MIN_BLOCK_LINES`] is 2, so no walk can ever hand this type a `Location`
-    /// with `end_line == line`. The branch is a property of the address type — which is public,
-    /// appears three times over in the schema, and is the one place a range is rendered — not of
-    /// the extractor that happens to feed it today. Testing it through the CLI is impossible;
-    /// leaving it untested means the only guard against `path:7-7` is that nothing currently
-    /// reaches it.
+    /// The single-line half is constructed directly to isolate the address type from extraction
+    /// and detector behavior. [`crate::extract::extract`] can hand one-line blocks to volume, but
+    /// this branch is a property of public `Location` itself — the one place a range is rendered —
+    /// so its smallest test should not depend on a configured word limit or finding conversion.
     #[test]
     fn an_address_renders_a_range_and_omits_it_for_a_single_line() {
         // Arrange

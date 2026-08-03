@@ -22,12 +22,18 @@ the binary printed, so the two cannot drift apart unnoticed.
 ### Volume boundaries
 
 Volume is measured in **words** rather than lines or characters, and the limit is the last size still
-allowed — a block of exactly the limit is silent, one word over is a finding.
+allowed — a block of exactly the limit is silent, one word over is a finding. Physical wrapping does
+not control `TPX001` / `TPX002` eligibility: the same normalised words have the same count and verdict
+on one line or several, with only the reported line range changing.
 
-A block must also span at least two physical lines to be considered at all. That threshold is why
-one-line prose never produces a finding: on the reference corpus, one-line blocks like
-`"""Initialize the class."""` are 98.83%–99.99% of all exact duplicate pairs (`corpus/REPORT.md`,
-*Minimum prose-block size*), and counting them would bury every real result.
+Normalisation replaces punctuation with spaces before counting. That includes punctuation inside
+source references: `path/to/file.py:42` counts as five normalised words (`path`, `to`, `file`, `py`,
+`42`). This is the existing calibrated word unit, not a path-, URL-, or module-specific tokenizer.
+
+The two-line and eight-word conjunction belongs only to `TPX003`. One-line blocks such as
+`"""Initialize the class."""` dominate exact duplicate pairs on the measured corpus
+(`corpus/REPORT.md`, *Minimum prose-block size*), so they are excluded before both exact grouping and
+near-duplicate shingling. They still reach `TPX001` / `TPX002` volume measurement.
 
 ### What `TPX003` compares: narrative prose, not the reference scaffolding
 

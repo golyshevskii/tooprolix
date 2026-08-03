@@ -27,9 +27,9 @@
 //! * a block whose narrative is **empty** takes no part in the rule. That is not a guard written
 //!   here: an empty text has no shingle, so the index never proposes it as a candidate, and
 //!   `exact_groups` skips it explicitly;
-//! * blocks arrive already filtered by [`crate::extract::MIN_BLOCK_LINES`] `AND`
-//!   [`crate::extract::MIN_BLOCK_WORDS`], and are not re-filtered. Those two count the **whole**
-//!   block, so a block can be large enough to arrive here and still have nothing to compare;
+//! * [`duplicates`] applies [`crate::extract::ProseBlock::is_large_enough`] before both exact
+//!   grouping and near-duplicate shingling. Those two dimensions count the **whole** block, so a
+//!   block can pass the floor and still have no narrative left to compare;
 //! * nothing here walks the filesystem, and nothing here is parallel.
 //!
 //! Two paths produce edges, for the reason spelled out on each: identical narrative is
@@ -546,9 +546,10 @@ impl Components {
 /// Every group of blocks that says the same thing, sorted.
 ///
 /// `blocks` is whatever [`crate::extract::extract`] produced, for one file or for a whole
-/// repository. Nothing is re-filtered here: the [`crate::extract::MIN_BLOCK_LINES`] `AND`
-/// [`crate::extract::MIN_BLOCK_WORDS`] conjunction already ran, and applying it twice would put
-/// two owners on one measured constant.
+/// repository. The [`crate::extract::MIN_BLOCK_LINES`] `AND`
+/// [`crate::extract::MIN_BLOCK_WORDS`] conjunction is applied before both exact grouping and
+/// near-duplicate shingling, so one-line and too-small blocks allocate no shingles and do not grow
+/// [`Report::comparisons`].
 ///
 /// # Examples
 ///
@@ -577,7 +578,13 @@ impl Components {
 pub fn duplicates(blocks: &[ProseBlock]) -> Report<'_> {
     let sets: Vec<Vec<Shingle<'_>>> = blocks
         .iter()
-        .map(|block| shingles(&block.narrative))
+        .map(|block| {
+            if block.is_large_enough() {
+                shingles(&block.narrative)
+            } else {
+                Vec::new()
+            }
+        })
         .collect();
 
     let mut components = Components::new(blocks.len());
@@ -614,12 +621,12 @@ pub fn duplicates(blocks: &[ProseBlock]) -> Report<'_> {
 /// on the corpus.** The 543 was measured when the floor sat somewhere else in the pipeline and did
 /// not survive the move into this function; it was reported as current and is not.
 ///
-/// **What is measured about this floor, stated at the size it actually is.** It gates the **exact**
-/// path only (this function has one caller, `exact_groups`). The **near** path has no explicit
-/// floor: a narrative of fewer than [`SHINGLE_K`] words yields no shingle, so the inverted index
-/// never proposes it. The two populations therefore coincide *at* [`SHINGLE_K`] by construction —
-/// which is why raising this constant alone moves nothing, and why raising it would have to be done
-/// in both places to mean anything.
+/// **What is measured about this narrative floor, stated at the size it actually is.** It gates the
+/// **exact** path only (this function has one caller, `exact_groups`). After the shared whole-block
+/// floor, the **near** path needs no separate narrative check: fewer than [`SHINGLE_K`] narrative
+/// words yield no shingle, so the inverted index never proposes the block. The two populations
+/// therefore coincide *at* [`SHINGLE_K`] by construction — which is why raising this constant alone
+/// moves nothing, and why raising it would have to be done in both places to mean anything.
 ///
 /// The floor is [`SHINGLE_K`]: the smallest value that means anything at all, and the value at which
 /// the two paths already agree. A larger floor is a **recall** decision that this task's Out-of-scope
@@ -677,7 +684,7 @@ fn exact_groups(blocks: &[ProseBlock], components: &mut Components) -> Vec<Optio
         // `is_compared` is `TPX003`'s whole answer to "what is left of a block that is mostly a
         // parameter table?" — see its rustdoc. Two such blocks are byte-identical here, so without
         // it they would be an exact group scoring 1.0 on a residue of one word.
-        if is_compared(block) {
+        if block.is_large_enough() && is_compared(block) {
             by_text
                 .entry(block.narrative.as_str())
                 .or_default()
@@ -834,6 +841,53 @@ mod tests {
             narrative: narrative(text),
             raw: text.to_owned(),
         }
+    }
+
+    /// Exact one-line twins stay outside `TPX003` even for direct public-API callers.
+    #[test]
+    fn exact_one_line_twins_are_not_grouped() {
+        // Arrange
+        let text = "one line with enough words to satisfy the measured word floor";
+        let blocks = vec![
+            block("left.py", 1, 1, ProseKind::Comment, text),
+            block("right.py", 1, 1, ProseKind::Comment, text),
+        ];
+
+        // Act
+        let report = duplicates(&blocks);
+
+        // Assert
+        assert!(report.clusters.is_empty(), "got {:?}", report.clusters);
+        assert_eq!(report.comparisons, 0, "exact twins are grouped, not scored");
+    }
+
+    /// Near one-line twins allocate no shingles and therefore create no comparison work.
+    #[test]
+    fn near_one_line_twins_are_not_shingled() {
+        // Arrange — six shared of eight total shingles: exactly the 0.75 threshold.
+        let blocks = vec![
+            block(
+                "left.py",
+                1,
+                1,
+                ProseKind::Comment,
+                "the retry budget here is small because upstream throttles",
+            ),
+            block(
+                "right.py",
+                1,
+                1,
+                ProseKind::Comment,
+                "the retry budget here is small because upstream waits",
+            ),
+        ];
+
+        // Act
+        let report = duplicates(&blocks);
+
+        // Assert
+        assert!(report.clusters.is_empty(), "got {:?}", report.clusters);
+        assert_eq!(report.comparisons, 0, "one-line blocks allocated shingles");
     }
 
     /// The same rationale, written once as a module docstring and once as a comment run in

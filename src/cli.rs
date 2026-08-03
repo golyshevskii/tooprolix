@@ -201,6 +201,9 @@ const HELP_AFTER_RULES: &str = "
   The limits are `comment-max-volume` and `docstring-max-volume`, both in words.
   Volume is measured in WORDS, after normalisation — not lines and not characters.
   The limit is the last size still allowed: a block of exactly the limit is silent.
+  Wrapping the same prose does not change TPX001/TPX002 eligibility or its word count.
+  Punctuation splits normalised words, including inside `path/to/file.py:42` references.
+  TPX003 alone requires at least two physical lines AND eight normalised words.
 
 Opt out of one block, with the marker on the physical line DIRECTLY ABOVE it —
 one rule for comments and docstrings alike:
