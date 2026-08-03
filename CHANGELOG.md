@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.3](https://github.com/golyshevskii/tooprolix/compare/v0.5.2...v0.5.3) - 2026-08-03
+
+### Added
+
+- accept multiple explicit check paths ([#66](https://github.com/golyshevskii/tooprolix/pull/66))
+
+### Other
+
+- clarify project metadata ([#64](https://github.com/golyshevskii/tooprolix/pull/64))
+
 ## [0.5.2](https://github.com/golyshevskii/tooprolix/compare/v0.5.1...v0.5.2) - 2026-08-02
 
 ### Added
