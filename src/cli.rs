@@ -770,20 +770,9 @@ fn prepare_walks(paths: &[PathBuf]) -> Result<(Config, Vec<Walked>), Error> {
     let Some(first_path) = paths.first() else {
         return Err(Error::Usage("check needs a path".to_owned()));
     };
-    let mut prepared = Vec::with_capacity(paths.len());
-    for path in paths {
-        let config = config::load(path)?;
-        let walked = python_files(path, &config)?;
-        prepared.push((config, walked));
-    }
-
-    let mut prepared = prepared.into_iter();
-    let Some((config, first_walk)) = prepared.next() else {
-        return Err(Error::Usage("check needs a path".to_owned()));
-    };
-    let mut walks = Vec::with_capacity(paths.len());
-    walks.push(first_walk);
-    for (path, (candidate, walked)) in paths.iter().skip(1).zip(prepared) {
+    let config = config::load(first_path)?;
+    for path in paths.iter().skip(1) {
+        let candidate = config::load(path)?;
         if candidate.source != config.source {
             return Err(Error::ConflictingConfigurations {
                 first_path: first_path.clone(),
@@ -792,8 +781,11 @@ fn prepare_walks(paths: &[PathBuf]) -> Result<(Config, Vec<Walked>), Error> {
                 second_source: config_source_label(&candidate),
             });
         }
-        walks.push(walked);
     }
+    let walks = paths
+        .iter()
+        .map(|path| python_files(path, &config))
+        .collect::<Result<Vec<_>, _>>()?;
     Ok((config, walks))
 }
 
@@ -1325,10 +1317,6 @@ fn merge_walks(paths: &[PathBuf], walks: Vec<Walked>) -> Walked {
     }
 
     let explicit_roots: HashSet<PathBuf> = paths.iter().map(|path| path_identity(path)).collect();
-    let explicit_measured: HashSet<PathBuf> = explicit_files
-        .iter()
-        .map(|path| path_identity(path))
-        .collect();
     let mut measured = HashSet::new();
     let mut files = Vec::new();
     for file in explicit_files.into_iter().chain(nested_files) {
@@ -1348,7 +1336,7 @@ fn merge_walks(paths: &[PathBuf], walks: Vec<Walked>) -> Walked {
     let mut seen_skipped = HashSet::new();
     skipped.retain(|entry| {
         let identity = path_identity(Path::new(&entry.path));
-        !explicit_measured.contains(&identity) && seen_skipped.insert(identity)
+        seen_skipped.insert(identity)
     });
 
     Walked {

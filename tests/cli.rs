@@ -507,7 +507,8 @@ fn explicit_path_wins_over_walked_duplicate() {
     .expect("a symlink is creatable");
 
     // Act — the directory contributes a walked copy and a skipped symlink; the first explicit
-    // spelling must replace both, and the explicitly named excluded file must leave `excluded`.
+    // spelling replaces the measured copy, but cannot erase the distinct refusal to follow the
+    // alias. The explicitly named excluded file must still leave `excluded`.
     let output = scratch.check(&[
         "visible.py",
         "./visible.py",
@@ -520,11 +521,24 @@ fn explicit_path_wins_over_walked_duplicate() {
 
     // Assert
     assert_eq!(output.status.code(), Some(1), "{output:?}");
-    assert_eq!(stderr_of(&output), "", "{output:?}");
+    assert!(
+        stderr_of(&output).contains("alias.py"),
+        "the skipped alias is not named: {output:?}"
+    );
     let document: serde_json::Value =
         serde_json::from_str(stdout_of(&output)).expect("stdout is one JSON document");
-    assert_eq!(document["complete"], true, "{document:#}");
-    assert_eq!(document["skipped"].as_array().map(Vec::len), Some(0));
+    assert_eq!(document["complete"], false, "{document:#}");
+    assert_eq!(
+        document["skipped"].as_array().map(Vec::len),
+        Some(1),
+        "{document:#}"
+    );
+    assert!(
+        document["skipped"][0]["path"]
+            .as_str()
+            .is_some_and(|path| path.ends_with("alias.py")),
+        "the refusal channel does not retain the alias: {document:#}"
+    );
     assert_eq!(document["excluded"].as_array().map(Vec::len), Some(0));
     let paths: Vec<&str> = document["findings"]
         .as_array()
