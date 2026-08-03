@@ -9,7 +9,7 @@ name = "tooprolix"
 # places is how they drift, and hand-editing either one is exactly what
 # `package-python-distribution-and-publish-0-1-0` AC5 forbids.
 dynamic = ["version"]
-description = "A prose budget linter for Python."
+description = "Deterministic linter for overlong and duplicated prose in Python comments and docstrings."
 # The PyPI project page. It is NOT this file verbatim: `scripts/transform_readme.py` rewrites
 # EVERY relative address README.md carries into an absolute GitHub URL first, because a relative
 # address has no repository to resolve against on a project page and 404s. No count is written
@@ -18,7 +18,17 @@ description = "A prose budget linter for Python."
 # step in `.github/workflows/build-artifacts.yml` before maturin reads this key, and it FAILS the
 # build rather than warning when the README is not the shape it expects.
 readme = "README.md"
-keywords = ["comments", "docstrings", "linter", "prose", "python"]
+keywords = [
+    "code-quality",
+    "comments",
+    "docstrings",
+    "duplicate-prose",
+    "linter",
+    "prose",
+    "python",
+    "python-linter",
+    "static-analysis",
+]
 # PEP 639: an SPDX expression plus the file, not the retired `License ::` trove classifiers —
 # `license-files` puts both required `License-File` headers and files into both archives, which
 # `scripts/check_artifact.py` grades by opening the built artifacts.
