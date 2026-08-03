@@ -356,12 +356,12 @@ type Edge = (f64, usize, usize);
 /// `total_cmp`, so the three arms are the whole domain and no unreachable `None` needs justifying.
 /// It agrees with `partial_cmp` on every score reachable here: `jaccard` is a ratio of two positive
 /// counts and `exact_groups` passes a literal `1.0`, so neither `NaN` nor `-0.0` can arrive.
-fn weaker(left: Edge, right: Edge, blocks: &[ProseBlock]) -> Edge {
+fn weaker(left: Edge, right: Edge, blocks: &[&ProseBlock]) -> Edge {
     match left.0.total_cmp(&right.0) {
         Ordering::Less => left,
         Ordering::Greater => right,
         Ordering::Equal => {
-            let ends = |edge: Edge| (end_of(&blocks[edge.1]), end_of(&blocks[edge.2]));
+            let ends = |edge: Edge| (end_of(blocks[edge.1]), end_of(blocks[edge.2]));
             if ends(left) <= ends(right) {
                 left
             } else {
@@ -376,9 +376,9 @@ fn weaker(left: Edge, right: Edge, blocks: &[ProseBlock]) -> Edge {
 /// A union-find, and **the** reason this module never allocates a pair: an exact group of `n`
 /// identical blocks reaches it as `n - 1` calls to [`Self::connect`], and a near-duplicate family of
 /// `n` as however many candidate pairs cleared the threshold — and this structure is three vectors
-/// of length `n` either way, because an edge is folded in and dropped rather than kept. A list of
-/// findings was `O(n^2)`: measured before the change, 2 000 files sharing a licence header allocated
-/// 1 999 000 findings at 92.5 MB of resident memory, and 5 000 files 445 MB.
+/// of length `n` **eligible candidates** either way, because an edge is folded in and dropped rather
+/// than kept. A list of findings was `O(n^2)`: measured before the change, 2 000 files sharing a
+/// licence header allocated 1 999 000 findings at 92.5 MB of resident memory, and 5 000 files 445 MB.
 ///
 /// That bound is only the whole story because `for_each_candidate_pair` streams: it used to hand
 /// this loop a `HashSet` of every candidate pair, so the peak was quadratic one function earlier,
@@ -432,8 +432,8 @@ impl Components {
     /// [`Cluster::members`] deduplicates by [`End`] and the pair would name one address against
     /// itself. `None` says that in the type rather than in a comment: it flows into the same fold
     /// below and simply is not there.
-    fn connect(&mut self, left: usize, right: usize, score: f64, blocks: &[ProseBlock]) {
-        let edge = match end_of(&blocks[left]).cmp(&end_of(&blocks[right])) {
+    fn connect(&mut self, left: usize, right: usize, score: f64, blocks: &[&ProseBlock]) {
+        let edge = match end_of(blocks[left]).cmp(&end_of(blocks[right])) {
             Ordering::Less => Some((score, left, right)),
             Ordering::Greater => Some((score, right, left)),
             Ordering::Equal => None,
@@ -474,7 +474,7 @@ impl Components {
     /// edges, and at least one edge on that path joins two different addresses — [`Self::connect`]
     /// records exactly those — so the weakest edge exists and both of its ends survive the dedup
     /// below.
-    fn into_clusters(mut self, blocks: &[ProseBlock]) -> Vec<Cluster<'_>> {
+    fn into_clusters<'a>(mut self, blocks: &[&'a ProseBlock]) -> Vec<Cluster<'a>> {
         let mut by_root: HashMap<usize, Vec<usize>> = HashMap::new();
         for position in 0..blocks.len() {
             let root = self.find(position);
@@ -485,10 +485,8 @@ impl Components {
 
         let mut clusters = Vec::with_capacity(by_root.len());
         for (root, positions) in by_root {
-            let mut members: Vec<&ProseBlock> = positions
-                .iter()
-                .map(|&position| &blocks[position])
-                .collect();
+            let mut members: Vec<&ProseBlock> =
+                positions.iter().map(|&position| blocks[position]).collect();
             members.sort_by(|left, right| {
                 end_of(left)
                     .cmp(&end_of(right))
@@ -515,7 +513,7 @@ impl Components {
             // at a block the dedup had just discarded — a different object, with a different `raw`,
             // that no longer appears in the finding it is part of.
             let member_at = |position: usize| {
-                let target = end_of(&blocks[position]);
+                let target = end_of(blocks[position]);
                 // A linear scan, not a binary search over the sorted list: it is two scans per
                 // cluster, and a binary search would silently make this depend on the member
                 // ordering above — two guards sharing one failure, which is how a defect in the
@@ -576,31 +574,29 @@ impl Components {
 /// ```
 #[must_use]
 pub fn duplicates(blocks: &[ProseBlock]) -> Report<'_> {
+    let blocks: Vec<&ProseBlock> = blocks
+        .iter()
+        .filter(|block| block.is_large_enough())
+        .collect();
     let sets: Vec<Vec<Shingle<'_>>> = blocks
         .iter()
-        .map(|block| {
-            if block.is_large_enough() {
-                shingles(&block.narrative)
-            } else {
-                Vec::new()
-            }
-        })
+        .map(|block| shingles(&block.narrative))
         .collect();
 
     let mut components = Components::new(blocks.len());
-    let group_of = exact_groups(blocks, &mut components);
+    let group_of = exact_groups(&blocks, &mut components);
 
     let mut comparisons = 0;
     for_each_candidate_pair(&sets, &group_of, |left, right| {
         comparisons += 1;
         let score = jaccard(&sets[left], &sets[right]);
         if score >= SIMILARITY_THRESHOLD {
-            components.connect(left, right, score, blocks);
+            components.connect(left, right, score, &blocks);
         }
     });
 
     Report {
-        clusters: components.into_clusters(blocks),
+        clusters: components.into_clusters(&blocks),
         comparisons,
     }
 }
@@ -677,14 +673,14 @@ fn is_compared(block: &ProseBlock) -> bool {
 /// and that is why the centre of the star is the smallest member by [`end_of`] rather than the
 /// first one to arrive — the recorded edge set is then the same for any permutation of the input,
 /// and so is the pair [`Cluster::weakest`] names.
-fn exact_groups(blocks: &[ProseBlock], components: &mut Components) -> Vec<Option<usize>> {
+fn exact_groups(blocks: &[&ProseBlock], components: &mut Components) -> Vec<Option<usize>> {
     // One entry per distinct narrative, so `blocks.len()` is the exact ceiling.
     let mut by_text: HashMap<&str, Vec<usize>> = HashMap::with_capacity(blocks.len());
     for (position, block) in blocks.iter().enumerate() {
         // `is_compared` is `TPX003`'s whole answer to "what is left of a block that is mostly a
         // parameter table?" — see its rustdoc. Two such blocks are byte-identical here, so without
         // it they would be an exact group scoring 1.0 on a residue of one word.
-        if block.is_large_enough() && is_compared(block) {
+        if is_compared(block) {
             by_text
                 .entry(block.narrative.as_str())
                 .or_default()
@@ -735,8 +731,8 @@ fn exact_groups(blocks: &[ProseBlock], components: &mut Components) -> Vec<Optio
 ///
 /// Chosen over `minhash`/LSH because the measurement says the exact index is already cheap enough
 /// on real input, so LSH would only add a probability of *missing* a pair. Measured by the
-/// supervisor on the shipped extractor's own output (blocks already `>= 2` lines `AND` `>= 8`
-/// words), before this task was written:
+/// supervisor on the shipped detector's candidate population (blocks filtered to `>= 2` lines
+/// `AND` `>= 8` words at the [`duplicates`] boundary), before this task was written:
 ///
 /// | repository | blocks | largest shingle bucket | candidate pairs | share of `n(n-1)/2` |
 /// |---|---|---|---|---|
@@ -753,7 +749,7 @@ fn exact_groups(blocks: &[ProseBlock], components: &mut Components) -> Vec<Optio
 /// It buys nothing and can only lie — and it lies in the worst direction, because the biggest
 /// buckets belong to the most-duplicated blocks. The catastrophic case on record (a cap hiding
 /// 737 681 exact pairs, 99.4% of them) was measured at the unfiltered `1 line / 1 word` level,
-/// which the inherited size conjunction already removes before anything reaches this function.
+/// which the [`duplicates`] boundary already removes before anything reaches this function.
 fn for_each_candidate_pair(
     sets: &[Vec<Shingle<'_>>],
     group_of: &[Option<usize>],
@@ -848,7 +844,7 @@ mod tests {
     fn exact_one_line_twins_are_not_grouped() {
         // Arrange
         let text = "one line with enough words to satisfy the measured word floor";
-        let blocks = vec![
+        let blocks = [
             block("left.py", 1, 1, ProseKind::Comment, text),
             block("right.py", 1, 1, ProseKind::Comment, text),
         ];
@@ -865,7 +861,7 @@ mod tests {
     #[test]
     fn near_one_line_twins_are_not_shingled() {
         // Arrange — six shared of eight total shingles: exactly the 0.75 threshold.
-        let blocks = vec![
+        let blocks = [
             block(
                 "left.py",
                 1,
@@ -888,6 +884,41 @@ mod tests {
         // Assert
         assert!(report.clusters.is_empty(), "got {:?}", report.clusters);
         assert_eq!(report.comparisons, 0, "one-line blocks allocated shingles");
+    }
+
+    /// Duplicate internals are indexed only by the eligible borrowed candidate population.
+    #[test]
+    fn duplicate_internals_are_sized_from_eligible_borrowed_candidates() {
+        // Arrange — excluded exact twins surround an eligible exact pair, so using positions from
+        // the original slice would either expose the one-line pair or index the wrong blocks.
+        let text = "the retry budget here is deliberately small because upstream throttles us";
+        let blocks = [
+            block("excluded-a.py", 1, 1, ProseKind::Comment, text),
+            block("eligible-a.py", 1, 2, ProseKind::Comment, text),
+            block("eligible-b.py", 1, 2, ProseKind::Comment, text),
+            block("excluded-b.py", 1, 1, ProseKind::Comment, text),
+        ];
+        let candidates: Vec<&ProseBlock> = blocks
+            .iter()
+            .filter(|block| block.is_large_enough())
+            .collect();
+
+        // Act
+        let mut components = Components::new(candidates.len());
+        let group_of = exact_groups(&candidates, &mut components);
+        let clusters = components.into_clusters(&candidates);
+
+        // Assert
+        assert_eq!(group_of, vec![Some(0), Some(0)]);
+        assert_eq!(clusters.len(), 1);
+        assert_eq!(
+            clusters[0]
+                .members
+                .iter()
+                .map(|block| block.path.as_path())
+                .collect::<Vec<_>>(),
+            vec![Path::new("eligible-a.py"), Path::new("eligible-b.py")]
+        );
     }
 
     /// The same rationale, written once as a module docstring and once as a comment run in
@@ -2467,10 +2498,11 @@ preserve_existing_api_key: bool = False
                     # an unbounded queue turns a slow consumer into a memory leak.\n";
         let blocks = corpus(&[("b.py", twin), ("a.py", twin), ("c.py", lone)]);
         assert_eq!(blocks.len(), 3, "got {blocks:?}");
+        let candidates: Vec<&ProseBlock> = blocks.iter().collect();
 
         // Act
-        let mut components = Components::new(blocks.len());
-        let group_of = exact_groups(&blocks, &mut components);
+        let mut components = Components::new(candidates.len());
+        let group_of = exact_groups(&candidates, &mut components);
 
         // Assert
         assert_eq!(
@@ -2480,7 +2512,7 @@ preserve_existing_api_key: bool = False
              block with no twin carries None"
         );
         assert_eq!(
-            components.into_clusters(&blocks).len(),
+            components.into_clusters(&candidates).len(),
             1,
             "the twins are connected and the lone block is not"
         );
@@ -2555,18 +2587,19 @@ preserve_existing_api_key: bool = False
     fn the_weakest_link_is_the_minimum_over_all_edges_not_over_the_merging_ones() {
         // Arrange — a triangle: strong a-b, strong a-c, weak b-c, in that order.
         let text = "the retry budget here is deliberately small and that matters a great deal";
-        let blocks = vec![
+        let blocks = [
             block("a.py", 1, 2, ProseKind::Comment, text),
             block("b.py", 1, 2, ProseKind::Comment, text),
             block("c.py", 1, 2, ProseKind::Comment, text),
         ];
-        let mut components = Components::new(blocks.len());
+        let candidates: Vec<&ProseBlock> = blocks.iter().collect();
+        let mut components = Components::new(candidates.len());
 
         // Act
-        components.connect(0, 1, 0.90, &blocks);
-        components.connect(0, 2, 0.88, &blocks);
-        components.connect(1, 2, 0.76, &blocks);
-        let clusters = components.into_clusters(&blocks);
+        components.connect(0, 1, 0.90, &candidates);
+        components.connect(0, 2, 0.88, &candidates);
+        components.connect(1, 2, 0.76, &candidates);
+        let clusters = components.into_clusters(&candidates);
 
         // Assert
         assert_eq!(clusters.len(), 1, "all three are one component");

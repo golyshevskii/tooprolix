@@ -214,6 +214,74 @@ fn one_line_volume_suppression_does_not_hide_an_incomplete_run() {
     assert!(stderr_of(&incomplete_json).contains("malformed.py"));
 }
 
+/// New small blocks use volume relevance, while the old duplicate floor keeps its warning contract.
+#[test]
+fn unknown_marker_relevance_preserves_the_old_floor_and_gates_new_one_line_blocks() {
+    // Arrange — the first two trees use the same two-word maximum. The first block is below it and
+    // is too short for TPX003; the second exceeds it, so swallowing its typo would hide TPX001.
+    let clean = Scratch::new("one-line-unknown-marker-clean");
+    clean.write(
+        "pyproject.toml",
+        "[tool.tooprolix]\ncomment-max-volume = 2\n",
+    );
+    clean.write("short.py", "# !TPX999\n# short\n");
+
+    let relevant = Scratch::new("one-line-unknown-marker-relevant");
+    relevant.write(
+        "pyproject.toml",
+        "[tool.tooprolix]\ncomment-max-volume = 2\n",
+    );
+    relevant.write("long.py", "# !TPX999\n# three words here\n");
+
+    // This block cleared the extractor's old floor, so its warning existed before one-line prose
+    // was retained. Ignoring TPX003 must not retroactively silence that config-independent warning.
+    let old_floor = Scratch::new("unknown-marker-old-floor");
+    old_floor.write(
+        "pyproject.toml",
+        "[tool.tooprolix]\nignore = [\"TPX003\"]\n",
+    );
+    old_floor.write(
+        "eligible.py",
+        "# !TPX999\n# one two three four five\n# six seven eight nine ten\n",
+    );
+
+    // Act
+    let clean_output = clean.check(&[]);
+    let relevant_output = relevant.check(&[]);
+    let old_floor_output = old_floor.check(&[]);
+
+    // Assert
+    assert_eq!(clean_output.status.code(), Some(0), "{clean_output:?}");
+    assert_eq!(stdout_of(&clean_output), CLEAN_STDOUT, "{clean_output:?}");
+    assert_eq!(stderr_of(&clean_output), "", "{clean_output:?}");
+
+    assert_eq!(
+        relevant_output.status.code(),
+        Some(1),
+        "{relevant_output:?}"
+    );
+    assert!(stdout_of(&relevant_output).contains("TPX001"));
+    assert!(
+        stderr_of(&relevant_output).contains("`TPX999` in an opt-out marker is not a rule code"),
+        "a typo that failed to suppress a real finding was hidden: {relevant_output:?}"
+    );
+
+    assert_eq!(
+        old_floor_output.status.code(),
+        Some(0),
+        "{old_floor_output:?}"
+    );
+    assert_eq!(
+        stdout_of(&old_floor_output),
+        CLEAN_STDOUT,
+        "{old_floor_output:?}"
+    );
+    assert!(
+        stderr_of(&old_floor_output).contains("`TPX999` in an opt-out marker is not a rule code"),
+        "ignoring TPX003 silenced the established warning population: {old_floor_output:?}"
+    );
+}
+
 /// The exit contract, all three codes, on fixtures that are each capable of the other two answers —
 /// which is what stops this from being three tests that all pass on a CLI that always exits 0.
 ///
