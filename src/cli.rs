@@ -201,6 +201,9 @@ const HELP_AFTER_RULES: &str = "
   The limits are `comment-max-volume` and `docstring-max-volume`, both in words.
   Volume is measured in WORDS, after normalisation — not lines and not characters.
   The limit is the last size still allowed: a block of exactly the limit is silent.
+  Wrapping the same prose does not change TPX001/TPX002 eligibility or its word count.
+  Punctuation splits normalised words, including inside `path/to/file.py:42` references.
+  TPX003 alone requires at least two physical lines AND eight normalised words.
 
 Opt out of one block, with the marker on the physical line DIRECTLY ABOVE it —
 one rule for comments and docstrings alike:
@@ -689,7 +692,7 @@ pub fn execute<I: IntoIterator<Item = OsString>>(arguments: I) -> Result<ExitSta
     // list, so none of them can disagree about whether the tree was complete.
     let (sources, mut skipped, mut warnings) = read(&files);
     skipped.extend(unwalkable);
-    report_unknown_marker_codes(&sources, &mut warnings);
+    report_unknown_marker_codes(&sources, &config, &mut warnings);
     warn_sorted(warnings);
     let findings = findings(sources, &config);
     // The guarantee, in one expression: `Success` — the only variant that reports 0 — is
@@ -1492,15 +1495,28 @@ fn sources_of(blocks: Vec<ProseBlock>, text: &str, warnings: &mut Vec<String>) -
         .collect()
 }
 
-/// Says which markers named a code no rule answers to.
+/// Says which relevant blocks have markers naming a code no rule answers to.
 ///
 /// A warning and not a failure — see [`crate::rules`] for why this is loud where the configuration
 /// is fatal. The finding still appears, so the typo fails closed either way.
 ///
+/// Extraction retains one-line prose for the volume rules, so a marker can now be paired with a
+/// block the old TPX003 floor discarded. Such a block is silent here when it is within its active
+/// volume limit; it becomes audible if it exceeds that limit. A block that clears the old TPX003
+/// floor remains audible regardless of `ignore`, preserving the config-independent warning
+/// population that existed before one-line prose was retained.
+///
 /// Appends rather than prints, for the reason [`read`] does: `sources` is in walk order, so
 /// emitting from here made the output depend on the filesystem. [`warn_sorted`] owns the order.
-fn report_unknown_marker_codes(sources: &[Source], warnings: &mut Vec<String>) {
+fn report_unknown_marker_codes(sources: &[Source], config: &Config, warnings: &mut Vec<String>) {
     for source in sources {
+        let volume_rule = Rule::volume_for(source.block.kind);
+        let relevant_to_volume = !config.ignores(volume_rule)
+            && source.block.size_words() > config.limits.max_volume(source.block.kind);
+        let relevant_to_old_floor = source.block.is_large_enough();
+        if !relevant_to_volume && !relevant_to_old_floor {
+            continue;
+        }
         for code in source.suppressed.unknown_codes() {
             warnings.push(format!(
                 "warning: {}:{}: `{code}` in an opt-out marker is not a rule code; it silences \

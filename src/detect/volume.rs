@@ -79,16 +79,12 @@
 //! its own number instead of switching the rule off. That escape hatch is what makes a useful
 //! default the right side to err on.
 //!
-//! # A block one physical line long is invisible here, whatever its length
+//! # Physical wrapping does not control volume eligibility
 //!
-//! [`crate::extract::extract`] applies [`crate::extract::MIN_BLOCK_LINES`] `AND`
-//! [`crate::extract::MIN_BLOCK_WORDS`] before any detector runs, and those two were measured for
-//! the *duplicate* detector. The line half is the one that can hide a volume finding, and it is
-//! deliberately left alone rather than forked into a second extraction path: measured over all
-//! eight corpus checkouts, the one-line blocks it hides number **1 above 50 words** (in
-//! `OpenHands`), **1 above 100**, and **0 above 150** — so at both defaults the population hidden
-//! from this module is **empty**. One block corpus-wide is not worth two owners of one extraction
-//! contract.
+//! [`crate::extract::extract`] retains one-line prose for this detector. A block's normalised word
+//! count alone decides `TPX001` / `TPX002`, so wrapping the same words changes only the reported
+//! line range. [`crate::extract::normalize`] replaces punctuation with spaces before counting,
+//! including punctuation inside source references: `path/to/file.py:42` counts as five words.
 //!
 //! # What this module does not own
 //!
@@ -317,9 +313,6 @@ mod tests {
     use crate::extract::{ProseKind, extract};
 
     /// A module docstring of exactly `words` normalised words, across two physical lines.
-    ///
-    /// Two lines, not one, because [`crate::extract::MIN_BLOCK_LINES`] is 2 and a one-line block
-    /// never reaches a detector at all — the limitation this module's rustdoc records.
     fn docstring_of(words: usize) -> String {
         let body: Vec<String> = (1..=words).map(|index| format!("w{index}")).collect();
         format!("\"\"\"{}\n{}\"\"\"\n", body[0], body[1..].join(" "))

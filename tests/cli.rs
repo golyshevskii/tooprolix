@@ -45,6 +45,278 @@ fn stderr_of(output: &Output) -> &str {
     std::str::from_utf8(&output.stderr).expect("the CLI writes UTF-8")
 }
 
+/// Volume is measured in normalised words, so physical wrapping cannot decide eligibility.
+#[test]
+fn one_line_volume_matches_wrapped_prose_in_text_and_json() {
+    // Arrange
+    let scratch = Scratch::new("one-line-volume");
+    let cases = [
+        ("docstring", 201, "TPX002", 200),
+        ("comment", 151, "TPX001", 150),
+    ];
+
+    for (kind, words, code, limit) in cases {
+        let body = (1..=words)
+            .map(|index| format!("w{index}"))
+            .collect::<Vec<_>>()
+            .join(" ");
+        let (first, rest) = body.split_once(' ').expect("the fixture has many words");
+        let sources = match kind {
+            "comment" => [format!("# {body}\n"), format!("# {first}\n# {rest}\n")],
+            "docstring" => [
+                format!("\"\"\"{body}\"\"\"\n"),
+                format!("\"\"\"{first}\n{rest}\"\"\"\n"),
+            ],
+            _ => unreachable!("the table contains only prose kinds"),
+        };
+
+        let outputs: Vec<(&str, usize, Output, Output)> =
+            [("one-line", &sources[0], 1), ("wrapped", &sources[1], 2)]
+                .into_iter()
+                .map(|(shape, source, expected_end_line)| {
+                    let path = scratch.write(&format!("{kind}-{shape}.py"), source);
+                    let path = path.to_str().expect("the scratch path is UTF-8");
+
+                    // Act
+                    let text = tooprolix(&["check", path]);
+                    let json = tooprolix(&["check", path, "--format", "json"]);
+                    (shape, expected_end_line, text, json)
+                })
+                .collect();
+
+        // The RED state is `[0, 1]`: one-line prose is incorrectly clean while its wrapped twin
+        // already fires. Keeping the pair in one assertion makes both observed outcomes visible.
+        assert_eq!(
+            outputs
+                .iter()
+                .map(|(_, _, text, _)| text.status.code())
+                .collect::<Vec<_>>(),
+            vec![Some(1), Some(1)],
+            "{kind} text outputs: {outputs:?}"
+        );
+
+        for (shape, expected_end_line, text, json) in outputs {
+            // Assert
+            assert_eq!(stderr_of(&text), "", "{kind} {shape}: {text:?}");
+            assert!(
+                stdout_of(&text).contains(&format!(
+                    "{code} {kind} is {words} words long, over the {limit}-word limit"
+                )),
+                "{kind} {shape}: {}",
+                stdout_of(&text)
+            );
+
+            assert_eq!(json.status.code(), Some(1), "{kind} {shape}: {json:?}");
+            assert_eq!(stderr_of(&json), "", "{kind} {shape}: {json:?}");
+            let document: serde_json::Value =
+                serde_json::from_str(stdout_of(&json)).expect("stdout is schema-v2 JSON");
+            assert_eq!(document["schema_version"], "2", "{kind} {shape}");
+            assert_eq!(document["complete"], true, "{kind} {shape}");
+            assert_eq!(document["findings"].as_array().map(Vec::len), Some(1));
+            let finding = &document["findings"][0];
+            assert_eq!(finding["code"], code, "{kind} {shape}");
+            assert_eq!(finding["prose_kind"], kind, "{kind} {shape}");
+            assert_eq!(finding["words"], words, "{kind} {shape}");
+            assert_eq!(finding["max_volume"], limit, "{kind} {shape}");
+            assert_eq!(finding["line"], 1, "{kind} {shape}");
+            assert_eq!(finding["end_line"], expected_end_line, "{kind} {shape}");
+        }
+    }
+}
+
+/// The configured maxima are allowed values for one-line prose in both output formats.
+#[test]
+fn one_line_volume_boundaries_are_silent_in_text_and_json() {
+    // Arrange
+    let scratch = Scratch::new("one-line-volume-boundaries");
+    for (kind, words) in [("comment", 150), ("docstring", 200)] {
+        let body = (1..=words)
+            .map(|index| format!("w{index}"))
+            .collect::<Vec<_>>()
+            .join(" ");
+        let source = match kind {
+            "comment" => format!("# {body}\n"),
+            "docstring" => format!("\"\"\"{body}\"\"\"\n"),
+            _ => unreachable!("the table contains only prose kinds"),
+        };
+        let path = scratch.write(&format!("{kind}.py"), &source);
+        let path = path.to_str().expect("the scratch path is UTF-8");
+
+        // Act
+        let text = tooprolix(&["check", path]);
+        let json = tooprolix(&["check", path, "--format", "json"]);
+
+        // Assert
+        assert_eq!(text.status.code(), Some(0), "{kind}: {text:?}");
+        assert_eq!(stdout_of(&text), CLEAN_STDOUT, "{kind}: {text:?}");
+        assert_eq!(stderr_of(&text), "", "{kind}: {text:?}");
+
+        assert_eq!(json.status.code(), Some(0), "{kind}: {json:?}");
+        assert_eq!(stderr_of(&json), "", "{kind}: {json:?}");
+        let document: serde_json::Value =
+            serde_json::from_str(stdout_of(&json)).expect("stdout is schema-v2 JSON");
+        assert_eq!(document["schema_version"], "2", "{kind}");
+        assert_eq!(document["complete"], true, "{kind}");
+        assert_eq!(document["findings"].as_array().map(Vec::len), Some(0));
+    }
+}
+
+/// Tool-looking labels that were not already pragmas cannot split a long comment run and hide it.
+#[test]
+fn new_tool_directive_prefixes_do_not_hide_comment_volume() {
+    // Arrange — sixteen prose lines hold 151 words; inserting one directive makes seventeen lines.
+    let scratch = Scratch::new("tool-directive-volume");
+    for (name, directive, expected_words) in [
+        ("fmt", "# fmt: off", 153),
+        ("pyright", "# pyright: reportUnusedImport=false", 154),
+    ] {
+        let words = (1..=151)
+            .map(|index| format!("w{index}"))
+            .collect::<Vec<_>>();
+        let mut lines = words
+            .chunks(10)
+            .map(|chunk| format!("# {}", chunk.join(" ")))
+            .collect::<Vec<_>>();
+        lines.insert(8, directive.to_owned());
+        let path = scratch.write(&format!("{name}.py"), &format!("{}\n", lines.join("\n")));
+
+        // Act
+        let output = tooprolix(&["check", path.to_str().expect("the scratch path is UTF-8")]);
+
+        // Assert
+        assert_eq!(output.status.code(), Some(1), "{name}: {output:?}");
+        assert_eq!(stderr_of(&output), "", "{name}: {output:?}");
+        assert!(
+            stdout_of(&output).contains(&format!(
+                ":1-17: TPX001 comment is {expected_words} words long, over the 150-word limit"
+            )),
+            "{name}: {}",
+            stdout_of(&output)
+        );
+    }
+}
+
+/// Existing markers suppress one-line volume, while a parse failure still makes the run partial.
+#[test]
+fn one_line_volume_suppression_does_not_hide_an_incomplete_run() {
+    // Arrange
+    let scratch = Scratch::new("one-line-volume-suppression");
+    let body = (1..=151)
+        .map(|index| format!("w{index}"))
+        .collect::<Vec<_>>()
+        .join(" ");
+    let suppressed_path = scratch.write("suppressed.py", &format!("# !TPX001\n# {body}\n"));
+    let suppressed = suppressed_path.to_str().expect("the scratch path is UTF-8");
+
+    // Act — prove the block would be clean for the marker, then add an unreadable syntax tree.
+    let text = tooprolix(&["check", suppressed]);
+    let json = tooprolix(&["check", suppressed, "--format", "json"]);
+    scratch.write("malformed.py", "def (:\n");
+    let incomplete_text = scratch.check(&[]);
+    let incomplete_json = scratch.check(&["--format", "json"]);
+
+    // Assert
+    assert_eq!(text.status.code(), Some(0), "{text:?}");
+    assert_eq!(stdout_of(&text), CLEAN_STDOUT, "{text:?}");
+    assert_eq!(stderr_of(&text), "", "{text:?}");
+    assert_eq!(json.status.code(), Some(0), "{json:?}");
+    assert_eq!(stderr_of(&json), "", "{json:?}");
+    let document: serde_json::Value =
+        serde_json::from_str(stdout_of(&json)).expect("stdout is schema-v2 JSON");
+    assert_eq!(document["complete"], true);
+    assert_eq!(document["findings"].as_array().map(Vec::len), Some(0));
+
+    assert_eq!(
+        incomplete_text.status.code(),
+        Some(1),
+        "{incomplete_text:?}"
+    );
+    assert_eq!(
+        stdout_of(&incomplete_text),
+        "No findings; check incomplete: 1 file skipped.\n"
+    );
+    assert!(stderr_of(&incomplete_text).contains("malformed.py"));
+    assert_eq!(
+        incomplete_json.status.code(),
+        Some(1),
+        "{incomplete_json:?}"
+    );
+    let document: serde_json::Value = serde_json::from_str(stdout_of(&incomplete_json))
+        .expect("incomplete stdout is schema-v2 JSON");
+    assert_eq!(document["complete"], false);
+    assert_eq!(document["findings"].as_array().map(Vec::len), Some(0));
+    assert_eq!(document["skipped"].as_array().map(Vec::len), Some(1));
+    assert!(stderr_of(&incomplete_json).contains("malformed.py"));
+}
+
+/// New small blocks use volume relevance, while the old duplicate floor keeps its warning contract.
+#[test]
+fn unknown_marker_relevance_preserves_the_old_floor_and_gates_new_one_line_blocks() {
+    // Arrange — the first two trees use the same two-word maximum. The first block is below it and
+    // is too short for TPX003; the second exceeds it, so swallowing its typo would hide TPX001.
+    let clean = Scratch::new("one-line-unknown-marker-clean");
+    clean.write(
+        "pyproject.toml",
+        "[tool.tooprolix]\ncomment-max-volume = 2\n",
+    );
+    clean.write("short.py", "# !TPX999\n# short\n");
+
+    let relevant = Scratch::new("one-line-unknown-marker-relevant");
+    relevant.write(
+        "pyproject.toml",
+        "[tool.tooprolix]\ncomment-max-volume = 2\n",
+    );
+    relevant.write("long.py", "# !TPX999\n# three words here\n");
+
+    // This block cleared the extractor's old floor, so its warning existed before one-line prose
+    // was retained. Ignoring TPX003 must not retroactively silence that config-independent warning.
+    let old_floor = Scratch::new("unknown-marker-old-floor");
+    old_floor.write(
+        "pyproject.toml",
+        "[tool.tooprolix]\nignore = [\"TPX003\"]\n",
+    );
+    old_floor.write(
+        "eligible.py",
+        "# !TPX999\n# one two three four five\n# six seven eight nine ten\n",
+    );
+
+    // Act
+    let clean_output = clean.check(&[]);
+    let relevant_output = relevant.check(&[]);
+    let old_floor_output = old_floor.check(&[]);
+
+    // Assert
+    assert_eq!(clean_output.status.code(), Some(0), "{clean_output:?}");
+    assert_eq!(stdout_of(&clean_output), CLEAN_STDOUT, "{clean_output:?}");
+    assert_eq!(stderr_of(&clean_output), "", "{clean_output:?}");
+
+    assert_eq!(
+        relevant_output.status.code(),
+        Some(1),
+        "{relevant_output:?}"
+    );
+    assert!(stdout_of(&relevant_output).contains("TPX001"));
+    assert!(
+        stderr_of(&relevant_output).contains("`TPX999` in an opt-out marker is not a rule code"),
+        "a typo that failed to suppress a real finding was hidden: {relevant_output:?}"
+    );
+
+    assert_eq!(
+        old_floor_output.status.code(),
+        Some(0),
+        "{old_floor_output:?}"
+    );
+    assert_eq!(
+        stdout_of(&old_floor_output),
+        CLEAN_STDOUT,
+        "{old_floor_output:?}"
+    );
+    assert!(
+        stderr_of(&old_floor_output).contains("`TPX999` in an opt-out marker is not a rule code"),
+        "ignoring TPX003 silenced the established warning population: {old_floor_output:?}"
+    );
+}
+
 /// The exit contract, all three codes, on fixtures that are each capable of the other two answers —
 /// which is what stops this from being three tests that all pass on a CLI that always exits 0.
 ///

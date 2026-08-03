@@ -34,6 +34,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use tooprolix::detect::duplicate::duplicates;
 use tooprolix::detect::volume::{Limits, volume};
 use tooprolix::extract::{ProseKind, extract, is_python_source};
 
@@ -94,6 +95,10 @@ struct Scan {
     docstrings: usize,
     /// `TPX001` findings.
     comments: usize,
+    /// `TPX003` clusters.
+    duplicates: usize,
+    /// Near-duplicate candidate pairs scored by `TPX003`.
+    comparisons: usize,
     /// Python files the walk reached.
     files: usize,
     /// Files the walk reached and the *parser* rejected — counted, never silently dropped.
@@ -119,9 +124,12 @@ fn scan(repo: &Path, limits: Limits) -> Scan {
     let mut scan = Scan {
         docstrings: 0,
         comments: 0,
+        duplicates: 0,
+        comparisons: 0,
         files: files.len(),
         unparseable: 0,
     };
+    let mut prose = Vec::new();
     for file in &files {
         let source = fs::read_to_string(file)
             .unwrap_or_else(|error| panic!("{} could not be read: {error}", file.display()));
@@ -135,7 +143,11 @@ fn scan(repo: &Path, limits: Limits) -> Scan {
                 ProseKind::Comment => scan.comments += 1,
             }
         }
+        prose.extend(blocks);
     }
+    let duplicate_report = duplicates(&prose);
+    scan.duplicates = duplicate_report.clusters.len();
+    scan.comparisons = duplicate_report.comparisons;
     scan
 }
 
@@ -235,14 +247,19 @@ fn volume_finds_something_on_the_corpus() {
     let mut firing = 0;
     let (mut total_docstrings, mut total_comments, mut total_unparseable) = (0, 0, 0);
     println!(
-        "{:<28} {:>6} {:>8} {:>8} {:>12}",
-        "repo", "files", "TPX002", "TPX001", "unparseable"
+        "{:<28} {:>6} {:>8} {:>8} {:>8} {:>12} {:>12}",
+        "repo", "files", "TPX002", "TPX001", "TPX003", "comparisons", "unparseable"
     );
     for (repo, name) in repos.iter().zip(&names) {
         let found = scan(repo, Limits::default());
         println!(
-            "{name:<28} {:>6} {:>8} {:>8} {:>12}",
-            found.files, found.docstrings, found.comments, found.unparseable
+            "{name:<28} {:>6} {:>8} {:>8} {:>8} {:>12} {:>12}",
+            found.files,
+            found.docstrings,
+            found.comments,
+            found.duplicates,
+            found.comparisons,
+            found.unparseable
         );
         assert!(
             found.files > 0,
