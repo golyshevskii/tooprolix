@@ -57,7 +57,6 @@ whole **never** exits 0. See the [CLI contract](docs/cli-contract.md).
 | `TPX001` | A comment run longer than its word limit | Released |
 | `TPX002` | A docstring longer than its word limit | Released |
 | `TPX003` | One explanation repeated across comments and docstrings, reported once with every place it appears | Released |
-| `TPX004` | Comments that restate the following code | Reserved |
 
 `tooprolix --rules` prints this table; `tooprolix --version` prints the version and the date of the
 commit it was built from.

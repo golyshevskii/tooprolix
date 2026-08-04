@@ -61,10 +61,6 @@ not repeated here: their one documented owner is the table in
 the same codes, statuses, descriptions and order the binary prints. `--help` embeds the same lines,
 and both come from one array in `src/rules.rs`.
 
-`TPX004` is listed as `Reserved` and is **not** an accepted code: `ignore = ["TPX004"]` is still a
-fatal configuration error and `# !TPX004` still warns and suppresses nothing. Being documented and
-being accepted are different things, deliberately.
-
 Each of the three flags takes no other argument — `tooprolix --version --rules` is an error, not a
 ranking, for the same reason `--format` given twice is. `--help` is the exception and ignores what
 follows it.

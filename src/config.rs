@@ -1037,7 +1037,7 @@ mod tests {
             (
                 "[tool.tooprolix]\nignore = [\"TPX004\"]\n",
                 "TPX004",
-                "a reserved code with no rule behind it",
+                "a non-existent code",
             ),
             (
                 "[tool.tooprolix]\ndocstring-max-volume = -1\n",

@@ -3997,9 +3997,6 @@ fn git(arguments: &[&str]) -> Option<String> {
 /// exactly the mutation this exists to catch — a description hardcoded in the help text next to a
 /// different one in the registry.
 ///
-/// `TPX004` is listed and is deliberately **not** a [`Rule`]: it is a number that has been spoken
-/// for, not a detector that runs, and `Rule::ALL` stays three long so `ignore = ["TPX004"]` and
-/// `# !TPX004` keep being refused.
 #[test]
 fn the_rules_listing_and_the_help_render_the_same_registry() {
     // Act
@@ -4013,8 +4010,8 @@ fn the_rules_listing_and_the_help_render_the_same_registry() {
     let listed: Vec<&str> = stdout_of(&rules).lines().collect();
     assert_eq!(
         listed.len(),
-        4,
-        "`--rules` does not list the three shipping rules plus reserved TPX004: {:?}",
+        3,
+        "`--rules` does not list exactly the three released rules: {:?}",
         stdout_of(&rules)
     );
     for line in &listed {
@@ -4025,18 +4022,13 @@ fn the_rules_listing_and_the_help_render_the_same_registry() {
             stdout_of(&help)
         );
     }
-    for code in ["TPX001", "TPX002", "TPX003", "TPX004"] {
+    for code in ["TPX001", "TPX002", "TPX003"] {
         assert!(
             listed.iter().any(|line| line.starts_with(code)),
             "`--rules` does not list {code}: {:?}",
             stdout_of(&rules)
         );
     }
-    assert!(
-        listed[3].contains("Reserved"),
-        "TPX004 is not marked reserved, so `--rules` claims a detector that does not run: {:?}",
-        listed[3]
-    );
 }
 
 /// AC3 — the binary and every documented rule table say the same thing, so there is no fourth owner.
@@ -4056,7 +4048,7 @@ fn the_rules_listing_agrees_with_every_documented_table() {
     assert_eq!(rules.status.code(), Some(0), "{rules:?}");
     assert_eq!(
         stdout_of(&rules).lines().count(),
-        4,
+        3,
         "`--rules` printed nothing to compare the tables against: {:?}",
         stdout_of(&rules)
     );

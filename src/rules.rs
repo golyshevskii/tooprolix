@@ -8,12 +8,6 @@
 //! | `TPX002` | a docstring longer than its word limit | one block |
 //! | `TPX003` | one explanation repeated across blocks | a cluster of blocks |
 //!
-//! `TPX004` is **reserved** for the code-restatement rule and there is deliberately **no variant
-//! for it**. That rule was evaluated on the reference corpus and closed NO-SHIP, so a variant would
-//! be a render branch, a match arm and a JSON case that no test could ever reach. Forward
-//! compatibility is bought with `#[non_exhaustive]` instead, which is what that attribute is for.
-//! The number is held so that the second epic renames nothing.
-//!
 //! Duplicate prose is `TPX003` and not `TPX001`. Volume is the base of the library — the tool is
 //! called *tooprolix* — so the first numbers belong to it. Any place that still reads `TPX001` as
 //! "duplicates" predates 2026-07-26. The codes freeze into the JSON schema and into every opt-out
@@ -151,8 +145,7 @@ use crate::extract::ProseKind;
 
 /// One shipping rule, and the single owner of its `TPX` code.
 ///
-/// `#[non_exhaustive]`: `TPX004` and whatever the second epic adds are new variants, and a consumer
-/// that matches on this must keep compiling across that.
+/// `#[non_exhaustive]` lets future rules be added without breaking consumers that match on this.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[non_exhaustive]
 pub enum Rule {
@@ -245,22 +238,11 @@ pub struct Documented {
     pub status: &'static str,
 }
 
-/// Every `TPX` number that has been spoken for, shipping or not, with its one-line description.
-///
-/// **This is not the registry of rules that exist — [`Rule::ALL`] is, and it stays three long.**
-/// The distinction is load-bearing: `Rule::ALL` answers "which codes does this tool accept", and
-/// three separate consumers read it for that ([`Rule::from_code`], `ignore` validation in
-/// [`crate::config`], and marker parsing below). Adding a `TPX004` variant so that `--rules` could
-/// print it would have made `ignore = ["TPX004"]` and `# !TPX004` start being *accepted* — a
-/// configuration silently switching off a detector that does not exist, and a marker silently
-/// claiming to suppress one. `TPX004` is documented here and refused there, which is the honest
-/// pair, and `the_registry_is_the_single_owner_of_the_codes` pins both halves.
-///
-/// The single owner of the **text**. Before this existed the same sentence was written three times
+/// The single owner of each released rule's public text. Before this existed the same sentence was written three times
 /// — in the help string, in the README table, and in `docs/rules-and-configuration.md` — and two of
 /// the three had already drifted apart. The wording here is the documentation's, because a user
 /// reads the table far more often than the help.
-pub const CATALOGUE: [Documented; 4] = [
+pub const CATALOGUE: [Documented; 3] = [
     Documented {
         code: "TPX001",
         description: "A comment run longer than its word limit",
@@ -276,11 +258,6 @@ pub const CATALOGUE: [Documented; 4] = [
         description: "One explanation repeated across comments and docstrings, reported once with \
                       every place it appears",
         status: "Released",
-    },
-    Documented {
-        code: "TPX004",
-        description: "Comments that restate the following code",
-        status: "Reserved",
     },
 ];
 
@@ -685,21 +662,15 @@ mod tests {
         assert_eq!(
             Rule::from_code("TPX004"),
             None,
-            "TPX004 is a reserved number and must not resolve to a rule"
+            "TPX004 must not resolve to a rule"
         );
         assert_eq!(Rule::from_code("TPX999"), None);
         assert_eq!(Rule::from_code("tpx001"), None, "codes are upper case");
     }
 
-    /// The catalogue documents every number; `Rule::ALL` decides which ones the tool *accepts*.
-    ///
-    /// Two things go wrong if these drift, and each has its own assertion below. Renaming a code in
-    /// one place leaves `--rules` describing `TPX003` under a heading nothing answers to. Promoting
-    /// the catalogue into the acceptance path — the tempting way to make `--rules` list `TPX004` —
-    /// makes `ignore = ["TPX004"]` and `# !TPX004` start being accepted for a detector that does
-    /// not exist, which is the pair `each_rule_owns_exactly_one_code…` pins from the other side.
     #[test]
-    fn the_catalogue_documents_the_rules_that_exist_and_one_that_deliberately_does_not() {
+    fn the_catalogue_documents_exactly_the_released_rules() {
+        assert_eq!(CATALOGUE.len(), Rule::ALL.len());
         for (rule, documented) in Rule::ALL.into_iter().zip(CATALOGUE) {
             assert_eq!(
                 rule.code(),
@@ -715,12 +686,8 @@ mod tests {
         // mapping this module already owns, so a description is checked against the detector that
         // actually runs under that code rather than against nothing.
         //
-        // **This covers TPX001 and TPX002 and nothing else, deliberately.** Swapping the TPX003
-        // and TPX004 descriptions still passes every test in this repository — measured. There is
-        // no oracle to build for those two: TPX004 has no detector at all, and TPX003's would be a
-        // keyword match of exactly the weak kind that reads as coverage without being any. The gap
-        // is recorded rather than papered over; `Rule::volume_for` is the only real mapping there
-        // is, so it is the only one used.
+        // This covers TPX001 and TPX002. `Rule::volume_for` is the only real mapping there is, so
+        // it is the only one used.
         for (kind, own, other) in [
             (ProseKind::Comment, "comment", "docstring"),
             (ProseKind::Docstring, "docstring", "comment"),
@@ -737,20 +704,6 @@ mod tests {
                 documented.description
             );
         }
-
-        let reserved = CATALOGUE[Rule::ALL.len()];
-        assert_eq!(reserved.code, "TPX004");
-        assert_eq!(reserved.status, "Reserved");
-        assert_eq!(
-            Rule::from_code(reserved.code),
-            None,
-            "a documented code became an accepted one: `ignore` and markers would now take TPX004"
-        );
-        assert_eq!(
-            CATALOGUE.len(),
-            Rule::ALL.len() + 1,
-            "the catalogue grew without the rules doing so, or the reverse"
-        );
     }
 
     /// A docstring must never be reported under the comment code, and the reverse.
