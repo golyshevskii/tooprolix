@@ -12,7 +12,6 @@ For output format, exit codes, and the JSON schema, see [cli-contract.md](cli-co
 | `TPX001` | A comment run longer than its word limit | Released |
 | `TPX002` | A docstring longer than its word limit | Released |
 | `TPX003` | One explanation repeated across comments and docstrings, reported once with every place it appears | Released |
-| `TPX004` | Comments that restate the following code | Reserved |
 
 `tooprolix --rules` prints these same three columns. The CLI renders them from one array in
 `src/rules.rs`; this table is written by hand, and `the_rules_listing_agrees_with_every_documented_table`
@@ -87,12 +86,6 @@ Closing it needs a rule about templated summary lines, which is a judgement rath
 
 The grammar lives in one function, `extract::narrative`, and its unit tests carry one case per style
 plus the fail-safe cases above.
-
-### Reserved rules
-
-`TPX004` is reserved rather than disabled: evaluation on the reference corpus could not find a
-setting that both flagged the intended case and stayed quiet on hand-cleaned code, so no rule ships
-under that number. The code stays reserved so it cannot be reused for something else.
 
 ## Suppressions
 

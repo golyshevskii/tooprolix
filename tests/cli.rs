@@ -3997,9 +3997,6 @@ fn git(arguments: &[&str]) -> Option<String> {
 /// exactly the mutation this exists to catch — a description hardcoded in the help text next to a
 /// different one in the registry.
 ///
-/// `TPX004` is listed and is deliberately **not** a [`Rule`]: it is a number that has been spoken
-/// for, not a detector that runs, and `Rule::ALL` stays three long so `ignore = ["TPX004"]` and
-/// `# !TPX004` keep being refused.
 #[test]
 fn the_rules_listing_and_the_help_render_the_same_registry() {
     // Act
@@ -4013,8 +4010,8 @@ fn the_rules_listing_and_the_help_render_the_same_registry() {
     let listed: Vec<&str> = stdout_of(&rules).lines().collect();
     assert_eq!(
         listed.len(),
-        4,
-        "`--rules` does not list the three shipping rules plus reserved TPX004: {:?}",
+        3,
+        "`--rules` does not list exactly the three released rules: {:?}",
         stdout_of(&rules)
     );
     for line in &listed {
@@ -4025,18 +4022,13 @@ fn the_rules_listing_and_the_help_render_the_same_registry() {
             stdout_of(&help)
         );
     }
-    for code in ["TPX001", "TPX002", "TPX003", "TPX004"] {
+    for code in ["TPX001", "TPX002", "TPX003"] {
         assert!(
             listed.iter().any(|line| line.starts_with(code)),
             "`--rules` does not list {code}: {:?}",
             stdout_of(&rules)
         );
     }
-    assert!(
-        listed[3].contains("Reserved"),
-        "TPX004 is not marked reserved, so `--rules` claims a detector that does not run: {:?}",
-        listed[3]
-    );
 }
 
 /// AC3 — the binary and every documented rule table say the same thing, so there is no fourth owner.
@@ -4056,7 +4048,7 @@ fn the_rules_listing_agrees_with_every_documented_table() {
     assert_eq!(rules.status.code(), Some(0), "{rules:?}");
     assert_eq!(
         stdout_of(&rules).lines().count(),
-        4,
+        3,
         "`--rules` printed nothing to compare the tables against: {:?}",
         stdout_of(&rules)
     );
@@ -4072,18 +4064,27 @@ fn the_rules_listing_agrees_with_every_documented_table() {
         })
         .collect();
 
-    // Equality of the whole set of `TPX` rows, not a `contains` per row. A whole-file `contains`
-    // passed while the visible table was stale and the right row sat in a fenced code block or an
-    // HTML comment; narrowing it to "some line starting with `|`" does not fix that, because a
-    // fenced row starts with `|` too. Requiring the document's rows to BE the binary's rows, in
-    // order, closes the stale row, the hidden duplicate and the extra row at once.
+    // Equality of the whole set of visible `TPX` rows, not a `contains` per row. GFM permits up to
+    // three leading spaces and an omitted leading pipe, but the original bytes still must equal the
+    // rendered rows. The code cell and two separators avoid collecting arbitrary prose.
     for document in documents {
         let text = std::fs::read_to_string(repository_root().join(document))
             .unwrap_or_else(|error| panic!("{document} is readable: {error}"));
         let rows: Vec<String> = text
             .lines()
             .map(|line| line.trim_end().to_owned())
-            .filter(|line| line.starts_with("| `TPX"))
+            .filter(|line| {
+                let row = line
+                    .strip_prefix("   ")
+                    .or_else(|| line.strip_prefix("  "))
+                    .or_else(|| line.strip_prefix(' '))
+                    .unwrap_or(line);
+                row.strip_prefix('|')
+                    .unwrap_or(row)
+                    .trim_start()
+                    .starts_with("`TPX")
+                    && row.matches('|').count() >= 2
+            })
             .collect();
         assert_eq!(
             rows, expected,
