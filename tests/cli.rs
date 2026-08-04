@@ -4064,18 +4064,27 @@ fn the_rules_listing_agrees_with_every_documented_table() {
         })
         .collect();
 
-    // Equality of the whole set of `TPX` rows, not a `contains` per row. A whole-file `contains`
-    // passed while the visible table was stale and the right row sat in a fenced code block or an
-    // HTML comment; narrowing it to "some line starting with `|`" does not fix that, because a
-    // fenced row starts with `|` too. Requiring the document's rows to BE the binary's rows, in
-    // order, closes the stale row, the hidden duplicate and the extra row at once.
+    // Equality of the whole set of visible `TPX` rows, not a `contains` per row. GFM permits up to
+    // three leading spaces and an omitted leading pipe, but the original bytes still must equal the
+    // rendered rows. The code cell and two separators avoid collecting arbitrary prose.
     for document in documents {
         let text = std::fs::read_to_string(repository_root().join(document))
             .unwrap_or_else(|error| panic!("{document} is readable: {error}"));
         let rows: Vec<String> = text
             .lines()
             .map(|line| line.trim_end().to_owned())
-            .filter(|line| line.starts_with("| `TPX"))
+            .filter(|line| {
+                let row = line
+                    .strip_prefix("   ")
+                    .or_else(|| line.strip_prefix("  "))
+                    .or_else(|| line.strip_prefix(' '))
+                    .unwrap_or(line);
+                row.strip_prefix('|')
+                    .unwrap_or(row)
+                    .trim_start()
+                    .starts_with("`TPX")
+                    && row.matches('|').count() >= 2
+            })
             .collect();
         assert_eq!(
             rows, expected,
