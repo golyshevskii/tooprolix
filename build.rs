@@ -42,23 +42,24 @@
 
 use std::process::Command;
 
-fn main() {
-    println!("cargo:rerun-if-changed=build.rs");
+fn main() -> Result<(), &'static str> {
+    println!("cargo::rerun-if-changed=build.rs");
     for variable in ["SOURCE_DATE_EPOCH", "GIT_DIR", "GIT_WORK_TREE"] {
-        println!("cargo:rerun-if-env-changed={variable}");
+        println!("cargo::rerun-if-env-changed={variable}");
     }
 
-    let date = match source_date_epoch() {
+    let date = match source_date_epoch()? {
         Some(epoch) => epoch,
         None if git_is_this_package() => {
             for path in git_inputs() {
-                println!("cargo:rerun-if-changed={path}");
+                println!("cargo::rerun-if-changed={path}");
             }
             git(&["log", "-1", "--format=%cs"]).unwrap_or_else(|| "unknown".to_owned())
         }
         None => "unknown".to_owned(),
     };
-    println!("cargo:rustc-env=TOOPROLIX_COMMIT_DATE={date}");
+    println!("cargo::rustc-env=TOOPROLIX_COMMIT_DATE={date}");
+    Ok(())
 }
 
 /// Whether the repository git discovers is **this package's own**, rather than one enclosing it.
@@ -97,19 +98,25 @@ fn git_is_this_package() -> bool {
     }
 }
 
-/// `SOURCE_DATE_EPOCH` as `YYYY-MM-DD` UTC, or `None` if it is unset or not a number.
+/// `SOURCE_DATE_EPOCH` as `YYYY-MM-DD` UTC, or `None` if it is unset.
 ///
 /// The civil-date arithmetic is spelled out rather than pulled from `chrono` or `time`: this is a
 /// build script, a build dependency is paid for by every consumer on every build, and the whole
 /// computation is Howard Hinnant's `civil_from_days` — proleptic Gregorian, no leap seconds, which
-/// is exactly what `SOURCE_DATE_EPOCH` is defined to be. An unparsable value falls through to git
-/// rather than failing the build: it is somebody else's environment variable.
-fn source_date_epoch() -> Option<String> {
-    let seconds: i64 = std::env::var("SOURCE_DATE_EPOCH")
-        .ok()?
+/// is exactly what `SOURCE_DATE_EPOCH` is defined to be. A present value is explicit build input,
+/// so an invalid one fails the build instead of silently changing the provenance source.
+fn source_date_epoch() -> Result<Option<String>, &'static str> {
+    let value = match std::env::var("SOURCE_DATE_EPOCH") {
+        Ok(value) => value,
+        Err(std::env::VarError::NotPresent) => return Ok(None),
+        Err(std::env::VarError::NotUnicode(_)) => {
+            return Err("invalid SOURCE_DATE_EPOCH: expected integer seconds");
+        }
+    };
+    let seconds: i64 = value
         .trim()
         .parse()
-        .ok()?;
+        .map_err(|_| "invalid SOURCE_DATE_EPOCH: expected integer seconds")?;
     let days = seconds.div_euclid(86_400);
 
     // Shift the epoch to 0000-03-01 so that a leap day lands at the end of the 400-year era.
@@ -129,7 +136,7 @@ fn source_date_epoch() -> Option<String> {
     };
     let year = year_of_era + era * 400 + i64::from(month <= 2);
 
-    Some(format!("{year:04}-{month:02}-{day:02}"))
+    Ok(Some(format!("{year:04}-{month:02}-{day:02}")))
 }
 
 /// The files whose contents decide what `git log -1` answers, so cargo re-runs when they move.
@@ -149,12 +156,12 @@ fn source_date_epoch() -> Option<String> {
 /// command that knows that mapping; it is right in a plain checkout, a worktree and a bare repo.
 ///
 /// **The ref path is emitted even when no file is there yet, and that is deliberate.** A packed ref
-/// (`git gc`, a fresh clone) has no loose file until the next commit writes one, and `packed-refs`
+/// (`git gc` or `git pack-refs`) has no loose file until the next commit writes one, and `packed-refs`
 /// is *not* rewritten by that commit — so filtering on existence would drop the one path that is
 /// about to appear. Measured: cargo treats a watched path that is missing as permanently dirty
 /// ("the file `…` is missing"), which re-runs this script and recompiles the crate on every build.
-/// That is a real cost, it is bounded — it self-heals the moment the ref is unpacked — and it is
-/// the safe side of the trade: a spurious rebuild is noise, a stale `--version` is a lie. It also
+/// That real cost continues until a loose ref is created, and it is the safe side of the trade: a
+/// spurious rebuild is noise, a stale `--version` is a lie. It also
 /// makes watching `packed-refs` redundant rather than merely unnecessary, which is why it is not
 /// here: while the ref is packed the missing path already forces a fresh answer every time.
 ///
