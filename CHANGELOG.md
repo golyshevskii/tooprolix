@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.5](https://github.com/golyshevskii/tooprolix/compare/v0.5.4...v0.5.5) - 2026-08-04
+
+### Other
+
+- remove the public TPX004 reservation ([#70](https://github.com/golyshevskii/tooprolix/pull/70))
+
 ## [0.5.4](https://github.com/golyshevskii/tooprolix/compare/v0.5.3...v0.5.4) - 2026-08-04
 
 ### Fixed
