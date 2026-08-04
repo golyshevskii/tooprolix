@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.4](https://github.com/golyshevskii/tooprolix/compare/v0.5.3...v0.5.4) - 2026-08-04
+
+### Fixed
+
+- fail loudly on invalid build provenance ([#69](https://github.com/golyshevskii/tooprolix/pull/69))
+- apply volume limits to one-line prose ([#67](https://github.com/golyshevskii/tooprolix/pull/67))
+
 ## [0.5.3](https://github.com/golyshevskii/tooprolix/compare/v0.5.2...v0.5.3) - 2026-08-03
 
 ### Added
