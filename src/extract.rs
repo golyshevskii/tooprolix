@@ -33,12 +33,13 @@
 //! Comments are read from the parsed **token stream** (`TokenKind::Comment`), the way ruff does in
 //! `crates/ruff_python_index/src/indexer.rs`. They are not "only in the trivia".
 //!
-//! * **Own-line comments glue into one block across any gap that holds only whitespace.** Blank
+//! * **Own-line comments glue into one block across any gap that carries no content.** Blank
 //!   lines — one or many, empty or carrying spaces, tabs, a form feed or CRLF endings — do not end
 //!   a run: the prose is the same prose, and a word limit a user can escape by pressing Enter is
-//!   not a limit. A line of code, a trailing comment, or an excluded comment between them DOES end
-//!   the run, because the gap then holds something that is not whitespace — the tokens this
-//!   grouping drops still leave their bytes in the source it reads.
+//!   not a limit. A lone `\` line, the explicit line join, is empty to the reader and is treated
+//!   the same way. A line of code, a trailing comment, or an excluded comment between them DOES
+//!   end the run, because the gap then carries content — the tokens this grouping drops still
+//!   leave their bytes in the source it reads.
 //! * **A trailing comment (`x = 1  # why`) never joins a run.** It is prose about one statement,
 //!   not about the lines below it. It is intentionally skipped rather than emitted as its own
 //!   block: the observable half of this rule is that it does not *glue*, and that is what
@@ -1065,9 +1066,10 @@ fn python_blocks(path: &Path, source: &str) -> Result<Vec<ProseBlock>, Error> {
 /// Own-line comment runs, glued across gaps that hold nothing but whitespace.
 ///
 /// The gap is read from the SOURCE and not from the line numbers, which is what makes one test
-/// serve both halves of the contract: whatever is not whitespace between two own-line comments —
+/// serve both halves of the contract: whatever carries content between two own-line comments —
 /// a statement, a trailing comment, a pragma, an opt-out marker, a string — is still in that gap
-/// after the token filter above dropped it, so it still ends the run.
+/// after the token filter above dropped it, so it still ends the run. What counts as "no content"
+/// is [`is_blank_gap`], which owns the one non-whitespace exception.
 fn comment_blocks(
     path: &Path,
     source: &str,
@@ -1095,9 +1097,7 @@ fn comment_blocks(
 
         run = match run {
             Some((first, last))
-                if source[TextRange::new(last.end(), range.start())]
-                    .trim()
-                    .is_empty() =>
+                if is_blank_gap(&source[TextRange::new(last.end(), range.start())]) =>
             {
                 Some((first, range))
             }
@@ -1128,6 +1128,26 @@ fn comment_run(
         index,
         TextRange::new(first.start(), last.end()),
     )
+}
+
+/// Whether the bytes between two own-line comments carry no content.
+///
+/// Whitespace, plus the one non-whitespace spelling that is still an empty line to whoever reads
+/// the file: an **explicit line join**, `\` immediately before the line ending. `CPython` and the
+/// ruff parser both accept a file whose only separator between two comment groups is such a line
+/// — measured, both `\`+LF and `\`+CRLF parse and produce no diagnostic — so counting it as
+/// content would leave this rule escapable by typing one backslash instead of pressing Enter,
+/// which is the same bypass with a different key. Nothing else is forgiven: a gap holding code, a
+/// trailing comment, a pragma or a marker still ends the run.
+///
+/// `trim` first so the ordinary gap — the overwhelming majority — allocates nothing.
+fn is_blank_gap(gap: &str) -> bool {
+    gap.trim().is_empty()
+        || gap
+            .replace("\\\r\n", "")
+            .replace("\\\n", "")
+            .trim()
+            .is_empty()
 }
 
 /// Whether a comment is a machine directive rather than prose.
@@ -1804,21 +1824,26 @@ mod tests {
     /// limit could be avoided by pressing Enter.
     ///
     /// Every gap spelling here is one a real file produces — an empty line, a line of spaces, a
-    /// line holding a tab, a form feed, and a CRLF line ending — and the discarded
-    /// `line == previous + 1` test rejected all of them.
+    /// line holding a tab, a form feed, a CRLF line ending, and an explicit line join (`\` alone
+    /// on a line, with either ending) — and the discarded `line == previous + 1` test rejected all
+    /// of them.
+    ///
+    /// The line join is the one that is not literally whitespace. It is here because `CPython` and
+    /// the ruff parser both accept the file, and what the reader sees is a line with nothing on
+    /// it: a splitter with no content is exactly the bypass this rule exists to close.
     #[test]
     fn blank_lines_and_other_whitespace_do_not_end_a_comment_run() {
-        let source = "# alpha beta gamma delta epsilon zeta\n\n   \n\t\n\u{c}\n# eta theta iota kappa lambda mu\r\n\r\n# nu xi omicron pi rho sigma\n";
+        let source = "# alpha beta gamma delta epsilon zeta\n\n   \n\t\n\u{c}\n\\\n# eta theta iota kappa lambda mu\r\n\r\n\\\r\n# nu xi omicron pi rho sigma\n";
 
         let extracted = blocks("a.py", source);
 
         assert_eq!(extracted.len(), 1, "got {extracted:?}");
-        assert_eq!((extracted[0].line_start, extracted[0].line_end), (1, 8));
+        assert_eq!((extracted[0].line_start, extracted[0].line_end), (1, 10));
         assert_eq!(extracted[0].size_words(), 18);
         // The raw span runs from the first `#` to the end of the last comment, whitespace and all.
         assert_eq!(
             extracted[0].raw,
-            "# alpha beta gamma delta epsilon zeta\n\n   \n\t\n\u{c}\n# eta theta iota kappa lambda mu\r\n\r\n# nu xi omicron pi rho sigma"
+            "# alpha beta gamma delta epsilon zeta\n\n   \n\t\n\u{c}\n\\\n# eta theta iota kappa lambda mu\r\n\r\n\\\r\n# nu xi omicron pi rho sigma"
         );
     }
 

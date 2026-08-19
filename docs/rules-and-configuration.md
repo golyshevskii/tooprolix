@@ -120,6 +120,10 @@ def settle(batch):
 For a docstring that means *inside* the body, between `def`/`class` and the literal — **not** above
 the `def` line.
 
+A marker silences the whole block it heads, and a comment block extends across blank lines, so a
+marker above a short comment also covers the comment groups below it that are separated from it by
+nothing but whitespace.
+
 ### Marker grammar
 
 ```python

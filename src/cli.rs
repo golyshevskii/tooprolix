@@ -221,6 +221,10 @@ one rule for comments and docstrings alike:
   # !TPX001,TPX003 several codes, then the reason
   # !TPX*          every rule on this block, and `TPX*` is a literal, not a glob
 
+  A marker silences the whole block it heads, and a comment block extends across
+  blank lines, so a marker above a short comment also covers the comment groups
+  below it separated from it by nothing but whitespace.
+
   For a docstring that means inside the body, between `def`/`class` and the
   literal — NOT above the `def` line. The space after `#` is required, so a
   shebang is never a marker, and what follows the `!` must START with one of
