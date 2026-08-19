@@ -202,9 +202,10 @@ const HELP_AFTER_RULES: &str = "
   Volume is measured in WORDS, after normalisation — not lines and not characters.
   The limit is the last size still allowed: a block of exactly the limit is silent.
   Wrapping the same prose does not change TPX001/TPX002 eligibility or its word count.
-  Blank lines do not reset TPX001 either: own-line comments separated by nothing but
-  whitespace are ONE comment block. Code, a trailing comment, an excluded machine
-  directive or an opt-out marker between them starts a new one.
+  Blank lines do not reset TPX001 either: own-line comments separated by nothing that
+  carries content — whitespace, or a lone `\\` line join with any line ending — are ONE
+  comment block. Code, a trailing comment, an excluded machine directive or an opt-out
+  marker between them starts a new one.
   Punctuation splits normalised words, including inside `path/to/file.py:42` references.
   TPX003 alone requires at least two physical lines AND eight normalised words.
 
@@ -223,7 +224,7 @@ one rule for comments and docstrings alike:
 
   A marker silences the whole block it heads, and a comment block extends across
   blank lines, so a marker above a short comment also covers the comment groups
-  below it separated from it by nothing but whitespace.
+  below it separated from it by nothing that carries content.
 
   For a docstring that means inside the body, between `def`/`class` and the
   literal — NOT above the `def` line. The space after `#` is required, so a

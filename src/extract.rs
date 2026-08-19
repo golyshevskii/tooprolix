@@ -1135,16 +1135,25 @@ fn comment_run(
 /// Whitespace, plus the one non-whitespace spelling that is still an empty line to whoever reads
 /// the file: an **explicit line join**, `\` immediately before the line ending. `CPython` and the
 /// ruff parser both accept a file whose only separator between two comment groups is such a line
-/// — measured, both `\`+LF and `\`+CRLF parse and produce no diagnostic — so counting it as
-/// content would leave this rule escapable by typing one backslash instead of pressing Enter,
+/// — measured, `\`+LF, `\`+CRLF and `\`+CR all parse and produce no diagnostic — so counting it
+/// as content would leave this rule escapable by typing one backslash instead of pressing Enter,
 /// which is the same bypass with a different key. Nothing else is forgiven: a gap holding code, a
 /// trailing comment, a pragma or a marker still ends the run.
+///
+/// **Two replacements cover all three line endings**, and the pair is not interchangeable with any
+/// two others: dropping `\`+CR also disposes of `\`+CRLF, because the LF it leaves behind is
+/// whitespace that `trim` eats. Written the other way round — `\`+LF first — the CRLF form would
+/// keep its CR-plus-backslash and the CR form would survive whole, which is exactly the hole this
+/// function had while it named LF and CRLF explicitly and left the third ending out. A malformed
+/// join fails CLOSED for the same reason: `\ `+CR and `\\`+CR leave a bare backslash behind, so
+/// the gap carries content and ends the run — and the file is a `SyntaxError` anyway, reported as
+/// an unreadable file rather than silently forgiven.
 ///
 /// `trim` first so the ordinary gap — the overwhelming majority — allocates nothing.
 fn is_blank_gap(gap: &str) -> bool {
     gap.trim().is_empty()
         || gap
-            .replace("\\\r\n", "")
+            .replace("\\\r", "")
             .replace("\\\n", "")
             .trim()
             .is_empty()
@@ -1833,17 +1842,17 @@ mod tests {
     /// it: a splitter with no content is exactly the bypass this rule exists to close.
     #[test]
     fn blank_lines_and_other_whitespace_do_not_end_a_comment_run() {
-        let source = "# alpha beta gamma delta epsilon zeta\n\n   \n\t\n\u{c}\n\\\n# eta theta iota kappa lambda mu\r\n\r\n\\\r\n# nu xi omicron pi rho sigma\n";
+        let source = "# alpha beta gamma delta epsilon zeta\n\n   \n\t\n\u{c}\n\\\n# eta theta iota kappa lambda mu\r\n\r\n\\\r\n\\\r# nu xi omicron pi rho sigma\n";
 
         let extracted = blocks("a.py", source);
 
         assert_eq!(extracted.len(), 1, "got {extracted:?}");
-        assert_eq!((extracted[0].line_start, extracted[0].line_end), (1, 10));
+        assert_eq!((extracted[0].line_start, extracted[0].line_end), (1, 11));
         assert_eq!(extracted[0].size_words(), 18);
         // The raw span runs from the first `#` to the end of the last comment, whitespace and all.
         assert_eq!(
             extracted[0].raw,
-            "# alpha beta gamma delta epsilon zeta\n\n   \n\t\n\u{c}\n\\\n# eta theta iota kappa lambda mu\r\n\r\n\\\r\n# nu xi omicron pi rho sigma"
+            "# alpha beta gamma delta epsilon zeta\n\n   \n\t\n\u{c}\n\\\n# eta theta iota kappa lambda mu\r\n\r\n\\\r\n\\\r# nu xi omicron pi rho sigma"
         );
     }
 

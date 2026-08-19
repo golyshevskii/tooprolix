@@ -25,10 +25,11 @@ allowed — a block of exactly the limit is silent, one word over is a finding. 
 not control `TPX001` / `TPX002` eligibility: the same normalised words have the same count and verdict
 on one line or several, with only the reported line range changing.
 
-Blank lines do not reset `TPX001` volume. Own-line comments separated by nothing but whitespace —
-one blank line or many, empty or carrying spaces, tabs or a form feed — are one comment block and
-are measured once, so the limit cannot be escaped by pressing Enter instead of shortening the prose
-or writing `# !TPX001`. A line of code, a trailing comment (`x = 1  # why`), an excluded machine
+Blank lines do not reset `TPX001` volume. Own-line comments separated by nothing that carries
+content — one blank line or many, empty or carrying spaces, tabs or a form feed, and a lone `\`
+line join with any of the three line endings (LF, CRLF or CR) — are one comment block and are
+measured once, so the limit cannot be escaped by pressing Enter instead of shortening the prose or
+writing `# !TPX001`. A line of code, a trailing comment (`x = 1  # why`), an excluded machine
 directive (`# noqa`, `# type:`) or an opt-out marker between two groups still ends the block and
 starts a new one.
 
@@ -122,7 +123,7 @@ the `def` line.
 
 A marker silences the whole block it heads, and a comment block extends across blank lines, so a
 marker above a short comment also covers the comment groups below it that are separated from it by
-nothing but whitespace.
+nothing that carries content.
 
 ### Marker grammar
 
