@@ -1,6 +1,6 @@
 ---
 source: src/extract.rs
-expression: extracted
+expression: duplicate_candidates
 ---
 [
     ProseBlock {
@@ -16,10 +16,10 @@ expression: extracted
         kind: Comment,
         path: "tests/fixtures/extract/sample.py",
         line_start: 10,
-        line_end: 12,
-        raw: "# This own-line comment block is glued from three adjacent lines and holds\n# comfortably more than eight normalised words, so the size conjunction keeps\n# it in the output as one block rather than three.",
-        normalized: "this own line comment block is glued from three adjacent lines and holds comfortably more than eight normalised words so the size conjunction keeps it in the output as one block rather than three",
-        narrative: "this own line comment block is glued from three adjacent lines and holds comfortably more than eight normalised words so the size conjunction keeps it in the output as one block rather than three",
+        line_end: 15,
+        raw: "# This own-line comment block is glued from three adjacent lines and holds\n# comfortably more than eight normalised words, so the size conjunction keeps\n# it in the output as one block rather than three.\n\n# Two lines here.\n# Still short.",
+        normalized: "this own line comment block is glued from three adjacent lines and holds comfortably more than eight normalised words so the size conjunction keeps it in the output as one block rather than three two lines here still short",
+        narrative: "this own line comment block is glued from three adjacent lines and holds comfortably more than eight normalised words so the size conjunction keeps it in the output as one block rather than three two lines here still short",
     },
     ProseBlock {
         kind: Docstring,

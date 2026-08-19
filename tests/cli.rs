@@ -196,6 +196,93 @@ fn new_tool_directive_prefixes_do_not_hide_comment_volume() {
     }
 }
 
+/// Whitespace between own-line comments cannot reset accumulated `TPX001` volume.
+///
+/// The same prose, written four ways under a ten-word limit: adjacent lines, one blank line, a
+/// run of blank lines that also carry spaces and a tab, and three groups. A blank line is not a
+/// new explanation, so all four are one comment block and all four exceed the same limit. Before
+/// this guard the three separated forms exited 0, which made the limit avoidable by pressing
+/// Enter — without touching the prose and without the `# !TPX001` acknowledgement.
+///
+/// The whole stdout is asserted, not a substring: the summary line is what proves there is
+/// exactly ONE finding rather than a merged block plus a leftover.
+#[test]
+fn blank_lines_do_not_reset_comment_volume() {
+    // Arrange
+    let first = "# alpha beta gamma delta epsilon zeta";
+    let second = "# eta theta iota kappa lambda mu";
+    let third = "# nu xi omicron pi rho sigma";
+    let cases = [
+        (
+            "adjacent",
+            format!("{first}\n{second}\ndef foo():\n    pass\n"),
+            "1-2",
+            12,
+        ),
+        (
+            "one-blank",
+            format!("{first}\n\n{second}\ndef foo():\n    pass\n"),
+            "1-3",
+            12,
+        ),
+        (
+            "several-blanks",
+            format!("{first}\n\n   \n\t\n{second}\ndef foo():\n    pass\n"),
+            "1-5",
+            12,
+        ),
+        (
+            "three-groups",
+            format!("{first}\n\n{second}\n\n{third}\ndef foo():\n    pass\n"),
+            "1-5",
+            18,
+        ),
+    ];
+
+    for (name, source, span, words) in cases {
+        let scratch = Scratch::new(&format!("blank-line-volume-{name}"));
+        scratch.write(
+            "pyproject.toml",
+            "[tool.tooprolix]\ncomment-max-volume = 10\n",
+        );
+        scratch.write("module.py", &source);
+
+        // Act
+        let output = scratch.check(&[]);
+
+        // Assert
+        assert_eq!(output.status.code(), Some(1), "{name}: {output:?}");
+        assert_eq!(stderr_of(&output), "", "{name}: {output:?}");
+        assert_eq!(
+            stdout_of(&output),
+            format!(
+                "./module.py:{span}: TPX001 comment is {words} words long, over the \
+                 10-word limit — shorten it, or mark it with `# !TPX001` on the line above it\n\
+                 Found 1 findings (TPX001: 1).\n"
+            ),
+            "{name}"
+        );
+    }
+
+    // Merging changed which lines are one block, not where a marker has to sit: the marker above
+    // the merged block still silences it, and says nothing on stderr about being misplaced.
+    let suppressed = Scratch::new("blank-line-volume-suppressed");
+    suppressed.write(
+        "pyproject.toml",
+        "[tool.tooprolix]\ncomment-max-volume = 10\n",
+    );
+    suppressed.write(
+        "module.py",
+        &format!("# !TPX001\n{first}\n\n{second}\ndef foo():\n    pass\n"),
+    );
+
+    let output = suppressed.check(&[]);
+
+    assert_eq!(output.status.code(), Some(0), "{output:?}");
+    assert_eq!(stdout_of(&output), CLEAN_STDOUT, "{output:?}");
+    assert_eq!(stderr_of(&output), "", "{output:?}");
+}
+
 /// Existing markers suppress one-line volume, while a parse failure still makes the run partial.
 #[test]
 fn one_line_volume_suppression_does_not_hide_an_incomplete_run() {

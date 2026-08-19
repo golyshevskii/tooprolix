@@ -202,6 +202,9 @@ const HELP_AFTER_RULES: &str = "
   Volume is measured in WORDS, after normalisation — not lines and not characters.
   The limit is the last size still allowed: a block of exactly the limit is silent.
   Wrapping the same prose does not change TPX001/TPX002 eligibility or its word count.
+  Blank lines do not reset TPX001 either: own-line comments separated by nothing but
+  whitespace are ONE comment block. Code, a trailing comment, an excluded machine
+  directive or an opt-out marker between them starts a new one.
   Punctuation splits normalised words, including inside `path/to/file.py:42` references.
   TPX003 alone requires at least two physical lines AND eight normalised words.
 

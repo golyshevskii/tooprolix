@@ -33,9 +33,12 @@
 //! Comments are read from the parsed **token stream** (`TokenKind::Comment`), the way ruff does in
 //! `crates/ruff_python_index/src/indexer.rs`. They are not "only in the trivia".
 //!
-//! * **Own-line comments on consecutive physical lines glue into one block.** A blank line, a line
-//!   of code, or an excluded comment between them ends the run, because the lines are then no
-//!   longer consecutive.
+//! * **Own-line comments glue into one block across any gap that holds only whitespace.** Blank
+//!   lines — one or many, empty or carrying spaces, tabs, a form feed or CRLF endings — do not end
+//!   a run: the prose is the same prose, and a word limit a user can escape by pressing Enter is
+//!   not a limit. A line of code, a trailing comment, or an excluded comment between them DOES end
+//!   the run, because the gap then holds something that is not whitespace — the tokens this
+//!   grouping drops still leave their bytes in the source it reads.
 //! * **A trailing comment (`x = 1  # why`) never joins a run.** It is prose about one statement,
 //!   not about the lines below it. It is intentionally skipped rather than emitted as its own
 //!   block: the observable half of this rule is that it does not *glue*, and that is what
@@ -1059,7 +1062,12 @@ fn python_blocks(path: &Path, source: &str) -> Result<Vec<ProseBlock>, Error> {
     Ok(blocks)
 }
 
-/// Own-line comment runs, glued by consecutive physical lines.
+/// Own-line comment runs, glued across gaps that hold nothing but whitespace.
+///
+/// The gap is read from the SOURCE and not from the line numbers, which is what makes one test
+/// serve both halves of the contract: whatever is not whitespace between two own-line comments —
+/// a statement, a trailing comment, a pragma, an opt-out marker, a string — is still in that gap
+/// after the token filter above dropped it, so it still ends the run.
 fn comment_blocks(
     path: &Path,
     source: &str,
@@ -1067,8 +1075,8 @@ fn comment_blocks(
     index: &LineIndex,
 ) -> Vec<ProseBlock> {
     let mut blocks = Vec::new();
-    // (first range of the run, last range of the run, line of the last range)
-    let mut run: Option<(TextRange, TextRange, usize)> = None;
+    // (first range of the run, last range of the run)
+    let mut run: Option<(TextRange, TextRange)> = None;
 
     for token in tokens
         .iter()
@@ -1086,15 +1094,21 @@ fn comment_blocks(
         }
 
         run = match run {
-            Some((first, _, previous)) if line == previous + 1 => Some((first, range, line)),
-            Some((first, last, _)) => {
-                blocks.push(comment_run(path, source, index, first, last));
-                Some((range, range, line))
+            Some((first, last))
+                if source[TextRange::new(last.end(), range.start())]
+                    .trim()
+                    .is_empty() =>
+            {
+                Some((first, range))
             }
-            None => Some((range, range, line)),
+            Some((first, last)) => {
+                blocks.push(comment_run(path, source, index, first, last));
+                Some((range, range))
+            }
+            None => Some((range, range)),
         };
     }
-    if let Some((first, last, _)) = run {
+    if let Some((first, last)) = run {
         blocks.push(comment_run(path, source, index, first, last));
     }
     blocks
@@ -1227,6 +1241,10 @@ mod tests {
     /// The duplicate-eligible Python blocks in one reviewed artifact: module, class, method and
     /// nested-function docstrings, the glued `#`-run, and the absence of machine directives and
     /// trailing comments. Small prose remains extracted for volume and is covered separately.
+    ///
+    /// The `#`-run in the snapshot spans the blank line between the fixture's two comment groups,
+    /// which is the whitespace-gap rule made visible in the artifact rather than only in a unit
+    /// test: before it, the same bytes produced one eligible block and one short one.
     #[test]
     fn extracts_the_python_fixture() {
         let extracted = blocks("tests/fixtures/extract/sample.py", SAMPLE_PY);
@@ -1761,8 +1779,9 @@ mod tests {
         );
     }
 
-    /// A statement between two comment runs ends the first one: the lines are no longer
-    /// consecutive, so this is one block on each side and never one block spanning the code.
+    /// A statement between two comment runs ends the first one: the gap between them holds
+    /// something that is not whitespace, so this is one block on each side and never one block
+    /// spanning the code.
     #[test]
     fn code_between_two_comment_runs_splits_them() {
         let source = "# the first run of comment lines with enough words to be kept\n\
@@ -1776,6 +1795,69 @@ mod tests {
         assert_eq!(extracted.len(), 2, "got {extracted:?}");
         assert_eq!((extracted[0].line_start, extracted[0].line_end), (1, 2));
         assert_eq!((extracted[1].line_start, extracted[1].line_end), (4, 5));
+    }
+
+    /// A gap holding nothing but whitespace keeps one comment run whole.
+    ///
+    /// The bypass this closes: the same prose with one blank line inserted used to become two
+    /// blocks, and each block was then measured against `comment-max-volume` on its own, so the
+    /// limit could be avoided by pressing Enter.
+    ///
+    /// Every gap spelling here is one a real file produces — an empty line, a line of spaces, a
+    /// line holding a tab, a form feed, and a CRLF line ending — and the discarded
+    /// `line == previous + 1` test rejected all of them.
+    #[test]
+    fn blank_lines_and_other_whitespace_do_not_end_a_comment_run() {
+        let source = "# alpha beta gamma delta epsilon zeta\n\n   \n\t\n\u{c}\n# eta theta iota kappa lambda mu\r\n\r\n# nu xi omicron pi rho sigma\n";
+
+        let extracted = blocks("a.py", source);
+
+        assert_eq!(extracted.len(), 1, "got {extracted:?}");
+        assert_eq!((extracted[0].line_start, extracted[0].line_end), (1, 8));
+        assert_eq!(extracted[0].size_words(), 18);
+        // The raw span runs from the first `#` to the end of the last comment, whitespace and all.
+        assert_eq!(
+            extracted[0].raw,
+            "# alpha beta gamma delta epsilon zeta\n\n   \n\t\n\u{c}\n# eta theta iota kappa lambda mu\r\n\r\n# nu xi omicron pi rho sigma"
+        );
+    }
+
+    /// Whatever is not whitespace between two own-line comment groups still ends the run.
+    ///
+    /// The pair to the test above: without it the whitespace rule would be a hole rather than a
+    /// rule. A statement is a semantic boundary; a trailing comment is prose about one statement;
+    /// the two excluded pragmas and our own opt-out marker are machine directives that the token
+    /// filter drops — and a dropped token still leaves its bytes in the gap, which is the only
+    /// reason one source test can serve all four.
+    #[test]
+    fn code_a_pragma_or_a_marker_between_comment_runs_still_ends_the_run() {
+        for separator in [
+            "x = 1",
+            "x = 1  # a trailing note about that one statement",
+            "# noqa: E501,F401",
+            "# type: ignore[assignment]",
+            "# !TPX001",
+        ] {
+            let source = format!(
+                "# alpha beta gamma delta epsilon zeta\n\n{separator}\n\n# eta theta iota kappa lambda mu\n"
+            );
+
+            let extracted = blocks("a.py", &source);
+
+            assert_eq!(extracted.len(), 2, "{separator}: {extracted:?}");
+            assert_eq!(
+                (extracted[0].line_start, extracted[0].line_end),
+                (1, 1),
+                "{separator}"
+            );
+            assert_eq!(
+                (extracted[1].line_start, extracted[1].line_end),
+                (5, 5),
+                "{separator}"
+            );
+            assert_eq!(extracted[0].size_words(), 6, "{separator}");
+            assert_eq!(extracted[1].size_words(), 6, "{separator}");
+        }
     }
 
     /// A string literal that is not in first position is not a docstring. Guards the
