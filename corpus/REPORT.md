@@ -62,6 +62,15 @@ SHA alone does not pin the bytes that get measured.
 Not counted, deliberately: bare string expressions used as pseudo-docstrings, README/docs prose
 (Python only in this pass), and non-`.py` files.
 
+**2026-08-19 — the shipped extractor no longer defines a comment block this way.** The "prose
+block" row above says *adjacent*, and that is what produced every number in this document; it is
+kept as written for that reason. The shipped rule has since changed: `src/extract.rs` glues
+own-line comments across any gap that carries no content — blank lines, whitespace-only lines and
+an explicit `\` line join — so a comment block there can span a gap that this calibration counted
+as two blocks. Nothing in this document was re-measured under the new rule. The current definition
+lives in the `src/extract.rs` module contract; the divergence is the same kind already recorded in
+`tests/volume_corpus.rs` between this script's file set and the shipped walk's.
+
 ### Exclusions (denominator hygiene)
 
 A ratio computed over a virtualenv, a build tree or generated code is wrong, and every constant

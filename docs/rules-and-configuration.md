@@ -25,6 +25,14 @@ allowed — a block of exactly the limit is silent, one word over is a finding. 
 not control `TPX001` / `TPX002` eligibility: the same normalised words have the same count and verdict
 on one line or several, with only the reported line range changing.
 
+Blank lines do not reset `TPX001` volume. Own-line comments separated by nothing that carries
+content — one blank line or many, empty or carrying spaces, tabs or a form feed, and a lone `\`
+line join with any of the three line endings (LF, CRLF or CR) — are one comment block and are
+measured once, so the limit cannot be escaped by pressing Enter instead of shortening the prose or
+writing `# !TPX001`. A line of code, a trailing comment (`x = 1  # why`), an excluded machine
+directive (`# noqa`, `# type:`) or an opt-out marker between two groups still ends the block and
+starts a new one.
+
 Normalisation replaces punctuation with spaces before counting. That includes punctuation inside
 source references: `path/to/file.py:42` counts as five normalised words (`path`, `to`, `file`, `py`,
 `42`). This is the existing calibrated word unit, not a path-, URL-, or module-specific tokenizer.
@@ -112,6 +120,10 @@ def settle(batch):
 
 For a docstring that means *inside* the body, between `def`/`class` and the literal — **not** above
 the `def` line.
+
+A marker silences the whole block it heads, and a comment block extends across blank lines, so a
+marker above a short comment also covers the comment groups below it that are separated from it by
+nothing that carries content.
 
 ### Marker grammar
 

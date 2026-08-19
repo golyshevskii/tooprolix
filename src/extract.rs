@@ -33,9 +33,11 @@
 //! Comments are read from the parsed **token stream** (`TokenKind::Comment`), the way ruff does in
 //! `crates/ruff_python_index/src/indexer.rs`. They are not "only in the trivia".
 //!
-//! * **Own-line comments on consecutive physical lines glue into one block.** A blank line, a line
-//!   of code, or an excluded comment between them ends the run, because the lines are then no
-//!   longer consecutive.
+//! * **Own-line comments glue into one block across any gap that carries no content.** Blank
+//!   lines — one or many, empty or holding spaces, tabs or a form feed — and a lone `\` line join
+//!   do not end a run: a word limit a user can escape by pressing Enter is not a limit. A line of
+//!   code, a trailing comment or an excluded comment DOES end it, because the gap then carries
+//!   content — the tokens this grouping drops still leave their bytes in the source it reads.
 //! * **A trailing comment (`x = 1  # why`) never joins a run.** It is prose about one statement,
 //!   not about the lines below it. It is intentionally skipped rather than emitted as its own
 //!   block: the observable half of this rule is that it does not *glue*, and that is what
@@ -1059,7 +1061,11 @@ fn python_blocks(path: &Path, source: &str) -> Result<Vec<ProseBlock>, Error> {
     Ok(blocks)
 }
 
-/// Own-line comment runs, glued by consecutive physical lines.
+/// Own-line comment runs, glued across gaps that carry no content.
+///
+/// The gap is read from the SOURCE, not from line numbers: a token this loop drops is still in
+/// those bytes, so one condition both glues blank lines and keeps every boundary. What counts as
+/// "no content" is [`is_blank_gap`].
 fn comment_blocks(
     path: &Path,
     source: &str,
@@ -1067,8 +1073,8 @@ fn comment_blocks(
     index: &LineIndex,
 ) -> Vec<ProseBlock> {
     let mut blocks = Vec::new();
-    // (first range of the run, last range of the run, line of the last range)
-    let mut run: Option<(TextRange, TextRange, usize)> = None;
+    // (first range of the run, last range of the run)
+    let mut run: Option<(TextRange, TextRange)> = None;
 
     for token in tokens
         .iter()
@@ -1086,15 +1092,19 @@ fn comment_blocks(
         }
 
         run = match run {
-            Some((first, _, previous)) if line == previous + 1 => Some((first, range, line)),
-            Some((first, last, _)) => {
-                blocks.push(comment_run(path, source, index, first, last));
-                Some((range, range, line))
+            Some((first, last))
+                if is_blank_gap(&source[TextRange::new(last.end(), range.start())]) =>
+            {
+                Some((first, range))
             }
-            None => Some((range, range, line)),
+            Some((first, last)) => {
+                blocks.push(comment_run(path, source, index, first, last));
+                Some((range, range))
+            }
+            None => Some((range, range)),
         };
     }
-    if let Some((first, last, _)) = run {
+    if let Some((first, last)) = run {
         blocks.push(comment_run(path, source, index, first, last));
     }
     blocks
@@ -1114,6 +1124,23 @@ fn comment_run(
         index,
         TextRange::new(first.start(), last.end()),
     )
+}
+
+/// Whether the bytes between two own-line comments carry no content.
+///
+/// Whitespace, plus an **explicit line join** — `\` immediately before the line ending — which
+/// `CPython` and the ruff parser both accept and which the reader sees as an empty line. Counting
+/// it as content would leave the rule escapable by typing one backslash instead of pressing Enter.
+///
+/// Dropping `\`+CR first also disposes of `\`+CRLF, whose leftover LF `trim` eats; `\`+LF first
+/// would leave both CR forms intact. `trim` leads so the ordinary gap allocates nothing.
+fn is_blank_gap(gap: &str) -> bool {
+    gap.trim().is_empty()
+        || gap
+            .replace("\\\r", "")
+            .replace("\\\n", "")
+            .trim()
+            .is_empty()
 }
 
 /// Whether a comment is a machine directive rather than prose.
@@ -1227,6 +1254,9 @@ mod tests {
     /// The duplicate-eligible Python blocks in one reviewed artifact: module, class, method and
     /// nested-function docstrings, the glued `#`-run, and the absence of machine directives and
     /// trailing comments. Small prose remains extracted for volume and is covered separately.
+    ///
+    /// The `#`-run spans the blank line between the fixture's two comment groups: the no-content
+    /// rule made visible in the artifact rather than only in a unit test.
     #[test]
     fn extracts_the_python_fixture() {
         let extracted = blocks("tests/fixtures/extract/sample.py", SAMPLE_PY);
@@ -1761,8 +1791,9 @@ mod tests {
         );
     }
 
-    /// A statement between two comment runs ends the first one: the lines are no longer
-    /// consecutive, so this is one block on each side and never one block spanning the code.
+    /// A statement between two comment runs ends the first one: the gap between them holds
+    /// something that is not whitespace, so this is one block on each side and never one block
+    /// spanning the code.
     #[test]
     fn code_between_two_comment_runs_splits_them() {
         let source = "# the first run of comment lines with enough words to be kept\n\
@@ -1776,6 +1807,63 @@ mod tests {
         assert_eq!(extracted.len(), 2, "got {extracted:?}");
         assert_eq!((extracted[0].line_start, extracted[0].line_end), (1, 2));
         assert_eq!((extracted[1].line_start, extracted[1].line_end), (4, 5));
+    }
+
+    /// A gap carrying no content keeps one comment run whole.
+    ///
+    /// The bypass this closes: one inserted blank line used to make two blocks, each measured
+    /// against `comment-max-volume` on its own, so the limit could be avoided by pressing Enter.
+    /// Every spelling below is one a real file produces, and `line == previous + 1` rejected all
+    /// of them.
+    #[test]
+    fn blank_lines_and_other_whitespace_do_not_end_a_comment_run() {
+        let source = "# alpha beta gamma delta epsilon zeta\n\n   \n\t\n\u{c}\n\\\n# eta theta iota kappa lambda mu\r\n\r\n\\\r\n\\\r# nu xi omicron pi rho sigma\n";
+
+        let extracted = blocks("a.py", source);
+
+        assert_eq!(extracted.len(), 1, "got {extracted:?}");
+        assert_eq!((extracted[0].line_start, extracted[0].line_end), (1, 11));
+        assert_eq!(extracted[0].size_words(), 18);
+        assert_eq!(
+            extracted[0].raw,
+            "# alpha beta gamma delta epsilon zeta\n\n   \n\t\n\u{c}\n\\\n# eta theta iota kappa lambda mu\r\n\r\n\\\r\n\\\r# nu xi omicron pi rho sigma"
+        );
+    }
+
+    /// Whatever is not whitespace between two own-line comment groups still ends the run.
+    ///
+    /// The pair to the test above: without it the no-content rule would be a hole rather than a
+    /// rule. The dropped tokens — the two pragmas and the marker — still leave their bytes in the
+    /// gap, which is the only reason one source test can serve all five.
+    #[test]
+    fn code_a_pragma_or_a_marker_between_comment_runs_still_ends_the_run() {
+        for separator in [
+            "x = 1",
+            "x = 1  # a trailing note about that one statement",
+            "# noqa: E501,F401",
+            "# type: ignore[assignment]",
+            "# !TPX001",
+        ] {
+            let source = format!(
+                "# alpha beta gamma delta epsilon zeta\n\n{separator}\n\n# eta theta iota kappa lambda mu\n"
+            );
+
+            let extracted = blocks("a.py", &source);
+
+            assert_eq!(extracted.len(), 2, "{separator}: {extracted:?}");
+            assert_eq!(
+                (extracted[0].line_start, extracted[0].line_end),
+                (1, 1),
+                "{separator}"
+            );
+            assert_eq!(
+                (extracted[1].line_start, extracted[1].line_end),
+                (5, 5),
+                "{separator}"
+            );
+            assert_eq!(extracted[0].size_words(), 6, "{separator}");
+            assert_eq!(extracted[1].size_words(), 6, "{separator}");
+        }
     }
 
     /// A string literal that is not in first position is not a docstring. Guards the
