@@ -540,11 +540,9 @@ def measure_file(path: Path, rel_path: str | None = None) -> FileStats:
     # "склейка соседних #-строк"). Comments sharing a line with code are
     # trailing comments and counted separately — they are not blocks.
     #
-    # 2026-08-19: this describes THIS calibration script, and it now differs
-    # from the shipped extractor, which since `src/extract.rs`'s whitespace-gap
-    # rule glues own-line comments across any gap carrying no content — blank
-    # lines and an explicit `\` line join included. The two are deliberately
-    # not re-synchronised: `corpus/REPORT.md` records what this script measured.
+    # 2026-08-19: this describes THIS script. The shipped extractor now glues
+    # across any gap carrying no content; the two are deliberately not
+    # re-synchronised, because REPORT.md records what this script measured.
     own_line: dict[int, str] = {}
     trailing: int = 0
     line_names: dict[int, set[str]] = defaultdict(set)

@@ -34,12 +34,10 @@
 //! `crates/ruff_python_index/src/indexer.rs`. They are not "only in the trivia".
 //!
 //! * **Own-line comments glue into one block across any gap that carries no content.** Blank
-//!   lines — one or many, empty or carrying spaces, tabs, a form feed or CRLF endings — do not end
-//!   a run: the prose is the same prose, and a word limit a user can escape by pressing Enter is
-//!   not a limit. A lone `\` line, the explicit line join, is empty to the reader and is treated
-//!   the same way. A line of code, a trailing comment, or an excluded comment between them DOES
-//!   end the run, because the gap then carries content — the tokens this grouping drops still
-//!   leave their bytes in the source it reads.
+//!   lines — one or many, empty or holding spaces, tabs or a form feed — and a lone `\` line join
+//!   do not end a run: a word limit a user can escape by pressing Enter is not a limit. A line of
+//!   code, a trailing comment or an excluded comment DOES end it, because the gap then carries
+//!   content — the tokens this grouping drops still leave their bytes in the source it reads.
 //! * **A trailing comment (`x = 1  # why`) never joins a run.** It is prose about one statement,
 //!   not about the lines below it. It is intentionally skipped rather than emitted as its own
 //!   block: the observable half of this rule is that it does not *glue*, and that is what
@@ -1063,13 +1061,11 @@ fn python_blocks(path: &Path, source: &str) -> Result<Vec<ProseBlock>, Error> {
     Ok(blocks)
 }
 
-/// Own-line comment runs, glued across gaps that hold nothing but whitespace.
+/// Own-line comment runs, glued across gaps that carry no content.
 ///
-/// The gap is read from the SOURCE and not from the line numbers, which is what makes one test
-/// serve both halves of the contract: whatever carries content between two own-line comments —
-/// a statement, a trailing comment, a pragma, an opt-out marker, a string — is still in that gap
-/// after the token filter above dropped it, so it still ends the run. What counts as "no content"
-/// is [`is_blank_gap`], which owns the one non-whitespace exception.
+/// The gap is read from the SOURCE, not from line numbers: a token this loop drops is still in
+/// those bytes, so one condition both glues blank lines and keeps every boundary. What counts as
+/// "no content" is [`is_blank_gap`].
 fn comment_blocks(
     path: &Path,
     source: &str,
@@ -1132,24 +1128,12 @@ fn comment_run(
 
 /// Whether the bytes between two own-line comments carry no content.
 ///
-/// Whitespace, plus the one non-whitespace spelling that is still an empty line to whoever reads
-/// the file: an **explicit line join**, `\` immediately before the line ending. `CPython` and the
-/// ruff parser both accept a file whose only separator between two comment groups is such a line
-/// — measured, `\`+LF, `\`+CRLF and `\`+CR all parse and produce no diagnostic — so counting it
-/// as content would leave this rule escapable by typing one backslash instead of pressing Enter,
-/// which is the same bypass with a different key. Nothing else is forgiven: a gap holding code, a
-/// trailing comment, a pragma or a marker still ends the run.
+/// Whitespace, plus an **explicit line join** — `\` immediately before the line ending — which
+/// `CPython` and the ruff parser both accept and which the reader sees as an empty line. Counting
+/// it as content would leave the rule escapable by typing one backslash instead of pressing Enter.
 ///
-/// **Two replacements cover all three line endings**, and the pair is not interchangeable with any
-/// two others: dropping `\`+CR also disposes of `\`+CRLF, because the LF it leaves behind is
-/// whitespace that `trim` eats. Written the other way round — `\`+LF first — the CRLF form would
-/// keep its CR-plus-backslash and the CR form would survive whole, which is exactly the hole this
-/// function had while it named LF and CRLF explicitly and left the third ending out. A malformed
-/// join fails CLOSED for the same reason: `\ `+CR and `\\`+CR leave a bare backslash behind, so
-/// the gap carries content and ends the run — and the file is a `SyntaxError` anyway, reported as
-/// an unreadable file rather than silently forgiven.
-///
-/// `trim` first so the ordinary gap — the overwhelming majority — allocates nothing.
+/// Dropping `\`+CR first also disposes of `\`+CRLF, whose leftover LF `trim` eats; `\`+LF first
+/// would leave both CR forms intact. `trim` leads so the ordinary gap allocates nothing.
 fn is_blank_gap(gap: &str) -> bool {
     gap.trim().is_empty()
         || gap
@@ -1271,9 +1255,8 @@ mod tests {
     /// nested-function docstrings, the glued `#`-run, and the absence of machine directives and
     /// trailing comments. Small prose remains extracted for volume and is covered separately.
     ///
-    /// The `#`-run in the snapshot spans the blank line between the fixture's two comment groups,
-    /// which is the whitespace-gap rule made visible in the artifact rather than only in a unit
-    /// test: before it, the same bytes produced one eligible block and one short one.
+    /// The `#`-run spans the blank line between the fixture's two comment groups: the no-content
+    /// rule made visible in the artifact rather than only in a unit test.
     #[test]
     fn extracts_the_python_fixture() {
         let extracted = blocks("tests/fixtures/extract/sample.py", SAMPLE_PY);
@@ -1826,20 +1809,12 @@ mod tests {
         assert_eq!((extracted[1].line_start, extracted[1].line_end), (4, 5));
     }
 
-    /// A gap holding nothing but whitespace keeps one comment run whole.
+    /// A gap carrying no content keeps one comment run whole.
     ///
-    /// The bypass this closes: the same prose with one blank line inserted used to become two
-    /// blocks, and each block was then measured against `comment-max-volume` on its own, so the
-    /// limit could be avoided by pressing Enter.
-    ///
-    /// Every gap spelling here is one a real file produces — an empty line, a line of spaces, a
-    /// line holding a tab, a form feed, a CRLF line ending, and an explicit line join (`\` alone
-    /// on a line, with either ending) — and the discarded `line == previous + 1` test rejected all
+    /// The bypass this closes: one inserted blank line used to make two blocks, each measured
+    /// against `comment-max-volume` on its own, so the limit could be avoided by pressing Enter.
+    /// Every spelling below is one a real file produces, and `line == previous + 1` rejected all
     /// of them.
-    ///
-    /// The line join is the one that is not literally whitespace. It is here because `CPython` and
-    /// the ruff parser both accept the file, and what the reader sees is a line with nothing on
-    /// it: a splitter with no content is exactly the bypass this rule exists to close.
     #[test]
     fn blank_lines_and_other_whitespace_do_not_end_a_comment_run() {
         let source = "# alpha beta gamma delta epsilon zeta\n\n   \n\t\n\u{c}\n\\\n# eta theta iota kappa lambda mu\r\n\r\n\\\r\n\\\r# nu xi omicron pi rho sigma\n";
@@ -1849,7 +1824,6 @@ mod tests {
         assert_eq!(extracted.len(), 1, "got {extracted:?}");
         assert_eq!((extracted[0].line_start, extracted[0].line_end), (1, 11));
         assert_eq!(extracted[0].size_words(), 18);
-        // The raw span runs from the first `#` to the end of the last comment, whitespace and all.
         assert_eq!(
             extracted[0].raw,
             "# alpha beta gamma delta epsilon zeta\n\n   \n\t\n\u{c}\n\\\n# eta theta iota kappa lambda mu\r\n\r\n\\\r\n\\\r# nu xi omicron pi rho sigma"
@@ -1858,11 +1832,9 @@ mod tests {
 
     /// Whatever is not whitespace between two own-line comment groups still ends the run.
     ///
-    /// The pair to the test above: without it the whitespace rule would be a hole rather than a
-    /// rule. A statement is a semantic boundary; a trailing comment is prose about one statement;
-    /// the two excluded pragmas and our own opt-out marker are machine directives that the token
-    /// filter drops — and a dropped token still leaves its bytes in the gap, which is the only
-    /// reason one source test can serve all four.
+    /// The pair to the test above: without it the no-content rule would be a hole rather than a
+    /// rule. The dropped tokens — the two pragmas and the marker — still leave their bytes in the
+    /// gap, which is the only reason one source test can serve all five.
     #[test]
     fn code_a_pragma_or_a_marker_between_comment_runs_still_ends_the_run() {
         for separator in [
