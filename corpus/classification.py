@@ -728,7 +728,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         profile = preregistration.profile(args.profile)
         artifact = load(args.artifact)
         verify(artifact, args.runs, profile, binary=args.binary)
-    except ClassificationError as error:
+    except (ClassificationError, sample_clusters.MalformedRun, sample_clusters.MalformedFinding) as error:
         print(f"error: {error}", file=sys.stderr)
         return 1
     except (OSError, json.JSONDecodeError) as error:

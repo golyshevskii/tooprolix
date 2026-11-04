@@ -303,3 +303,47 @@ class TestAMalformedFindingIsNeverSkipped:
         }
 
         assert [c.path for c in sample_clusters.tpx003_clusters("repo", report, population="all")] == ["b.py"]
+
+
+@pytest.mark.parametrize("population", sample_clusters.POPULATIONS)
+@pytest.mark.parametrize("similarity", ["NaN", float("nan"), float("inf"), -0.25, 1.25, True, "0.8", None])
+def test_invalid_similarity_is_rejected_before_population_selection(similarity: Any, population: Any) -> None:
+    report = {"findings": [finding("a.py", 7, similarity)]}
+    with pytest.raises(sample_clusters.MalformedFinding, match=r"repo:.*a.py:7.*similarity"):
+        sample_clusters.tpx003_clusters("repo", report, population)
+
+
+@pytest.mark.parametrize("population", sample_clusters.POPULATIONS)
+@pytest.mark.parametrize(
+    "locations",
+    [
+        [],
+        [{}],
+        None,
+        "bad",
+        [None, None],
+        [{"path": "a.py", "line": 1, "end_line": 2}] * 2,
+        [{"path": "a.py", "line": 0, "end_line": 2}, {"path": "b.py", "line": 1, "end_line": 2}],
+        [{"path": "a.py", "line": 3, "end_line": 2}, {"path": "b.py", "line": 1, "end_line": 2}],
+        [{"path": "a.py", "line": True, "end_line": 2}, {"path": "b.py", "line": 1, "end_line": 2}],
+        [{"path": "", "line": 1, "end_line": 2}, {"path": "b.py", "line": 1, "end_line": 2}],
+    ],
+)
+def test_invalid_members_are_rejected_even_outside_the_selected_population(locations: Any, population: Any) -> None:
+    raw = finding("a.py", 7, 1.0)
+    raw["locations"] = locations
+    with pytest.raises(sample_clusters.MalformedFinding, match=r"repo:.*a.py:7.*locations"):
+        sample_clusters.tpx003_clusters("repo", {"findings": [raw]}, population)
+
+
+@pytest.mark.parametrize("field", ["path", "line", "end_line"])
+def test_invalid_finding_address_is_not_coerced(field: str) -> None:
+    raw = finding("a.py", 7, 0.8)
+    raw[field] = None
+    with pytest.raises(sample_clusters.MalformedFinding, match="invalid address"):
+        sample_clusters.tpx003_clusters("repo", {"findings": [raw]}, "all")
+
+
+def test_non_object_finding_is_reported_as_a_malformed_run() -> None:
+    with pytest.raises(sample_clusters.MalformedRun, match="repo:.*finding"):
+        sample_clusters.tpx003_clusters("repo", {"findings": [None]}, "all")

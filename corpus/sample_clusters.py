@@ -142,7 +142,14 @@ class Cluster:
 
 
 def _member(raw: Mapping[str, Any]) -> Member:
-    return Member(path=str(raw["path"]), line=int(raw["line"]), end_line=int(raw["end_line"]))
+    if not isinstance(raw, Mapping):
+        raise TypeError("expected an address object")
+    path, line, end_line = raw["path"], raw["line"], raw["end_line"]
+    if not isinstance(path, str) or not path or type(line) is not int or type(end_line) is not int:
+        raise ValueError("expected a nonempty path and integer coordinates")
+    if not 1 <= line <= end_line:
+        raise ValueError("expected 1 <= line <= end_line")
+    return Member(path=path, line=line, end_line=end_line)
 
 
 def tpx003_clusters(repo: str, report: Mapping[str, Any], population: Population = "near") -> list[Cluster]:
@@ -158,7 +165,8 @@ def tpx003_clusters(repo: str, report: Mapping[str, Any], population: Population
     would report a near-only number under an `exact` heading, which is the single failure mode the
     exact population was added to prevent — so the guard fails closed.
 
-    `MalformedFinding` if a `TPX003` finding carries no readable `weakest.similarity`.
+    `MalformedFinding` if a `TPX003` finding has invalid similarity, members or coordinates.
+    Validation precedes population selection so a malformed finding cannot hide in another pool.
 
     **This used to be `if weakest is None: continue`, and that is a guard a rename switches
     off.** Measured on a copy of the corpus: renaming `weakest` to `weakest_v2` on six findings
@@ -171,6 +179,8 @@ def tpx003_clusters(repo: str, report: Mapping[str, Any], population: Population
         raise ValueError(f"unknown population {population!r}; expected one of {', '.join(POPULATIONS)}")
     clusters: list[Cluster] = []
     for raw in report.get("findings", []):
+        if not isinstance(raw, Mapping):
+            raise MalformedRun(f"{repo}: expected a finding object")
         if raw.get("code") != "TPX003":
             continue
         weakest = raw.get("weakest")
@@ -180,20 +190,29 @@ def tpx003_clusters(repo: str, report: Mapping[str, Any], population: Population
                 f"{repo}: TPX003 finding at {where} has no readable `weakest.similarity`; "
                 "a similarity finding that cannot state its similarity is not skippable"
             )
-        similarity = float(weakest["similarity"])
+        similarity = weakest["similarity"]
+        if type(similarity) not in (int, float) or not 0 <= similarity <= 1:
+            raise MalformedFinding(
+                f"{repo}: TPX003 finding at {where} has invalid similarity; expected a number in [0, 1]"
+            )
+        try:
+            locations = raw["locations"]
+            if not isinstance(locations, list):
+                raise TypeError("expected a list")
+            members = tuple(sorted(_member(location) for location in locations))
+            if len(set(members)) < 2:
+                raise ValueError("expected at least two distinct members")
+        except (KeyError, TypeError, ValueError) as error:
+            raise MalformedFinding(f"{repo}: TPX003 finding at {where} has invalid locations: {error}") from error
+        try:
+            address = _member(raw)
+        except (KeyError, TypeError, ValueError) as error:
+            raise MalformedFinding(f"{repo}: TPX003 finding at {where} has invalid address: {error}") from error
         if population == "near" and similarity >= 1.0:
             continue
         if population == "exact" and similarity < 1.0:
             continue
-        clusters.append(
-            Cluster(
-                repo=repo,
-                path=str(raw["path"]),
-                line=int(raw["line"]),
-                weakest=similarity,
-                members=tuple(sorted(_member(location) for location in raw["locations"])),
-            )
-        )
+        clusters.append(Cluster(repo=repo, path=address.path, line=address.line, weakest=similarity, members=members))
     clusters.sort(key=lambda cluster: cluster.address)
     return clusters
 
@@ -272,7 +291,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 2
     root = Path(corpus_root)
 
-    pools = load_runs(args.runs, args.population)
+    try:
+        pools = load_runs(args.runs, args.population)
+    except (MalformedRun, MalformedFinding) as error:
+        print(f"error: {error}", file=sys.stderr)
+        return 1
     if not pools:
         print(f"error: no {args.population} clusters in {args.runs}; run corpus/run_all.sh first", file=sys.stderr)
         return 2
