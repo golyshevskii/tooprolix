@@ -13,10 +13,11 @@ from pathlib import Path
 import pytest
 
 CORPUS = Path(__file__).resolve().parents[2] / "corpus"
+ROOT_VALUES = {"root-null": None, "root-array": [], "root-string": "run", "root-number": 1, "root-bool": True}
 
 
 @pytest.mark.parametrize("command", ["sample_clusters", "classification"])
-@pytest.mark.parametrize("mutation", ["none", "nan", "range", "empty", "address"])
+@pytest.mark.parametrize("mutation", ["none", "nan", "range", "empty", "address", "skipped", "excluded", *ROOT_VALUES])
 def test_corpus_commands_validate_before_printing_results(tmp_path: Path, command: str, mutation: str) -> None:
     runs = tmp_path / "runs"
     shutil.copytree(CORPUS / "runs", runs)
@@ -47,6 +48,10 @@ def test_corpus_commands_validate_before_printing_results(tmp_path: Path, comman
         arguments = ["--runs", str(runs), "--profile", "dry_run", "--artifact", str(tmp_path / "artifact.json")]
         source_root = tmp_path
 
+    if mutation in ("skipped", "excluded"):
+        document[mutation] = None
+    elif mutation in ROOT_VALUES:
+        document = ROOT_VALUES[mutation]
     run.write_text(json.dumps(document))
     if command == "classification":
         artifact = json.loads((CORPUS / "dry_run_classification.json").read_text())
@@ -70,5 +75,10 @@ def test_corpus_commands_validate_before_printing_results(tmp_path: Path, comman
     else:
         assert result.returncode == 1
         assert result.stdout == ""
-        assert result.stderr.startswith("error: pydantic: TPX003 finding at ")
+        if mutation in ("skipped", "excluded"):
+            assert result.stderr == f"error: pydantic: `{mutation}` is NoneType, expected list\n"
+        elif mutation in ROOT_VALUES:
+            assert result.stderr == f"error: pydantic: run document is {type(document).__name__}, expected object\n"
+        else:
+            assert result.stderr.startswith("error: pydantic: TPX003 finding at ")
         assert "Traceback" not in result.stderr
