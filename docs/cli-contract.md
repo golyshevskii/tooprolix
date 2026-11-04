@@ -77,9 +77,10 @@ The end line is the size of the problem, and it is the half a reader cannot infe
 not say whether that is 26 lines or 3; the address does, so you know where to stop before opening
 the file.
 
-Every address carries a range, because a block must span at least two physical lines to be reported
-at all (see [rules-and-configuration.md](rules-and-configuration.md)). A single-line `path:line`
-form is not something you will meet in output.
+Every address carries a range, including one-line TPX001/TPX002 findings such as `path:1-1`.
+Only TPX003 requires at least two physical lines (see
+[rules-and-configuration.md](rules-and-configuration.md)). A `path:line` form without the end line
+is not something you will meet in output.
 
 ## Reading TPX003 clusters
 

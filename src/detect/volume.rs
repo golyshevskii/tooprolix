@@ -150,6 +150,11 @@ impl Default for Limits {
 }
 
 impl Limits {
+    // Keep findings and marker diagnostics on the same volume eligibility policy.
+    pub(crate) fn exceeds(self, kind: ProseKind, words: usize) -> bool {
+        words > self.max_volume(kind)
+    }
+
     /// The limit that applies to `kind`, in normalised words.
     ///
     /// The single owner of the kind-to-limit mapping: a second `match` anywhere else is how a
@@ -284,7 +289,7 @@ pub fn volume<'a>(blocks: &'a [ProseBlock], limits: Limits) -> Report<'a> {
         .filter_map(|block| {
             let max_volume = limits.max_volume(block.kind);
             let words = block.size_words();
-            (words > max_volume).then_some(Overrun {
+            limits.exceeds(block.kind, words).then_some(Overrun {
                 block,
                 words,
                 max_volume,
