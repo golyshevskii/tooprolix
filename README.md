@@ -58,8 +58,8 @@ whole **never** exits 0. See the [CLI contract](docs/cli-contract.md).
 | `TPX002` | A docstring longer than its word limit |
 | `TPX003` | One explanation repeated across comments and docstrings, reported once with every place it appears |
 
-`tooprolix --rules` prints this table; `tooprolix --version` prints the version and the date of the
-commit it was built from.
+`tooprolix --rules` prints these rules with their release status; `tooprolix --version` prints the
+version and the date of the commit it was built from.
 
 Some prose earns its length. Put a marker on the line directly above the block:
 

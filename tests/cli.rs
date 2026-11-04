@@ -4142,14 +4142,12 @@ fn the_rules_listing_and_the_help_render_the_same_registry() {
 
 /// AC3 — the binary and every documented rule table say the same thing, so there is no fourth owner.
 ///
-/// This grades the real Markdown files against the real stdout. It is also the guard on the
-/// release-day flip: when `Implemented` becomes `Released` in one file and not the others, this
-/// reddens instead of shipping three answers to "is this rule available?".
+/// The README summarizes codes and descriptions; the detailed table also carries release status.
+/// Both are checked against the real stdout, including row order and status where documented.
 #[test]
 fn the_rules_listing_agrees_with_every_documented_table() {
     // Arrange
     let rules = tooprolix(&["--rules"]);
-    let documents = ["README.md", "docs/rules-and-configuration.md"];
 
     // Assert — the loop below iterates over `--rules` output, so an empty one would make every
     // assertion in it vacuous. Measured: without these two lines this test PASSED on a binary that
@@ -4161,7 +4159,7 @@ fn the_rules_listing_agrees_with_every_documented_table() {
         "`--rules` printed nothing to compare the tables against: {:?}",
         stdout_of(&rules)
     );
-    let expected: Vec<String> = stdout_of(&rules)
+    let catalogue: Vec<(&str, &str, &str)> = stdout_of(&rules)
         .lines()
         .map(|line| {
             let (code, rest) = line.split_at(6);
@@ -4169,14 +4167,27 @@ fn the_rules_listing_agrees_with_every_documented_table() {
                 .trim_start()
                 .split_once(char::is_whitespace)
                 .expect("every catalogue line is `code status description`");
-            format!("| `{code}` | {} | {status} |", description.trim_start())
+            (code, status, description.trim_start())
         })
         .collect();
 
     // Equality of the whole set of visible `TPX` rows, not a `contains` per row. GFM permits up to
     // three leading spaces and an omitted leading pipe, but the original bytes still must equal the
     // rendered rows. The code cell and two separators avoid collecting arbitrary prose.
-    for document in documents {
+    for (document, with_status) in [
+        ("README.md", false),
+        ("docs/rules-and-configuration.md", true),
+    ] {
+        let expected: Vec<String> = catalogue
+            .iter()
+            .map(|(code, status, description)| {
+                if with_status {
+                    format!("| `{code}` | {description} | {status} |")
+                } else {
+                    format!("| `{code}` | {description} |")
+                }
+            })
+            .collect();
         let text = std::fs::read_to_string(repository_root().join(document))
             .unwrap_or_else(|error| panic!("{document} is readable: {error}"));
         let rows: Vec<String> = text
