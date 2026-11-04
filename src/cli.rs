@@ -1438,11 +1438,12 @@ fn read(files: &[PathBuf]) -> (Vec<Source>, Vec<Skipped>, Vec<String>) {
 
 /// Prints collected diagnostics to stderr in a deterministic order.
 ///
-/// One line per warning, sorted. Sorting the rendered strings rather than a key is deliberate and
-/// enough: every line begins `warning: {path}:{line}:`, so the order is by path and the warnings
+/// One line per distinct warning, sorted. Sorting the rendered strings rather than a key is enough:
+/// every line begins `warning: {path}:{line}:`, so the order is by path and the warnings
 /// for one file end up adjacent — which is also what [`report_skipped`] does with its block.
 fn warn_sorted(mut warnings: Vec<String>) {
     warnings.sort();
+    warnings.dedup();
     for warning in warnings {
         eprintln!("{warning}");
     }
