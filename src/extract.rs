@@ -87,7 +87,7 @@ use ruff_python_ast::token::TokenKind;
 use ruff_python_ast::{self as ast, Stmt};
 use ruff_python_parser::{ParseError, parse_module};
 use ruff_python_trivia::has_leading_content;
-use ruff_source_file::LineIndex;
+use ruff_source_file::{LineIndex, UniversalNewlines};
 use ruff_text_size::{Ranged, TextRange};
 use thiserror::Error as ThisError;
 
@@ -488,7 +488,7 @@ fn fold(text: &str, keep_operators: bool) -> String {
     // Line by line, because two of the operator rules are line-scoped: `>` needs to know what
     // precedes it on its line, and every operator needs to know whether the line has words at all.
     // The line break itself folds to a space exactly as any other non-alphanumeric would.
-    for line in text.lines() {
+    for line in text.universal_newlines() {
         let line_has_alnum = line.chars().any(char::is_alphanumeric);
         // Peekable rather than a collected `Vec<char>`: one character of look-behind and one of
         // look-ahead is all `is_operator_here` needs, and this runs once per prose block per file.
@@ -666,7 +666,10 @@ const SPHINX_FIELDS_WITHOUT_ARGUMENT: [&str; 6] =
 /// ```
 #[must_use]
 pub fn narrative(text: &str) -> String {
-    let lines: Vec<&str> = text.lines().collect();
+    let lines: Vec<&str> = text
+        .universal_newlines()
+        .map(|line| line.as_str())
+        .collect();
     let mut kept = String::with_capacity(text.len());
     let mut position = 0;
     // Indexed rather than iterated: every branch below decides how many lines to *skip*, and two of
@@ -1309,6 +1312,28 @@ mod tests {
     #[test]
     fn source_reference_punctuation_remains_word_boundaries() {
         assert_eq!(normalize("path/to/file.py:42-43"), "path to file py 42 43");
+    }
+
+    #[test]
+    fn operator_normalization_recognizes_python_line_endings() {
+        for (source, expected) in [
+            (
+                "the owner retains the buffer\n> until the operation completes",
+                "the owner retains the buffer until the operation completes",
+            ),
+            (
+                "the value must be > 0\n===\nand < 10",
+                "the value must be > 0 and < 10",
+            ),
+        ] {
+            for ending in ["\n", "\r\n", "\r"] {
+                assert_eq!(
+                    normalize_comparable(&source.replace('\n', ending)),
+                    expected,
+                    "{ending:?}"
+                );
+            }
+        }
     }
 
     /// **The guard that can say "these two must stay DIFFERENT", and the reason it exists.**

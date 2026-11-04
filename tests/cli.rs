@@ -45,6 +45,152 @@ fn stderr_of(output: &Output) -> &str {
     std::str::from_utf8(&output.stderr).expect("the CLI writes UTF-8")
 }
 
+#[test]
+fn markers_follow_python_physical_lines() {
+    let scratch = Scratch::new("marker-line-endings");
+    scratch.write(
+        "pyproject.toml",
+        "[tool.tooprolix]\ncomment-max-volume = 10\ndocstring-max-volume = 10\nignore = [\"TPX003\"]\n",
+    );
+    let prose = "alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu";
+    // Spaces keep blank lines from becoming a single CRLF when mixed endings meet.
+    let source = format!(
+        "x = 1\n# !TPX001\n# {prose}\n \ndef marked():\n    # !TPX002\n    \"\"\"{prose}\"\"\"\n \n\
+         # !TPX999\n# {prose}\n \ndef mistyped():\n    # TPX002\n    \"\"\"{prose}\"\"\"\n"
+    );
+    for format in ["text", "json"] {
+        scratch.write("case.py", &source);
+        let control = scratch.check(&["--format", format]);
+        assert_eq!(control.status.code(), Some(1), "{control:?}");
+        assert_eq!(stderr_of(&control).lines().count(), 2, "{control:?}");
+        assert!(stderr_of(&control).contains("case.py:9: `TPX999`"));
+        assert!(stderr_of(&control).contains("case.py:13: this is not an opt-out marker"));
+        if format == "json" {
+            let report = document_of(&control);
+            assert_eq!(report["complete"], true);
+            let findings = report["findings"].as_array().expect("findings is an array");
+            assert_eq!(findings.len(), 2);
+            assert_eq!(
+                (findings[0]["code"].as_str(), findings[0]["line"].as_u64()),
+                (Some("TPX001"), Some(10))
+            );
+            assert_eq!(
+                (findings[1]["code"].as_str(), findings[1]["line"].as_u64()),
+                (Some("TPX002"), Some(14))
+            );
+        }
+        for endings in [&["\n"][..], &["\r\n"], &["\r"], &["\r", "\n", "\r\n"]] {
+            let varied: String = source
+                .lines()
+                .enumerate()
+                .flat_map(|(index, line)| [line, endings[index % endings.len()]])
+                .collect();
+            scratch.write("case.py", &varied);
+            let result = scratch.check(&["--format", format]);
+            assert_eq!(
+                result.status.code(),
+                control.status.code(),
+                "{endings:?} {format}"
+            );
+            assert_eq!(
+                stdout_of(&result),
+                stdout_of(&control),
+                "{endings:?} {format}"
+            );
+            assert_eq!(
+                stderr_of(&result),
+                stderr_of(&control),
+                "{endings:?} {format}"
+            );
+        }
+    }
+}
+
+#[test]
+fn narrative_follows_python_physical_lines() {
+    let scratch = Scratch::new("narrative-line-endings");
+    let prose = "the caller keeps ownership of the buffer until the operation completes";
+    for (name, body, count) in [
+        ("google", format!("Args:\n    value: {prose}"), 0),
+        (
+            "sphinx",
+            format!(":param value: {prose}\n    and releases it afterwards"),
+            0,
+        ),
+        (
+            "numpy",
+            format!("Parameters\n----------\nvalue : str\n    {prose}"),
+            0,
+        ),
+        ("fence", format!("```python\nvalue = '{prose}'\n```"), 0),
+        ("doctest", format!(">>> value = (\n... '{prose}'\n... )"), 0),
+        (
+            "output",
+            format!(">>> print_contract()\nArgs:\n    {prose}"),
+            1,
+        ),
+        ("unrecognised", format!("Unlisted:\n    {prose}"), 1),
+        (
+            "blockquote",
+            format!("the explanation follows\n> {prose}"),
+            1,
+        ),
+    ] {
+        let source = format!("\"\"\"\n{body}\n\"\"\"\n");
+        let twin = source.replace("\n> ", "\n");
+        for format in ["text", "json"] {
+            scratch.write("first.py", &source);
+            scratch.write("second.py", &twin);
+            let control = scratch.check(&["--format", format]);
+            assert_eq!(control.status.code(), Some(count), "{name}: {control:?}");
+            assert_eq!(stderr_of(&control), "", "{name}");
+            if format == "json" {
+                let report = document_of(&control);
+                assert_eq!(report["complete"], true);
+                assert_eq!(
+                    report["findings"]
+                        .as_array()
+                        .expect("findings is an array")
+                        .len(),
+                    usize::try_from(count).expect("the expected count is nonnegative")
+                );
+                if count == 1 {
+                    assert_eq!(report["findings"][0]["code"], "TPX003");
+                    assert_eq!(report["findings"][0]["weakest"]["similarity"], 1.0);
+                }
+            } else if count == 0 {
+                assert_eq!(stdout_of(&control), CLEAN_STDOUT);
+            }
+            for endings in [&["\n"][..], &["\r\n"], &["\r"], &["\r", "\n", "\r\n"]] {
+                for (file, original) in [("first.py", &source), ("second.py", &twin)] {
+                    let varied: String = original
+                        .lines()
+                        .enumerate()
+                        .flat_map(|(index, line)| [line, endings[index % endings.len()]])
+                        .collect();
+                    scratch.write(file, &varied);
+                }
+                let result = scratch.check(&["--format", format]);
+                assert_eq!(
+                    result.status.code(),
+                    control.status.code(),
+                    "{name} {endings:?} {format}"
+                );
+                assert_eq!(
+                    stdout_of(&result),
+                    stdout_of(&control),
+                    "{name} {endings:?} {format}"
+                );
+                assert_eq!(
+                    stderr_of(&result),
+                    stderr_of(&control),
+                    "{name} {endings:?} {format}"
+                );
+            }
+        }
+    }
+}
+
 /// Volume is measured in normalised words, so physical wrapping cannot decide eligibility.
 #[test]
 fn one_line_volume_matches_wrapped_prose_in_text_and_json() {

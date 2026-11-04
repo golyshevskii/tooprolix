@@ -97,6 +97,7 @@ use std::process::ExitCode;
 use std::sync::{Arc, Mutex};
 
 use ignore::WalkBuilder;
+use ruff_source_file::UniversalNewlines;
 use thiserror::Error as ThisError;
 
 use crate::config::{self, Config};
@@ -1458,7 +1459,10 @@ fn sources_of(blocks: Vec<ProseBlock>, text: &str, warnings: &mut Vec<String>) -
     if blocks.is_empty() {
         return Vec::new();
     }
-    let lines: Vec<&str> = text.lines().collect();
+    let lines: Vec<&str> = text
+        .universal_newlines()
+        .map(|line| line.as_str())
+        .collect();
 
     blocks
         .into_iter()
