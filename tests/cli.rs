@@ -1551,6 +1551,28 @@ fn a_comment_that_was_aiming_at_a_marker_is_reported_without_changing_the_outcom
     );
 }
 
+/// One physical near-miss is one diagnostic even when it neighbours a docstring.
+#[test]
+fn a_near_miss_is_reported_once_per_physical_line() {
+    let scratch = Scratch::new("near-miss-once");
+    scratch.write(
+        "input.py",
+        "# TPX002\n\"\"\"Module summary.\"\"\"\n\ndef process():\n    # TPX002\n    \"\"\"Function summary.\"\"\"\n    pass\n",
+    );
+
+    for format in ["text", "json"] {
+        let output = scratch.check(&["--format", format]);
+        assert_eq!(output.status.code(), Some(0), "{output:?}");
+        let warnings: Vec<&str> = stderr_of(&output)
+            .lines()
+            .filter(|line| line.contains("this is not an opt-out marker"))
+            .collect();
+        assert_eq!(warnings.len(), 2, "{output:?}");
+        assert!(warnings[0].contains("input.py:1:"), "{warnings:?}");
+        assert!(warnings[1].contains("input.py:5:"), "{warnings:?}");
+    }
+}
+
 /// AC5 — `.gitignore` is respected, and the fixture is proved capable of producing the finding it
 /// is supposed to suppress.
 ///
