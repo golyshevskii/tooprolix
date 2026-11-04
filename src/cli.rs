@@ -57,10 +57,9 @@
 //!   crate — ruff's own choice for the same job. `require_git` is **off**, so an exported tarball
 //!   with a `.gitignore` in it behaves like the checkout it came from.
 //! * **`exclude` from [`crate::config`] is layered on top of that, not in place of it.** It is
-//!   applied as an `ignore::overrides::Override`, which leaves every non-matching path untouched,
-//!   so the gitignore layer underneath still decides those. A project that sets `exclude` does not
-//!   thereby start walking what its `.gitignore` hides — which is what the whitelist reading of
-//!   that type would have done.
+//!   applied through `filter_entry` after gitignore filtering, so excluded paths can be recorded
+//!   before pruning. A project that sets `exclude` does not thereby start walking what its
+//!   `.gitignore` hides.
 //! * **Symlinks are not followed.** Measured 2026-07-25: following them takes pydantic from 343
 //!   findings to 559, because `tests/pydantic_core` is a symlink back into the tree and every file
 //!   under it is then counted twice. This is the `ignore` crate's default; the requirement is not to
@@ -301,10 +300,8 @@ pub enum ExitStatus {
 impl ExitStatus {
     /// The number this outcome is reported as.
     ///
-    /// There are two consumers and they need two different types, which is why the mapping is a
-    /// function rather than only the `From<ExitStatus> for ExitCode` below: `src/main.rs` wants an
-    /// [`ExitCode`], and the `tooprolix` console script has to hand an `int` back to `CPython`
-    /// (`sys.exit(main())`), where [`ExitCode`] is opaque. One `match`, so the two cannot drift.
+    /// The native entry point converts this number to [`ExitCode`]; tests inspect the number
+    /// directly. One mapping keeps both on the same exit contract.
     ///
     /// `#[non_exhaustive]` on [`ExitStatus`] only forbids exhaustive matching from *other* crates,
     /// so a fifth outcome is still a compile error here — which is the point of doing it once. No
@@ -369,7 +366,7 @@ enum Invocation {
 /// [`Output`](Error::Output) is the one variant that is **not** a failure to start — the run did
 /// everything right and could not hand the answer over. It is also the only variant that does not
 /// always mean exit 2: `status` reads its [`std::io::ErrorKind`] and turns a closed pipe into a
-/// silent exit 0. That decision lives there, in the single place both entry points pass through,
+/// silent exit 0. That decision lives there, on the native entry point's error path,
 /// rather than here, because the *error* is the same fact either way — only the verdict differs.
 #[derive(Debug, ThisError)]
 #[non_exhaustive]
@@ -518,9 +515,8 @@ fn reader_stopped_reading(error: &Error) -> bool {
 /// Writes to stdout, turning any write failure into [`Error::Output`].
 ///
 /// Every byte this tool puts on stdout goes through here, and that is what makes the write
-/// contract in `status` hold for **both** output formats and **both** entry points: `src/main.rs`
-/// and the console script in `src/lib.rs` differ only in how they spell the exit code, and both
-/// reach stdout through this function.
+/// contract in `status` hold for both output formats and every invocation. The wheel ships the
+/// same native entry point in `src/main.rs`; there is no separate Python console script.
 ///
 /// It takes a closure rather than a `&str` so that the findings loop can hold one buffer for the
 /// whole run and stop at the **first** failed write. That matters beyond tidiness: on a closed pipe
@@ -594,12 +590,8 @@ fn emit(write: impl FnOnce(&mut dyn Write) -> std::io::Result<()>) -> Result<(),
 
 /// [`run`] with the outcome still typed, for a caller that is not a process.
 ///
-/// **Public on purpose**, and the decision is worth recording because the alternative was to demote
-/// [`ExitStatus`], [`Format`] and [`Error`] to `pub(crate)`. All three were public with no public
-/// producer — three types frozen into 0.1.0 for zero capability — and the fix that *adds* something
-/// is this one: `package-python-distribution-and-publish-0-1-0` has to run the CLI inside `CPython`
-/// through a console script, where the answer has to become a Python return value rather than a
-/// process exit code, and `ExitCode` cannot be inspected.
+/// Library callers can inspect [`ExitStatus`] and handle [`Error`] without converting the outcome
+/// to an opaque [`ExitCode`]. The wheel ships the native executable, not a Python caller.
 ///
 /// It still writes findings to stdout and diagnostics to stderr; only the exit code is returned
 /// rather than taken.
@@ -1521,7 +1513,9 @@ fn report_unknown_marker_codes(sources: &[Source], config: &Config, warnings: &m
     for source in sources {
         let volume_rule = Rule::volume_for(source.block.kind);
         let relevant_to_volume = !config.ignores(volume_rule)
-            && source.block.size_words() > config.limits.max_volume(source.block.kind);
+            && config
+                .limits
+                .exceeds(source.block.kind, source.block.size_words());
         let relevant_to_old_floor = source.block.is_large_enough();
         if !relevant_to_volume && !relevant_to_old_floor {
             continue;

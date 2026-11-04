@@ -404,6 +404,74 @@ fn unknown_marker_relevance_preserves_the_old_floor_and_gates_new_one_line_block
     );
 }
 
+/// Volume warnings use the same threshold as findings, before block suppression is applied.
+#[test]
+fn volume_marker_warnings_share_eligibility_but_not_suppression() {
+    for (kind, code) in [("comment", "TPX001"), ("docstring", "TPX002")] {
+        for (prose, over_limit) in [("two words", false), ("three words here", true)] {
+            for (suppressed, ignored) in [(false, false), (true, false), (false, true)] {
+                let scratch = Scratch::new("volume-marker-eligibility");
+                let ignore = if ignored {
+                    format!("ignore = [\"{code}\"]\n")
+                } else {
+                    String::new()
+                };
+                scratch.write("pyproject.toml", &format!(
+                    "[tool.tooprolix]\ncomment-max-volume = 2\ndocstring-max-volume = 2\n{ignore}"
+                ));
+                let marker = if suppressed {
+                    format!("{code},TPX999")
+                } else {
+                    "TPX999".to_owned()
+                };
+                let block = if kind == "comment" {
+                    format!("# {prose}")
+                } else {
+                    format!("\"\"\"{prose}\"\"\"")
+                };
+                scratch.write("input.py", &format!("# !{marker}\n{block}\n"));
+                let finding = over_limit && !ignored && !suppressed;
+                let warning = over_limit && !ignored;
+
+                for format in ["text", "json"] {
+                    let output = scratch.check(&["--format", format]);
+                    assert_eq!(output.status.code(), Some(i32::from(finding)), "{output:?}");
+                    assert_eq!(
+                        stderr_of(&output)
+                            .matches("`TPX999` in an opt-out marker")
+                            .count(),
+                        usize::from(warning),
+                        "{kind}, {prose}, suppressed={suppressed}, ignored={ignored}: {output:?}"
+                    );
+                    if format == "json" {
+                        let document: serde_json::Value = serde_json::from_str(stdout_of(&output))
+                            .expect("the CLI emits valid JSON");
+                        assert_eq!(document["complete"], true);
+                        assert_eq!(
+                            document["findings"]
+                                .as_array()
+                                .expect("findings is an array")
+                                .len(),
+                            usize::from(finding)
+                        );
+                        if finding {
+                            assert_eq!(document["findings"][0]["code"], code);
+                            assert_eq!(document["findings"][0]["line"], 2);
+                            assert_eq!(document["findings"][0]["end_line"], 2);
+                        }
+                    } else {
+                        assert_eq!(
+                            stdout_of(&output).contains(&format!(": {code} ")),
+                            finding,
+                            "{output:?}"
+                        );
+                    }
+                }
+            }
+        }
+    }
+}
+
 /// The exit contract, all three codes, on fixtures that are each capable of the other two answers —
 /// which is what stops this from being three tests that all pass on a CLI that always exits 0.
 ///
