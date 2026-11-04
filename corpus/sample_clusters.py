@@ -90,8 +90,10 @@ def validate_run(name: str, report: Mapping[str, Any]) -> None:
     is what let it through.
 
     # Raises
-    `MalformedRun`, naming `name` and the offending key.
+    `MalformedRun`, naming `name` and the offending root type or key.
     """
+    if not isinstance(report, Mapping):
+        raise MalformedRun(f"{name}: run document is {type(report).__name__}, expected object")
     for key, kind in (
         ("schema_version", str),
         ("complete", bool),

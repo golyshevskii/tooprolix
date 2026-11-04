@@ -468,6 +468,7 @@ def _check_run_health(
     the pre-registration, so the check is against an external expectation rather than a self-report.
     """
     document: Mapping[str, Any] = json.loads(path.read_text(encoding="utf-8"))
+    sample_clusters.validate_run(name, document)
     # A profile pins per-run numbers when they were already measured (the corpus) and states
     # requirements when they cannot be predicted (a holdout nobody has run). One of the two must
     # exist: a run nothing checks is a hole, not a default.
