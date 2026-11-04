@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.6](https://github.com/golyshevskii/tooprolix/compare/v0.5.5...v0.5.6) - 2026-11-04
+
+### Fixed
+
+- *(corpus)* validate clusters before selecting populations ([#76](https://github.com/golyshevskii/tooprolix/pull/76))
+- *(cli)* share volume eligibility and correct contract docs ([#75](https://github.com/golyshevskii/tooprolix/pull/75))
+- *(cli)* deduplicate marker diagnostics ([#73](https://github.com/golyshevskii/tooprolix/pull/73))
+
 ## [0.5.5](https://github.com/golyshevskii/tooprolix/compare/v0.5.4...v0.5.5) - 2026-08-19
 
 ### Fixed
