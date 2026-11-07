@@ -65,6 +65,7 @@
 //! There is deliberately no way to *enable* a rule that `ignore` disabled. See [`crate::rules`] for
 //! the marker-versus-`ignore` precedence that follows from it.
 
+use std::collections::{HashMap, hash_map::Entry};
 use std::path::{Path, PathBuf};
 
 use ignore::overrides::{Override, OverrideBuilder};
@@ -72,6 +73,12 @@ use thiserror::Error as ThisError;
 
 use crate::detect::volume::Limits;
 use crate::rules::{Rule, shipping_codes};
+
+#[cfg(test)]
+thread_local! {
+    pub(crate) static CONFIG_READS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    pub(crate) static MATCHER_BUILDS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
 
 /// The file the configuration is read from.
 ///
@@ -107,10 +114,9 @@ pub struct Config {
     /// Gitignore-syntax globs whose matches are never walked, relative to [`Config::source`]'s
     /// own directory.
     ///
-    /// Kept as the strings the file wrote, in file order, rather than as a built matcher: the
-    /// matcher is not comparable, and `Config` is compared. `exclude_matcher` turns these into
-    /// the one the walk uses, and is the *only* thing that does — so the validation [`load`]
-    /// performs and the filtering [`crate::cli`] applies can never be built from different rules.
+    /// Kept as the strings the file wrote, in file order, because `Config` is compared.
+    /// `exclude_matcher` validates them for [`load`]; the CLI retains that prepared matcher
+    /// separately so every walk in the invocation uses the same validated rules.
     pub exclude: Vec<String>,
     /// The file these settings came from, or `None` when nothing was found and the defaults apply.
     pub source: Option<PathBuf>,
@@ -142,6 +148,38 @@ impl Config {
     #[must_use]
     pub fn ignores_everything(&self) -> bool {
         Rule::ALL.iter().all(|rule| self.ignores(*rule))
+    }
+}
+
+/// An immutable configuration snapshot and the matcher validated with it.
+#[derive(Debug)]
+pub(crate) struct Prepared {
+    pub(crate) config: Config,
+    pub(crate) excluded: Override,
+}
+
+impl Prepared {
+    fn new(config: Config) -> Result<Self, Error> {
+        let excluded = exclude_matcher(&config)?;
+        Ok(Self { config, excluded })
+    }
+}
+
+/// One invocation's snapshots, keyed by discovered path rather than effective source.
+#[derive(Default)]
+pub(crate) struct Loader {
+    prepared: HashMap<Option<PathBuf>, Prepared>,
+}
+
+impl Loader {
+    pub(crate) fn load(&mut self, target: &Path) -> Result<&Prepared, Error> {
+        match self.prepared.entry(discover(target)) {
+            Entry::Occupied(entry) => Ok(entry.into_mut()),
+            Entry::Vacant(entry) => {
+                let prepared = prepare(entry.key().clone())?;
+                Ok(entry.insert(prepared))
+            }
+        }
     }
 }
 
@@ -223,10 +261,16 @@ pub enum Error {
 /// Every variant of [`Error`]: a configuration file that exists and is wrong is fatal, because a
 /// setting that silently does nothing is a gate that is silently off.
 pub fn load(target: &Path) -> Result<Config, Error> {
-    let Some(path) = discover(target) else {
-        return Ok(Config::default());
+    prepare(discover(target)).map(|prepared| prepared.config)
+}
+
+fn prepare(path: Option<PathBuf>) -> Result<Prepared, Error> {
+    let Some(path) = path else {
+        return Prepared::new(Config::default());
     };
 
+    #[cfg(test)]
+    CONFIG_READS.set(CONFIG_READS.get() + 1);
     let text = std::fs::read_to_string(&path).map_err(|source| Error::Read {
         path: path.clone(),
         source,
@@ -272,7 +316,7 @@ fn discover(target: &Path) -> Option<PathBuf> {
 ///
 /// Separate from [`load`] so the table can be tested without a filesystem, and so the walk up the
 /// tree is tested without a table.
-fn from_document(document: &toml::Table, path: PathBuf) -> Result<Config, Error> {
+fn from_document(document: &toml::Table, path: PathBuf) -> Result<Prepared, Error> {
     let mut config = Config {
         source: Some(path.clone()),
         ..Config::default()
@@ -295,7 +339,7 @@ fn from_document(document: &toml::Table, path: PathBuf) -> Result<Config, Error>
             }
             // No `[tool]`, or no `[tool.tooprolix]` inside it: the defaults, and no complaint.
             None => {
-                return Ok(Config {
+                return Prepared::new(Config {
                     source: None,
                     ..config
                 });
@@ -336,14 +380,8 @@ fn from_document(document: &toml::Table, path: PathBuf) -> Result<Config, Error>
         }
     }
 
-    // The globs are compiled HERE, while the file that wrote them is still in hand, and the result
-    // is thrown away. A glob that only fails when a walk happens to reach it would be reported by
-    // `crate::cli` as "could not walk <root>" — naming the tree instead of the typo, at a moment
-    // when the configuration is no longer on screen. Everything else in this module is fatal at
-    // load time for the same reason, so this is the convention and not a new rule.
-    exclude_matcher(&config)?;
-
-    Ok(config)
+    // Validate before comparing sources so a malformed configuration keeps its diagnostic.
+    Prepared::new(config)
 }
 
 /// Reads `ignore = ["TPX003"]`, in registry order rather than in the order the file listed.
@@ -668,6 +706,8 @@ pub(crate) fn exclude_matcher(config: &Config) -> Result<Override, Error> {
             })?;
     }
 
+    #[cfg(test)]
+    MATCHER_BUILDS.set(MATCHER_BUILDS.get() + 1);
     builder.build().map_err(|error| Error::BadValue {
         path: source.to_path_buf(),
         key: "exclude".to_owned(),
@@ -705,7 +745,47 @@ mod tests {
 
     fn parse(toml_text: &str) -> Result<Config, Error> {
         let document: toml::Table = toml_text.parse().expect("the fixture is valid TOML");
-        from_document(&document, PathBuf::from("pyproject.toml"))
+        from_document(&document, PathBuf::from("pyproject.toml")).map(|prepared| prepared.config)
+    }
+
+    #[test]
+    fn invocation_snapshots_do_not_cache_public_loads_or_later_invocations() {
+        let root =
+            std::env::temp_dir().join(format!("tooprolix-config-snapshot-{}", std::process::id()));
+        std::fs::create_dir_all(&root).expect("create fixture");
+        let target = root.join("source.py");
+        let file = root.join(CONFIG_FILE);
+        std::fs::write(&target, "x = 1\n").expect("write source");
+        std::fs::write(&file, "[tool.tooprolix]\nexclude = [\"vendor\"]\n")
+            .expect("write valid config");
+        let mut invocation = Loader::default();
+        let initial = invocation
+            .load(&target)
+            .expect("valid config")
+            .config
+            .clone();
+
+        std::fs::write(&file, "[tool.tooprolix]\nexclude = [\"[\"]\n")
+            .expect("replace with an invalid glob");
+        let snapshot = invocation
+            .load(&target)
+            .expect("reuse snapshot")
+            .config
+            .clone();
+        let public_result = load(&target);
+        let next_invocation_result = Loader::default()
+            .load(&target)
+            .map(|entry| entry.config.clone());
+        std::fs::remove_dir_all(&root).expect("remove fixture");
+
+        assert_eq!(snapshot, initial);
+        assert_eq!(snapshot.exclude, ["vendor"]);
+        for result in [public_result, next_invocation_result] {
+            assert!(
+                matches!(result, Err(Error::BadValue { key, .. }) if key == "exclude"),
+                "a fresh load must validate the current glob"
+            );
+        }
     }
 
     /// The whole point of the defaults: a project that says nothing gets exactly the calibrated

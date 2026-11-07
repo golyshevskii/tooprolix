@@ -30,6 +30,8 @@ missing or unsupported explicit target stops the whole invocation before any rep
 The nearest `pyproject.toml` is resolved independently from every target before sources are read.
 All targets must resolve to the same configuration source; targets with no file share the default
 context. Conflicting sources are an exit-2 startup error rather than an order-dependent choice.
+Within one invocation, each discovered configuration file is read and validated once; later targets
+reuse that snapshot. A subsequent invocation reads the file again.
 
 ### `--version`
 

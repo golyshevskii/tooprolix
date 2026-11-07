@@ -1170,6 +1170,159 @@ fn conflicting_explicit_path_configurations() {
     }
 }
 
+#[test]
+fn explicit_paths_without_tool_tables_share_the_default_configuration() {
+    let scratch = Scratch::new("default-config-sources");
+    for directory in ["one", "two"] {
+        scratch.write(
+            &format!("{directory}/pyproject.toml"),
+            "[project]\nname = \"example\"\n",
+        );
+        scratch.write(&format!("{directory}/x.py"), "x = 1\n");
+    }
+    scratch.write("no-project/x.py", "x = 1\n");
+
+    for second in ["two/x.py", "no-project/x.py"] {
+        let output = Command::new(env!("CARGO_BIN_EXE_tooprolix"))
+            .args(["check", "one/x.py", second, "--format", "json"])
+            .current_dir(&scratch.root)
+            .output()
+            .expect("the binary cargo just built is executable");
+        assert_eq!(output.status.code(), Some(0), "{output:?}");
+        assert_eq!(stderr_of(&output), "");
+        let document = document_of(&output);
+        assert_eq!(document["complete"], true);
+        for field in ["findings", "skipped", "excluded"] {
+            assert_eq!(document[field], serde_json::json!([]), "{document}");
+        }
+    }
+}
+
+#[test]
+fn explicit_path_configuration_errors_preserve_argument_order_before_walking() {
+    let scratch = Scratch::new("config-error-order");
+    for directory in ["one", "two"] {
+        scratch.write(
+            &format!("{directory}/pyproject.toml"),
+            "[tool.tooprolix]\ncomment-max-volume = 5\n",
+        );
+        scratch.write(&format!("{directory}/x.py"), "x = 1\n");
+    }
+    scratch.write("malformed/pyproject.toml", "[tool.tooprolix\n");
+    scratch.write("malformed/x.py", "x = 1\n");
+    scratch.write(
+        "bad-glob/pyproject.toml",
+        "[tool.tooprolix]\nexclude = [\"[\"]\n",
+    );
+    scratch.write("bad-glob/x.py", "x = 1\n");
+    scratch.write("default/x.py", "x = 1\n");
+    let cases: &[(&[&str], &str, &str)] = &[
+        (
+            &["one/x.py", "malformed/x.py"],
+            "TOML parse error",
+            "different configuration sources",
+        ),
+        (
+            &["one/x.py", "bad-glob/x.py"],
+            "exclude",
+            "different configuration sources",
+        ),
+        (
+            &["one/x.py", "two/x.py", "malformed/x.py"],
+            "different configuration sources",
+            "TOML parse error",
+        ),
+        (
+            &["default/missing.py", "one/x.py"],
+            "different configuration sources",
+            "no such file or directory",
+        ),
+        (
+            &["one/x.py", "default/missing.py", "malformed/x.py"],
+            "different configuration sources",
+            "TOML parse error",
+        ),
+        (
+            &["default/missing.py", "malformed/x.py"],
+            "TOML parse error",
+            "no such file or directory",
+        ),
+        (
+            &["default/missing.py", "default/x.py"],
+            "no such file or directory",
+            "different configuration sources",
+        ),
+    ];
+    for (paths, expected, absent) in cases {
+        let output = Command::new(env!("CARGO_BIN_EXE_tooprolix"))
+            .arg("check")
+            .args(*paths)
+            .args(["--format", "json"])
+            .current_dir(&scratch.root)
+            .output()
+            .expect("the binary cargo just built is executable");
+        assert_eq!(output.status.code(), Some(2), "{paths:?}: {output:?}");
+        assert_eq!(stdout_of(&output), "", "{paths:?}");
+        assert!(
+            stderr_of(&output).contains(expected),
+            "{paths:?}: {output:?}"
+        );
+        assert!(
+            !stderr_of(&output).contains(absent),
+            "{paths:?}: {output:?}"
+        );
+    }
+}
+
+#[test]
+#[cfg(unix)]
+fn a_symlinked_configuration_keeps_its_discovered_identity_and_exclude_base() {
+    let scratch = Scratch::new("symlink-config-source");
+    let config = scratch.write(
+        "original/pyproject.toml",
+        "[tool.tooprolix]\ncomment-max-volume = 0\nexclude = [\"./hidden.py\"]\n",
+    );
+    for directory in ["original", "linked"] {
+        scratch.write(&format!("{directory}/x.py"), "# alpha beta gamma\n");
+        scratch.write(&format!("{directory}/hidden.py"), "def invalid(:\n");
+    }
+    std::os::unix::fs::symlink(config, scratch.root.join("linked/pyproject.toml"))
+        .expect("a symlink is creatable");
+
+    let output = Command::new(env!("CARGO_BIN_EXE_tooprolix"))
+        .args(["check", "linked", "--format", "json"])
+        .current_dir(&scratch.root)
+        .output()
+        .expect("the binary cargo just built is executable");
+    assert_eq!(output.status.code(), Some(1), "{output:?}");
+    assert_eq!(stderr_of(&output), "");
+    let document = document_of(&output);
+    assert_eq!(document["complete"], true);
+    assert_eq!(document["skipped"], serde_json::json!([]));
+    assert_eq!(
+        document["excluded"],
+        serde_json::json!(["linked/hidden.py"])
+    );
+    assert_eq!(document["findings"].as_array().map(Vec::len), Some(1));
+    assert_eq!(document["findings"][0]["path"], "linked/x.py");
+    assert_eq!(document["findings"][0]["code"], "TPX001");
+
+    let conflict = Command::new(env!("CARGO_BIN_EXE_tooprolix"))
+        .args(["check", "original/x.py", "linked/x.py", "--format", "json"])
+        .current_dir(&scratch.root)
+        .output()
+        .expect("the binary cargo just built is executable");
+    assert_eq!(conflict.status.code(), Some(2), "{conflict:?}");
+    assert_eq!(stdout_of(&conflict), "");
+    for expected in [
+        "different configuration sources",
+        "original/pyproject.toml",
+        "linked/pyproject.toml",
+    ] {
+        assert!(stderr_of(&conflict).contains(expected), "{conflict:?}");
+    }
+}
+
 /// `.` is one of the three path forms the user confirmed, and it must not be special-cased.
 #[test]
 fn a_directory_and_a_dot_are_the_same_walk() {
