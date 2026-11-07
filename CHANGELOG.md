@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.7](https://github.com/golyshevskii/tooprolix/compare/v0.5.6...v0.5.7) - 2026-11-07
+
+### Fixed
+
+- *(corpus)* validate run structure before health checks ([#79](https://github.com/golyshevskii/tooprolix/pull/79))
+- *(extract)* honor python physical line endings ([#77](https://github.com/golyshevskii/tooprolix/pull/77))
+
+### Other
+
+- *(cli)* reuse configuration preparation across explicit paths ([#80](https://github.com/golyshevskii/tooprolix/pull/80))
+
 ## [0.5.6](https://github.com/golyshevskii/tooprolix/compare/v0.5.5...v0.5.6) - 2026-11-04
 
 ### Fixed
