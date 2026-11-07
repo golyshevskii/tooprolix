@@ -96,7 +96,7 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 use std::sync::{Arc, Mutex};
 
-use ignore::WalkBuilder;
+use ignore::{WalkBuilder, overrides::Override};
 use ruff_source_file::UniversalNewlines;
 use thiserror::Error as ThisError;
 
@@ -774,21 +774,24 @@ fn prepare_walks(paths: &[PathBuf]) -> Result<(Config, Vec<Walked>), Error> {
     let Some(first_path) = paths.first() else {
         return Err(Error::Usage("check needs a path".to_owned()));
     };
-    let config = config::load(first_path)?;
+    let mut loader = config::Loader::default();
+    let first = loader.load(first_path)?;
+    let config = first.config.clone();
+    let excluded = first.excluded.clone();
     for path in paths.iter().skip(1) {
-        let candidate = config::load(path)?;
+        let candidate = &loader.load(path)?.config;
         if candidate.source != config.source {
             return Err(Error::ConflictingConfigurations {
                 first_path: first_path.clone(),
                 first_source: config_source_label(&config),
                 second_path: path.clone(),
-                second_source: config_source_label(&candidate),
+                second_source: config_source_label(candidate),
             });
         }
     }
     let walks = paths
         .iter()
-        .map(|path| python_files(path, &config))
+        .map(|path| python_files(path, &excluded))
         .collect::<Result<Vec<_>, _>>()?;
     Ok((config, walks))
 }
@@ -1055,7 +1058,7 @@ fn parse_format(value: &str) -> Result<Format, Error> {
 ///
 /// [`Error::Missing`], [`Error::NotPython`] and [`Error::Walk`] — all three are "the tree could not
 /// be read", never "the tree is clean".
-fn python_files(root: &Path, config: &Config) -> Result<Walked, Error> {
+fn python_files(root: &Path, excluded: &Override) -> Result<Walked, Error> {
     if !root.exists() {
         return Err(Error::Missing(root.to_path_buf()));
     }
@@ -1063,7 +1066,6 @@ fn python_files(root: &Path, config: &Config) -> Result<Walked, Error> {
         return Err(Error::NotPython(root.to_path_buf()));
     }
 
-    let excluded = config::exclude_matcher(config)?;
     // Nothing to exclude, nothing to normalise: the walk is the one this tool has always done, on
     // the path exactly as typed. Kept as a branch rather than as a canonical walk that happens to
     // round-trip, so that a project without `exclude` cannot be affected by any of this at all.
@@ -1116,6 +1118,7 @@ fn python_files(root: &Path, config: &Config) -> Result<Walked, Error> {
     // never contended and its cost is a compare-and-swap per excluded path.
     let removed: Arc<Mutex<Vec<PathBuf>>> = Arc::new(Mutex::new(Vec::new()));
     if !excluded.is_empty() {
+        let excluded = excluded.clone();
         let observed = Arc::clone(&removed);
         // The reported paths are put back under the typed root, exactly as findings are, so a
         // relative invocation reports relative paths and the field can be pasted into a config.
@@ -2039,13 +2042,47 @@ mod tests {
         );
     }
 
+    #[test]
+    fn explicit_paths_prepare_their_shared_configuration_once() {
+        let root = std::env::temp_dir().join(format!(
+            "tooprolix-shared-preparation-{}",
+            std::process::id()
+        ));
+        std::fs::create_dir_all(&root).expect("create fixture");
+        std::fs::write(
+            root.join("pyproject.toml"),
+            "[tool.tooprolix]\nexclude = [\"vendor\"]\n",
+        )
+        .expect("write config");
+        let paths: Vec<_> = ["first.py", "second.py", "third.py"]
+            .into_iter()
+            .map(|name| {
+                let path = root.join(name);
+                std::fs::write(&path, "x = 1\n").expect("write source");
+                path
+            })
+            .collect();
+        config::CONFIG_READS.set(0);
+        config::MATCHER_BUILDS.set(0);
+
+        let result = prepare_walks(&paths);
+        let counts = (config::CONFIG_READS.get(), config::MATCHER_BUILDS.get());
+        std::fs::remove_dir_all(&root).expect("remove fixture");
+
+        let (config, walks) = result.expect("the paths share one valid config");
+        assert_eq!(config.exclude, ["vendor"]);
+        let files: Vec<_> = walks.into_iter().flat_map(|walk| walk.files).collect();
+        assert_eq!(files, paths);
+        assert_eq!(counts, (1, 1), "shared config reads and matcher builds");
+    }
+
     /// A directory walk must not be able to report "clean" because it visited nothing it should
     /// have visited.
     #[test]
     fn the_walk_finds_python_and_refuses_everything_else() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/dup-corpus");
 
-        let walked = python_files(&root, &Config::default()).expect("the fixture tree is readable");
+        let walked = python_files(&root, &Override::empty()).expect("the fixture tree is readable");
         assert!(
             walked.excluded.is_empty(),
             "a walk with no `exclude` configured reported that it excluded something: {:?}",
@@ -2073,13 +2110,13 @@ mod tests {
                 "worker.py"
             ]
         );
-        assert!(python_files(&root.join("nope"), &Config::default()).is_err());
+        assert!(python_files(&root.join("nope"), &Override::empty()).is_err());
         assert!(
             python_files(
                 Path::new(env!("CARGO_MANIFEST_DIR"))
                     .join("README.md")
                     .as_path(),
-                &Config::default()
+                &Override::empty()
             )
             .is_err(),
             "a non-Python file named directly is not an empty result"
