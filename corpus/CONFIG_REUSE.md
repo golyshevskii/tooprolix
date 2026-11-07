@@ -100,7 +100,7 @@ one entry for each of the six pins:
 ```
 
 The harness verifies each recorded checkout and all seven expected file counts.
-Run it without concurrent builds/tests. Save the following exact executed harness
+Run it without concurrent builds/tests. Save the following harness (formatting normalized; Python AST verified identical to the executed version)
 as `compare.py` beside the binaries and manifests, then run `python3 compare.py`.
 It emits all raw samples and saves both formats of output for both binaries.
 The pinned paths/counts are deliberate independent corpus expectations.
@@ -110,6 +110,7 @@ The pinned paths/counts are deliberate independent corpus expectations.
 
 ```python
 """Compare immutable release executables on pinned corpus and config-heavy CLI inputs."""
+
 import collections
 import hashlib
 import json
@@ -124,30 +125,38 @@ from pathlib import Path
 OUT = Path(__file__).resolve().parent
 ROOT = Path((OUT / "corpus-root.txt").read_text().strip())
 BINS = {name: OUT / name for name in ("baseline", "candidate")}
-SUBJECTS = {"OpenHands": ("OpenHands", 914, 0), "crewAI-full": ("crewAI", 1269, 5),
-            "crewAI": ("crewAI/lib/crewai", 754, 0), "langgraph": ("langgraph", 445, 0),
-            "openai-agents-python": ("openai-agents-python", 834, 0),
-            "pydantic": ("pydantic", 404, 0), "requests": ("requests", 37, 0)}
+SUBJECTS = {
+    "OpenHands": ("OpenHands", 914, 0),
+    "crewAI-full": ("crewAI", 1269, 5),
+    "crewAI": ("crewAI/lib/crewai", 754, 0),
+    "langgraph": ("langgraph", 445, 0),
+    "openai-agents-python": ("openai-agents-python", 834, 0),
+    "pydantic": ("pydantic", 404, 0),
+    "requests": ("requests", 37, 0),
+}
 
 
 def run(label, paths, fmt="json"):
     start = time.perf_counter_ns()
-    result = subprocess.run([str(BINS[label]), "check", *paths, "--format", fmt],
-                            cwd=ROOT, capture_output=True, timeout=120)
+    result = subprocess.run(
+        [str(BINS[label]), "check", *paths, "--format", fmt], cwd=ROOT, capture_output=True, timeout=120
+    )
     elapsed = (time.perf_counter_ns() - start) / 1e6
     return (result.returncode, result.stdout, result.stderr), elapsed
 
 
 def summarize(samples):
     before, after = samples["baseline"], samples["candidate"]
-    deltas = [a-b for a, b in zip(before, after, strict=True)]
+    deltas = [a - b for a, b in zip(before, after, strict=True)]
     rng = random.Random(761)
     boot = sorted(statistics.median(rng.choices(deltas, k=len(deltas))) for _ in range(4000))
-    return {"samples_ms": samples,
-            "median_ms": {k: statistics.median(v) for k, v in samples.items()},
-            "min_max_ms": {k: [min(v), max(v)] for k, v in samples.items()},
-            "paired_saved_ms_ci95": [boot[100], boot[3899]],
-            "median_speedup": statistics.median(before) / statistics.median(after)}
+    return {
+        "samples_ms": samples,
+        "median_ms": {k: statistics.median(v) for k, v in samples.items()},
+        "min_max_ms": {k: [min(v), max(v)] for k, v in samples.items()},
+        "paired_saved_ms_ci95": [boot[100], boot[3899]],
+        "median_speedup": statistics.median(before) / statistics.median(after),
+    }
 
 
 def measure(name, paths, repeats=21):
@@ -159,10 +168,14 @@ def measure(name, paths, repeats=21):
             reference, _ = run("baseline", paths, fmt)
             actual, _ = run("candidate", paths, fmt)
             assert actual == reference
-        return {"name": name, "paths": paths, "exit": 2,
-                "identical_json_text_stderr_exit": True,
-                "startup_error": expected[2].decode(),
-                "timing_omitted": "The old CLI already refuses template pyproject TOML; not a successful scan."}
+        return {
+            "name": name,
+            "paths": paths,
+            "exit": 2,
+            "identical_json_text_stderr_exit": True,
+            "startup_error": expected[2].decode(),
+            "timing_omitted": "The old CLI already refuses template pyproject TOML; not a successful scan.",
+        }
     assert expected[0] == 1, (name, expected)
     document = json.loads(expected[1])
     assert document["findings"], name
@@ -186,18 +199,29 @@ def measure(name, paths, repeats=21):
                 samples[label].append(elapsed)
     rss = {key: [] for key in BINS}
     for iteration in range(3):
-        for label in (list(BINS) if iteration % 2 else list(reversed(BINS))):
-            proc = subprocess.run(["/usr/bin/time", "-l", str(BINS[label]), "check", *paths,
-                                   "--format", "json"], cwd=ROOT, capture_output=True, timeout=120)
+        for label in list(BINS) if iteration % 2 else list(reversed(BINS)):
+            proc = subprocess.run(
+                ["/usr/bin/time", "-l", str(BINS[label]), "check", *paths, "--format", "json"],
+                cwd=ROOT,
+                capture_output=True,
+                timeout=120,
+            )
             assert proc.returncode == expected[0] and proc.stdout == expected[1]
             match = re.search(rb"(\d+)\s+maximum resident set size", proc.stderr)
             assert match, proc.stderr
             rss[label].append(int(match[1]))
-    row = {"name": name, "paths": paths, "exit": expected[0],
-           "findings": dict(collections.Counter(f["code"] for f in document["findings"])),
-           "complete": document["complete"], "skipped": len(document["skipped"]),
-           "excluded": len(document["excluded"]), "identical_json_text_stderr_exit": True,
-           "rss_bytes": rss, **summarize(samples)}
+    row = {
+        "name": name,
+        "paths": paths,
+        "exit": expected[0],
+        "findings": dict(collections.Counter(f["code"] for f in document["findings"])),
+        "complete": document["complete"],
+        "skipped": len(document["skipped"]),
+        "excluded": len(document["excluded"]),
+        "identical_json_text_stderr_exit": True,
+        "rss_bytes": rss,
+        **summarize(samples),
+    }
     print(json.dumps({k: row[k] for k in ("name", "median_ms", "paired_saved_ms_ci95", "median_speedup")}), flush=True)
     return row
 
@@ -205,14 +229,24 @@ def measure(name, paths, repeats=21):
 def main():
     for entry in json.loads((OUT / "corpus-integrity.json").read_text())["clones"]:
         checkout = Path(entry["path"])
-        assert subprocess.check_output(["git", "-C", str(checkout), "rev-parse", "HEAD"], text=True).strip() == entry["expected_sha"]
+        assert (
+            subprocess.check_output(["git", "-C", str(checkout), "rev-parse", "HEAD"], text=True).strip()
+            == entry["expected_sha"]
+        )
         assert not subprocess.check_output(["git", "-C", str(checkout), "status", "--porcelain"])
     assert not any((p / ".gitignore").exists() for p in [ROOT, *ROOT.parents])
-    results = {"binary_sha256": {k: hashlib.sha256(p.read_bytes()).hexdigest() for k, p in BINS.items()},
-               "power_before": subprocess.check_output(["pmset", "-g", "batt"], text=True),
-               "protocol": "21 paired samples after 2 warmups; alternating order; stdout/stderr/exit equality every timed run; RSS 3 runs separately verifies stdout/exit; CI paired bootstrap median saved ms, descriptive only", "cases": []}
+    results = {
+        "binary_sha256": {k: hashlib.sha256(p.read_bytes()).hexdigest() for k, p in BINS.items()},
+        "power_before": subprocess.check_output(["pmset", "-g", "batt"], text=True),
+        "protocol": "21 paired samples after 2 warmups; alternating order; stdout/stderr/exit equality every timed run; RSS 3 runs separately verifies stdout/exit; CI paired bootstrap median saved ms, descriptive only",
+        "cases": [],
+    }
     for name, (subject, count, skipped) in SUBJECTS.items():
-        files = sorted(subprocess.check_output(["rg", "--no-require-git", "--files", "--glob", "*.py", subject], cwd=ROOT, text=True).splitlines())
+        files = sorted(
+            subprocess.check_output(
+                ["rg", "--no-require-git", "--files", "--glob", "*.py", subject], cwd=ROOT, text=True
+            ).splitlines()
+        )
         assert len(files) == count, (name, len(files), count)
         (OUT / f"{name}.files").write_text("\n".join(files) + "\n")
         for mode, paths in (("directory", [subject]), ("explicit", files)):
@@ -230,7 +264,11 @@ def main():
             target.write_text("# " + " ".join([f"word{i}"] * 151) + "\n")
             files.append(str(target))
         for globs in (0, 100):
-            (fixture / "pyproject.toml").write_text('[tool.tooprolix]\nignore = ["TPX003"]\nexclude = ' + json.dumps([f"vendor-{i}/" for i in range(globs)]) + "\n")
+            (fixture / "pyproject.toml").write_text(
+                '[tool.tooprolix]\nignore = ["TPX003"]\nexclude = '
+                + json.dumps([f"vendor-{i}/" for i in range(globs)])
+                + "\n"
+            )
             for n in (1, 100):
                 row = measure(f"synthetic-{n}-paths-{globs}-globs", files[:n])
                 assert row["findings"] == {"TPX001": n} and row["complete"]
@@ -240,7 +278,7 @@ def main():
 
 
 if __name__ == "__main__":
-    assert summarize({"baseline": [10.0]*21, "candidate": [5.0]*21})["paired_saved_ms_ci95"] == [5.0, 5.0]
+    assert summarize({"baseline": [10.0] * 21, "candidate": [5.0] * 21})["paired_saved_ms_ci95"] == [5.0, 5.0]
     main()
 ```
 
